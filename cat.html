@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<title>Simulatore genetico felino completo</title>
+<style>
+body { font-family: Arial, sans-serif; padding: 20px; background:#eee; }
+h2 { color:#333; }
+.controls { display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; }
+select, button { font-size:16px; padding:6px 12px; border-radius:8px; border:1px solid #ccc; }
+button { cursor:pointer; background:#4b4; color:white; transition:0.3s; }
+button:hover{ background:#5c5; }
+
+.cards { display:flex; flex-wrap:wrap; gap:10px; }
+.card { position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center;
+        padding:10px 15px; border-radius:12px; color:white; font-weight:bold; min-width:120px;
+        cursor:pointer; transition:0.2s; text-align:center; box-shadow:0 2px 5px rgba(0,0,0,0.2);}
+.card:hover{ transform:scale(1.05); }
+.card img { width:30px; height:30px; margin-bottom:5px; }
+
+/* Fenotipo -> colore */
+.black{background:#666;color:#fff;}
+.red{background:#c40;color:#000;}
+.tortie{background:#d96;color:#000;}
+.point{background:#fed;color:#000;}
+.gray{background:#bbb;color:#000;}
+.white{background:#fff;color:#000;border:1px solid #ccc;}
+
+table { border-collapse: collapse; width: 100%; margin-top: 20px; background:#fff; border-radius:8px; overflow:hidden; }
+th, td { border: 1px solid #ccc; padding: 8px; text-align:center; }
+th { background: #4b4; }
+tr:hover{background:#5c5;}
+
+/* Modal */
+.modal { display:none; position:fixed; z-index:100; left:0; top:0; width:100%; height:100%; overflow:auto; background-color: rgba(0,0,0,0.5);}
+.modal-content { background-color:#fff; margin:10% auto; padding:20px; border-radius:12px; width:90%; max-width:500px; position:relative;}
+.close { position:absolute; top:10px; right:15px; font-size:24px; font-weight:bold; cursor:pointer;}
+</style>
+</head>
+<body>
+
+<h2>Simulatore genetico felino completo</h2>
+
+<div class="controls">
+  <select id="female"></select>  
+  <button onclick="calcola()">Genera combinazioni</button>
+  <select id="male"></select>
+</div>
+
+<div id="result"></div>
+
+<!-- Modal per Punnett Square -->
+<div id="modal" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeModal()">&times;</span>
+    <h3 id="modal-title"></h3>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<script>
+// Liste colori
+const COLORS_FEMALE = [
+  "nero uniforme","bianco uniforme","rosso uniforme","grigio uniforme",
+  "tigrato grigio","tigrato rosso","tigrato grigio/nero",
+  "siamese seal","siamese blue","siamese tabby","tuxedo",
+  "tigrato grigio + bianco","tigrato rosso + bianco","calico"
+];
+
+const COLORS_MALE = [
+  "nero uniforme","bianco uniforme","rosso uniforme","grigio uniforme",
+  "tigrato grigio","tigrato rosso","tigrato grigio/nero",
+  "siamese seal","siamese blue","siamese tabby","tuxedo",
+  "tigrato grigio + bianco","tigrato rosso + bianco"
+];
+
+// Popolamento dropdown
+["female","male"].forEach(id=>{
+  const s = document.getElementById(id);
+  const list = id === "female" ? COLORS_FEMALE:COLORS_MALE;
+  list.forEach(c=>{
+    const o = document.createElement("option");
+    o.value = c;
+    o.text = (id === "female" ? "MADRE: " : "PADRE: " ) + c;
+    s.appendChild(o);
+  });
+});
+
+// Traduzione fenotipo -> loci genetici
+function translateCat(color, sex){
+  const loci = {};
+  loci.D = (color.includes("grigio") || color.includes("blue"))?"diluizione":"normale";
+  loci.A = color.includes("tigrato")?"tigrato":"uniforme";
+  loci.Si = (color.startsWith("siamese"))?"point":"non point";
+  loci.W = (color==="tuxedo" || color==="calico" || color.includes(" + bianco") || color==="bianco uniforme")?"bianco":"nessuno";
+
+  if(sex==="Madre"){
+    if(color==="rosso uniforme") loci.O=["Xᴿ","Xᴿ"];
+    else if(color==="nero uniforme" || color==="grigio uniforme" || color==="tigrato grigio" || color==="tigrato grigio/nero") loci.O=["Xᴺ","Xᴺ"];
+    else if(color==="tigrato rosso" || color==="calico" || color==="tigrato rosso + bianco") loci.O=["Xᴿ","Xᴺ"];
+    else if(color==="tigrato grigio + bianco") loci.O=["Xᴺ","Xᴺ"];
+    else if(color.startsWith("siamese")) loci.O=["Xᴺ","Xᴺ"];
+    else if(color==="tuxedo") loci.O=["Xᴺ","Xᴺ"];
+  } else { // Padre
+    if(color==="tigrato rosso + bianco") {
+      loci.O=["Xᴿ","Y"];
+      loci.A="tigrato";
+      loci.D="normale";
+      loci.W="bianco";
+    }
+    else if(color==="tigrato grigio + bianco") {
+      loci.O=["Xᴺ","Y"];
+      loci.A="tigrato";
+      loci.D="diluizione";
+      loci.W="bianco";
+    }
+    else if(color.includes("rosso")) loci.O=["Xᴿ","Y"];
+    else loci.O=["Xᴺ","Y"];
+  }
+  loci.sex = sex==="Madre"?"Femmina":"Maschio";
+  return loci;
+}
+
+// Fenotipo finale combinato
+function phenotype(loci){
+  let base;
+  if(loci.sex==="Maschio"){
+    base = loci.O[0]==="Xᴿ"?"rosso":"nero";
+  } else {
+    if(loci.O.includes("Xᴿ") && loci.O.includes("Xᴺ")) base="tortie";
+    else base = loci.O[0]==="Xᴿ"?"rosso":"nero";
+  }
+  if(loci.A==="tigrato") base="tigrato "+base;
+  if(loci.D==="diluizione") base=base.replace("nero","grigio").replace("rosso","crema");
+  if(loci.Si==="point") base="point ("+base+")";
+  if(loci.W==="bianco") base+=" + bianco";
+  return base;
+}
+
+// Fenotipo -> classe colore
+function getColorClass(ph){
+  if(ph.includes("nero")) return "black";
+  if(ph.includes("rosso") || ph.includes("crema")) return "red";
+  if(ph.includes("tortie")) return "tortie";
+  if(ph.includes("point")) return "point";
+  if(ph.includes("grigio")) return "gray";
+  if(ph.includes("bianco")) return "white";
+  return "";
+}
+
+// Modal functions
+function openModal(title, content){
+  document.getElementById("modal-title").innerText = title;
+  document.getElementById("modal-body").innerHTML = content;
+  document.getElementById("modal").style.display = "block";
+}
+function closeModal(){ document.getElementById("modal").style.display = "none"; }
+
+// Genera combinazioni e schede
+function calcola(){
+  const mother = document.getElementById("female").value;
+  const father = document.getElementById("male").value;
+
+  const mLoci = translateCat(mother,"Madre");
+  const fLoci = translateCat(father,"Padre");
+
+  const D = [mLoci.D,fLoci.D];
+  const A = [mLoci.A,fLoci.A];
+  const Si = [mLoci.Si,fLoci.Si];
+  const W = [mLoci.W,fLoci.W];
+
+  const combinations = [];
+  for(let mo of mLoci.O){
+    for(let fo of fLoci.O){
+      for(let d of D){
+        for(let a of A){
+          for(let si of Si){
+            for(let w of W){
+              let sex = fo==="Y"?"Maschio":"Femmina";
+              let genoO = fo==="Y"?mo:mo+" "+fo;
+              combinations.push({O:genoO,D:d,A:a,Si:si,W:w,sex:sex});
+            }
+          }
+        }
+      }
+    }
+  }
+
+  const prob = 1/combinations.length*100;
+  const summary = {};
+  combinations.forEach(c=>{
+    const ph = phenotype(c);
+    summary[ph] = (summary[ph]||0)+prob;
+  });
+
+  // --- Schede cuccioli con click per Punnett square
+  let html=`<div>
+    <strong>🩷 Madre:</strong> ${mother} → genotipo: ${mLoci.O.join(" ")}
+    <br/>
+    <strong>🩵 Padre:</strong> ${father} → genotipo: ${fLoci.O.join(" ")}
+  </div><br/><br/>`;
+
+  html+=`<div class="cards">`;
+  combinations.forEach(c=>{
+    const ph = phenotype(c);
+    const colorClass = getColorClass(ph);
+    const icon = c.sex==="Femmina"?"🩷":"🩵";
+    const lociText = `
+      <strong>Loci genetici:</strong>
+      <br/>O: ${c.O}
+      <br/>D: ${c.D}
+      <br/>A: ${c.A}
+      <br/>Siamese: ${c.Si}
+      <br/>Bianco: ${c.W}
+      <br/><br/>
+      <strong>Punnett O (2x2):</strong>
+      <br/>
+      <table style='margin:auto;border:1px solid #ccc;border-collapse:collapse;'>
+        <tr><td>${mLoci.O[0]}</td><td>${mLoci.O[1]}</td></tr>
+        <tr><td>${fLoci.O[0]}</td><td>${fLoci.O[1]||"Y"}</td></tr>
+      </table>
+      <strong>Probabilità singola:</strong> ${prob.toFixed(2)}%
+    `;
+    html+=`<div class="card ${colorClass}" onclick="openModal('${c.sex}: ${ph}', \`${lociText}\`)">${icon}<br>${c.sex}<br>${ph}</div>`;
+  });
+  html+=`</div>`;
+
+  // --- Tabella aggregata
+  html+=`<table>
+  <caption>Fenotipi aggregati e probabilità</caption>
+  <tr><th>Fenotipo</th><th>Probabilità totale</th></tr>`;
+  Object.entries(summary).sort((a,b)=>b[1]-a[1]).forEach(([ph,p])=>{
+    html+=`<tr class="${getColorClass(ph)}"><td>${ph}</td><td>${p.toFixed(2)}%</td></tr>`;
+  });
+  html+=`</table>`;
+
+  document.getElementById("result").innerHTML=html;
+}
+
+// Chiudi modal cliccando fuori
+window.onclick = function(event){if(event.target==document.getElementById("modal")) closeModal();}
+</script>
+
+</body>
+</html>
