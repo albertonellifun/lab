@@ -1,0 +1,333 @@
+<html>
+<head>
+</head>
+<body>
+<canvas id="game" width="800" height="600" />
+<script>
+class Cell {
+	constructor(x, y) {
+		//position
+		this.x = x;
+		this.y = y;
+		//walls
+		this.n = y === 0 ? true : Math.random() < RND;
+		this.s = y === ROWS - 1 ? true : Math.random() < RND;
+		this.e = x === COLS - 1 ? true : Math.random() < RND;
+		this.w = x === 0 ? true : Math.random() < RND;
+		//player over
+		this.taken = false;
+	}
+	
+	draw(ctx) {
+		//center
+		let cx = (this.x+1) * SIZE - SIZE / 2;
+		let cy = (this.y+1) * SIZE - SIZE / 2;
+		
+		const vertices = {
+			tl: {x: cx - SIZE / 2, y: cy - SIZE / 2},
+			tr: {x: cx + SIZE / 2, y: cy - SIZE / 2},
+			bl: {x: cx - SIZE / 2, y: cy + SIZE / 2},
+			br: {x: cx + SIZE / 2, y: cy + SIZE / 2},
+		};
+		
+		//pavimento
+		ctx.strokeStyle = '#ccc';
+		ctx.fillStyle = this.taken ? '#ddd' : '#eee';
+		ctx.fillRect(vertices.tl.x, vertices.tl.y, SIZE, SIZE);
+		ctx.strokeRect(vertices.tl.x, vertices.tl.y, SIZE, SIZE);
+		
+		//debug coords
+		ctx.fillStyle = '#666';
+		ctx.fillText(this.x+','+this.y, cx - 6, cy + 3);
+		
+		//walls
+		//muro nord blu
+		if (this.n) {
+			ctx.fillStyle = '#00f';
+			ctx.fillRect(vertices.tl.x, vertices.tl.y, SIZE, SIZE / 10);
+		}
+		//muro sud arancio
+		if (this.s) {
+			ctx.fillStyle = '#f80';
+			ctx.fillRect(vertices.bl.x, vertices.bl.y, SIZE, -SIZE / 10);
+		}
+		//muro ovest rosso
+		if (this.w) {
+			ctx.fillStyle = '#f00';
+			ctx.fillRect(vertices.tl.x, vertices.tl.y, SIZE / 10, SIZE);
+		}
+		//muro est giallo
+		if (this.e) {
+			ctx.fillStyle = '#ff0';
+			ctx.fillRect(vertices.tr.x, vertices.tr.y, -SIZE / 10, SIZE);
+		}
+		
+		//angoli/colonne
+		ctx.fillStyle = '#000';
+		ctx.beginPath();
+		ctx.arc(vertices.tl.x, vertices.tl.y, SIZE / 10, 0, 6.28);
+		ctx.fill();
+		ctx.beginPath();
+		ctx.arc(vertices.tr.x, vertices.tr.y, SIZE / 10, 0, 6.28);
+		ctx.fill();
+		ctx.beginPath();
+		ctx.arc(vertices.bl.x, vertices.bl.y, SIZE / 10, 0, 6.28);
+		ctx.fill();
+		ctx.beginPath();
+		ctx.arc(vertices.br.x, vertices.br.y, SIZE / 10, 0, 6.28);
+		ctx.fill();
+	}
+	
+	drawIso(ctx) {
+		const p = this.iso(this.x, this.y);
+		const topX = p.x;
+		const topY = p.y;
+		
+		const vertices = {
+			top:    {x: topX, y: topY},
+			right:  {x: topX + TILE_W, y: topY + TILE_H},
+			bottom: {x: topX, y: topY + TILE_H * 2},
+			left:   {x: topX - TILE_W, y: topY + TILE_H}
+		};
+		
+		//pavimento rombo
+		ctx.strokeStyle = '#ccc';
+		ctx.fillStyle = this.taken ? '#ddd' : '#eee';
+		ctx.beginPath();
+		ctx.moveTo(vertices.top.x, vertices.top.y);//vertice superiore
+		ctx.lineTo(vertices.right.x, vertices.right.y);//vertice destro
+		ctx.lineTo(vertices.bottom.x, vertices.bottom.y);//vertice inferiore
+		ctx.lineTo(vertices.left.x, vertices.left.y);//vertice sinistro
+		ctx.closePath();
+		ctx.fill();
+		ctx.stroke();
+
+		//debug coords
+		ctx.fillStyle = '#666';
+		ctx.fillText(this.x + ',' + this.y, topX - 6, topY + TILE_H + 3);
+
+		//walls
+		//muro ovest rosso
+		if (this.w) {
+			ctx.fillStyle = '#f00';
+			ctx.beginPath();
+			ctx.moveTo(vertices.top.x, vertices.top.y);//vertice superiore
+			ctx.lineTo(vertices.left.x, vertices.left.y);//vertice sinistro
+			ctx.lineTo(vertices.left.x, vertices.left.y - WALL_Y);//vertice sinistro - H
+			ctx.lineTo(vertices.top.x, vertices.top.y - WALL_Y);//vertice superiore - H
+			ctx.closePath();
+			ctx.fill();
+		}
+		
+		//muro nord blu
+		if (this.n) {
+			ctx.fillStyle = '#00f';
+			ctx.beginPath();
+			ctx.moveTo(vertices.right.x, vertices.right.y);//vertice destro
+			ctx.lineTo(vertices.top.x, vertices.top.y);//vertice superiore
+			ctx.lineTo(vertices.top.x, vertices.top.y - WALL_Y);//vertice superiore - H
+			ctx.lineTo(vertices.right.x, vertices.right.y - WALL_Y);//vertice destro - H
+			ctx.closePath();
+			ctx.fill();
+		}
+		
+		//muro est giallo
+		if (this.e) {
+			ctx.fillStyle = '#ff0';
+			ctx.beginPath();
+			ctx.moveTo(vertices.bottom.x, vertices.bottom.y);//vertice inferiore
+			ctx.lineTo(vertices.right.x, vertices.right.y);//vertice destro
+			ctx.lineTo(vertices.right.x, vertices.right.y - WALL_Y);//vertice destro - H
+			ctx.lineTo(vertices.bottom.x, vertices.bottom.y - WALL_Y);//vertice inferiore - H
+			ctx.closePath();
+			ctx.fill();
+		}
+
+		//muro sud arancio
+		if (this.s) {
+			ctx.fillStyle = '#f80';
+			ctx.beginPath();
+			ctx.moveTo(vertices.left.x, vertices.left.y);//vertice sinistro
+			ctx.lineTo(vertices.bottom.x, vertices.bottom.y);//vertice inferiore
+			ctx.lineTo(vertices.bottom.x, vertices.bottom.y - WALL_Y);//vertice inferiore - H
+			ctx.lineTo(vertices.left.x, vertices.left.y - WALL_Y);//vertice sinistro - H
+			ctx.closePath();
+			ctx.fill();
+		}
+		
+		//angoli
+		this.drawColumn(ctx, vertices.top);
+		this.drawColumn(ctx, vertices.right);
+		this.drawColumn(ctx, vertices.bottom);
+		this.drawColumn(ctx, vertices.left);
+		
+		
+		//soffitto rombo
+		ctx.strokeStyle = 'rgba(200,200,200,0.2)';
+		ctx.fillStyle = 'rgba(230,230,230,0.2)';
+		ctx.beginPath();
+		ctx.moveTo(vertices.top.x, vertices.top.y - WALL_Y);//vertice superiore
+		ctx.lineTo(vertices.right.x, vertices.right.y - WALL_Y);//vertice destro
+		ctx.lineTo(vertices.bottom.x, vertices.bottom.y - WALL_Y);//vertice inferiore
+		ctx.lineTo(vertices.left.x, vertices.left.y - WALL_Y);//vertice sinistro
+		ctx.closePath();
+		ctx.fill();
+		ctx.stroke();
+	}
+
+	drawColumn(ctx, v) {
+		const W = SIZE / 10; //larghezza colonna
+
+		ctx.fillStyle = '#000';
+		ctx.beginPath();
+		ctx.moveTo(v.x - W/2, v.y);       // lato sinistro in basso
+		ctx.lineTo(v.x + W/2, v.y);       // lato destro in basso
+		ctx.lineTo(v.x + W/2, v.y - WALL_Y);   // lato destro in alto
+		ctx.lineTo(v.x - W/2, v.y - WALL_Y);   // lato sinistro in alto
+		ctx.closePath();
+		ctx.fill();
+	}
+
+	iso(x, y) {
+		return {
+			x: (x - y) * TILE_W + TOP_ISO_00_X,
+			y: (x + y) * TILE_H + TOP_ISO_00_Y
+		};
+	}
+}
+
+class Player {
+	constructor(x, y) {
+		this.x = x;
+		this.y = y;
+	}
+	
+	draw(ctx) {
+		ctx.fillStyle = '#0f0';
+		//disegno un cerchio al centro del quadrato
+		let cx = (this.x+1) * SIZE - SIZE / 2;
+		let cy = (this.y+1) * SIZE - SIZE / 2;
+		
+		ctx.beginPath();
+		ctx.arc(cx, cy, SIZE / 4, 0, 6.28); 
+		ctx.fill();
+	}
+	
+	drawIso(ctx) {
+		const p = this.iso(this.x, this.y);
+		ctx.fillStyle = '#0f0';
+		//disegno un cerchio al centro del rombo
+		ctx.beginPath();
+		ctx.ellipse(p.x, p.y + TILE_H - WALL_Y / 3, SIZE / 3, SIZE / 4, 0, 0, Math.PI*2); 
+		ctx.fill();
+	}
+	
+	iso(x, y) {
+		return {
+			x: (x - y) * TILE_W + TOP_ISO_00_X,
+			y: (x + y) * TILE_H + TOP_ISO_00_Y
+		};
+	}
+}
+
+//init
+let COLS = 8;
+let ROWS = 4;
+let SIZE = 40;
+let RND = 0.3;
+
+let canvas = document.getElementById('game');
+let ctx = canvas.getContext('2d');
+
+//iso
+const TILE_W = SIZE * 1.5;//distorsione orizzontale -> 2 = allungata
+const TILE_H = SIZE * 0.66;//distorsione verticale -> 0.5 = schiacciata
+const WALL_Y = 20;
+
+const TOP_ISO_00_X = 300;//angolo alto sinistro X della visualizzazione isometrica
+const TOP_ISO_00_Y = 250;//angolo alto sinistro Y della visualizzazione isometrica
+
+class Labyrinth {
+	constructor(ctx) {
+		this.lab = [];
+		this.initLab();
+		this.syncLab();
+		this.player = new Player(COLS-1,ROWS-1);
+		this.attachEvent(ctx);
+		this.draw(ctx);
+	}
+	
+	initLab() {
+		for (let y = 0; y < ROWS; y++) {
+			for (let x = 0; x < COLS; x++) {
+				this.lab.push(new Cell(x,y));
+			}
+		}
+	}
+	
+	syncLab() {
+		//sync muri n/s + e/w
+		for (let y = 0; y < ROWS; y++) {
+			for (let x = 0; x < COLS; x++) {
+				let idx = this.findIndex(x, y);
+				let c = this.lab[idx];
+		
+				if (x < COLS - 1) {
+					let idxA = this.findIndex(x + 1, y)
+					let r = this.lab[idxA];
+					r.w = c.e;
+				}
+				if (y < ROWS - 1) {
+					let idxB = this.findIndex(x, y + 1);
+					let b = this.lab[idxB];
+					b.n = c.s;
+				}
+			}
+		}
+	}
+	
+	findIndex(x, y) {
+		return y * COLS + x;
+	}
+	
+	draw(ctx) {
+		ctx.clearRect(0, 0, canvas.width, canvas.height);
+		for (let cell of this.lab) {
+			cell.draw(ctx);
+			cell.drawIso(ctx);
+		}
+		this.player.draw(ctx);
+		this.player.drawIso(ctx);
+	}	
+
+	attachEvent(ctx) {
+		document.addEventListener('keydown', (e) => {
+			let idx = this.findIndex(this.player.x, this.player.y);
+			switch(e.key) {
+				case 'ArrowUp':
+					if(this.player.y > 0 && !this.lab[idx].n) this.player.y--;
+					break;
+				case 'ArrowDown':
+					if(this.player.y < ROWS-1 && !this.lab[idx].s) this.player.y++;
+					break;
+				case 'ArrowLeft':
+					if(this.player.x > 0 && !this.lab[idx].w) this.player.x--;
+					break;
+				case 'ArrowRight':
+					if(this.player.x < COLS-1 && !this.lab[idx].e) this.player.x++;
+					break;
+			}
+			this.lab[this.findIndex(this.player.x, this.player.y)].taken = true;
+			this.draw(ctx);
+		});
+		this.lab[this.findIndex(this.player.x, this.player.y)].taken = true;
+	}
+}
+
+
+
+let x = new Labyrinth(ctx);
+
+</script>
+</body>
+</html>
