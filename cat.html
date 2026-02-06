@@ -67,7 +67,7 @@ p { margin:0; padding:0; }
   <div class="group">
 	<button onclick="calcola()">Genera combinazioni</button> 
 	<label><input type="checkbox" id="show_comb_all"/>Mostra combinazioni tutte</label>
-	<label><input type="checkbox" id="show_comb_uni"/>Mostra combinazioni uniche</label>
+	<label><input type="checkbox" id="show_comb_uni" checked="checked"/>Mostra combinazioni uniche</label>
   </div>
 </div>
 
@@ -482,10 +482,12 @@ function calcola(){
   let show_comb_uni = document.getElementById("show_comb_uni").checked;
   if(show_comb_uni) {
 	  html += `<div class="cards">`;
-	  const seen = new Set(); // per tenere traccia dei genotipi già mostrati
+
+	  const seen = {}; //oggetto { key: { loci: c, prob: somma_prob } }
+	  const probPerCombo = 1 / combinations.length * 100;
+
 	  combinations.forEach(c => {
-		//crea una chiave unica per il genotipo
-		//slice non modifica oggetto originale
+		// crea una chiave unica per il genotipo
 		const key = [
 		  c.O.slice().sort().join(''),
 		  c.A.slice().sort().join(''),
@@ -495,8 +497,18 @@ function calcola(){
 		  c.S.slice().sort().join(''),
 		  c.W.slice().sort().join('')
 		].join('|');
-		if (seen.has(key)) return; // se già mostrato, salta
-		seen.add(key);
+
+		if(seen[key]) {
+		  // aggiungi la probabilità se già esiste
+		  seen[key].prob += probPerCombo;
+		} else {
+		  seen[key] = { loci: c, prob: probPerCombo };
+		}
+	  });
+
+	  // ora mostri solo i cuccioli unici
+	  Object.values(seen).forEach(entry => {
+		const c = entry.loci;
 		const ph = phenotype(c);
 		const colorClass = getColorClass(ph);
 		const icon = c.sex === "Femmina" ? "🩷" : "🩵";
@@ -512,7 +524,7 @@ function calcola(){
 		  <p>S: ${c.S.join(" / ")}<p/>
 		  <p>W: ${c.W.join(" / ")}<p/>
 		  <hr/>
-		  <p>Probabilità: ${(1/combinations.length*100).toFixed(2)}%</p>
+		  <p>Probabilità: ${entry.prob.toFixed(2)}%</p>
 		`;
 
 		html += `<div class="card ${colorClass}" onclick="openModal('${c.sex}: ${ph}', \`${lociText}\`)">${icon}<br>${c.sex}<br>${ph}</div>`;
@@ -520,6 +532,7 @@ function calcola(){
 
 	  html += `</div>`;
 	}
+
 
   document.getElementById("result").innerHTML=html;
 }
