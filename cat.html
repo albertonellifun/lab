@@ -2,12 +2,12 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8">
-<title>Simulatore genetico felino completo</title>
+<title>Simulatore genetico felino — Mendel Completo</title>
 <style>
 body { font-family: Arial, sans-serif; padding: 20px; background:#eee; }
 h2 { color:#333; }
 .controls { display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; }
-select, button { font-size:16px; padding:6px 12px; border-radius:8px; border:1px solid #ccc; }
+select, button { font-size:16px; padding:6px 12px; border-radius:8px; border:1px solid #ccc; margin-bottom: 8px; }
 button { cursor:pointer; background:#4b4; color:white; transition:0.3s; }
 button:hover{ background:#5c5; }
 
@@ -16,40 +16,64 @@ button:hover{ background:#5c5; }
         padding:10px 15px; border-radius:12px; color:white; font-weight:bold; min-width:120px;
         cursor:pointer; transition:0.2s; text-align:center; box-shadow:0 2px 5px rgba(0,0,0,0.2);}
 .card:hover{ transform:scale(1.05); }
-.card img { width:30px; height:30px; margin-bottom:5px; }
 
-/* Fenotipo -> colore */
-.black{background:#666;color:#fff;}
+.black{background:#444;color:#fff;}
 .red{background:#c40;color:#000;}
-.tortie{background:#d96;color:#000;}
-.point{background:#fed;color:#000;}
-.gray{background:#bbb;color:#000;}
-.white{background:#fff;color:#000;border:1px solid #ccc;}
+.tortie{background:#442;color:#fff;}
+.point{background:#fed;background:linear-gradient(to right, #444 0%, #fed 50%, #444 100%);color:#000;}
+.gray{background:#666;color:#fff;}
+.choco{background:#532;color:#fff;}
+.lilac{background:#cac;color:#000;}
+.white{background:#eee;color:#000;}
 
 table { border-collapse: collapse; width: 100%; margin-top: 20px; background:#fff; border-radius:8px; overflow:hidden; }
 th, td { border: 1px solid #ccc; padding: 8px; text-align:center; }
 th { background: #4b4; }
 tr:hover{background:#5c5;}
 
-/* Modal */
 .modal { display:none; position:fixed; z-index:100; left:0; top:0; width:100%; height:100%; overflow:auto; background-color: rgba(0,0,0,0.5);}
 .modal-content { background-color:#fff; margin:10% auto; padding:20px; border-radius:12px; width:90%; max-width:500px; position:relative;}
 .close { position:absolute; top:10px; right:15px; font-size:24px; font-weight:bold; cursor:pointer;}
+
+.group { display:flex; flex-direction:column; width: 280px; }
+.parents { display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; }
+.summary { margin-bottom: 20px; }
+p { margin:0; padding:0; }
 </style>
 </head>
 <body>
 
-<h2>Simulatore genetico felino completo</h2>
+<h2>Simulatore genetico felino — Mendel Completo</h2>
 
 <div class="controls">
-  <select id="female"></select>  
-  <button onclick="calcola()">Genera combinazioni</button>
-  <select id="male"></select>
+  <div class="group">
+    <select id="female"></select>  
+    <label><input type="checkbox" id="f_carrier_d"/> Portatrice diluizione (d)</label><br/>
+    <label><input type="checkbox" id="f_carrier_b"/> Portatrice chocolate (b)</label><br/>
+    <label><input type="checkbox" id="f_tabby"/> Tigrata (A)</label><br/>
+	<label><input type="checkbox" id="f_carrier_cs"/>Portatrice siamese (cs)</label><br/>
+	<label><input type="checkbox" id="f_carrier_s"/>Spotting bianco (S/s)</label><br/>
+  </div>
+  
+  <div class="group">
+	<select id="male"></select>
+    <label><input type="checkbox" id="m_carrier_d"/> Portatore diluizione (d)</label><br/>
+    <label><input type="checkbox" id="m_carrier_b"/> Portatore chocolate (b)</label><br/>
+    <label><input type="checkbox" id="m_tabby"/> Tigrato (A)</label><br/>
+	<label><input type="checkbox" id="m_carrier_cs"/>Portatore siamese (cs)</label><br/>
+	<label><input type="checkbox" id="m_carrier_s"/>Spotting bianco (S/s)</label><br/>
+  </div>
+  
+  <div class="group">
+	<button onclick="calcola()">Genera combinazioni</button> 
+	<label><input type="checkbox" id="show_comb"/>Mostra combinazioni</label>
+  </div>
 </div>
+
+<hr/>
 
 <div id="result"></div>
 
-<!-- Modal per Punnett Square -->
 <div id="modal" class="modal">
   <div class="modal-content">
     <span class="close" onclick="closeModal()">&times;</span>
@@ -59,26 +83,118 @@ tr:hover{background:#5c5;}
 </div>
 
 <script>
-// Liste colori
+const INCOMPATIBLE = {
+  carrierD: color =>
+    color.includes("grigio") ||
+    color.includes("blue") ||
+    color.includes("lilac"),
+
+  carrierB: color =>
+    color.includes("chocolate") ||
+    color.includes("lilac"),
+
+  tabby: color =>
+    !color.includes("tigrato")
+};
+
+function updateCheckboxes(parent) {
+  const select = document.getElementById(parent);
+  const color = select.value;
+
+  const isFemale = parent === "female";
+
+  const boxes = {
+    carrierD:  document.getElementById(isFemale ? "f_carrier_d"  : "m_carrier_d"),
+    carrierB:  document.getElementById(isFemale ? "f_carrier_b"  : "m_carrier_b"),
+    tabby:     document.getElementById(isFemale ? "f_tabby"      : "m_tabby"),
+	carrierCs: document.getElementById(isFemale ? "f_carrier_cs" : "m_carrier_cs"),
+	carrierS:  document.getElementById(isFemale ? "f_carrier_s"  : "m_carrier_s")
+  };
+
+  // ---------- D locus (diluizione)
+  if (color.includes("grigio") || color.includes("blue") || color.includes("lilac")) {
+    boxes.carrierD.checked = true;     // dd
+    boxes.carrierD.disabled = true;
+  } else {
+    boxes.carrierD.checked = false;    // DD o Dd
+    boxes.carrierD.disabled = false;
+  }
+
+  // ---------- B locus (chocolate)
+  if (color.includes("chocolate") || color.includes("lilac")) {
+    boxes.carrierB.checked = true;     // bb
+    boxes.carrierB.disabled = true;
+  } else {
+    boxes.carrierB.checked = false;    // BB o Bb
+    boxes.carrierB.disabled = false;
+  }
+
+  // ---------- A locus (tabby)
+  if (color.includes("tigrato")) {
+    boxes.tabby.checked = true;        // A-
+    boxes.tabby.disabled = true;
+  } else {
+    boxes.tabby.checked = false;       // aa
+    boxes.tabby.disabled = true;
+  }
+  
+  // ---------- Cs locus (siamese)
+  if (color.includes("siamese")) {
+	boxes.carrierCs.checked = true;   // cscs
+	boxes.carrierCs.disabled = true;
+  } else {
+	boxes.carrierCs.checked = false;  // CC o Ccs
+	boxes.carrierCs.disabled = false;
+  }
+  
+  if (color.includes("bianco") && color !== "bianco uniforme") {
+    boxes.carrierS.disabled = false;
+  } else {
+    boxes.carrierS.disabled = true;
+	boxes.carrierS.checked = false;
+  }
+}
+
+document.getElementById("female").addEventListener("change", () => {
+  updateCheckboxes("female");
+});
+
+document.getElementById("male").addEventListener("change", () => {
+  updateCheckboxes("male");
+});
+
+// stato iniziale
+updateCheckboxes("female");
+updateCheckboxes("male");
+
+
+
+
+// ------------------------------
+// 1. LISTE FENOTIPI
+// ------------------------------
 const COLORS_FEMALE = [
   "nero uniforme","bianco uniforme","rosso uniforme","grigio uniforme",
-  "tigrato grigio","tigrato rosso","tigrato grigio/nero",
-  "siamese seal","siamese blue","siamese tabby","tuxedo",
-  "tigrato grigio + bianco","tigrato rosso + bianco","calico"
+  "tigrato grigio","tigrato rosso",
+  "siamese seal","siamese chocolate","siamese blue","siamese tabby",
+  "tuxedo","tigrato grigio + bianco","tigrato rosso + bianco",
+  "calico","tortie"
 ];
 
 const COLORS_MALE = [
   "nero uniforme","bianco uniforme","rosso uniforme","grigio uniforme",
-  "tigrato grigio","tigrato rosso","tigrato grigio/nero",
-  "siamese seal","siamese blue","siamese tabby","tuxedo",
-  "tigrato grigio + bianco","tigrato rosso + bianco"
+  "tigrato grigio","tigrato rosso",
+  "siamese seal","siamese chocolate","siamese blue","siamese tabby",
+  "tuxedo","tigrato grigio + bianco","tigrato rosso + bianco"
 ];
 
-// Popolamento dropdown
-["female","male"].forEach(id=>{
+// ------------------------------
+// 2. POPOLAMENTO MENU
+// ------------------------------
+["female","male"].forEach(id => {
   const s = document.getElementById(id);
-  const list = id === "female" ? COLORS_FEMALE:COLORS_MALE;
-  list.forEach(c=>{
+  const list = ( id === "female" ? COLORS_FEMALE : COLORS_MALE );
+  list.forEach(c => {
     const o = document.createElement("option");
     o.value = c;
     o.text = (id === "female" ? "MADRE: " : "PADRE: " ) + c;
@@ -86,69 +202,167 @@ const COLORS_MALE = [
   });
 });
 
-// Traduzione fenotipo -> loci genetici
-function translateCat(color, sex){
+// ------------------------------
+// 3. TRADUZIONE FENOTIPO → GENOTIPO (Mendeliano)
+// ------------------------------
+function translateCat(color, sex, opt = {}){
   const loci = {};
-  loci.D = (color.includes("grigio") || color.includes("blue"))?"diluizione":"normale";
-  loci.A = color.includes("tigrato")?"tigrato":"uniforme";
-  loci.Si = (color.startsWith("siamese"))?"point":"non point";
-  loci.W = (color==="tuxedo" || color==="calico" || color.includes(" + bianco") || color==="bianco uniforme")?"bianco":"nessuno";
 
-  if(sex==="Madre"){
-    if(color==="rosso uniforme") loci.O=["Xᴿ","Xᴿ"];
-    else if(color==="nero uniforme" || color==="grigio uniforme" || color==="tigrato grigio" || color==="tigrato grigio/nero") loci.O=["Xᴺ","Xᴺ"];
-    else if(color==="tigrato rosso" || color==="calico" || color==="tigrato rosso + bianco") loci.O=["Xᴿ","Xᴺ"];
-    else if(color==="tigrato grigio + bianco") loci.O=["Xᴺ","Xᴺ"];
-    else if(color.startsWith("siamese")) loci.O=["Xᴺ","Xᴺ"];
-    else if(color==="tuxedo") loci.O=["Xᴺ","Xᴺ"];
-  } else { // Padre
-    if(color==="tigrato rosso + bianco") {
-      loci.O=["Xᴿ","Y"];
-      loci.A="tigrato";
-      loci.D="normale";
-      loci.W="bianco";
-    }
-    else if(color==="tigrato grigio + bianco") {
-      loci.O=["Xᴺ","Y"];
-      loci.A="tigrato";
-      loci.D="diluizione";
-      loci.W="bianco";
-    }
-    else if(color.includes("rosso")) loci.O=["Xᴿ","Y"];
-    else loci.O=["Xᴺ","Y"];
+  // D locus (diluizione)
+  if (color.includes("grigio") || color.includes("blue") || color.includes("lilac"))
+	loci.D = ["d","d"];
+  else if (opt.carrierD)
+	loci.D = ["D","d"];
+  else
+    loci.D = ["D","D"];//non portatore di diluizione
+
+  // B locus (chocolate)
+  if (color.includes("chocolate") || color.includes("lilac"))
+    loci.B = ["b","b"];
+  else if (opt.carrierB)
+	loci.B = ["B","b"];
+  else
+    loci.B = ["B","B"];//non portatore
+
+  // A locus (tabby) è particolare
+  if (color.includes("tigrato") || color.includes("tabby")) {
+	if (opt.tabby) loci.A = ["A","a"];
+	else loci.A = ["A","A"];
+  } else {
+	loci.A = ["a","a"];//non tigrato
   }
-  loci.sex = sex==="Madre"?"Femmina":"Maschio";
+
+
+  // Cs locus (siamese)
+  if (color.includes("siamese"))
+	loci.Cs = ["cs","cs"];//recessivo omozigote obbligato
+  else if (opt.carrierCs)
+    loci.Cs = ["C","cs"];//eterozigote = portatore
+  else
+    loci.Cs = ["C","C"];//dominante omozigote = non siamese
+
+
+  // W locus (bianco dominante)
+  if (color === "bianco uniforme")
+    loci.W = ["W","w"];
+  else
+    loci.W = ["w","w"];
+
+  // S locus (white spotting)
+  if (color === "bianco uniforme") {
+	loci.S = ["s","s"];//non spotted, coerente
+  }
+  else if (color.includes("bianco") || color === "tuxedo") {
+    if (opt.carrierS) loci.S = ["S","s"];
+	else loci.S = ["S", "S"];
+  }
+  else {
+    loci.S = ["s","s"];
+  }
+
+  // O locus (rosso X-linked)
+  if (sex === "Madre") {
+    if (color.includes("tortie") || color.includes("calico"))
+      loci.O = ["Xᴿ","Xᴺ"];
+    else if (color.includes("rosso"))
+      loci.O = ["Xᴿ","Xᴿ"];
+    else
+      loci.O = ["Xᴺ","Xᴺ"];
+  } else {
+    loci.O = color.includes("rosso") ? ["Xᴿ","Y"] : ["Xᴺ","Y"];
+  }
+
+  loci.sex = sex === "Madre" ? "Femmina" : "Maschio";
   return loci;
 }
 
-// Fenotipo finale combinato
-function phenotype(loci){
-  let base;
-  if(loci.sex==="Maschio"){
-    base = loci.O[0]==="Xᴿ"?"rosso":"nero";
-  } else {
-    if(loci.O.includes("Xᴿ") && loci.O.includes("Xᴺ")) base="tortie";
-    else base = loci.O[0]==="Xᴿ"?"rosso":"nero";
+// ------------------------------
+// 4. GAMETI -> non del tutto corretto ma per ora va bene cosi
+// ------------------------------
+function gametes(alleles){
+  return [ alleles[0], alleles[1] ];
+}
+
+// ------------------------------
+// 5. COMBINAZIONE DI UN LOCUS
+// ------------------------------
+function combineLocus(mother, father){
+  const gM = gametes(mother);
+  const gF = gametes(father);
+  const combos = [];
+
+  for (let m of gM){
+    for (let f of gF){
+      combos.push([m,f]);
+    }
   }
-  if(loci.A==="tigrato") base="tigrato "+base;
-  if(loci.D==="diluizione") base=base.replace("nero","grigio").replace("rosso","crema");
-  if(loci.Si==="point") base="point ("+base+")";
-  if(loci.W==="bianco") base+=" + bianco";
+  return combos;
+}
+
+// ------------------------------
+// 6. FENOTIPO DA GENOTIPO
+// ------------------------------
+function has(pair, allele){ return pair.includes(allele); }
+
+function phenotype(loci){
+  if (has(loci.W,"W")) return "bianco uniforme";
+
+  let base;
+
+  if (loci.sex === "Maschio"){
+    base = has(loci.O,"Xᴿ") ? "rosso" : "nero";
+  } else {
+    const r = has(loci.O,"Xᴿ");
+    const n = has(loci.O,"Xᴺ");
+    if (r && n) base = "tortie";
+    else base = r ? "rosso" : "nero";
+  }
+
+  if (base.includes("nero") && loci.B[0]==="b" && loci.B[1]==="b")
+    base = "chocolate";
+
+  if (loci.D[0]==="d" && loci.D[1]==="d"){
+    base = base.replace("nero","grigio")
+               .replace("chocolate","lilac")
+               .replace("rosso","crema");
+  }
+
+  if (has(loci.A,"A")) base = "tigrato " + base;
+  if (loci.Cs[0]==="cs" && loci.Cs[1]==="cs") base = "siamese " + base;
+  if (has(loci.S,"S")) base += " + bianco";
+
   return base;
 }
 
-// Fenotipo -> classe colore
+// ------------------------------
+// 7. CLASSE COLORE
+// ------------------------------
 function getColorClass(ph){
-  if(ph.includes("nero")) return "black";
-  if(ph.includes("rosso") || ph.includes("crema")) return "red";
-  if(ph.includes("tortie")) return "tortie";
-  if(ph.includes("point")) return "point";
-  if(ph.includes("grigio")) return "gray";
-  if(ph.includes("bianco")) return "white";
+  if (ph.includes("nero")) return "black";
+  if (ph.includes("rosso")||ph.includes("crema")) return "red";
+  if (ph.includes("tortie")) return "tortie";
+  if (ph.includes("siamese")) return "point";
+  if (ph.includes("grigio")) return "gray";
+  if (ph.includes("bianco uniforme")) return "white";
+  if (ph.includes("chocolate")) return "choco";
+  if (ph.includes("lilac")) return "lilac";
   return "";
 }
 
-// Modal functions
+function lociToHtml(l) {
+  let res = `<p>O: ${l.O.join(" / ")}</p>`;
+  res += `<p>A: ${l.A.join(" / ")}</p>`;
+  res += `<p>B: ${l.B.join(" / ")}</p>`;
+  res += `<p>D: ${l.D.join(" / ")}</p>`;
+  res += `<p>Cs: ${l.Cs.join(" / ")}</p>`;
+  res += `<p>S: ${l.S.join(" / ")}</p>`;
+  res += `<p>W: ${l.W.join(" / ")}</p>`;
+  return res;
+}
+
+// ------------------------------
+// 8. MODAL
+// ------------------------------
 function openModal(title, content){
   document.getElementById("modal-title").innerText = title;
   document.getElementById("modal-body").innerHTML = content;
@@ -156,29 +370,55 @@ function openModal(title, content){
 }
 function closeModal(){ document.getElementById("modal").style.display = "none"; }
 
-// Genera combinazioni e schede
+// ------------------------------
+// 9. CALCOLO COMBINAZIONI MENDELIANE COMPLETE
+// ------------------------------
 function calcola(){
   const mother = document.getElementById("female").value;
   const father = document.getElementById("male").value;
 
-  const mLoci = translateCat(mother,"Madre");
-  const fLoci = translateCat(father,"Padre");
+  const motherOpt = {
+	carrierD: document.getElementById("f_carrier_d").checked,
+	carrierB: document.getElementById("f_carrier_b").checked,
+	tabby:    document.getElementById("f_tabby").checked,
+	carrierCs:document.getElementById("f_carrier_cs").checked,
+	carrierS: document.getElementById("f_carrier_s").checked
+  };
 
-  const D = [mLoci.D,fLoci.D];
-  const A = [mLoci.A,fLoci.A];
-  const Si = [mLoci.Si,fLoci.Si];
-  const W = [mLoci.W,fLoci.W];
+  const fatherOpt = {
+	carrierD: document.getElementById("m_carrier_d").checked,
+	carrierB: document.getElementById("m_carrier_b").checked,
+	tabby:    document.getElementById("m_tabby").checked,
+	carrierCs:document.getElementById("m_carrier_cs").checked,
+	carrierS: document.getElementById("m_carrier_s").checked
+  };
+
+  const m = translateCat(mother, "Madre", motherOpt);
+  const f = translateCat(father, "Padre", fatherOpt);
+
+  const Ocomb = combineLocus(m.O, f.O);
+  const Acomb = combineLocus(m.A, f.A);
+  const Bcomb = combineLocus(m.B, f.B);
+  const Dcomb = combineLocus(m.D, f.D);
+  const Cscomb = combineLocus(m.Cs, f.Cs);
+  const Scomb = combineLocus(m.S, f.S);
+  const Wcomb = combineLocus(m.W, f.W);
 
   const combinations = [];
-  for(let mo of mLoci.O){
-    for(let fo of fLoci.O){
-      for(let d of D){
-        for(let a of A){
-          for(let si of Si){
-            for(let w of W){
-              let sex = fo==="Y"?"Maschio":"Femmina";
-              let genoO = fo==="Y"?mo:mo+" "+fo;
-              combinations.push({O:genoO,D:d,A:a,Si:si,W:w,sex:sex});
+
+  for (let O of Ocomb){
+    const sex = O.includes("Y") ? "Maschio" : "Femmina";
+
+    if (sex==="Maschio" && O.includes("Xᴿ") && O.includes("Xᴺ")) continue;
+
+    for (let A of Acomb){
+      for (let B of Bcomb){
+        for (let D of Dcomb){
+          for (let Cs of Cscomb){
+            for (let S of Scomb){
+              for (let W of Wcomb){
+                combinations.push({O,A,B,D,Cs,S,W,sex});
+              }
             }
           }
         }
@@ -186,59 +426,65 @@ function calcola(){
     }
   }
 
+  if (combinations.length === 0){
+    document.getElementById("result").innerHTML="<p>Nessuna combinazione valida.</p>";
+    return;
+  }
+
   const prob = 1/combinations.length*100;
-  const summary = {};
+  const summary={};
+
   combinations.forEach(c=>{
     const ph = phenotype(c);
-    summary[ph] = (summary[ph]||0)+prob;
+    summary[ph]=(summary[ph]||0)+prob;
   });
 
-  // --- Schede cuccioli con click per Punnett square
-  let html=`<div>
-    <strong>🩷 Madre:</strong> ${mother} → genotipo: ${mLoci.O.join(" ")}
-    <br/>
-    <strong>🩵 Padre:</strong> ${father} → genotipo: ${fLoci.O.join(" ")}
-  </div><br/><br/>`;
 
-  html+=`<div class="cards">`;
-  combinations.forEach(c=>{
-    const ph = phenotype(c);
-    const colorClass = getColorClass(ph);
-    const icon = c.sex==="Femmina"?"🩷":"🩵";
-    const lociText = `
-      <strong>Loci genetici:</strong>
-      <br/>O: ${c.O}
-      <br/>D: ${c.D}
-      <br/>A: ${c.A}
-      <br/>Siamese: ${c.Si}
-      <br/>Bianco: ${c.W}
-      <br/><br/>
-      <strong>Punnett O (2x2):</strong>
-      <br/>
-      <table style='margin:auto;border:1px solid #ccc;border-collapse:collapse;'>
-        <tr><td>${mLoci.O[0]}</td><td>${mLoci.O[1]}</td></tr>
-        <tr><td>${fLoci.O[0]}</td><td>${fLoci.O[1]||"Y"}</td></tr>
-      </table>
-      <strong>Probabilità singola:</strong> ${prob.toFixed(2)}%
-    `;
-    html+=`<div class="card ${colorClass}" onclick="openModal('${c.sex}: ${ph}', \`${lociText}\`)">${icon}<br>${c.sex}<br>${ph}</div>`;
-  });
-  html+=`</div>`;
+  let html=`<div class="parents"><div class="group"><p><strong>🩷 Madre:</strong> ${mother}</p>`;
+  html += lociToHtml(m);
+  html +=`</div><div class="group"><p><strong>🩵 Padre:</strong> ${father}</p>`;
+  html += lociToHtml(f);
+  html +=`</div></div>`;
 
-  // --- Tabella aggregata
-  html+=`<table>
-  <caption>Fenotipi aggregati e probabilità</caption>
-  <tr><th>Fenotipo</th><th>Probabilità totale</th></tr>`;
+
+  html+=`<table class="summary"><tr><th>Fenotipo</th><th>Probabilità</th></tr>`;
   Object.entries(summary).sort((a,b)=>b[1]-a[1]).forEach(([ph,p])=>{
     html+=`<tr class="${getColorClass(ph)}"><td>${ph}</td><td>${p.toFixed(2)}%</td></tr>`;
   });
   html+=`</table>`;
 
+
+  let show_comb = document.getElementById("show_comb").checked;
+  if(show_comb) {
+	  html+=`<div class="cards">`;
+	  combinations.forEach(c=>{
+		const ph=phenotype(c);
+		const colorClass=getColorClass(ph);
+		const icon=c.sex==="Femmina"?"🩷":"🩵";
+
+		const lociText = `
+		  <p><strong>Loci cucciolo:</strong></p>
+		  <p>Sesso: ${c.sex}<p/>
+		  <p>O: ${c.O.join(" / ")}<p/>
+		  <p>A: ${c.A.join(" / ")}<p/>
+		  <p>B: ${c.B.join(" / ")}<p/>
+		  <p>D: ${c.D.join(" / ")}<p/>
+		  <p>Cs: ${c.Cs.join(" / ")}<p/>
+		  <p>S: ${c.S.join(" / ")}<p/>
+		  <p>W: ${c.W.join(" / ")}<p/>
+		  <hr/>
+		  <p>Probabilità: ${prob.toFixed(2)}%</p>
+		`;
+
+		html+=`<div class="card ${colorClass}" onclick="openModal('${c.sex}: ${ph}', \`${lociText}\`)">${icon}<br>${c.sex}<br>${ph}</div>`;
+	  });
+	  html+=`</div>`;
+  }
+
   document.getElementById("result").innerHTML=html;
 }
 
-// Chiudi modal cliccando fuori
-window.onclick = function(event){if(event.target==document.getElementById("modal")) closeModal();}
+window.onclick=function(e){ if(e.target==document.getElementById("modal")) closeModal(); }
 </script>
 
 </body>
