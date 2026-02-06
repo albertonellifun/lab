@@ -9,13 +9,13 @@ h2 { color:#333; }
 .controls { display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; }
 select, button { font-size:16px; padding:6px 12px; border-radius:8px; border:1px solid #ccc; margin-bottom: 8px; }
 button { cursor:pointer; background:#4b4; color:white; transition:0.3s; }
-button:hover{ background:#5c5; }
+button:hover{ filter: brightness(1.1); }
 
 .cards { display:flex; flex-wrap:wrap; gap:10px; }
 .card { position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center;
         padding:10px 15px; border-radius:12px; color:white; font-weight:bold; min-width:120px;
         cursor:pointer; transition:0.2s; text-align:center; box-shadow:0 2px 5px rgba(0,0,0,0.2);}
-.card:hover{ transform:scale(1.05); }
+.card:hover{ filter: brightness(1.1); }
 
 .black{background:#444;color:#fff;}
 .red{background:#c40;color:#000;}
@@ -29,7 +29,7 @@ button:hover{ background:#5c5; }
 table { border-collapse: collapse; width: 100%; margin-top: 20px; background:#fff; border-radius:8px; overflow:hidden; }
 th, td { border: 1px solid #ccc; padding: 8px; text-align:center; }
 th { background: #4b4; }
-tr:hover{background:#5c5;}
+tr:hover{filter: brightness(1.1);}
 
 .modal { display:none; position:fixed; z-index:100; left:0; top:0; width:100%; height:100%; overflow:auto; background-color: rgba(0,0,0,0.5);}
 .modal-content { background-color:#fff; margin:10% auto; padding:20px; border-radius:12px; width:90%; max-width:500px; position:relative;}
@@ -50,7 +50,7 @@ p { margin:0; padding:0; }
     <select id="female"></select>  
     <label><input type="checkbox" id="f_carrier_d"/> Portatrice diluizione (d)</label><br/>
     <label><input type="checkbox" id="f_carrier_b"/> Portatrice chocolate (b)</label><br/>
-    <label><input type="checkbox" id="f_tabby"/> Tigrata (A)</label><br/>
+    <label><input type="checkbox" id="f_tabby"/> Tabby eterozigote (A/a)</label><br/>
 	<label><input type="checkbox" id="f_carrier_cs"/>Portatrice siamese (cs)</label><br/>
 	<label><input type="checkbox" id="f_carrier_s"/>Spotting bianco (S/s)</label><br/>
   </div>
@@ -59,14 +59,15 @@ p { margin:0; padding:0; }
 	<select id="male"></select>
     <label><input type="checkbox" id="m_carrier_d"/> Portatore diluizione (d)</label><br/>
     <label><input type="checkbox" id="m_carrier_b"/> Portatore chocolate (b)</label><br/>
-    <label><input type="checkbox" id="m_tabby"/> Tigrato (A)</label><br/>
+    <label><input type="checkbox" id="m_tabby"/> Tabby eterozigote (A/a)</label><br/>
 	<label><input type="checkbox" id="m_carrier_cs"/>Portatore siamese (cs)</label><br/>
 	<label><input type="checkbox" id="m_carrier_s"/>Spotting bianco (S/s)</label><br/>
   </div>
   
   <div class="group">
 	<button onclick="calcola()">Genera combinazioni</button> 
-	<label><input type="checkbox" id="show_comb"/>Mostra combinazioni</label>
+	<label><input type="checkbox" id="show_comb_all"/>Mostra combinazioni tutte</label>
+	<label><input type="checkbox" id="show_comb_uni"/>Mostra combinazioni uniche</label>
   </div>
 </div>
 
@@ -83,20 +84,6 @@ p { margin:0; padding:0; }
 </div>
 
 <script>
-const INCOMPATIBLE = {
-  carrierD: color =>
-    color.includes("grigio") ||
-    color.includes("blue") ||
-    color.includes("lilac"),
-
-  carrierB: color =>
-    color.includes("chocolate") ||
-    color.includes("lilac"),
-
-  tabby: color =>
-    !color.includes("tigrato")
-};
-
 function updateCheckboxes(parent) {
   const select = document.getElementById(parent);
   const color = select.value;
@@ -130,11 +117,11 @@ function updateCheckboxes(parent) {
   }
 
   // ---------- A locus (tabby)
-  if (color.includes("tigrato")) {
-    boxes.tabby.checked = true;        // A-
-    boxes.tabby.disabled = true;
+  if (color.includes("tigrato") || color.includes("tabby")) {
+    boxes.tabby.disabled = false;   // può essere A/A o A/a
+    boxes.tabby.checked = false;    // default A/A
   } else {
-    boxes.tabby.checked = false;       // aa
+    boxes.tabby.checked = false;    // solido -> aa
     boxes.tabby.disabled = true;
   }
   
@@ -147,12 +134,16 @@ function updateCheckboxes(parent) {
 	boxes.carrierCs.disabled = false;
   }
   
-  if (color.includes("bianco") && color !== "bianco uniforme") {
-    boxes.carrierS.disabled = false;
-  } else {
+  // ------- SPOTTED
+  if (color === "bianco uniforme") {
     boxes.carrierS.disabled = true;
 	boxes.carrierS.checked = false;
-  }
+  } else if ( color.includes("bianco") || color.includes("tuxedo") || color.includes("calico") ) {
+    boxes.carrierS.disabled = false;//ha spotting -> puo essere SS o Ss
+  } else {
+	//potrebbe essere portatore 
+	boxes.carrierS.disabled = false;
+  }  
 }
 
 document.getElementById("female").addEventListener("change", () => {
@@ -248,17 +239,24 @@ function translateCat(color, sex, opt = {}){
   else
     loci.W = ["w","w"];
 
+  
   // S locus (white spotting)
   if (color === "bianco uniforme") {
-	loci.S = ["s","s"];//non spotted, coerente
+    loci.S = ["s","s"]; // W maschera tutto == non spotted
+  } 
+  else if (color === "tuxedo" || color === "calico") {
+  loci.S = ["S","s"]; // come nella realta
   }
-  else if (color.includes("bianco") || color === "tuxedo") {
-    if (opt.carrierS) loci.S = ["S","s"];
-	else loci.S = ["S", "S"];
+  else if (opt.carrierS) {
+    loci.S = ["S","s"]; // portatore con bianco
+  }
+  else if (color.includes("bianco")) {
+    loci.S = ["S","S"]; // bianco visibile ma non portatore
   }
   else {
-    loci.S = ["s","s"];
+    loci.S = ["s","s"]; // nessun bianco
   }
+  
 
   // O locus (rosso X-linked)
   if (sex === "Madre") {
@@ -454,8 +452,8 @@ function calcola(){
   html+=`</table>`;
 
 
-  let show_comb = document.getElementById("show_comb").checked;
-  if(show_comb) {
+  let show_comb_all = document.getElementById("show_comb_all").checked;
+  if(show_comb_all) {
 	  html+=`<div class="cards">`;
 	  combinations.forEach(c=>{
 		const ph=phenotype(c);
@@ -480,6 +478,48 @@ function calcola(){
 	  });
 	  html+=`</div>`;
   }
+  
+  let show_comb_uni = document.getElementById("show_comb_uni").checked;
+  if(show_comb_uni) {
+	  html += `<div class="cards">`;
+	  const seen = new Set(); // per tenere traccia dei genotipi già mostrati
+	  combinations.forEach(c => {
+		//crea una chiave unica per il genotipo
+		//slice non modifica oggetto originale
+		const key = [
+		  c.O.slice().sort().join(''),
+		  c.A.slice().sort().join(''),
+		  c.B.slice().sort().join(''),
+		  c.D.slice().sort().join(''),
+		  c.Cs.slice().sort().join(''),
+		  c.S.slice().sort().join(''),
+		  c.W.slice().sort().join('')
+		].join('|');
+		if (seen.has(key)) return; // se già mostrato, salta
+		seen.add(key);
+		const ph = phenotype(c);
+		const colorClass = getColorClass(ph);
+		const icon = c.sex === "Femmina" ? "🩷" : "🩵";
+
+		const lociText = `
+		  <p><strong>Loci cucciolo:</strong></p>
+		  <p>Sesso: ${c.sex}<p/>
+		  <p>O: ${c.O.join(" / ")}<p/>
+		  <p>A: ${c.A.join(" / ")}<p/>
+		  <p>B: ${c.B.join(" / ")}<p/>
+		  <p>D: ${c.D.join(" / ")}<p/>
+		  <p>Cs: ${c.Cs.join(" / ")}<p/>
+		  <p>S: ${c.S.join(" / ")}<p/>
+		  <p>W: ${c.W.join(" / ")}<p/>
+		  <hr/>
+		  <p>Probabilità: ${(1/combinations.length*100).toFixed(2)}%</p>
+		`;
+
+		html += `<div class="card ${colorClass}" onclick="openModal('${c.sex}: ${ph}', \`${lociText}\`)">${icon}<br>${c.sex}<br>${ph}</div>`;
+	  });
+
+	  html += `</div>`;
+	}
 
   document.getElementById("result").innerHTML=html;
 }
