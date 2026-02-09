@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, height=device-height, maximum-scale=1.0">
-<title>Simulatore genetico felino — Mendel Completo</title>
+<title>Simulatore Genetico Felino</title>
 <style>
 body { font-family: Arial, sans-serif; padding: 20px; background:#eee; overflow-x: hidden; }
 h2 { color:#333; }
@@ -38,7 +38,7 @@ tr:hover{filter: brightness(1.2);}
 .modal-content { background-color:#fff; margin:10% auto; padding:20px; border-radius:12px; width:90%; max-width:500px; position:relative;}
 .close { position:absolute; top:10px; right:15px; font-size:24px; font-weight:bold; cursor:pointer;}
 
-.group { display:flex; flex-direction:column; width: 280px; }
+.group { display:flex; flex-direction:column; width: 280px; white-space: nowrap; }
 .parents { display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; }
 .summary { margin-bottom: 20px; }
 p { margin:0; padding:0; }
@@ -66,7 +66,7 @@ p { margin:0; padding:0; }
 </head>
 <body>
 
-<h2>Simulatore genetico felino — Mendel Completo</h2>
+<h2>Simulatore Genetico Felino</h2>
 
 <div class="controls">
   <div class="group">
@@ -74,14 +74,14 @@ p { margin:0; padding:0; }
 	<select id="female"></select>
 	Genotipo:</br>
 	<select id="f_redblack">
-		<option value="Xᴿ_Xᴿ">Rosso Xᴿ/Xᴿ</option>
-		<option value="Xᴺ_Xᴺ">Nero Xᴺ/Xᴺ</option>
-		<option value="Xᴿ_Xᴺ">Nero e Rosso Xᴿ/Xᴺ</option>
+		<option value="Xᴺ_Xᴺ">Nero Xᴺ/Xᴺ (o/o)</option>
+		<option value="Xᴿ_Xᴺ">Nero e Rosso Xᴿ/Xᴺ (O/o)</option>
+		<option value="Xᴿ_Xᴿ">Rosso Xᴿ/Xᴿ (O/O)</option>
 	</select>
 	<select id="f_agouti">
-		<option value="A_A">Tabby Tigrato A/A</option>
-		<option value="A_a">Tabby Tigrato A/a</option>
 		<option value="a_a">No Tabby a/a</option>
+		<option value="A_a">Tabby Tigrato A/a</option>
+		<option value="A_A">Tabby Tigrato A/A</option>
 	</select>
 	<select id="f_chocolate">
 		<option value="B_B">Nero B/B</option>
@@ -89,9 +89,9 @@ p { margin:0; padding:0; }
 		<option value="b_b">Cioccolato b/b</option>
 	</select>
 	<select id="f_siamese">
-		<option value="Cs_Cs">Siamese Cs/Cs</option>
-		<option value="C_Cs">Siamese portatore C/Cs</option>
 		<option value="C_C">No Siamese C/C</option>
+		<option value="C_Cs">Siamese portatore C/Cs</option>
+		<option value="Cs_Cs">Siamese Cs/Cs</option>
 	</select>
 	    <select id="f_diluizione">
 		<option value="D_D">Colore Pieno D/D</option>
@@ -99,9 +99,9 @@ p { margin:0; padding:0; }
 		<option value="d_d">Colore Diluito d/d</option>
 	</select>
 	<select id="f_spotted">
-		<option value="S_S">Spotting molto Bianco S/S</option>
-		<option value="S_s">Spotting moderato Bianco S/s</option>
 		<option value="s_s">No Spotting Bianco s/s</option>
+		<option value="S_s">Spotting moderato Bianco S/s</option>
+		<option value="S_S">Spotting molto Bianco S/S</option>
 	</select>
 	<select id="f_white">
 		<option value="w_w">No Bianco uniforme w/w</option>
@@ -120,13 +120,13 @@ p { margin:0; padding:0; }
 	<select id="male"></select>
 	Genotipo:</br>
     <select id="m_redblack">
-		<option value="Xᴿ_Y">Rosso Xᴿ/Y</option>
-		<option value="Xᴺ_Y">Nero Xᴺ/Y</option>
+		<option value="Xᴺ_Y">Nero Xᴺ/Y (o/Y)</option>
+		<option value="Xᴿ_Y">Rosso Xᴿ/Y (O/Y)</option>
 	</select>
 	<select id="m_agouti">
-		<option value="A_A">Tabby Tigrato A/A</option>
-		<option value="A_a">Tabby Tigrato A/a</option>
 		<option value="a_a">No Tabby a/a</option>
+		<option value="A_a">Tabby Tigrato A/a</option>
+		<option value="A_A">Tabby Tigrato A/A</option>
 	</select>
 	<select id="m_chocolate">
 		<option value="B_B">Nero B/B</option>
@@ -134,9 +134,9 @@ p { margin:0; padding:0; }
 		<option value="b_b">Cioccolato b/b</option>
 	</select>
 	<select id="m_siamese">
-		<option value="Cs_Cs">Siamese Cs/Cs</option>
-		<option value="C_Cs">Siamese portatore C/Cs</option>
 		<option value="C_C">No Siamese C/C</option>
+		<option value="C_Cs">Siamese portatore C/Cs</option>
+		<option value="Cs_Cs">Siamese Cs/Cs</option>
 	</select>
 	    <select id="m_diluizione">
 		<option value="D_D">Colore Pieno D/D</option>
@@ -144,9 +144,9 @@ p { margin:0; padding:0; }
 		<option value="d_d">Colore Diluito d/d</option>
 	</select>
 	<select id="m_spotted">
-		<option value="S_S">Spotting molto Bianco S/S</option>
-		<option value="S_s">Spotting moderato Bianco S/s</option>
 		<option value="s_s">No Spotting Bianco s/s</option>
+		<option value="S_s">Spotting moderato Bianco S/s</option>
+		<option value="S_S">Spotting molto Bianco S/S</option>
 	</select>
 	<select id="m_white">
 		<option value="w_w">No Bianco uniforme w/w</option>

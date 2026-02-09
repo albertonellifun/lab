@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, height=device-height, maximum-scale=1.0">
+<title>Simulatore Genetico Felino Inverso</title>
+<style>
+body { font-family: Arial, sans-serif; padding: 20px; background:#eee; overflow-x: hidden; }
+h2 { color:#333; }
+.controls { display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; }
+select, button { font-size:16px; padding:6px 12px; border-radius:8px; border:1px solid #ccc; margin-bottom: 8px; }
+button { cursor:pointer; background:#28f; color:#fff; transition:0.3s; }
+button:hover{ filter: brightness(1.2); }
+label { font-size: 16px; line-height: 2; }
+p { font-size: 16px; line-height: 1.5; }
+
+.cards { display:flex; flex-wrap:wrap; gap:10px; }
+.card { position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center;
+        padding:10px 15px; border-radius:12px; color:#fff; font-weight:bold; min-width:120px;
+        cursor:pointer; transition:0.2s; text-align:center; box-shadow:0 2px 5px rgba(0,0,0,0.2);}
+.card:hover{ filter: brightness(1.2); }
+
+.black{background:#444;color:#fff;}
+.red{background:#c40;color:#000;}
+.tortie{background:#442;color:#fff;}
+.point{background:#fed;background:linear-gradient(to right, #444 0%, #fed 50%, #444 100%);color:#000;}
+.gray{background:#666;color:#fff;}
+.choco{background:#532;color:#fff;}
+.lilac{background:#cac;color:#000;}
+.white{background:#fff;color:#000;}
+
+table { border-collapse: collapse; width: 100%; margin-top: 20px; background:#fff; border-radius:8px; overflow:hidden; }
+th, td { border: 1px solid #ccc; padding: 8px; text-align:center; }
+th { background:#28f; color:#fff; }
+tr:hover{filter: brightness(1.2);}
+
+.modal { display:none; position:fixed; z-index:100; left:0; top:0; width:100%; height:100%; overflow:auto; background-color: rgba(0,0,0,0.5);}
+.modal-content { background-color:#fff; margin:10% auto; padding:20px; border-radius:12px; width:90%; max-width:500px; position:relative;}
+.close { position:absolute; top:10px; right:15px; font-size:24px; font-weight:bold; cursor:pointer;}
+
+.group { display:flex; flex-direction:column; width: 280px; white-space: nowrap; }
+.parents { display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; }
+.summary { margin-bottom: 20px; }
+p { margin:0; padding:0; }
+
+.img-search { cursor: pointer; }
+.img-search:hover { filter: brightness(1.2); }
+
+/* MOBILE FIX */
+@media (max-width: 768px) {
+  body { font-size: 20px; padding: 12px; }
+  h2 { font-size: 24px; line-height: 1.3; }
+  label { font-size: 20px; line-height: 2; }
+  p { font-size: 20px; line-height: 1.5; }
+  input[type="checkbox"] { transform: scale(1.3); margin-right: 6px; }
+  select, button { font-size: 20px; padding: 10px 12px; }
+  .group { width: 100%; }
+  .card { font-size: 20px; min-width: 100%; padding: 14px; }
+  .cards { justify-content: center; }
+  table { font-size: 20px; }
+  th, td { padding: 10px 6px; }
+  .modal-content { margin: 15% auto; font-size: 20px; }
+}
+
+</style>
+</head>
+
+<body>
+<h2>Simulatore Genetico Felino Inverso</h2>
+<div class="controls">
+	<div class="group">
+		<label>Sesso del figlio:</label>
+		<select id="sex">
+			<option value="F">Femmina</option>
+			<option value="M">Maschio</option>
+		</select> Genotipo <br />
+		<select id="f_redblack">
+			<option value="Xᴺ_Xᴺ">Nero Xᴺ/Xᴺ (o/o)</option>
+			<option value="Xᴿ_Xᴺ">Nero e Rosso Xᴿ/Xᴺ (O/o)</option>
+			<option value="Xᴿ_Xᴿ">Rosso Xᴿ/Xᴿ (O/O)</option>
+		</select>
+		<select id="f_agouti">
+			<option value="a_a">No Tabby a/a</option>
+			<option value="A_a">Tabby Tigrato A/a</option>
+			<option value="A_A">Tabby Tigrato A/A</option>
+		</select>
+		<select id="f_chocolate">
+			<option value="B_B">Nero B/B</option>
+			<option value="B_b">Nero portatore di Cioccolato B/b</option>
+			<option value="b_b">Cioccolato b/b</option>
+		</select>
+		<select id="f_siamese">
+			<option value="C_C">No Siamese C/C</option>
+			<option value="C_Cs">Siamese portatore C/Cs</option>
+			<option value="Cs_Cs">Siamese Cs/Cs</option>
+		</select>
+		<select id="f_diluizione">
+			<option value="D_D">Colore Pieno D/D</option>
+			<option value="D_d">Colore Pieno portatore Diluizione D/d</option>
+			<option value="d_d">Colore Diluito d/d</option>
+		</select>
+		<select id="f_spotted">
+			<option value="s_s">No Spotting Bianco s/s</option>
+			<option value="S_s">Spotting moderato Bianco S/s</option>
+			<option value="S_S">Spotting molto Bianco S/S</option>
+		</select>
+		<select id="f_white">
+			<option value="w_w">No Bianco uniforme w/w</option>
+			<option value="W_w">Bianco uniforme W/w</option>
+			<option value="W_W">Bianco uniforme W/W</option>
+		</select>
+		<select id="f_hair">
+			<option value="L_L">Pelo Corto L/L</option>
+			<option value="L_l">Pelo Lungo portatore L/l</option>
+			<option value="l_l">Pelo Lungo l/l</option>
+		</select>
+		<br />
+		<button onclick="calcola()">Calcola genitori</button>
+	</div>
+</div>
+<hr />
+<div id="result"></div>
+
+<script>
+// ================== UTILITY ==================
+function aggiornaRedBlack() {
+	const sex = document.getElementById("sex").value;
+	const sel = document.getElementById("f_redblack");
+	const current = sel.value;
+
+	sel.innerHTML = ""; // reset
+
+	if (sex === "M") {
+		// maschio: solo O/Y e o/Y
+		sel.innerHTML += `<option value="Xᴺ_Y">Nero Xᴺ/Y (o/Y)</option>`;
+		sel.innerHTML += `<option value="Xᴿ_Y">Rosso Xᴿ/Y (O/Y)</option>`;
+		
+	} else {
+		// femmina: tutte le opzioni
+		sel.innerHTML += `<option value="Xᴺ_Xᴺ">Nero Xᴺ/Xᴺ (o/o)</option>`;
+		sel.innerHTML += `<option value="Xᴿ_Xᴺ">Nero e Rosso Xᴿ/Xᴺ (O/o)</option>`;
+		sel.innerHTML += `<option value="Xᴿ_Xᴿ">Rosso Xᴿ/Xᴿ (O/O)</option>`;
+	}
+
+	// cerca di mantenere la selezione precedente se possibile
+	if ([...sel.options].some(o => o.value === current)) {
+		sel.value = current;
+	}
+}
+
+// aggiorna al cambio di sesso
+document.getElementById("sex").addEventListener("change", aggiornaRedBlack);
+
+// inizializza la select
+aggiornaRedBlack();
+
+
+function splitGeno(v) {
+	return v.replace("Xᴿ", "O").replace("Xᴺ", "o");
+}
+
+function gameti(g) {
+	const [a, b] = g.split("_");
+	return a === b ? [a] : [a, b];
+}
+
+function gametiXlinked(g, sex) {
+	if (sex === "M") {
+		return [g.split("_")[0]]; // solo O o o
+	}
+	const [a, b] = g.split("_");
+	return a === b ? [a] : [a, b];
+}
+
+
+function incrocio(gm, gp) {
+	let res = {};
+	gm.forEach(m => gp.forEach(p => {
+		const f = [m, p].sort().join("_");
+		res[f] = (res[f] || 0) + 1;
+	}));
+	const tot = gm.length * gp.length;
+	Object.keys(res).forEach(k => res[k] /= tot);
+	return res;
+}
+
+// ================== AUTOSOMICO ==================
+function genitoriAutosomico(figlio) {
+	const [A, B] = figlio.split("_");
+	const alleli = [...new Set([A, B])];
+
+	const possibili = [
+		`${alleli[0]}_${alleli[0]}`,
+		`${alleli[0]}_${alleli[1] || alleli[0]}`,
+		`${alleli[1] || alleli[0]}_${alleli[1] || alleli[0]}`
+	].filter((v, i, a) => a.indexOf(v) === i);
+
+	let res = [];
+
+	possibili.forEach(m => {
+		possibili.forEach(p => {
+			const figli = incrocio(gameti(m), gameti(p));
+			if (figli[figlio]) {
+				res.push({
+					madre: m,
+					padre: p,
+					prob: figli[figlio]
+				});
+			}
+		});
+	});
+
+	return res;
+}
+
+// ================== ORANGE X-LINKED ==================
+function genitoriOrange(figlio, sex) {
+	let res = [];
+
+	if (sex === "M") {
+		// figlio O_Y o o_Y
+		const allele = figlio.split("_")[0];
+
+		["O_O", "O_o", "o_o"].forEach(m => {
+			const gm = gametiXlinked(m, sex);
+			gm.forEach(a => {
+				if (a === allele) {
+					res.push({
+						madre: m,
+						padre: allele + "_Y",
+						prob: 1 / gm.length
+					});
+				}
+			});
+		});
+
+	} else {
+		// femmina O_O, O_o, o_o
+		["O_O", "O_o", "o_o"].forEach(m => {
+			["O_Y", "o_Y"].forEach(p => {
+				const figli = incrocio(gametiXlinked(m, sex), [p[0]]);
+				if (figli[figlio]) {
+					res.push({
+						madre: m,
+						padre: p,
+						prob: figli[figlio]
+					});
+				}
+			});
+		});
+	}
+
+	return res;
+}
+
+// ================== COMBINAZIONE ==================
+function combina(liste) {
+	let res = [{
+		madre: [],
+		padre: [],
+		prob: 1
+	}];
+
+	liste.forEach(g => {
+		let tmp = [];
+		res.forEach(r => g.forEach(x => {
+			tmp.push({
+				madre: [...r.madre, x.madre],
+				padre: [...r.padre, x.padre],
+				prob: r.prob * x.prob
+			});
+		}));
+		res = tmp;
+	});
+
+	const tot = res.reduce((s, r) => s + r.prob, 0);
+	res.forEach(r => r.prob /= tot);
+
+	return res.filter(r => r.prob > 0.01);
+}
+
+// ================== MAIN ==================
+function calcola() {
+	const sex = document.getElementById("sex").value;
+
+	const f_redblack = document.getElementById("f_redblack");
+	const f_agouti = document.getElementById("f_agouti");
+	const f_chocolate = document.getElementById("f_chocolate");
+	const f_siamese = document.getElementById("f_siamese");
+	const f_diluizione = document.getElementById("f_diluizione");
+	const f_spotted = document.getElementById("f_spotted");
+	const f_white = document.getElementById("f_white");
+	const f_hair = document.getElementById("f_hair");
+
+	let orange = splitGeno(f_redblack.value);
+
+	// 🔒 FORZATURA BIOLOGICA
+	if (sex === "M") {
+		const allele = orange.startsWith("O") ? "O" : "o";
+		orange = allele + "_Y";
+	}
+
+	const geni = [
+		splitGeno(f_agouti.value),
+		splitGeno(f_chocolate.value),
+		splitGeno(f_siamese.value),
+		splitGeno(f_diluizione.value),
+		splitGeno(f_spotted.value),
+		splitGeno(f_white.value),
+		splitGeno(f_hair.value)
+	];
+
+	const perGene = [
+		genitoriOrange(orange, sex),
+		...geni.map(g => genitoriAutosomico(g))
+	];
+
+	const comb = combina(perGene);
+
+	let html = `<div class="section"><h3>Genitori compatibili</h3><table>
+        <tr><th>Madre</th><th>Padre</th><th>Probabilità</th></tr>`;
+
+	comb.forEach(c => {
+		html += `<tr>
+            <td>${c.madre.join(", ")}</td>
+            <td>${c.padre.join(", ")}</td>
+            <td>${(c.prob * 100).toFixed(2)}%</td>
+        </tr>`;
+	});
+
+	html += "</table></div>";
+	document.getElementById("result").innerHTML = html;
+}
+</script>
+
+</body>
+</html>
