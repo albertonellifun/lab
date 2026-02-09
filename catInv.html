@@ -75,9 +75,9 @@ p { margin:0; padding:0; }
 			<option value="M">Maschio</option>
 		</select> Genotipo <br />
 		<select id="f_redblack">
-			<option value="Xᴺ_Xᴺ">Nero Xᴺ/Xᴺ (o/o)</option>
-			<option value="Xᴿ_Xᴺ">Nero e Rosso Xᴿ/Xᴺ (O/o)</option>
-			<option value="Xᴿ_Xᴿ">Rosso Xᴿ/Xᴿ (O/O)</option>
+			<option value="o_o">Nero Xᴺ/Xᴺ (o/o)</option>
+			<option value="O_o">Nero e Rosso Xᴿ/Xᴺ (O/o)</option>
+			<option value="O_O">Rosso Xᴿ/Xᴿ (O/O)</option>
 		</select>
 		<select id="f_agouti">
 			<option value="a_a">No Tabby a/a</option>
@@ -132,14 +132,14 @@ function aggiornaRedBlack() {
 
 	if (sex === "M") {
 		// maschio: solo O/Y e o/Y
-		sel.innerHTML += `<option value="Xᴺ_Y">Nero Xᴺ/Y (o/Y)</option>`;
-		sel.innerHTML += `<option value="Xᴿ_Y">Rosso Xᴿ/Y (O/Y)</option>`;
+		sel.innerHTML += `<option value="o_Y">Nero Xᴺ/Y (o/Y)</option>`;
+		sel.innerHTML += `<option value="O_Y">Rosso Xᴿ/Y (O/Y)</option>`;
 		
 	} else {
 		// femmina: tutte le opzioni
-		sel.innerHTML += `<option value="Xᴺ_Xᴺ">Nero Xᴺ/Xᴺ (o/o)</option>`;
-		sel.innerHTML += `<option value="Xᴿ_Xᴺ">Nero e Rosso Xᴿ/Xᴺ (O/o)</option>`;
-		sel.innerHTML += `<option value="Xᴿ_Xᴿ">Rosso Xᴿ/Xᴿ (O/O)</option>`;
+		sel.innerHTML += `<option value="o_o">Nero Xᴺ/Xᴺ (o/o)</option>`;
+		sel.innerHTML += `<option value="O_o">Nero e Rosso Xᴿ/Xᴺ (O/o)</option>`;
+		sel.innerHTML += `<option value="O_O">Rosso Xᴿ/Xᴿ (O/O)</option>`;
 	}
 
 	// cerca di mantenere la selezione precedente se possibile
@@ -153,11 +153,6 @@ document.getElementById("sex").addEventListener("change", aggiornaRedBlack);
 
 // inizializza la select
 aggiornaRedBlack();
-
-
-function splitGeno(v) {
-	return v.replace("Xᴿ", "O").replace("Xᴺ", "o");
-}
 
 function gameti(g) {
 	const [a, b] = g.split("_");
@@ -186,71 +181,213 @@ function incrocio(gm, gp) {
 
 // ================== AUTOSOMICO ==================
 function genitoriAutosomico(figlio) {
-	const [A, B] = figlio.split("_");
-	const alleli = [...new Set([A, B])];
+    const [A, B] = figlio.split("_");
+    const alleli = [...new Set([A, B])];
 
-	const possibili = [
-		`${alleli[0]}_${alleli[0]}`,
-		`${alleli[0]}_${alleli[1] || alleli[0]}`,
-		`${alleli[1] || alleli[0]}_${alleli[1] || alleli[0]}`
-	].filter((v, i, a) => a.indexOf(v) === i);
+    let possibili;
 
-	let res = [];
+    if (alleli.length === 1) {
+        // omozigote: solo AA × AA
+        possibili = [`${alleli[0]}_${alleli[0]}`];
+    } else {
+        // eterozigote: AA, AB, BB
+        possibili = [
+            `${alleli[0]}_${alleli[0]}`,
+            `${alleli[0]}_${alleli[1]}`,
+            `${alleli[1]}_${alleli[1]}`
+        ];
+    }
 
-	possibili.forEach(m => {
-		possibili.forEach(p => {
-			const figli = incrocio(gameti(m), gameti(p));
-			if (figli[figlio]) {
-				res.push({
-					madre: m,
-					padre: p,
-					prob: figli[figlio]
-				});
-			}
-		});
-	});
+    let res = [];
 
-	return res;
+    possibili.forEach(m => {
+        possibili.forEach(p => {
+            const figli = incrocio(gameti(m), gameti(p));
+            Object.keys(figli).forEach(k => {
+                if (sortGeno(k) === sortGeno(figlio)) {
+                    res.push({
+                        madre: m,
+                        padre: p,
+                        prob: figli[k]
+                    });
+                }
+            });
+        });
+    });
+
+    return res;
 }
+
+function fenotipo(geni) {
+    const f = {};
+
+    // Orange (X-linked)
+    switch (geni[0]) {
+        case "O_O": f.colore = "rosso"; break;
+        case "O_o": f.colore = "tortie"; break;
+        case "o_o": f.colore = "nero"; break;
+        case "O_Y": f.colore = "rosso"; break;
+        case "o_Y": f.colore = "nero"; break;
+    }
+
+    // Agouti (Tabby)
+    switch (geni[1]) {
+        case "A_A":
+        case "A_a": f.tabby = "tabby"; break;
+        case "a_a": f.tabby = "solido"; break;
+    }
+
+    // Chocolate
+    switch (geni[2]) {
+        case "b_b": f.chocolate = "cioccolato"; break;
+        case "B_b": f.chocolate = "nero portatore cioccolato"; break;
+        case "B_B": f.chocolate = "nero"; break;
+    }
+
+    // Siamese
+    switch (geni[3]) {
+        case "Cs_Cs": f.siamese = "point (siamese)"; break;
+        case "C_Cs": f.siamese = "portatore point"; break;
+        case "C_C": f.siamese = "non point"; break;
+    }
+
+    // Dilution
+    switch (geni[4]) {
+        case "d_d": f.diluizione = "diluito (blu/crema)"; break;
+        case "D_d": f.diluizione = "portatore diluizione"; break;
+        case "D_D": f.diluizione = "colore pieno"; break;
+    }
+
+    // White spotting
+    switch (geni[5]) {
+        case "S_S": f.bianco = "molto bianco"; break;
+        case "S_s": f.bianco = "bianco moderato"; break;
+        case "s_s": f.bianco = "nessun bianco"; break;
+    }
+
+    // Dominant white
+    switch (geni[6]) {
+        case "W_W":
+        case "W_w": f.white = "bianco totale (W)"; break;
+        case "w_w": f.white = null; break;
+    }
+
+    // Hair length
+    switch (geni[7]) {
+        case "l_l": f.pelo = "pelo lungo"; break;
+        case "L_l": f.pelo = "pelo corto portatore lungo"; break;
+        case "L_L": f.pelo = "pelo corto"; break;
+    }
+
+    // Composizione finale
+    let descrizione = [];
+
+    // Dominant white annulla tutto il resto
+    if (f.white) {
+        descrizione.push("bianco totale (W)");
+    } else {
+        descrizione.push(f.colore);
+
+        if (f.tabby === "tabby") descrizione.push("tabby");
+        if (f.chocolate === "cioccolato") descrizione.push("cioccolato");
+        if (f.siamese === "point (siamese)") descrizione.push("point");
+        if (f.diluizione === "diluito (blu/crema)") descrizione.push("diluito");
+
+        if (f.bianco === "bianco moderato") descrizione.push("con bianco");
+        if (f.bianco === "molto bianco") descrizione.push("molto bianco");
+    }
+
+    descrizione.push(f.pelo);
+
+    return descrizione.filter(Boolean).join(" ");//rimuovo elementi vuoti col filter
+}
+
+
+function sortGeno(g) {
+    const [a, b] = g.split("_");
+    return [a, b].sort().join("_");
+}
+
 
 // ================== ORANGE X-LINKED ==================
 function genitoriOrange(figlio, sex) {
-	let res = [];
+    let res = [];
 
-	if (sex === "M") {
-		// figlio O_Y o o_Y
-		const allele = figlio.split("_")[0];
+    if (sex === "M") {
+        // figlio maschio: O_Y oppure o_Y
+        const allele = figlio.split("_")[0]; // "O" o "o"
+        const possibiliMadri = ["O_O", "O_o", "o_o"];
 
-		["O_O", "O_o", "o_o"].forEach(m => {
-			const gm = gametiXlinked(m, sex);
-			gm.forEach(a => {
-				if (a === allele) {
-					res.push({
-						madre: m,
-						padre: allele + "_Y",
-						prob: 1 / gm.length
-					});
-				}
-			});
-		});
+        possibiliMadri.forEach(m => {
+            const gm = gametiXlinked(m, "F"); // madre è sempre XX
+            if (gm.includes(allele)) {
+                res.push({
+                    madre: m,
+                    padre: allele + "_Y",
+                    prob: 1 / gm.length
+                });
+            }
+        });
 
-	} else {
-		// femmina O_O, O_o, o_o
-		["O_O", "O_o", "o_o"].forEach(m => {
-			["O_Y", "o_Y"].forEach(p => {
-				const figli = incrocio(gametiXlinked(m, sex), [p[0]]);
-				if (figli[figlio]) {
-					res.push({
-						madre: m,
-						padre: p,
-						prob: figli[figlio]
-					});
-				}
-			});
-		});
-	}
+    } else {
+        // figlia femmina: O_O, O_o, o_o
+        const tutteMadri = ["O_O", "O_o", "o_o"];
+        const tuttiPadri = ["O_Y", "o_Y"];
 
-	return res;
+        tutteMadri.forEach(m => {
+            const gm = gametiXlinked(m, "F"); // madre XX
+            tuttiPadri.forEach(p => {
+                const gp = [p.split("_")[0]]; // X del padre: "O" o "o"
+                gm.forEach(mallele => {
+                    gp.forEach(pallele => {
+                        const combinazione = mallele + "_" + pallele;
+                        if (sortGeno(combinazione) === sortGeno(figlio)) {
+                            res.push({
+                                madre: m,
+                                padre: p,
+                                prob: 1 / (gm.length * gp.length)
+                            });
+                        }
+                    });
+                });
+            });
+        });
+    }
+
+
+    return res;
+}
+
+
+
+function getColorClass(ph) {
+    const p = ph.toLowerCase();
+
+    // Dominanti visivi
+    if (p.includes("bianco")) return "white";
+    if (p.includes("point") || p.includes("siamese")) return "point";
+
+    // Base di colore
+    if (p.includes("tortie")) return "tortie";
+    if (p.includes("rosso") || p.includes("crema")) return "red";
+
+    // Varianti del nero
+    if (p.includes("lilac")) return "lilac";
+    if (p.includes("cioccolato")) return "choco";
+    if (p.includes("grigio")) return "gray";
+    if (p.includes("nero")) return "black";
+
+    return "";
+}
+
+function openGoogleImages(query) {
+	const q = encodeURIComponent("gatto " + query);
+	const url = `https://www.google.com/search?tbm=isch&q=${q}`;
+	window.open(
+		url,
+		"imgPopup",
+		"width=900,height=700,scrollbars=yes,resizable=yes"
+	);
 }
 
 // ================== COMBINAZIONE ==================
@@ -292,22 +429,22 @@ function calcola() {
 	const f_white = document.getElementById("f_white");
 	const f_hair = document.getElementById("f_hair");
 
-	let orange = splitGeno(f_redblack.value);
+	let orange = f_redblack.value;
 
-	// 🔒 FORZATURA BIOLOGICA
+	//FORZATURA BIOLOGICA
 	if (sex === "M") {
 		const allele = orange.startsWith("O") ? "O" : "o";
 		orange = allele + "_Y";
 	}
 
 	const geni = [
-		splitGeno(f_agouti.value),
-		splitGeno(f_chocolate.value),
-		splitGeno(f_siamese.value),
-		splitGeno(f_diluizione.value),
-		splitGeno(f_spotted.value),
-		splitGeno(f_white.value),
-		splitGeno(f_hair.value)
+		f_agouti.value,
+		f_chocolate.value,
+		f_siamese.value,
+		f_diluizione.value,
+		f_spotted.value,
+		f_white.value,
+		f_hair.value
 	];
 
 	const perGene = [
@@ -315,21 +452,36 @@ function calcola() {
 		...geni.map(g => genitoriAutosomico(g))
 	];
 
-	const comb = combina(perGene);
 
-	let html = `<div class="section"><h3>Genitori compatibili</h3><table>
-        <tr><th>Madre</th><th>Padre</th><th>Probabilità</th></tr>`;
+// se un gene non ha soluzioni, non ha senso combinare
+if (perGene.some(g => g.length === 0)) {
+    document.getElementById("result").innerHTML =
+        "<b>Nessuna combinazione genetica possibile con i valori selezionati.</b>";
+    return;
+}
 
-	comb.forEach(c => {
-		html += `<tr>
-            <td>${c.madre.join(", ")}</td>
-            <td>${c.padre.join(", ")}</td>
-            <td>${(c.prob * 100).toFixed(2)}%</td>
-        </tr>`;
-	});
+const comb = combina(perGene);
 
-	html += "</table></div>";
-	document.getElementById("result").innerHTML = html;
+if (comb.length === 0) {
+    document.getElementById("result").innerHTML =
+        "<b>Nessuna combinazione con probabilità &gt; 1%.</b>";
+    return;
+}
+
+let html = `<div class="section"><h3>Genitori compatibili</h3><table>
+    <tr><th>Madre</th><th>Padre</th><th>Probabilità</th></tr>`;
+
+comb.forEach(c => {
+    html += `<tr>
+        <td onclick="openGoogleImages('${fenotipo(c.madre)}');" class="${getColorClass(fenotipo(c.madre))}">${fenotipo(c.madre)} 🔍<br/><br/>${c.madre.join(", ")}</td>
+		<td onclick="openGoogleImages('${fenotipo(c.padre)}');"class="${getColorClass(fenotipo(c.padre))}">${fenotipo(c.padre)} 🔍<br/><br/>${c.padre.join(", ")}</td>
+        <td>${(c.prob * 100).toFixed(2)}%</td>
+    </tr>`;
+});
+
+html += "</table></div>";
+document.getElementById("result").innerHTML = html;
+
 }
 </script>
 

@@ -74,9 +74,9 @@ p { margin:0; padding:0; }
 	<select id="female"></select>
 	Genotipo:</br>
 	<select id="f_redblack">
-		<option value="Xᴺ_Xᴺ">Nero Xᴺ/Xᴺ (o/o)</option>
-		<option value="Xᴿ_Xᴺ">Nero e Rosso Xᴿ/Xᴺ (O/o)</option>
-		<option value="Xᴿ_Xᴿ">Rosso Xᴿ/Xᴿ (O/O)</option>
+		<option value="o_o">Nero Xᴺ/Xᴺ (o/o)</option>
+		<option value="O_o">Nero e Rosso Xᴿ/Xᴺ (O/o)</option>
+		<option value="O_O">Rosso Xᴿ/Xᴿ (O/O)</option>
 	</select>
 	<select id="f_agouti">
 		<option value="a_a">No Tabby a/a</option>
@@ -120,8 +120,8 @@ p { margin:0; padding:0; }
 	<select id="male"></select>
 	Genotipo:</br>
     <select id="m_redblack">
-		<option value="Xᴺ_Y">Nero Xᴺ/Y (o/Y)</option>
-		<option value="Xᴿ_Y">Rosso Xᴿ/Y (O/Y)</option>
+		<option value="o_Y">Nero Xᴺ/Y (o/Y)</option>
+		<option value="O_Y">Rosso Xᴿ/Y (O/Y)</option>
 	</select>
 	<select id="m_agouti">
 		<option value="a_a">No Tabby a/a</option>
@@ -189,12 +189,12 @@ function updateDropdowns(parentSelectId) {
 	// ---- O (rosso / nero x-linked)
 	if (isFemale) {
 		document.getElementById(p + "redblack").value = 
-			(color.includes("tortie") || color.includes("calico")) ? "Xᴿ_Xᴺ" :
-			color.includes("rosso") ? "Xᴿ_Xᴿ" :
-			"Xᴺ_Xᴺ";
+			(color.includes("tortie") || color.includes("calico")) ? "O_o" :
+			color.includes("rosso") ? "O_O" :
+			"o_o";
 	} else {
 		document.getElementById(p + "redblack").value = 
-			color.includes("rosso") ? "Xᴿ_Y" : "Xᴺ_Y";
+			color.includes("rosso") ? "O_Y" : "o_Y";
 	}
 	
 	// ---- D (diluizione)
@@ -345,10 +345,10 @@ function phenotype(loci) {
 	let base;
 
 	if (loci.sex === "Maschio") {
-		base = has(loci.O, "Xᴿ") ? "rosso" : "nero";
+		base = has(loci.O, "O") ? "rosso" : "nero";
 	} else {
-		const r = has(loci.O, "Xᴿ");
-		const n = has(loci.O, "Xᴺ");
+		const r = has(loci.O, "O");
+		const n = has(loci.O, "o");
 		if (r && n) base = "tortie";
 		else base = r ? "rosso" : "nero";
 	}
@@ -392,8 +392,8 @@ function getColorClass(ph) {
 function getColorClassFromLoci(l) {
 	if (has(l.W, "W")) return "white";
 	if (l.Cs[0] === "Cs" && l.Cs[1] === "Cs") return "point";
-	if (has(l.O, "Xᴿ") && has(l.O, "Xᴺ")) return "tortie";
-	if (has(l.O, "Xᴿ")) return "red";
+	if (has(l.O, "O") && has(l.O, "o")) return "tortie";
+	if (has(l.O, "O")) return "red";
 	if (l.B[0] === "b" && l.B[1] === "b") return "choco";
 	if (l.D[0] === "d" && l.D[1] === "d") return "gray";
 	return "black";
@@ -485,7 +485,7 @@ function calcola() {
 	for (let O of Ocomb) {
 		const sex = O.includes("Y") ? "Maschio" : "Femmina";
 
-		if (sex === "Maschio" && O.includes("Xᴿ") && O.includes("Xᴺ")) continue;
+		if (sex === "Maschio" && O.includes("O") && O.includes("o")) continue;
 
 		for (let A of Acomb) {
 			for (let B of Bcomb) {
