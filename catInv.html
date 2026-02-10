@@ -38,7 +38,7 @@ tr:hover{filter: brightness(1.2);}
 .modal-content { background-color:#fff; margin:10% auto; padding:20px; border-radius:12px; width:90%; max-width:500px; position:relative;}
 .close { position:absolute; top:10px; right:15px; font-size:24px; font-weight:bold; cursor:pointer;}
 
-.group { display:flex; flex-direction:column; width: 280px; white-space: nowrap; }
+.group { display:flex; flex-direction:column; width: 280px; width: 32%; white-space: nowrap; }
 .parents { display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; }
 .summary { margin-bottom: 20px; }
 p { margin:0; padding:0; }
@@ -61,7 +61,6 @@ p { margin:0; padding:0; }
   th, td { padding: 10px 6px; }
   .modal-content { margin: 15% auto; font-size: 20px; }
 }
-
 </style>
 </head>
 
@@ -76,6 +75,8 @@ p { margin:0; padding:0; }
 		</select>
 		Fenotipo:<br/>
 		<select id="feno"></select>
+	</div>
+	<div class="group">
 		Genotipo:<br/>
 		<select id="f_redblack">
 			<option value="o_o">Nero Xᴺ/Xᴺ (o/o)</option>
@@ -117,8 +118,10 @@ p { margin:0; padding:0; }
 			<option value="L_l">Pelo Lungo portatore L/l</option>
 			<option value="l_l">Pelo Lungo l/l</option>
 		</select>
-		<br />
-		<button onclick="calcola()">Calcola genitori</button>
+	</div>
+	<div class="group">
+		Genitori compatibili:
+		<button onclick="calcola()">Calcola</button>
 	</div>
 </div>
 <hr />
@@ -605,16 +608,16 @@ function calcola() {
 
 	
 	let htmlCucciolo = `
-		<p><strong>Loci cucciolo:</strong></p>
+		<p><strong>${sex === "F" ? "🩷" : "🩵"} Loci cucciolo:</strong></p>
 		<p>Sesso: ${sex}</p>
-		<p>O: ${geni.O}</p>
-		<p>A: ${geni.A}</p>
-		<p>B: ${geni.B}</p>
-		<p>Cs: ${geni.Cs}</p>
-		<p>D: ${geni.D}</p>
-		<p>S: ${geni.S}</p>
-		<p>W: ${geni.W}</p>
-		<p>H: ${geni.H}</p>
+		<p>O: ${geni.O.replace("_"," / ")}</p>
+		<p>A: ${geni.A.replace("_"," / ")}</p>
+		<p>B: ${geni.B.replace("_"," / ")}</p>
+		<p>Cs: ${geni.Cs.replace("_"," / ")}</p>
+		<p>D: ${geni.D.replace("_"," / ")}</p>
+		<p>S: ${geni.S.replace("_"," / ")}</p>
+		<p>W: ${geni.W.replace("_"," / ")}</p>
+		<p>H: ${geni.H.replace("_"," / ")}</p>
 		<p>FIFe: ${denominazioneFIFE(geni, sex)}</p>
 		<hr/>`;
 	document.getElementById("result").innerHTML = htmlCucciolo;
@@ -647,19 +650,19 @@ function calcola() {
 		return;
 	}
 
-	let html = `<div class="section"><h3>Genitori compatibili</h3><table>
+	let html = `<div class="section"><h3>Genitori compatibili:</h3><table>
     <tr><th>Madre</th><th>Padre</th><th>Probabilità</th></tr>`;
 
 	comb.forEach(c => {
 		html += `<tr>
         <td onclick="openGoogleImages('${fenotipo(c.madre)}');" 
 			class="${getColorClass(fenotipo(c.madre))}">${fenotipo(c.madre)} 🔍<br/>
-			<br/>${Object.values(c.madre).join(", ")}<br/>
+			<br/>${Object.values(c.madre).join(", ").replaceAll("_","/")}<br/>
 			<br/>FIFe: ${denominazioneFIFE(c.madre, "F")}
 			</td>
 		<td onclick="openGoogleImages('${fenotipo(c.padre)}');"
 			class="${getColorClass(fenotipo(c.padre))}">${fenotipo(c.padre)} 🔍<br/>
-			<br/>${Object.values(c.padre).join(", ")}<br/>
+			<br/>${Object.values(c.padre).join(", ").replaceAll("_","/")}<br/>
 			<br/>FIFe: ${denominazioneFIFE(c.padre, "M")}
 			</td>
         <td>${(c.prob * 100).toFixed(2)}%</td>

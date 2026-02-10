@@ -38,7 +38,7 @@ tr:hover{filter: brightness(1.2);}
 .modal-content { background-color:#fff; margin:10% auto; padding:20px; border-radius:12px; width:90%; max-width:500px; position:relative;}
 .close { position:absolute; top:10px; right:15px; font-size:24px; font-weight:bold; cursor:pointer;}
 
-.group { display:flex; flex-direction:column; width: 280px; white-space: nowrap; }
+.group { display:flex; flex-direction:column; width: 280px; width: 32%; white-space: nowrap; }
 .parents { display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; }
 .summary { margin-bottom: 20px; }
 p { margin:0; padding:0; }
@@ -161,7 +161,7 @@ p { margin:0; padding:0; }
   
   <div class="group">
 	Combinazioni:<br/>
-	<button onclick="calcola()">Genera</button>
+	<button onclick="calcola()">Calcola</button>
 	Opzioni:<br/>
 	<label><input type="checkbox" id="show_comb_all"/>Mostra tutte</label>
 	<label><input type="checkbox" id="show_comb_uni" checked="checked"/>Mostra uniche</label>
@@ -597,7 +597,7 @@ function calcola() {
 	html += `<p>FIFe: ${denominazioneFIFE(f)}</p>`;
 	html += `</div></div>`;
 
-
+	html += `<h3>Combinazioni:</h3>`;
 	html += `<table class="summary"><tr><th>Fenotipo</th><th>Probabilità</th></tr>`;
 	Object.entries(summary).sort((a, b) => b[1] - a[1]).forEach(([ph, p]) => {
 		html +=
