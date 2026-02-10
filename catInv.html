@@ -73,7 +73,10 @@ p { margin:0; padding:0; }
 		<select id="sex">
 			<option value="F">Femmina</option>
 			<option value="M">Maschio</option>
-		</select> Genotipo <br />
+		</select>
+		Fenotipo <br/>
+		<select id="feno"></select>
+		Genotipo <br/>
 		<select id="f_redblack">
 			<option value="o_o">Nero Xᴺ/Xᴺ (o/o)</option>
 			<option value="O_o">Nero e Rosso Xᴿ/Xᴺ (O/o)</option>
@@ -91,8 +94,8 @@ p { margin:0; padding:0; }
 		</select>
 		<select id="f_siamese">
 			<option value="C_C">No Siamese C/C</option>
-			<option value="C_Cs">Siamese portatore C/Cs</option>
-			<option value="Cs_Cs">Siamese Cs/Cs</option>
+			<option value="C_cs">Siamese portatore C/cs</option>
+			<option value="cs_cs">Siamese cs/cs</option>
 		</select>
 		<select id="f_diluizione">
 			<option value="D_D">Colore Pieno D/D</option>
@@ -122,6 +125,105 @@ p { margin:0; padding:0; }
 <div id="result"></div>
 
 <script>
+const COLORS_FEMALE = [
+	"nero uniforme", "bianco uniforme", "grigio uniforme",
+	"tigrato grigio", "tigrato rosso",
+	"siamese seal", "siamese chocolate", "siamese blue", "siamese lilac", "siamese tabby",
+	"tuxedo", "tigrato grigio + bianco", "tigrato rosso + bianco",
+	"calico", "tortie"
+];
+
+const COLORS_MALE = [
+	"nero uniforme", "bianco uniforme", "grigio uniforme",
+	"tigrato grigio", "tigrato rosso",
+	"siamese seal", "siamese chocolate", "siamese blue", "siamese lilac", "siamese tabby",
+	"tuxedo", "tigrato grigio + bianco", "tigrato rosso + bianco"
+];
+function updateDropdownSex() {
+	const s = document.getElementById("feno");
+	const isFemale = document.getElementById("sex").value === "F";
+	const list = (isFemale ? COLORS_FEMALE : COLORS_MALE);
+	s.innerHTML = "";//svuota
+	list.forEach(c => {
+		const o = document.createElement("option");
+		o.value = c;
+		o.text = c;
+		s.appendChild(o);
+	});
+}
+function updateDropdownFeno() {
+	const isFemale = document.getElementById("sex").value === "F";
+	const color = document.getElementById("feno").value;
+	
+	// ---- O (rosso / nero x-linked)
+	if (isFemale) {
+		document.getElementById("f_redblack").value = 
+			(color.includes("tortie") || color.includes("calico")) ? "O_o" :
+			color.includes("rosso") ? "O_O" :
+			"o_o";
+	} else {
+		document.getElementById("f_redblack").value = 
+			color.includes("rosso") ? "O_Y" : "o_Y";
+	}
+	
+	// ---- D (diluizione)
+	document.getElementById("f_diluizione").value =
+		(color.includes("grigio") || color.includes("blue") || color.includes("lilac")) ?
+		"d_d" :
+		"D_D";
+
+	// ---- B (chocolate)
+	document.getElementById("f_chocolate").value =
+		(color.includes("chocolate") || color.includes("lilac")) ?
+		"b_b" :
+		"B_B";
+
+	// ---- A (agouti)
+	document.getElementById("f_agouti").value =
+		(color.includes("tigrato") || color.includes("tabby")) ?
+		"A_A" :
+		"a_a";
+
+	// ---- cs (siamese)
+	document.getElementById("f_siamese").value =
+		color.includes("siamese") ?
+		"cs_cs" :
+		"C_C";
+
+	// ---- S (spotting)
+	document.getElementById("f_spotted").value =
+		(color.includes("bianco") || color.includes("tuxedo") || color.includes("calico")) ?
+		"S_S" :
+		"s_s";
+
+	// ---- W (white dominante)
+	document.getElementById("f_white").value =
+		color === "bianco uniforme" ?
+		"W_W" :
+		"w_w";
+
+	// ---- H (pelo) → neutro
+	document.getElementById("f_hair").value = "L_L";
+}
+
+// EVENTI
+document.getElementById("feno").addEventListener("change", () => {
+	updateDropdownFeno();
+});
+
+document.getElementById("sex").addEventListener("change", () => {
+    updateDropdownSex();   //aggiorna i nomi dei colori (es. aggiunge/toglie Tortie)
+    aggiornaRedBlack();    //aggiorna le opzioni genetiche (es. X/X o X/Y)
+});
+
+
+// INIT
+updateDropdownSex();
+updateDropdownFeno();
+
+
+
+
 // ================== UTILITY ==================
 function aggiornaRedBlack() {
 	const sex = document.getElementById("sex").value;
@@ -246,7 +348,7 @@ function fenotipo(geni) {
 	}
 
 	// ================= SIAMESE / POINT =================
-	if (geni.Cs === "Cs_Cs") {
+	if (geni.Cs === "cs_cs") {
 		f.point = true;
 	}
 
@@ -391,7 +493,7 @@ function denominazioneFIFE(geni, sex) {
 	if (geni.W !== "w_w") return "w";
 
 	// --- POINT ---
-	const isPoint = geni.Cs === "Cs_Cs";
+	const isPoint = geni.Cs === "cs_cs";
 
 	// --- TABBY ---
 	let pattern = "";

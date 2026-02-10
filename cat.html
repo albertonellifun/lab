@@ -90,8 +90,8 @@ p { margin:0; padding:0; }
 	</select>
 	<select id="f_siamese">
 		<option value="C_C">No Siamese C/C</option>
-		<option value="C_Cs">Siamese portatore C/Cs</option>
-		<option value="Cs_Cs">Siamese Cs/Cs</option>
+		<option value="C_cs">Siamese portatore C/cs</option>
+		<option value="cs_cs">Siamese cs/cs</option>
 	</select>
 	    <select id="f_diluizione">
 		<option value="D_D">Colore Pieno D/D</option>
@@ -135,8 +135,8 @@ p { margin:0; padding:0; }
 	</select>
 	<select id="m_siamese">
 		<option value="C_C">No Siamese C/C</option>
-		<option value="C_Cs">Siamese portatore C/Cs</option>
-		<option value="Cs_Cs">Siamese Cs/Cs</option>
+		<option value="C_cs">Siamese portatore C/cs</option>
+		<option value="cs_cs">Siamese cs/cs</option>
 	</select>
 	    <select id="m_diluizione">
 		<option value="D_D">Colore Pieno D/D</option>
@@ -218,7 +218,7 @@ function updateDropdowns(parentSelectId) {
 	// ---- cs (siamese)
 	document.getElementById(p + "siamese").value =
 		color.includes("siamese") ?
-		"Cs_Cs" :
+		"cs_cs" :
 		"C_C";
 
 	// ---- S (spotting)
@@ -257,7 +257,7 @@ updateDropdowns("male");
 const COLORS_FEMALE = [
 	"nero uniforme", "bianco uniforme", "grigio uniforme",
 	"tigrato grigio", "tigrato rosso",
-	"siamese seal", "siamese chocolate", "siamese blue", "siamese tabby",
+	"siamese seal", "siamese chocolate", "siamese blue", "siamese lilac", "siamese tabby",
 	"tuxedo", "tigrato grigio + bianco", "tigrato rosso + bianco",
 	"calico", "tortie"
 ];
@@ -265,7 +265,7 @@ const COLORS_FEMALE = [
 const COLORS_MALE = [
 	"nero uniforme", "bianco uniforme", "grigio uniforme",
 	"tigrato grigio", "tigrato rosso",
-	"siamese seal", "siamese chocolate", "siamese blue", "siamese tabby",
+	"siamese seal", "siamese chocolate", "siamese blue", "siamese lilac", "siamese tabby",
 	"tuxedo", "tigrato grigio + bianco", "tigrato rosso + bianco"
 ];
 
@@ -363,7 +363,7 @@ function phenotype(loci) {
 	}
 
 	if (has(loci.A, "A")) base = "tigrato " + base;
-	if (loci.Cs[0] === "Cs" && loci.Cs[1] === "Cs") base = "siamese " + base;
+	if (loci.Cs[0] === "cs" && loci.Cs[1] === "cs") base = "siamese " + base;
 	if (has(loci.S, "S")) base += " + bianco";
 
 	const hair = (loci.H[0] === "l" && loci.H[1] === "l") ? "pelo lungo" : "pelo corto";
@@ -391,7 +391,7 @@ function getColorClass(ph) {
 
 function getColorClassFromLoci(l) {
 	if (has(l.W, "W")) return "white";
-	if (l.Cs[0] === "Cs" && l.Cs[1] === "Cs") return "point";
+	if (l.Cs[0] === "cs" && l.Cs[1] === "cs") return "point";
 	if (has(l.O, "O") && has(l.O, "o")) return "tortie";
 	if (has(l.O, "O")) return "red";
 	if (l.B[0] === "b" && l.B[1] === "b") return "choco";
@@ -445,7 +445,7 @@ function denominazioneFIFE(c) {
     if (c.W.includes("W")) return "w";
 
     // --- POINT ---
-    const isPoint = c.Cs.includes("Cs");
+    const isPoint = c.Cs.includes("cs");
 
     // --- TABBY ---
     let tabby = "";
