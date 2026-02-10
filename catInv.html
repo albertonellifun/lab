@@ -134,7 +134,7 @@ function aggiornaRedBlack() {
 		// maschio: solo O/Y e o/Y
 		sel.innerHTML += `<option value="o_Y">Nero Xᴺ/Y (o/Y)</option>`;
 		sel.innerHTML += `<option value="O_Y">Rosso Xᴿ/Y (O/Y)</option>`;
-		
+
 	} else {
 		// femmina: tutte le opzioni
 		sel.innerHTML += `<option value="o_o">Nero Xᴺ/Xᴺ (o/o)</option>`;
@@ -180,204 +180,199 @@ function incrocio(gm, gp) {
 }
 
 // ================== AUTOSOMICO ==================
-function genitoriAutosomico(figlio) {
-    const [A, B] = figlio.split("_");
-    const alleli = [...new Set([A, B])];
+function genitoriAutosomico(locus, valore) {
+	const [A, B] = valore.split("_");
+	const alleli = [...new Set([A, B])];
 
-    let possibili;
+	let possibili =
+		alleli.length === 1
+			? [`${A}_${A}`]
+			: [`${A}_${A}`, `${A}_${B}`, `${B}_${B}`];
 
-    if (alleli.length === 1) {
-        // omozigote: solo AA × AA
-        possibili = [`${alleli[0]}_${alleli[0]}`];
-    } else {
-        // eterozigote: AA, AB, BB
-        possibili = [
-            `${alleli[0]}_${alleli[0]}`,
-            `${alleli[0]}_${alleli[1]}`,
-            `${alleli[1]}_${alleli[1]}`
-        ];
-    }
+	let res = [];
 
-    let res = [];
+	possibili.forEach(m => {
+		possibili.forEach(p => {
+			const figli = incrocio(gameti(m), gameti(p));
+			if (figli[valore]) {
+				res.push({
+					madre: { [locus]: m },
+					padre: { [locus]: p },
+					prob: figli[valore]
+				});
+			}
+		});
+	});
 
-    possibili.forEach(m => {
-        possibili.forEach(p => {
-            const figli = incrocio(gameti(m), gameti(p));
-            Object.keys(figli).forEach(k => {
-                if (sortGeno(k) === sortGeno(figlio)) {
-                    res.push({
-                        madre: m,
-                        padre: p,
-                        prob: figli[k]
-                    });
-                }
-            });
-        });
-    });
-
-    return res;
+	return res;
 }
+
 
 function fenotipo(geni) {
-    const f = {};
+	const f = {};
 
-    // Orange (X-linked)
-    switch (geni[0]) {
-        case "O_O": f.colore = "rosso"; break;
-        case "O_o": f.colore = "tortie"; break;
-        case "o_o": f.colore = "nero"; break;
-        case "O_Y": f.colore = "rosso"; break;
-        case "o_Y": f.colore = "nero"; break;
-    }
+	// ================= ORANGE (X-linked) =================
+	switch (geni.O) {
+		case "O_O":
+		case "O_Y":
+			f.colore = "rosso";
+			break;
+		case "O_o":
+			f.colore = "tortie";
+			break;
+		case "o_o":
+		case "o_Y":
+			f.colore = "nero";
+			break;
+	}
 
-    // Agouti (Tabby)
-    switch (geni[1]) {
-        case "A_A":
-        case "A_a": f.tabby = "tabby"; break;
-        case "a_a": f.tabby = "solido"; break;
-    }
+	// ================= AGOUTI / TABBY =================
+	if (geni.A === "A_A" || geni.A === "A_a") {
+		f.tabby = "tabby";
+	} else {
+		f.tabby = "solido";
+	}
 
-    // Chocolate
-    switch (geni[2]) {
-        case "b_b": f.chocolate = "cioccolato"; break;
-        case "B_b": f.chocolate = "nero portatore cioccolato"; break;
-        case "B_B": f.chocolate = "nero"; break;
-    }
+	// ================= CHOCOLATE =================
+	if (geni.B === "b_b") {
+		f.base = "cioccolato";
+	} else {
+		f.base = "nero";
+	}
 
-    // Siamese
-    switch (geni[3]) {
-        case "Cs_Cs": f.siamese = "point (siamese)"; break;
-        case "C_Cs": f.siamese = "portatore point"; break;
-        case "C_C": f.siamese = "non point"; break;
-    }
+	// ================= DILUIZIONE =================
+	if (geni.D === "d_d") {
+		f.diluizione = true;
+	}
 
-    // Dilution
-    switch (geni[4]) {
-        case "d_d": f.diluizione = "diluito (blu/crema)"; break;
-        case "D_d": f.diluizione = "portatore diluizione"; break;
-        case "D_D": f.diluizione = "colore pieno"; break;
-    }
+	// ================= SIAMESE / POINT =================
+	if (geni.Cs === "Cs_Cs") {
+		f.point = true;
+	}
 
-    // White spotting
-    switch (geni[5]) {
-        case "S_S": f.bianco = "molto bianco"; break;
-        case "S_s": f.bianco = "bianco moderato"; break;
-        case "s_s": f.bianco = "nessun bianco"; break;
-    }
+	// ================= WHITE DOMINANTE =================
+	if (geni.W !== "w_w") {
+		return "bianco uniforme";
+	}
 
-    // Dominant white
-    switch (geni[6]) {
-        case "W_W":
-        case "W_w": f.white = "bianco totale (W)"; break;
-        case "w_w": f.white = null; break;
-    }
+	// ================= COMPOSIZIONE COLORE =================
+	let descrizione = [];
 
-    // Hair length
-    switch (geni[7]) {
-        case "l_l": f.pelo = "pelo lungo"; break;
-        case "L_l": f.pelo = "pelo corto portatore lungo"; break;
-        case "L_L": f.pelo = "pelo corto"; break;
-    }
+	// TORTIE
+	if (f.colore === "tortie") {
+		descrizione.push("tortie");
+	}
+	// ROSSO / CREMA (B irrilevante)
+	else if (f.colore === "rosso") {
+		descrizione.push(f.diluizione ? "crema" : "rosso");
+	}
+	// BASE NERA / CIOCCOLATO
+	else {
+		let base = (geni.B === "b_b") ? "cioccolato" : "nero";
 
-    // Composizione finale
-    let descrizione = [];
+		if (f.diluizione) {
+			base = base === "cioccolato" ? "lilac" : "grigio";
+		}
+		descrizione.push(base);
+	}
 
-    // Dominant white annulla tutto il resto
-    if (f.white) {
-        descrizione.push("bianco totale (W)");
-    } else {
-        descrizione.push(f.colore);
 
-        if (f.tabby === "tabby") descrizione.push("tabby");
-        if (f.chocolate === "cioccolato") descrizione.push("cioccolato");
-        if (f.siamese === "point (siamese)") descrizione.push("point");
-        if (f.diluizione === "diluito (blu/crema)") descrizione.push("diluito");
+	// ================= TABBY =================
+	if (f.tabby === "tabby") {
+		descrizione.push("tabby");
+	}
 
-        if (f.bianco === "bianco moderato") descrizione.push("con bianco");
-        if (f.bianco === "molto bianco") descrizione.push("molto bianco");
-    }
+	// ================= POINT =================
+	if (f.point) {
+		descrizione.push("point");
+	}
 
-    descrizione.push(f.pelo);
+	// ================= WHITE SPOTTING =================
+	if (geni.S === "S_s") descrizione.push("con bianco");
+	if (geni.S === "S_S") descrizione.push("molto bianco");
 
-    return descrizione.filter(Boolean).join(" ");//rimuovo elementi vuoti col filter
+	// ================= PELO =================
+	switch (geni.H) {
+		case "l_l":
+			descrizione.push("pelo lungo");
+			break;
+		case "L_l":
+			descrizione.push("pelo corto");
+			break;
+		case "L_L":
+			descrizione.push("pelo corto");
+			break;
+	}
+
+	return descrizione.join(" ");
 }
+
 
 
 function sortGeno(g) {
-    const [a, b] = g.split("_");
-    return [a, b].sort().join("_");
+	const [a, b] = g.split("_");
+	return [a, b].sort().join("_");
 }
 
 
 // ================== ORANGE X-LINKED ==================
-function genitoriOrange(figlio, sex) {
-    let res = [];
+function genitoriOrange(valore, sex) {
+	let res = [];
 
-    if (sex === "M") {
-        // figlio maschio: O_Y oppure o_Y
-        const allele = figlio.split("_")[0]; // "O" o "o"
-        const possibiliMadri = ["O_O", "O_o", "o_o"];
+	if (sex === "M") {
+		const allele = valore.split("_")[0];
+		["O_O", "O_o", "o_o"].forEach(m => {
+			const gm = gametiXlinked(m, "F");
+			if (gm.includes(allele)) {
+				res.push({
+					madre: { O: m },
+					padre: { O: allele + "_Y" },
+					prob: 1 / gm.length
+				});
+			}
+		});
+	} else {
+		["O_O", "O_o", "o_o"].forEach(m => {
+			["O_Y", "o_Y"].forEach(p => {
+				const gm = gametiXlinked(m, "F");
+				gm.forEach(ma => {
+					const f = [ma, p[0]].sort().join("_");
+					if (f === valore) {
+						res.push({
+							madre: { O: m },
+							padre: { O: p },
+							prob: 1 / gm.length
+						});
+					}
+				});
+			});
+		});
+	}
 
-        possibiliMadri.forEach(m => {
-            const gm = gametiXlinked(m, "F"); // madre è sempre XX
-            if (gm.includes(allele)) {
-                res.push({
-                    madre: m,
-                    padre: allele + "_Y",
-                    prob: 1 / gm.length
-                });
-            }
-        });
-
-    } else {
-        // figlia femmina: O_O, O_o, o_o
-        const tutteMadri = ["O_O", "O_o", "o_o"];
-        const tuttiPadri = ["O_Y", "o_Y"];
-
-        tutteMadri.forEach(m => {
-            const gm = gametiXlinked(m, "F"); // madre XX
-            tuttiPadri.forEach(p => {
-                const gp = [p.split("_")[0]]; // X del padre: "O" o "o"
-                gm.forEach(mallele => {
-                    gp.forEach(pallele => {
-                        const combinazione = mallele + "_" + pallele;
-                        if (sortGeno(combinazione) === sortGeno(figlio)) {
-                            res.push({
-                                madre: m,
-                                padre: p,
-                                prob: 1 / (gm.length * gp.length)
-                            });
-                        }
-                    });
-                });
-            });
-        });
-    }
-
-
-    return res;
+	return res;
 }
 
 
 
+
 function getColorClass(ph) {
-    const p = ph.toLowerCase();
+	const p = ph.toLowerCase();
 
-    // Dominanti visivi
-    if (p.includes("bianco")) return "white";
-    if (p.includes("point") || p.includes("siamese")) return "point";
+	// Dominanti visivi
+	if (p.includes("bianco")) return "white";
+	if (p.includes("point") || p.includes("siamese")) return "point";
 
-    // Base di colore
-    if (p.includes("tortie")) return "tortie";
-    if (p.includes("rosso") || p.includes("crema")) return "red";
+	// Base di colore
+	if (p.includes("tortie")) return "tortie";
+	if (p.includes("rosso") || p.includes("crema")) return "red";
 
-    // Varianti del nero
-    if (p.includes("lilac")) return "lilac";
-    if (p.includes("cioccolato")) return "choco";
-    if (p.includes("grigio")) return "gray";
-    if (p.includes("nero")) return "black";
+	// Varianti del nero
+	if (p.includes("lilac")) return "lilac";
+	if (p.includes("cioccolato")) return "choco";
+	if (p.includes("grigio")) return "gray";
+	if (p.includes("nero")) return "black";
 
-    return "";
+	return "";
 }
 
 function openGoogleImages(query) {
@@ -390,23 +385,80 @@ function openGoogleImages(query) {
 	);
 }
 
+function denominazioneFIFE(geni, sex) {
+
+	// --- WHITE DOMINANTE ---
+	if (geni.W !== "w_w") return "w";
+
+	// --- POINT ---
+	const isPoint = geni.Cs === "Cs_Cs";
+
+	// --- TABBY ---
+	let pattern = "";
+	if (geni.A !== "a_a") {
+		pattern = "21"; // tabby generico
+	}
+
+	// --- DILUIZIONE ---
+	const isDiluted = geni.D === "d_d";
+
+	// --- ORANGE / TORTIE ---
+	let colore = "";
+
+	const isRed =
+		(sex === "M" && geni.O === "O_Y") ||
+		(sex === "F" && geni.O === "O_O");
+
+	const isTortie =
+		(sex === "F" && geni.O === "O_o");
+
+	if (isTortie) {
+		colore = isDiluted ? "g" : "f"; // blu tortie / nero tortie
+	}
+	else if (isRed) {
+		colore = isDiluted ? "e" : "d"; // crema / rosso
+	}
+	else {
+		// --- BASE NERO / CIOCCOLATO ---
+		if (geni.B === "b_b") {
+			colore = isDiluted ? "p" : "b"; // lilac / chocolate
+		} else {
+			colore = isDiluted ? "a" : "n"; // blu / nero
+		}
+	}
+
+	// --- BIANCO ---
+	let white = "";
+	if (geni.S === "S_s") white = "09";
+	if (geni.S === "S_S") white = "03";
+
+	// --- POINT OVERRIDE ---
+	if (isPoint) pattern = "33";
+
+	return [colore, pattern, white].filter(Boolean).join(" ");
+}
+
+
+
 // ================== COMBINAZIONE ==================
 function combina(liste) {
 	let res = [{
-		madre: [],
-		padre: [],
+		madre: {},
+		padre: {},
 		prob: 1
 	}];
 
-	liste.forEach(g => {
+	liste.forEach(l => {
 		let tmp = [];
-		res.forEach(r => g.forEach(x => {
-			tmp.push({
-				madre: [...r.madre, x.madre],
-				padre: [...r.padre, x.padre],
-				prob: r.prob * x.prob
+		res.forEach(r => {
+			l.forEach(x => {
+				tmp.push({
+					madre: { ...r.madre, ...x.madre },
+					padre: { ...r.padre, ...x.padre },
+					prob: r.prob * x.prob
+				});
 			});
-		}));
+		});
 		res = tmp;
 	});
 
@@ -415,6 +467,7 @@ function combina(liste) {
 
 	return res.filter(r => r.prob > 0.01);
 }
+
 
 // ================== MAIN ==================
 function calcola() {
@@ -437,51 +490,96 @@ function calcola() {
 		orange = allele + "_Y";
 	}
 
-	const geni = [
-		f_agouti.value,
-		f_chocolate.value,
-		f_siamese.value,
-		f_diluizione.value,
-		f_spotted.value,
-		f_white.value,
-		f_hair.value
-	];
+	const geni = {
+		O:  orange,
+		A:  f_agouti.value,
+		B:  f_chocolate.value,
+		Cs: f_siamese.value,
+		D:  f_diluizione.value,
+		S:  f_spotted.value,
+		W:  f_white.value,
+		H:  f_hair.value
+	};
+
+	
+	let htmlCucciolo = `
+		<p><strong>Loci cucciolo:</strong></p>
+		<p>Sesso: ${sex}</p>
+		<p>O: ${geni.O}</p>
+		<p>A: ${geni.A}</p>
+		<p>B: ${geni.B}</p>
+		<p>Cs: ${geni.Cs}</p>
+		<p>D: ${geni.D}</p>
+		<p>S: ${geni.S}</p>
+		<p>W: ${geni.W}</p>
+		<p>H: ${geni.H}</p>
+		<p>FIFe: ${denominazioneFIFE(geni, sex)}</p>
+		<hr/>`;
+	document.getElementById("result").innerHTML = htmlCucciolo;
 
 	const perGene = [
-		genitoriOrange(orange, sex),
-		...geni.map(g => genitoriAutosomico(g))
+		genitoriOrange(geni.O, sex),
+		genitoriAutosomico("A", geni.A),
+		genitoriAutosomico("B", geni.B),
+		genitoriAutosomico("Cs", geni.Cs),
+		genitoriAutosomico("D", geni.D),
+		genitoriAutosomico("S", geni.S),
+		genitoriAutosomico("W", geni.W),
+		genitoriAutosomico("H", geni.H)
 	];
 
 
-// se un gene non ha soluzioni, non ha senso combinare
-if (perGene.some(g => g.length === 0)) {
-    document.getElementById("result").innerHTML =
-        "<b>Nessuna combinazione genetica possibile con i valori selezionati.</b>";
-    return;
-}
 
-const comb = combina(perGene);
+	// se un gene non ha soluzioni, non ha senso combinare
+	if (perGene.some(g => g.length === 0)) {
+		document.getElementById("result").innerHTML +=
+			"<b>Nessuna combinazione genetica possibile con i valori selezionati.</b>";
+		return;
+	}
 
-if (comb.length === 0) {
-    document.getElementById("result").innerHTML =
-        "<b>Nessuna combinazione con probabilità &gt; 1%.</b>";
-    return;
-}
+	const comb = combina(perGene);
 
-let html = `<div class="section"><h3>Genitori compatibili</h3><table>
+	if (comb.length === 0) {
+		document.getElementById("result").innerHTML +=
+			"<b>Nessuna combinazione con probabilità &gt; 1%.</b>";
+		return;
+	}
+
+	let html = `<div class="section"><h3>Genitori compatibili</h3><table>
     <tr><th>Madre</th><th>Padre</th><th>Probabilità</th></tr>`;
 
-comb.forEach(c => {
-    html += `<tr>
-        <td onclick="openGoogleImages('${fenotipo(c.madre)}');" class="${getColorClass(fenotipo(c.madre))}">${fenotipo(c.madre)} 🔍<br/><br/>${c.madre.join(", ")}</td>
-		<td onclick="openGoogleImages('${fenotipo(c.padre)}');"class="${getColorClass(fenotipo(c.padre))}">${fenotipo(c.padre)} 🔍<br/><br/>${c.padre.join(", ")}</td>
+	comb.forEach(c => {
+		html += `<tr>
+        <td onclick="openGoogleImages('${fenotipo(c.madre)}');" 
+			class="${getColorClass(fenotipo(c.madre))}">${fenotipo(c.madre)} 🔍<br/>
+			<br/>${Object.values(c.madre).join(", ")}<br/>
+			<br/>FIFe: ${denominazioneFIFE(c.madre, "F")}
+			</td>
+		<td onclick="openGoogleImages('${fenotipo(c.padre)}');"
+			class="${getColorClass(fenotipo(c.padre))}">${fenotipo(c.padre)} 🔍<br/>
+			<br/>${Object.values(c.padre).join(", ")}<br/>
+			<br/>FIFe: ${denominazioneFIFE(c.padre, "M")}
+			</td>
         <td>${(c.prob * 100).toFixed(2)}%</td>
     </tr>`;
-});
+	});
 
-html += "</table></div>";
-document.getElementById("result").innerHTML = html;
+	html += "</table></div>";
+	document.getElementById("result").innerHTML += html;
 
+}
+
+// ------------------------------
+// 8. MODAL
+// ------------------------------
+function openModal(title, content) {
+	document.getElementById("modal-title").innerText = title;
+	document.getElementById("modal-body").innerHTML = content;
+	document.getElementById("modal").style.display = "block";
+}
+
+function closeModal() {
+	document.getElementById("modal").style.display = "none";
 }
 </script>
 

@@ -437,6 +437,65 @@ function openGoogleImages(query) {
 	);
 }
 
+function denominazioneFIFE(c) {
+    // --- sesso ---
+    const isFemale = c.sex === "F";
+
+    // --- BIANC0 TOTALE (W) ---
+    if (c.W.includes("W")) return "w";
+
+    // --- POINT ---
+    const isPoint = c.Cs.includes("Cs");
+
+    // --- TABBY ---
+    let tabby = "";
+    if (c.A.includes("A")) {
+        if (c.T?.includes("22")) tabby = "22";       // classico
+        else if (c.T?.includes("23")) tabby = "23";  // mackerel
+        else if (c.T?.includes("24")) tabby = "24";  // spotted
+        else tabby = "21";                            // tabby generico
+    }
+
+    // --- DILUIZIONE ---
+    const isDiluted = c.D.includes("d");
+
+    // --- COLORE BASE ---
+    let colore = "";
+
+    const isRed = isFemale
+        ? c.O.includes("O")
+        : c.O[0] === "O";
+
+    const isTortie = isFemale && c.O.includes("O") && c.O.includes("o");
+
+    if (isTortie) {
+        colore = isDiluted ? "g" : "f"; // blu tortie / nero tortie
+    } else if (isRed) {
+        colore = isDiluted ? "e" : "d";
+    } else {
+        // base nero / cioccolato / cannella
+        const b = c.B.includes("b") ? "b"
+                : c.B.includes("bl") ? "c"
+                : "n";
+
+        if (b === "n") colore = isDiluted ? "a" : "n";
+        if (b === "b") colore = isDiluted ? "p" : "b";
+        if (b === "c") colore = "c";
+    }
+
+    // --- BIANC0 ---
+    let white = "";
+    if (c.S.includes("S")) {
+        white = c.S.includes("S") && c.S.includes("s") ? "09" : "03";
+    }
+
+    // --- POINT override pattern ---
+    const pattern = isPoint ? "33" : tabby;
+
+    return [colore, pattern, white].filter(Boolean).join(" ");
+}
+
+
 
 // ------------------------------
 // 9. CALCOLO COMBINAZIONI MENDELIANE COMPLETE
@@ -532,9 +591,11 @@ function calcola() {
 	let html = `<div class="parents"><div class="group">`;
 	html += `<p class="img-search" onclick="openGoogleImages('${motherHair}'); return false;"><strong>🩷 Madre:</strong> ${motherHair} 🔍</p>`;
 	html += lociToHtml(m);
+	html += `<p>FIFe: ${denominazioneFIFE(m)}</p>`;
 	html += `</div><div class="group">`;
 	html += `<p class="img-search" onclick="openGoogleImages('${fatherHair}'); return false;"><strong>🩵 Padre:</strong> ${fatherHair} 🔍</p>`;
 	html += lociToHtml(f);
+	html += `<p>FIFe: ${denominazioneFIFE(f)}</p>`;
 	html += `</div></div>`;
 
 
@@ -556,15 +617,16 @@ function calcola() {
 
 			const lociText = `
 		  <p><strong>Loci cucciolo:</strong></p>
-		  <p>Sesso: ${c.sex}<p/>
-		  <p>O: ${c.O.join(" / ")}<p/>
-		  <p>A: ${c.A.join(" / ")}<p/>
-		  <p>B: ${c.B.join(" / ")}<p/>
-		  <p>Cs: ${c.Cs.join(" / ")}<p/>
-		  <p>D: ${c.D.join(" / ")}<p/>
-		  <p>S: ${c.S.join(" / ")}<p/>
-		  <p>W: ${c.W.join(" / ")}<p/>
+		  <p>Sesso: ${c.sex}</p>
+		  <p>O: ${c.O.join(" / ")}</p>
+		  <p>A: ${c.A.join(" / ")}</p>
+		  <p>B: ${c.B.join(" / ")}</p>
+		  <p>Cs: ${c.Cs.join(" / ")}</p>
+		  <p>D: ${c.D.join(" / ")}</p>
+		  <p>S: ${c.S.join(" / ")}</p>
+		  <p>W: ${c.W.join(" / ")}</p>
 		  <p>H: ${c.H.join(" / ")}</p>
+		  <p>FIFe: ${denominazioneFIFE(c)}</p>
 		  <hr/>
 		  <p>Probabilità: ${prob.toFixed(2)}%</p>
 		`;
@@ -614,15 +676,16 @@ function calcola() {
 
 			const lociText = `
 		  <p><strong>Loci cucciolo:</strong></p>
-		  <p>Sesso: ${c.sex}<p/>
-		  <p>O: ${c.O.join(" / ")}<p/>
-		  <p>A: ${c.A.join(" / ")}<p/>
-		  <p>B: ${c.B.join(" / ")}<p/>
-		  <p>D: ${c.D.join(" / ")}<p/>
-		  <p>Cs: ${c.Cs.join(" / ")}<p/>
-		  <p>S: ${c.S.join(" / ")}<p/>
-		  <p>W: ${c.W.join(" / ")}<p/>
+		  <p>Sesso: ${c.sex}</p>
+		  <p>O: ${c.O.join(" / ")}</p>
+		  <p>A: ${c.A.join(" / ")}</p>
+		  <p>B: ${c.B.join(" / ")}</p>
+		  <p>D: ${c.D.join(" / ")}</p>
+		  <p>Cs: ${c.Cs.join(" / ")}</p>
+		  <p>S: ${c.S.join(" / ")}</p>
+		  <p>W: ${c.W.join(" / ")}</p>
 		  <p>H: ${c.H.join(" / ")}</p>
+		  <p>FIFe: ${denominazioneFIFE(c)}</p>
 		  <hr/>
 		  <p>Probabilità: ${entry.prob.toFixed(2)}%</p>
 		`;
