@@ -92,30 +92,56 @@
 					</filter>
 				</defs>
 				<ellipse cx="130" cy="140" rx="95" ry="65" fill="url(#headGrad)" filter="url(#shadow)"/>
-				<!-- TABBY M -->
-				<g id="tabbyM" stroke="#000" stroke-opacity="0.35" stroke-width="3" fill="none" stroke-linecap="round">
-					<path d="M110 105 Q130 90 150 105"/>
-					<path d="M110 105 Q100 95 95 85"/>
-					<path d="M150 105 Q160 95 165 85"/>
-				</g>
+				
 				<ellipse cx="130" cy="150" rx="70" ry="40" fill="url(#maskGrad)" filter="url(#shadow)"/>
+				
+				<!-- TABBY M -->
+				<g id="tabbyM" stroke="#000" stroke-opacity="0.15" stroke-width="5" fill="none" stroke-linecap="round">
+					<!-- W grande -->
+					<!--centro-->
+					<path d="M110 105 Q130 90 150 105"/>
+					<!--sx-->
+					<path d="M110 105 Q100 95 95 85"/>
+					<!--dx-->
+					<path d="M150 105 Q160 95 165 85"/>
+					
+					<!-- w interna -->
+					<path d="M120 90 Q130 82 140 90"/>
+					<path d="M120 90 Q115 85 110 80"/>
+					<path d="M140 90 Q145 85 150 80"/>
+					
+					
+					<!-- guancia sinistra -->
+					<path d="M70 145 Q90 150 105 160"/>
+					<path d="M65 155 Q90 165 110 175"/>
+
+					<!-- guancia destra -->
+					<path d="M190 145 Q170 150 155 160"/>
+					<path d="M195 155 Q170 165 150 175"/>
+				</g>
+								
+				
 				<!-- SPOTTING SUL MUSO -->
 				<g id="faceSpotting" fill="#fff">
 					<!-- blaze centrale -->
 					<path id="spotBlaze" d="M130 125
-           C120 135 120 155 130 165
-           C140 155 140 135 130 125 Z" opacity="0.9"/>
+											C120 135 120 155 130 165
+											C140 155 140 135 130 125 Z" opacity="0.9"/>
 					<!-- mento -->
-					<ellipse id="spotChin" cx="130" cy="175" rx="18" ry="10" opacity="0.95"/>
-					<!-- baffo sinistro -->
-					<ellipse id="spotLeft" cx="105" cy="155" rx="16" ry="10" opacity="0.85"/>
-					<!-- baffo destro -->
-					<ellipse id="spotRight" cx="155" cy="155" rx="16" ry="10" opacity="0.85"/>
+					<ellipse id="spotChin" cx="130" cy="180" rx="22" ry="15" opacity="0.95"/>
+					<!-- mento grande -->
+					<ellipse id="spotChinBig" cx="130" cy="185" rx="58" ry="20" opacity="0.95"/>
+					<!-- naso grande -->
+					<path id="spotBlazeBig" d="M130 125
+											C115 125 115 165 130 180
+											C145 165 145 125 130 125 Z" opacity="0.9"/>
 				</g>
+				<!-- orecchie -->
 				<polygon points="55,120 40,60 95,95" fill="url(#maskGrad)" filter="url(#shadow)"/>
 				<polygon points="205,120 220,60 165,95" fill="url(#maskGrad)" filter="url(#shadow)"/>
 				<polygon points="60,120 52,75 85,100" fill="url(#earGrad)"/>
 				<polygon points="200,120 208,75 175,100" fill="url(#earGrad)"/>
+				
 				<ellipse cx="100" cy="135" rx="18" ry="11" fill="#0af" transform="rotate(-15 100 135)"/>
 				<ellipse cx="160" cy="135" rx="18" ry="11" fill="#0af" transform="rotate(15 160 135)"/>
 				<ellipse cx="100" cy="135" rx="3" ry="9" fill="#000" transform="rotate(-15 100 135)"/>
@@ -123,14 +149,9 @@
 				<!-- naso/muso -->
 				<polygon points="120,165 130,175 140,165" fill="#000"/>
 				<!-- bocca -->
-				<path d="
-  M130 175
-  L130 185
-  M130 185
-  Q120 195 110 185
-  M130 183
-  Q140 195 150 185
-" stroke="#b98" stroke-width="2" fill="none"/>
+				<path d="M130 175 L130 185 
+						M130 185 Q120 195 110 185
+						M130 183 Q140 195 150 185" stroke="#b98" stroke-width="2" fill="none"/>
 				<!-- ==== Baffi 3 per lato ==== -->
 				<g id="whiskers" stroke="rgba(200,200,200,0.8)" stroke-width="1">
 					<!-- sinistra -->
@@ -264,10 +285,10 @@ function updateRocky() {
 
 	const faceSpotting = document.getElementById("faceSpotting");
 	const blaze = document.getElementById("spotBlaze");
+	const blazeBig = document.getElementById("spotBlazeBig");
 	const chin = document.getElementById("spotChin");
-	const left = document.getElementById("spotLeft");
-	const right = document.getElementById("spotRight");
-
+	const chinBig = document.getElementById("spotChinBig");
+	
 	/* WHITE DOMINANTE → tutto bianco */
 	if (white === "W_w" || white === "W_W") {
 		faceSpotting.style.display = "none";
@@ -283,15 +304,15 @@ function updateRocky() {
 		if (spotting === "S_s") {
 			blaze.style.display = "block";
 			chin.style.display = "block";
-			left.style.display = "none";
-			right.style.display = "none";
+			blazeBig.style.display = "none";
+			chinBig.style.display = "none";
 		}
 
 		if (spotting === "S_S") {
 			blaze.style.display = "block";
 			chin.style.display = "block";
-			left.style.display = "block";
-			right.style.display = "block";
+			blazeBig.style.display = "block";
+			chinBig.style.display = "block";
 		}
 	}
 
