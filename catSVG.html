@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="it">
+	<head>
+		<meta charset="UTF-8">
+			<title>Generatore Felino SVG di Rocky Graffietto</title>
+			<style>
+				body { font-family: Arial, sans-serif; padding: 20px; background:#eee; overflow-x: hidden; }
+				h2 { color:#333; }
+				.controls { display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; }
+				select, button { font-size:16px; padding:6px 12px; border-radius:8px; border:1px solid #ccc; margin-bottom: 8px; }
+				/* MOBILE FIX */
+				@media (max-width: 768px) {
+					body { font-size: 20px; padding: 12px; }
+					h2 { font-size: 24px; line-height: 1.3; }
+					label { font-size: 20px; line-height: 2; }
+					p { font-size: 20px; line-height: 1.5; }
+					input[type="checkbox"] { transform: scale(1.3); margin-right: 6px; }
+					select, button { font-size: 20px; padding: 10px 12px; }
+					.group { width: 100%; }
+					.card { font-size: 20px; min-width: 100%; padding: 14px; }
+					.cards { justify-content: center; }
+					table { font-size: 20px; }
+					th, td { padding: 10px 6px; }
+					.modal-content { margin: 15% auto; font-size: 20px; }
+				}
+			</style>
+		</head>
+		<body>
+			<h2>Generatore Felino SVG di Rocky Graffietto 🥊🐱</h2>
+			<div class="controls">
+				<select id="f_redblack">
+					<option value="o_o">Nero Xᴺ/Xᴺ (o/o)</option>
+					<option value="O_o">Nero e Rosso Xᴿ/Xᴺ (O/o)</option>
+					<option value="O_O">Rosso Xᴿ/Xᴿ (O/O)</option>
+				</select>
+				<select id="f_agouti">
+					<option value="a_a">No Tabby a/a</option>
+					<option value="A_a">Tabby Tigrato A/a</option>
+					<option value="A_A">Tabby Tigrato A/A</option>
+				</select>
+				<select id="f_chocolate">
+					<option value="B_B">Nero B/B</option>
+					<option value="B_b">Nero portatore B/b</option>
+					<option value="b_b">Cioccolato b/b</option>
+				</select>
+				<select id="f_siamese">
+					<option value="C_C">No Siamese</option>
+					<option value="C_cs">Portatore</option>
+					<option value="cs_cs">Siamese</option>
+				</select>
+				<select id="f_diluizione">
+					<option value="D_D">Colore pieno</option>
+					<option value="D_d">Portatore</option>
+					<option value="d_d">Diluito</option>
+				</select>
+				<select id="f_spotted">
+					<option value="s_s">No spotting</option>
+					<option value="S_s">Spotting medio</option>
+					<option value="S_S">Spotting forte</option>
+				</select>
+				<select id="f_white">
+					<option value="w_w">No bianco</option>
+					<option value="W_w">Bianco</option>
+					<option value="W_W">Bianco totale</option>
+				</select>
+				<select id="f_hair">
+					<option value="L_L">Pelo corto</option>
+					<option value="L_l">Portatore</option>
+					<option value="l_l">Pelo lungo</option>
+				</select>
+			</div>
+			<hr/>
+			<b>Risultato:</b>
+			<br/>
+			<!-- ================= SVG ROCKY ================= -->
+			<svg id="catSVG" width="260" height="260" viewBox="0 0 260 260">
+				<defs>
+					<radialGradient id="headGrad" cx="50%" cy="50%" r="60%">
+						<stop offset="0%" stop-color="#322"/>
+						<stop offset="100%" stop-color="#ba9"/>
+					</radialGradient>
+					<radialGradient id="maskGrad" cx="50%" cy="40%" r="70%">
+						<stop offset="0%" stop-color="#322"/>
+						<stop offset="100%" stop-color="#433"/>
+					</radialGradient>
+					<radialGradient id="earGrad" cx="50%" cy="30%" r="80%">
+						<stop offset="0%" stop-color="#322"/>
+						<stop offset="100%" stop-color="#844"/>
+					</radialGradient>
+					<filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+						<feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="rgba(0,0,0,0.3)"/>
+					</filter>
+				</defs>
+				<ellipse cx="130" cy="140" rx="95" ry="65" fill="url(#headGrad)" filter="url(#shadow)"/>
+				<!-- TABBY M -->
+				<g id="tabbyM" stroke="#000" stroke-opacity="0.35" stroke-width="3" fill="none" stroke-linecap="round">
+					<path d="M110 105 Q130 90 150 105"/>
+					<path d="M110 105 Q100 95 95 85"/>
+					<path d="M150 105 Q160 95 165 85"/>
+				</g>
+				<ellipse cx="130" cy="150" rx="70" ry="40" fill="url(#maskGrad)" filter="url(#shadow)"/>
+				<!-- SPOTTING SUL MUSO -->
+				<g id="faceSpotting" fill="#fff">
+					<!-- blaze centrale -->
+					<path id="spotBlaze" d="M130 125
+           C120 135 120 155 130 165
+           C140 155 140 135 130 125 Z" opacity="0.9"/>
+					<!-- mento -->
+					<ellipse id="spotChin" cx="130" cy="175" rx="18" ry="10" opacity="0.95"/>
+					<!-- baffo sinistro -->
+					<ellipse id="spotLeft" cx="105" cy="155" rx="16" ry="10" opacity="0.85"/>
+					<!-- baffo destro -->
+					<ellipse id="spotRight" cx="155" cy="155" rx="16" ry="10" opacity="0.85"/>
+				</g>
+				<polygon points="55,120 40,60 95,95" fill="url(#maskGrad)" filter="url(#shadow)"/>
+				<polygon points="205,120 220,60 165,95" fill="url(#maskGrad)" filter="url(#shadow)"/>
+				<polygon points="60,120 52,75 85,100" fill="url(#earGrad)"/>
+				<polygon points="200,120 208,75 175,100" fill="url(#earGrad)"/>
+				<ellipse cx="100" cy="135" rx="18" ry="11" fill="#0af" transform="rotate(-15 100 135)"/>
+				<ellipse cx="160" cy="135" rx="18" ry="11" fill="#0af" transform="rotate(15 160 135)"/>
+				<ellipse cx="100" cy="135" rx="3" ry="9" fill="#000" transform="rotate(-15 100 135)"/>
+				<ellipse cx="160" cy="135" rx="3" ry="9" fill="#000" transform="rotate(15 160 135)"/>
+				<!-- naso/muso -->
+				<polygon points="120,165 130,175 140,165" fill="#000"/>
+				<!-- bocca -->
+				<path d="
+  M130 175
+  L130 185
+  M130 185
+  Q120 195 110 185
+  M130 183
+  Q140 195 150 185
+" stroke="#b98" stroke-width="2" fill="none"/>
+				<!-- ==== Baffi 3 per lato ==== -->
+				<g id="whiskers" stroke="rgba(200,200,200,0.8)" stroke-width="1">
+					<!-- sinistra -->
+					<path d="M118,168 Q70,160 50,170"/>
+					<path d="M118,173 Q70,170 50,180"/>
+					<path d="M118,178 Q70,180 50,190"/>
+					<!-- destra -->
+					<path d="M142,168 Q190,160 210,170"/>
+					<path d="M142,173 Q190,170 210,180"/>
+					<path d="M142,178 Q190,180 210,190"/>
+				</g>
+			</svg>
+			<script>
+const COLORS = {
+	black: "#222222",
+	blue: "#6a6a8a",
+	chocolate: "#5b3a29",
+	lilac: "#b9a3c9",
+	red: "#cc4444",
+	cream: "#f3c6a5",
+	white: "#ffffff",
+	tortie: "#444422"
+};
+
+const f_redblack = document.getElementById("f_redblack");
+const f_chocolate = document.getElementById("f_chocolate");
+const f_diluizione = document.getElementById("f_diluizione");
+const f_white = document.getElementById("f_white");
+const f_siamese = document.getElementById("f_siamese");
+const f_spotted = document.getElementById("f_spotted");
+const f_hair = document.getElementById("f_hair");
+
+const headGrad = document.getElementById("headGrad");
+const maskGrad = document.getElementById("maskGrad");
+
+
+function computeCoatColor() {
+
+	const redblack = f_redblack.value;
+	const chocolate = f_chocolate.value;
+	const dilution = f_diluizione.value;
+	const white = f_white.value;
+	const siamese = f_siamese.value;
+
+	/* 1 - WHITE DOMINANTE */
+	if (white === "W_W" || white === "W_w") {
+		return {
+			body: COLORS.white,
+			mask: COLORS.white
+		};
+	}
+
+	let base;
+
+	/* 2 - ROSSO / NERO */
+	if (redblack === "O_O") base = "red";
+	else if (redblack === "o_o") base = "black";
+	else base = "tortie"; // O/o
+
+	/* 3 - CIOCCOLATO (solo se nero) */
+	if (base === "black" && chocolate === "b_b") {
+		base = "chocolate";
+	}
+
+	/* 4 - DILUIZIONE */
+	if (dilution === "d_d") {
+		if (base === "black") base = "blue";
+		else if (base === "chocolate") base = "lilac";
+		else if (base === "red") base = "cream";
+	}
+
+	/* 5 - SIAMESE = PATTERN */
+	if (siamese === "cs_cs") {
+		if (base === "red") {
+			// rosso siamese: muso marrone scuro (tipico)
+			return {
+				body: COLORS.red, // corpo rosso chiaro
+				mask: "#733" // muso/mask scuro rosso/marrone
+			};
+		} else {
+			// altri colori
+			return {
+				body: lighten(COLORS[base], 0.5),
+				mask: darken(COLORS[base], 0.4)
+			};
+		}
+	}
+	return {
+		body: COLORS[base],
+		mask: COLORS[base]
+	};
+}
+
+function lighten(hex, f) {
+	return shade(hex, 255, f);
+}
+
+function darken(hex, f) {
+	return shade(hex, 0, f);
+}
+
+function shade(hex, target, f) {
+	let r = parseInt(hex.substr(1, 2), 16);
+	let g = parseInt(hex.substr(3, 2), 16);
+	let b = parseInt(hex.substr(5, 2), 16);
+	r = Math.round(r + (target - r) * f);
+	g = Math.round(g + (target - g) * f);
+	b = Math.round(b + (target - b) * f);
+	return `rgb(${r},${g},${b})`;
+}
+
+const selects = document.querySelectorAll("select");
+
+function updateRocky() {
+	const coat = computeCoatColor();
+	setGradient(headGrad, coat.body, coat.body);
+	setGradient(maskGrad, coat.mask, coat.mask);
+
+	const agouti = f_agouti.value;
+	const tabbyM = document.getElementById("tabbyM");
+
+	if (agouti === "a_a") {
+		tabbyM.style.display = "none"; // non tabby
+	} else {
+		tabbyM.style.display = "block"; // tabby
+	}
+
+
+	const spotting = f_spotted.value;
+	const white = f_white.value;
+
+	const faceSpotting = document.getElementById("faceSpotting");
+	const blaze = document.getElementById("spotBlaze");
+	const chin = document.getElementById("spotChin");
+	const left = document.getElementById("spotLeft");
+	const right = document.getElementById("spotRight");
+
+	/* WHITE DOMINANTE → tutto bianco */
+	if (white === "W_w" || white === "W_W") {
+		faceSpotting.style.display = "none";
+	}
+	/* SPOTTING */
+	else {
+		faceSpotting.style.display = "block";
+
+		if (spotting === "s_s") {
+			faceSpotting.style.display = "none";
+		}
+
+		if (spotting === "S_s") {
+			blaze.style.display = "block";
+			chin.style.display = "block";
+			left.style.display = "none";
+			right.style.display = "none";
+		}
+
+		if (spotting === "S_S") {
+			blaze.style.display = "block";
+			chin.style.display = "block";
+			left.style.display = "block";
+			right.style.display = "block";
+		}
+	}
+
+}
+
+function setGradient(g, c1, c2) {
+	g.children[0].setAttribute("stop-color", c1);
+	g.children[1].setAttribute("stop-color", c2);
+}
+
+selects.forEach(s => s.addEventListener("change", updateRocky));
+updateRocky();
+</script>
+		</body>
+	</html>
