@@ -112,8 +112,8 @@
 					<stop offset="100%" stop-color="#f80"/> <!-- bordo scuro -->
 				</radialGradient>
 				<!-- pelo sfumato -->
-				<filter id="blur5" x="-20%" y="-20%" width="200%" height="200%">
-					<feGaussianBlur stdDeviation="3" />
+				<filter id="blurHair" x="-20%" y="-20%" width="200%" height="200%">
+					<feGaussianBlur stdDeviation="2" />
 				</filter>
 			</defs>
 			
@@ -121,7 +121,7 @@
 			<g id="tailGroup">
 				<path id="tail" d="M190 225 Q255 205 235 165" stroke="url(#maskGrad)" stroke-width="18" fill="none" stroke-linecap="round" filter="url(#shadowBottom)"/>
 				<!-- righe tabby sulla coda -->
-				<g id="tailStripes" stroke="#000" stroke-width="5" fill="none" stroke-linecap="round" stroke-opacity="0.15">
+				<g id="tailStripes" stroke="#000" stroke-width="5" fill="none" stroke-linecap="round" stroke-opacity="0.15" filter="url(#blurHair)">
 					<!-- striscia 1 (vicino alla base della coda) --> 
 					<path d="M202 215 Q210 220 210 226"/> 
 					<!-- striscia 2 --> 
@@ -136,9 +136,20 @@
 			</g>
 			<!--corpo-->
 			<path id="body" d="M60 205 Q50 245 105 250 L155 250 Q210 245 200 205 Q175 165 130 175 Q85 165 60 205 Z" fill="url(#headGrad)" filter="url(#shadowBottom)"/>
+
 			<!-- pancia bianca -->
 			<ellipse id="panzetta"    cx="130" cy="215" rx="20" ry="30" fill="#fff" opacity="0.2" filter="url(#shadowBottom)"/>
 			<ellipse id="panzettaBig" cx="130" cy="215" rx="35" ry="30" fill="#fff" opacity="0.0" filter="url(#shadowBottom)"/>
+
+			<!-- righe tabby sul corpo -->
+			<g id="bodyStripes" stroke="#000" stroke-width="5" fill="none" stroke-linecap="round" stroke-opacity="0.15" filter="url(#blurHair)">
+				<path d="M75 195 Q130 180 185 195" />
+				<path d="M65 210 Q130 195 195 210" />
+				<path d="M65 225 Q130 210 195 225" />
+				<path d="M75 238 Q130 225 185 238" />
+			</g>
+
+
 			<!--zampette-->
 			<ellipse id="zampetteLeft" cx="105" cy="240" rx="20" ry="12" fill="url(#maskGrad)" filter="url(#shadowTop)"/>
 			<ellipse id="zampetteRight" cx="155" cy="240" rx="20" ry="12" fill="url(#maskGrad)" filter="url(#shadowTop)"/>
@@ -158,10 +169,10 @@
 			<!--testa-->
 			<ellipse id="head" cx="130" cy="140" rx="95" ry="65" fill="url(#headGrad)" filter="url(#shadowBottom)"/>
 			<!--muso-->
-			<ellipse cx="130" cy="150" rx="70" ry="45" fill="url(#maskGrad)" filter="url(#shadowBottom)"/>
+			<ellipse id="muso" cx="130" cy="150" rx="70" ry="45" fill="url(#maskGrad)" filter="url(#shadowBottom)"/>
 			
 			<!-- TABBY M -->
-			<g id="tabbyM" stroke="#000" stroke-opacity="0.15" stroke-width="5" fill="none" stroke-linecap="round">
+			<g id="tabbyM" stroke="#000" stroke-opacity="0.15" stroke-width="5" fill="none" stroke-linecap="round" filter="url(#blurHair)">
 				<!-- W grande -->
 				<!--centro-->
 				<path d="M110 105 Q130 90 150 105"/>
@@ -175,14 +186,25 @@
 				<path d="M120 90 Q115 85 110 80"/>
 				<path d="M140 90 Q145 85 150 80"/>
 				
-				
 				<!-- guancia sinistra -->
-				<path d="M70 145 Q90 150 105 160"/>
-				<path d="M65 155 Q90 165 110 175"/>
+				<path d="M50 145 Q90 150 115 155"/>
+				<path d="M45 155 Q90 165 120 165"/>
+
 				<!-- guancia destra -->
-				<path d="M190 145 Q170 150 155 160"/>
-				<path d="M195 155 Q170 165 150 175"/>
-			</g>						
+				<path d="M210 145 Q170 150 145 155"/>
+				<path d="M215 155 Q170 165 140 165"/>
+
+				
+				<!-- righe sinistra -->
+				<path d="M50 110 Q70 105 90 110"/>
+				<path d="M50 120 Q70 115 90 120"/>
+				<path d="M50 130 Q70 125 90 130"/>
+
+				<!-- righe destra -->
+				<path d="M170 110 Q190 105 210 110"/>
+				<path d="M170 120 Q190 115 210 120"/>
+				<path d="M170 130 Q190 125 210 130"/>
+			</g>
 			
 			<!-- SPOTTING SUL MUSO -->
 			<g id="faceSpotting" fill="#fff">
@@ -253,29 +275,56 @@ const f_white = document.getElementById("f_white");
 const f_siamese = document.getElementById("f_siamese");
 const f_spotted = document.getElementById("f_spotted");
 const f_hair = document.getElementById("f_hair");
+const f_agouti = document.getElementById("f_agouti");
 
+//SVG
 const headGrad = document.getElementById("headGrad");
 const maskGrad = document.getElementById("maskGrad");
 
+const head = document.getElementById("head");
+const muso = document.getElementById("muso");
+const tail = document.getElementById("tail");
+const body = document.getElementById("body");
+const earLeft = document.getElementById("earLeft");
+const earRight = document.getElementById("earRight");
+const zampetteLeft = document.getElementById("zampetteLeft");
+const zampetteRight = document.getElementById("zampetteRight");
+const spotBlaze = document.getElementById("spotBlaze");
+const spotBlazeBig = document.getElementById("spotBlazeBig");
+const spotChin = document.getElementById("spotChin");
+const spotChinBig = document.getElementById("spotChinBig");
+const panzetta = document.getElementById("panzetta");
+const panzettaBig = document.getElementById("panzettaBig");
+
+//tabby
+const tabbyM = document.getElementById("tabbyM");
+const tailStripes = document.getElementById("tailStripes");
+const bodyStripes = document.getElementById("bodyStripes");
+const faceSpotting = document.getElementById("faceSpotting");	
+
+//occhi e coda
+const eyeLeft = document.getElementById("eyeLeft");
+const pupilLeft = document.getElementById("pupilLeft");
+const eyeRight = document.getElementById("eyeRight");
+const pupilRight = document.getElementById("pupilRight");
+const tailGroup = document.getElementById("tailGroup");
+const svgrect = document.getElementById("catSVG").getBoundingClientRect();
+const eyeLeftRect = eyeLeft.getBoundingClientRect();
+const eyeLeftCenterX = eyeLeftRect.x + eyeLeftRect.width/2;
+const eyeLeftCenterY = eyeLeftRect.y + eyeLeftRect.height/2;
+const eyeRightRect = eyeRight.getBoundingClientRect();
+const eyeRightCenterX = eyeRightRect.x + eyeRightRect.width/2;
+const eyeRightCenterY = eyeRightRect.y + eyeRightRect.height/2;
+
+
 function setFur(enable) {
-	const head = document.getElementById("head");
-	const tail = document.getElementById("tail");
-	const body = document.getElementById("body");
-	const earLeft = document.getElementById("earLeft");
-	const earRight = document.getElementById("earRight");
-	const zampetteLeft = document.getElementById("zampetteLeft");
-	const zampetteRight = document.getElementById("zampetteRight");
-	
-	setFilter(enable, head);
-	setFilter(enable, tail);
-	setFilter(enable, body);
-	setFilter(enable, earLeft);
-	setFilter(enable, earRight);
-	setFilter(enable, zampetteLeft);
-	setFilter(enable, zampetteRight);
+	let arr = [head, tail, muso, body, earLeft, earRight, zampetteLeft, zampetteRight, 
+		spotChin, spotBlaze, spotChinBig, spotBlazeBig, panzetta, panzettaBig];
+	arr.forEach(elem => setFilter(enable, elem));
 }
+
 function setFilter(enable, cmp) {
-	const blur = "url(#blur5)";
+	const blur = "url(#blurHair)";
 	const current = cmp.getAttribute("filter") || "";
 	if (enable) {
 		if (!current.includes(blur)) {
@@ -283,17 +332,13 @@ function setFilter(enable, cmp) {
 		}
 	} else {
 		const updated = current.replace(blur, "").replace(/\s+/g, " ").trim();
-		if (updated) {
-			cmp.setAttribute("filter", updated);
-		} else {
-			cmp.removeAttribute("filter");
-		}
+		if (updated) cmp.setAttribute("filter", updated);
+		else cmp.removeAttribute("filter");
 	}
 }
 
 
 function computeCoatColor() {
-
 	const redblack = f_redblack.value;
 	const chocolate = f_chocolate.value;
 	const dilution = f_diluizione.value;
@@ -302,7 +347,8 @@ function computeCoatColor() {
 
 	/* 1 - WHITE DOMINANTE */
 	if (white === "W_W" || white === "W_w") {
-		setEyeColor(white === "W_W" ? true : false, false);
+		if (Math.random() < 0.5)  setEyeColor(white === "W_W" ? true : false, false);
+		else setEyeColor(false, white === "W_W" ? true : false);
 		return {
 			body: COLORS.white,
 			mask: COLORS.white
@@ -354,21 +400,21 @@ function computeCoatColor() {
 	};
 }
 
-function lighten(hex, f) {
-	return shade(hex, 255, f);
+function lighten(hex, factor) {
+	return shade(hex, 255, factor);
 }
 
-function darken(hex, f) {
-	return shade(hex, 0, f);
+function darken(hex, factor) {
+	return shade(hex, 0, factor);
 }
 
-function shade(hex, target, f) {
+function shade(hex, target, factor) {
 	let r = parseInt(hex.substr(1, 2), 16);
 	let g = parseInt(hex.substr(3, 2), 16);
 	let b = parseInt(hex.substr(5, 2), 16);
-	r = Math.round(r + (target - r) * f);
-	g = Math.round(g + (target - g) * f);
-	b = Math.round(b + (target - b) * f);
+	r = Math.round(r + (target - r) * factor);
+	g = Math.round(g + (target - g) * factor);
+	b = Math.round(b + (target - b) * factor);
 	return `rgb(${r},${g},${b})`;
 }
 
@@ -382,26 +428,17 @@ function updateRocky() {
 	const spotting = f_spotted.value;
 	const white = f_white.value;
 	const agouti = f_agouti.value;
-	const tabbyM = document.getElementById("tabbyM");
-	const tailStripes = document.getElementById("tailStripes");
 	
 	const hasFur = f_hair.value === "l_l";
 	setFur(hasFur);
 
-	const faceSpotting = document.getElementById("faceSpotting");
-	const blaze = document.getElementById("spotBlaze");
-	const blazeBig = document.getElementById("spotBlazeBig");
-	const chin = document.getElementById("spotChin");
-	const chinBig = document.getElementById("spotChinBig");
-	const panzetta = document.getElementById("panzetta");
-	const panzettaBig = document.getElementById("panzettaBig");
-	
 	/* WHITE DOMINANTE → tutto bianco */
 	if (white === "W_w" || white === "W_W") {
 		faceSpotting.style.display = "none";
 		//nota: W nasconde anche il tabby!!!
 		tabbyM.style.display = "none"; // non tabby
 		tailStripes.style.display = "none"; // non tabby
+		bodyStripes.style.display = "none"; // non tabby
 	}
 	/* SPOTTING + tabby*/
 	else {
@@ -409,9 +446,11 @@ function updateRocky() {
 		if (agouti === "a_a") {
 			tabbyM.style.display = "none"; // non tabby
 			tailStripes.style.display = "none"; // non tabby
+			bodyStripes.style.display = "none"; // non tabby
 		} else {
 			tabbyM.style.display = "block"; // tabby
 			tailStripes.style.display = "block"; // tabby
+			bodyStripes.style.display = "block"; // tabby
 		}
 	
 	
@@ -424,19 +463,19 @@ function updateRocky() {
 		}
 
 		if (spotting === "S_s") {
-			blaze.style.display = "block";
-			chin.style.display = "block";
-			blazeBig.style.display = "none";
-			chinBig.style.display = "none";
+			spotBlaze.style.display = "block";
+			spotChin.style.display = "block";
+			spotBlazeBig.style.display = "none";
+			spotChinBig.style.display = "none";
 			panzetta.style.opacity = "0.85";
 			panzettaBig.style.opacity = "0.0";
 		}
 
 		if (spotting === "S_S") {
-			blaze.style.display = "block";
-			chin.style.display = "block";
-			blazeBig.style.display = "block";
-			chinBig.style.display = "block";
+			spotBlaze.style.display = "block";
+			spotChin.style.display = "block";
+			spotBlazeBig.style.display = "block";
+			spotChinBig.style.display = "block";
 			panzetta.style.opacity = "1.0";
 			panzettaBig.style.opacity = "0.85";
 		}
@@ -448,27 +487,17 @@ function setGradient(g, c1, c2) {
 	g.children[1].setAttribute("stop-color", c2);
 }
 
-const eyeLeft = document.getElementById("eyeLeft");
-const pupilLeft = document.getElementById("pupilLeft");
-const eyeRight = document.getElementById("eyeRight");
-const pupilRight = document.getElementById("pupilRight");
-const tailGroup = document.getElementById("tailGroup");
-const svgrect = document.getElementById("catSVG").getBoundingClientRect();
-
-function setEyeColor(left, right) {
+//	
+function setEyeColor(isSiameseLeft, isSiameseRight) {
   let irisRand = f_redblack.value === "o_o" && Math.random() < 0.5 ? "irisNormal" : "irisOrange";
-  const gradientIdLeft = left ? "irisSiamese" : irisRand;
-  const gradientIdRight = right ? "irisSiamese" : irisRand;
-  document.getElementById("eyeLeft").setAttribute("fill", `url(#${gradientIdLeft})`);
-  document.getElementById("eyeRight").setAttribute("fill", `url(#${gradientIdRight})`);
+  const gradientIdLeft = isSiameseLeft ? "irisSiamese" : irisRand;
+  const gradientIdRight = isSiameseRight ? "irisSiamese" : irisRand;
+  eyeLeft.setAttribute("fill", `url(#${gradientIdLeft})`);
+  eyeRight.setAttribute("fill", `url(#${gradientIdRight})`);
 }
 
 // Funzione per far muovere una pupilla
-function movePupil(pupil, eye, mouseX, mouseY, maxOffset=5) {
-    const eyeRect = eye.getBoundingClientRect();
-    const eyeCenterX = eyeRect.x + eyeRect.width/2;
-    const eyeCenterY = eyeRect.y + eyeRect.height/2;
-
+function movePupil(pupil, eye, eyeCenterX, eyeCenterY, mouseX, mouseY, maxOffset=5) {
     let dx = mouseX - eyeCenterX;
     let dy = mouseY - eyeCenterY;
 
@@ -477,17 +506,17 @@ function movePupil(pupil, eye, mouseX, mouseY, maxOffset=5) {
     const distance = Math.min(maxOffset, Math.sqrt(dx*dx + dy*dy));
 
     const newX = parseFloat(eye.getAttribute("cx")) + distance * Math.cos(angle);
-    const newY = parseFloat(eye.getAttribute("cy")) + distance * Math.sin(angle) / 2;
+    //const newY = parseFloat(eye.getAttribute("cy")) + distance * Math.sin(angle) / 2;
 
     pupil.setAttribute("cx", newX);
-    pupil.setAttribute("cy", newY);
+    //pupil.setAttribute("cy", newY);
 }
 
 function moveTail(clientX, clientY) {
 	const mouseX = clientX - svgrect.left;// coordinate SVG
 	const mouseY = clientY - svgrect.top;// coordinate SVG
 	const centerX = svgrect.width / 2;// centro del gatto (circa meta SVG)
-	const centerY = svgrect.width / 2;// centro del gatto (circa meta SVG)
+	const centerY = svgrect.height / 2;// centro del gatto (circa meta SVG)
 	
 	let dx = mouseX - centerX;// distanza orizzontale dal centro
 	dx = Math.max(-6, Math.min(6, dx / 100));// normalizza e limita a +/- 6px
@@ -500,10 +529,79 @@ function moveTail(clientX, clientY) {
 
 //Evento mousemove sostituito da pointermove che intercetta sia mousemove che touchmove
 document.addEventListener("pointermove", (e) => {
-    movePupil(pupilLeft, eyeLeft, e.clientX, e.clientY);
-    movePupil(pupilRight, eyeRight, e.clientX, e.clientY);	
+    movePupil(pupilLeft, eyeLeft, eyeLeftCenterX, eyeLeftCenterY, e.clientX, e.clientY);
+    movePupil(pupilRight, eyeRight, eyeRightCenterX, eyeRightCenterY, e.clientX, e.clientY);	
 	moveTail(e.clientX, e.clientY);
 });
+
+let isBlinking = false;
+
+//gatto socchiude gli occhi
+function slowBlink(duration = 1000) {
+	isBlinking = true;
+	const closeTime = duration * 0.4;
+	const pauseTime = duration * 0.2;
+	const openTime  = duration * 0.4;
+
+	const eyeOpenRY = 11;
+	const eyeClosedRY = 2;
+
+	const pupilOpenRY = 6;
+	const pupilClosedRY = 1;
+
+	const pupilDown = 1; // quanto la pupilla “affonda”
+
+	function animateEye(
+		eye,
+		pupil,
+		fromEyeRY,
+		toEyeRY,
+		fromPupilRY,
+		toPupilRY,
+		fromCY,
+		toCY,
+		time
+	) {
+		const start = performance.now();
+
+		function frame(now) {
+			const t = Math.min((now - start) / time, 1);
+			const eased = t * t * (3 - 2 * t);
+
+			eye.setAttribute( "ry", fromEyeRY + (toEyeRY - fromEyeRY) * eased );
+			pupil.setAttribute( "ry", fromPupilRY + (toPupilRY - fromPupilRY) * eased );
+			pupil.setAttribute( "cy", fromCY + (toCY - fromCY) * eased );
+
+			if (t < 1) requestAnimationFrame(frame);
+		}
+		requestAnimationFrame(frame);
+	}
+
+
+	const eyeLCY = parseFloat(eyeLeft.getAttribute("cy"));
+	const eyeRCY = parseFloat(eyeRight.getAttribute("cy"));
+
+	//chiusura
+	animateEye( eyeLeft, pupilLeft, eyeOpenRY, eyeClosedRY, pupilOpenRY, pupilClosedRY, eyeLCY, eyeLCY + pupilDown, closeTime );
+	animateEye( eyeRight, pupilRight, eyeOpenRY, eyeClosedRY, pupilOpenRY, pupilClosedRY, eyeRCY, eyeRCY + pupilDown, closeTime );
+
+
+	//pausa
+	setTimeout(() => {
+		//ri-apertura
+		animateEye( eyeLeft, pupilLeft, eyeClosedRY, eyeOpenRY, pupilClosedRY, pupilOpenRY, eyeLCY + pupilDown, eyeLCY, openTime );
+		animateEye( eyeRight, pupilRight, eyeClosedRY, eyeOpenRY, pupilClosedRY, pupilOpenRY, eyeRCY + pupilDown, eyeRCY, openTime);
+	}, closeTime + pauseTime);
+	
+	//pronto per nuovo blink
+	setTimeout(() => {
+		isBlinking = false;
+	}, closeTime + pauseTime + openTime);
+}
+
+setInterval(() => {
+	if (!isBlinking && Math.random() < 0.5) slowBlink();
+}, 5000);//ogni 5 secondi circa
 
 
 selects.forEach(s => s.addEventListener("change", updateRocky));
