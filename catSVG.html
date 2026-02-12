@@ -413,8 +413,8 @@ function movePupil(pupil, eye, mouseX, mouseY, maxOffset=5) {
     //pupil.setAttribute("cy", newY);
 }
 
-// Evento mousemove
-document.addEventListener("mousemove", (e) => {
+// Evento mousemove sostituito da pointermove che intercetta sia mousemove che touchmove
+document.addEventListener("pointermove", (e) => {
     movePupil(pupilLeft, eyeLeft, e.clientX, e.clientY);
     movePupil(pupilRight, eyeRight, e.clientX, e.clientY);
 });
