@@ -111,6 +111,10 @@
 					<stop offset="0%" stop-color="#fd7"/> <!-- centro chiaro -->
 					<stop offset="100%" stop-color="#f80"/> <!-- bordo scuro -->
 				</radialGradient>
+				<!-- pelo sfumato -->
+				<filter id="blur5" x="-20%" y="-20%" width="200%" height="200%">
+					<feGaussianBlur stdDeviation="3" />
+				</filter>
 			</defs>
 			
 			<!--coda-->
@@ -131,13 +135,13 @@
 				</g>
 			</g>
 			<!--corpo-->
-			<path d="M60 205 Q50 245 105 250 L155 250 Q210 245 200 205 Q175 165 130 175 Q85 165 60 205 Z" fill="url(#headGrad)" filter="url(#shadowBottom)"/>
+			<path id="body" d="M60 205 Q50 245 105 250 L155 250 Q210 245 200 205 Q175 165 130 175 Q85 165 60 205 Z" fill="url(#headGrad)" filter="url(#shadowBottom)"/>
 			<!-- pancia bianca -->
 			<ellipse id="panzetta"    cx="130" cy="215" rx="20" ry="30" fill="#fff" opacity="0.2" filter="url(#shadowBottom)"/>
 			<ellipse id="panzettaBig" cx="130" cy="215" rx="35" ry="30" fill="#fff" opacity="0.0" filter="url(#shadowBottom)"/>
 			<!--zampette-->
-			<ellipse cx="105" cy="240" rx="20" ry="12" fill="url(#maskGrad)" filter="url(#shadowTop)"/>
-			<ellipse cx="155" cy="240" rx="20" ry="12" fill="url(#maskGrad)" filter="url(#shadowTop)"/>
+			<ellipse id="zampetteLeft" cx="105" cy="240" rx="20" ry="12" fill="url(#maskGrad)" filter="url(#shadowTop)"/>
+			<ellipse id="zampetteRight" cx="155" cy="240" rx="20" ry="12" fill="url(#maskGrad)" filter="url(#shadowTop)"/>
 			<!-- unghiette sx -->
 			<g stroke="#ccc" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.5">
 			  <path d="M96  240 Q95 245 95 248"/>
@@ -152,9 +156,9 @@
 			</g>
 			
 			<!--testa-->
-			<ellipse cx="130" cy="140" rx="95" ry="65" fill="url(#headGrad)" filter="url(#shadowBottom)"/>
+			<ellipse id="head" cx="130" cy="140" rx="95" ry="65" fill="url(#headGrad)" filter="url(#shadowBottom)"/>
 			<!--muso-->
-			<ellipse cx="130" cy="150" rx="70" ry="40" fill="url(#maskGrad)" filter="url(#shadowBottom)"/>
+			<ellipse cx="130" cy="150" rx="70" ry="45" fill="url(#maskGrad)" filter="url(#shadowBottom)"/>
 			
 			<!-- TABBY M -->
 			<g id="tabbyM" stroke="#000" stroke-opacity="0.15" stroke-width="5" fill="none" stroke-linecap="round">
@@ -197,8 +201,8 @@
 			</g>
 			<!-- orecchie -->
 			<!-- orecchie esterne più larghe (Left/Top/center) -->
-			<polygon points="45,120 40,60 105,95" fill="url(#maskGrad)" filter="url(#shadowTop)"/>
-			<polygon points="215,120 220,60 155,95" fill="url(#maskGrad)" filter="url(#shadowTop)"/>
+			<polygon id="earLeft" points="45,120 40,60 105,95" fill="url(#maskGrad)" filter="url(#shadowTop)"/>
+			<polygon id="earRight" points="215,120 220,60 155,95" fill="url(#maskGrad)" filter="url(#shadowTop)"/>
 			<!-- orecchie interne più larghe -->
 			<polygon points="55,115 52,75 90,100" fill="url(#earGrad)"/>
 			<polygon points="205,115 208,75 170,100" fill="url(#earGrad)"/>
@@ -252,6 +256,40 @@ const f_hair = document.getElementById("f_hair");
 
 const headGrad = document.getElementById("headGrad");
 const maskGrad = document.getElementById("maskGrad");
+
+function setFur(enable) {
+	const head = document.getElementById("head");
+	const tail = document.getElementById("tail");
+	const body = document.getElementById("body");
+	const earLeft = document.getElementById("earLeft");
+	const earRight = document.getElementById("earRight");
+	const zampetteLeft = document.getElementById("zampetteLeft");
+	const zampetteRight = document.getElementById("zampetteRight");
+	
+	setFilter(enable, head);
+	setFilter(enable, tail);
+	setFilter(enable, body);
+	setFilter(enable, earLeft);
+	setFilter(enable, earRight);
+	setFilter(enable, zampetteLeft);
+	setFilter(enable, zampetteRight);
+}
+function setFilter(enable, cmp) {
+	const blur = "url(#blur5)";
+	const current = cmp.getAttribute("filter") || "";
+	if (enable) {
+		if (!current.includes(blur)) {
+			cmp.setAttribute( "filter", current ? `${current} ${blur}` : blur );
+		}
+	} else {
+		const updated = current.replace(blur, "").replace(/\s+/g, " ").trim();
+		if (updated) {
+			cmp.setAttribute("filter", updated);
+		} else {
+			cmp.removeAttribute("filter");
+		}
+	}
+}
 
 
 function computeCoatColor() {
@@ -346,6 +384,9 @@ function updateRocky() {
 	const agouti = f_agouti.value;
 	const tabbyM = document.getElementById("tabbyM");
 	const tailStripes = document.getElementById("tailStripes");
+	
+	const hasFur = f_hair.value === "l_l";
+	setFur(hasFur);
 
 	const faceSpotting = document.getElementById("faceSpotting");
 	const blaze = document.getElementById("spotBlaze");
