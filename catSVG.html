@@ -91,9 +91,49 @@
 				<filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
 					<feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="rgba(0,0,0,0.3)"/>
 				</filter>
+				<!-- occhio giallo/verde per gatti normali -->
+				<radialGradient id="irisNormal" cx="50%" cy="50%" r="50%">
+					<stop offset="0%" stop-color="#efa"/> <!-- centro chiaro -->
+					<stop offset="100%" stop-color="#9b4"/> <!-- bordo scuro -->
+				</radialGradient>			
+				<!-- occhio azzurro per gatti siamese -->
+				<radialGradient id="irisSiamese" cx="50%" cy="50%" r="50%">
+					<stop offset="0%" stop-color="#0cf"/> <!-- centro chiaro -->
+					<stop offset="100%" stop-color="#0ad"/> <!-- bordo scuro -->
+				</radialGradient>
+				<!-- occhio arancione per gatti neri -->
+				<radialGradient id="irisOrange" cx="50%" cy="50%" r="50%">
+					<stop offset="0%" stop-color="#fd7"/> <!-- centro chiaro -->
+					<stop offset="100%" stop-color="#f80"/> <!-- bordo scuro -->
+				</radialGradient>
 			</defs>
-			<ellipse cx="130" cy="140" rx="95" ry="65" fill="url(#headGrad)" filter="url(#shadow)"/>
 			
+			<!--coda-->
+			<path d="M190 225 Q255 205 235 165" stroke="url(#maskGrad)" stroke-width="18" fill="none" stroke-linecap="round" filter="url(#shadow)"/>
+			<!--corpo-->
+			<path d="M60 205 Q50 245 105 250 L155 250 Q210 245 200 205 Q175 165 130 175 Q85 165 60 205 Z" fill="url(#headGrad)" filter="url(#shadow)"/>
+			<!-- pancia bianca -->
+			<ellipse id="panzetta"    cx="130" cy="215" rx="20" ry="30" fill="#fff" opacity="0.2" filter="url(#shadow)"/>
+			<ellipse id="panzettaBig" cx="130" cy="215" rx="35" ry="30" fill="#fff" opacity="0.0" filter="url(#shadow)"/>
+			<!--zampette-->
+			<ellipse cx="105" cy="240" rx="20" ry="12" fill="url(#maskGrad)" filter="url(#shadow)"/>
+			<ellipse cx="155" cy="240" rx="20" ry="12" fill="url(#maskGrad)" filter="url(#shadow)"/>
+			<!-- unghiette sx -->
+			<g stroke="#fff" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.4">
+			  <path d="M96  240 Q95 245 95 248"/>
+			  <path d="M105 240 Q105 246 105 249"/>
+			  <path d="M114 240 Q115 245 115 248"/>
+			</g>
+			<!-- unghiette dx -->
+			<g stroke="#fff" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.4">
+			  <path d="M146 240 Q145 245 145 248"/>
+			  <path d="M155 240 Q155 246 155 249"/>
+			  <path d="M164 240 Q165 245 165 248"/>
+			</g>
+			
+			<!--testa-->
+			<ellipse cx="130" cy="140" rx="95" ry="65" fill="url(#headGrad)" filter="url(#shadow)"/>
+			<!--muso-->
 			<ellipse cx="130" cy="150" rx="70" ry="40" fill="url(#maskGrad)" filter="url(#shadow)"/>
 			
 			<!-- TABBY M -->
@@ -118,8 +158,7 @@
 				<!-- guancia destra -->
 				<path d="M190 145 Q170 150 155 160"/>
 				<path d="M195 155 Q170 165 150 175"/>
-			</g>
-							
+			</g>						
 			
 			<!-- SPOTTING SUL MUSO -->
 			<g id="faceSpotting" fill="#fff">
@@ -137,16 +176,17 @@
 										C145 165 145 125 130 125 Z" opacity="0.9"/>
 			</g>
 			<!-- orecchie -->
-			<!-- Orecchie esterne più larghe -->
+			<!-- orecchie esterne più larghe -->
 			<polygon points="45,120 40,60 105,95" fill="url(#maskGrad)" filter="url(#shadow)"/>
 			<polygon points="215,120 220,60 155,95" fill="url(#maskGrad)" filter="url(#shadow)"/>
-			<!-- Orecchie interne più larghe -->
+			<!-- orecchie interne più larghe -->
 			<polygon points="55,115 52,75 90,100" fill="url(#earGrad)"/>
 			<polygon points="205,115 208,75 170,100" fill="url(#earGrad)"/>
-			<!-- Occhio sinistro -->
+			
+			<!-- occhio sinistro -->
 			<ellipse id="eyeLeft" cx="100" cy="135" rx="18" ry="11" fill="#0af" transform="rotate(-15 100 135)"/>
 			<ellipse id="pupilLeft" cx="100" cy="135" rx="3" ry="9" fill="#000" transform="rotate(-15 100 135)"/>
-			<!-- Occhio destro -->
+			<!-- occhio destro -->
 			<ellipse id="eyeRight" cx="160" cy="135" rx="18" ry="11" fill="#0af" transform="rotate(15 160 135)"/>
 			<ellipse id="pupilRight" cx="160" cy="135" rx="3" ry="9" fill="#000" transform="rotate(15 160 135)"/>
 
@@ -202,6 +242,7 @@ function computeCoatColor() {
 
 	/* 1 - WHITE DOMINANTE */
 	if (white === "W_W" || white === "W_w") {
+		setEyeColor(white === "W_W" ? true : false, false);
 		return {
 			body: COLORS.white,
 			mask: COLORS.white
@@ -229,6 +270,7 @@ function computeCoatColor() {
 
 	/* 5 - SIAMESE = PATTERN */
 	if (siamese === "cs_cs") {
+		setEyeColor(true, true);
 		if (base === "red") {
 			// rosso siamese: muso marrone scuro (tipico)
 			return {
@@ -242,7 +284,10 @@ function computeCoatColor() {
 				mask: darken(COLORS[base], 0.4)
 			};
 		}
+	} else {
+		setEyeColor(false, false);
 	}
+	
 	return {
 		body: COLORS[base],
 		mask: COLORS[base]
@@ -292,6 +337,8 @@ function updateRocky() {
 	const blazeBig = document.getElementById("spotBlazeBig");
 	const chin = document.getElementById("spotChin");
 	const chinBig = document.getElementById("spotChinBig");
+	const panzetta = document.getElementById("panzetta");
+	const panzettaBig = document.getElementById("panzettaBig");
 	
 	/* WHITE DOMINANTE → tutto bianco */
 	if (white === "W_w" || white === "W_W") {
@@ -303,6 +350,8 @@ function updateRocky() {
 
 		if (spotting === "s_s") {
 			faceSpotting.style.display = "none";
+			panzetta.style.opacity = "0.1";
+			panzettaBig.style.opacity = "0.0";
 		}
 
 		if (spotting === "S_s") {
@@ -310,6 +359,8 @@ function updateRocky() {
 			chin.style.display = "block";
 			blazeBig.style.display = "none";
 			chinBig.style.display = "none";
+			panzetta.style.opacity = "0.85";
+			panzettaBig.style.opacity = "0.0";
 		}
 
 		if (spotting === "S_S") {
@@ -317,6 +368,8 @@ function updateRocky() {
 			chin.style.display = "block";
 			blazeBig.style.display = "block";
 			chinBig.style.display = "block";
+			panzetta.style.opacity = "1.0";
+			panzettaBig.style.opacity = "0.85";
 		}
 	}
 
@@ -332,11 +385,19 @@ const pupilLeft = document.getElementById("pupilLeft");
 const eyeRight = document.getElementById("eyeRight");
 const pupilRight = document.getElementById("pupilRight");
 
+function setEyeColor(left, right) {
+  let irisRand = f_redblack.value === "o_o" && Math.random() < 0.5 ? "irisNormal" : "irisOrange";
+  const gradientIdLeft = left ? "irisSiamese" : irisRand;
+  const gradientIdRight = right ? "irisSiamese" : irisRand;
+  document.getElementById("eyeLeft").setAttribute("fill", `url(#${gradientIdLeft})`);
+  document.getElementById("eyeRight").setAttribute("fill", `url(#${gradientIdRight})`);
+}
+
 // Funzione per far muovere una pupilla
 function movePupil(pupil, eye, mouseX, mouseY, maxOffset=5) {
     const eyeRect = eye.getBoundingClientRect();
     const eyeCenterX = eyeRect.x + eyeRect.width/2;
-    //const eyeCenterY = eyeRect.y + eyeRect.height/2;
+    const eyeCenterY = eyeRect.y + eyeRect.height/2;
 
     let dx = mouseX - eyeCenterX;
     let dy = mouseY - eyeCenterY;
