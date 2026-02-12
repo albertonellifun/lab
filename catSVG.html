@@ -9,6 +9,7 @@
 			h2 { color:#333; }
 			.controls { display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; }
 			select, button { font-size:16px; padding:6px 12px; border-radius:8px; border:1px solid #ccc; margin-bottom: 8px; }
+			.svg-container { touch-action: none; }
 			/* MOBILE FIX */
 			@media (max-width: 768px) {
 				body { font-size: 20px; padding: 12px; }
@@ -73,6 +74,7 @@
 		<hr/>
 		<b>Risultato:</b>
 		<br/>
+		<div class="svg-container">
 		<!-- ================= SVG ROCKY ================= -->
 		<svg id="catSVG" width="260" height="260" viewBox="0 0 260 260">
 			<defs>
@@ -208,6 +210,7 @@
 				<path d="M142,178 Q190,180 210,190"/>
 			</g>
 		</svg>
+		</div>
 		<script>
 const COLORS = {
 	black: "#222222",
