@@ -318,6 +318,11 @@ function gametes(alleles) {
 // ------------------------------
 // 5. COMBINAZIONE DI UN LOCUS
 // ------------------------------
+function sortAlleles(a, b) {
+	if (a === b) return 0;
+	return a.toUpperCase() === a ? -1 : 1;
+}
+
 function combineLocus(mother, father) {
 	const gM = gametes(mother);
 	const gF = gametes(father);
@@ -325,7 +330,7 @@ function combineLocus(mother, father) {
 
 	for (let m of gM) {
 		for (let f of gF) {
-			combos.push([m, f]);
+			combos.push([m, f].sort(sortAlleles));
 		}
 	}
 	return combos;
@@ -426,12 +431,30 @@ function closeModal() {
 	document.getElementById("modal").style.display = "none";
 }
 
-function openGoogleImages(query) {
+function openGoogleImages(query, genotipo) {
 	const q = encodeURIComponent("gatto " + query);
 	const url = `https://www.google.com/search?tbm=isch&q=${q}`;
 	window.open(
 		url,
 		"imgPopup",
+		"width=900,height=700,scrollbars=yes,resizable=yes"
+	);
+}
+
+function openCatSvg(query, genotipo) {
+	const optSvg = 'f_redblack='+genotipo.O.join('_')
+				+'&f_agouti='+genotipo.A.join('_')
+				+'&f_chocolate='+genotipo.B.join('_')
+				+'&f_siamese='+genotipo.Cs.join('_')
+				+'&f_diluizione='+genotipo.D.join('_')
+				+'&f_spotted='+genotipo.S.join('_')
+				+'&f_white='+genotipo.W.join('_')
+				+'&f_hair='+genotipo.H.join('_');
+				
+	const urlSvg = './catSVG.html?'+optSvg;
+	window.open(
+		urlSvg,
+		"svgPopup",
 		"width=900,height=700,scrollbars=yes,resizable=yes"
 	);
 }
@@ -494,6 +517,16 @@ function denominazioneFIFE(c) {
     return [colore, pattern, white].filter(Boolean).join(" ");
 }
 
+function genotipoToString(c) {
+	return c.O.join("/")+', '
+		  +c.A.join("/")+', '
+		  +c.B.join("/")+', '
+		  +c.Cs.join("/")+', '
+		  +c.D.join("/")+', '
+		  +c.S.join("/")+', '
+		  +c.W.join("/")+', '
+		  +c.H.join("/");
+}
 
 
 // ------------------------------
@@ -582,26 +615,35 @@ function calcola() {
 
 	combinations.forEach(c => {
 		const ph = phenotype(c);
-		summary[ph] = (summary[ph] || 0) + prob;
+		if (!summary[ph]) summary[ph] = { prob: 0, genotipo: c };
+		//ora posso incrementare
+		summary[ph].prob += prob;
 	});
-
+	
 	let motherHair = mother + " " + (m.H[0] === "l" && m.H[1] === "l" ? "pelo lungo" : "pelo corto");
 	let fatherHair = father + " " + (f.H[0] === "l" && f.H[1] === "l" ? "pelo lungo" : "pelo corto");
 	let html = `<div class="parents"><div class="group">`;
-	html += `<p class="img-search" onclick="openGoogleImages('${motherHair}'); return false;"><strong>🩷 Madre:</strong> ${motherHair} 🔍</p>`;
+	html += `<p><strong>🩷 Madre:</strong> ${motherHair} <span class="img-search" onclick="openGoogleImages('${motherHair}'); return false;">🔍</span><span class="img-search" onclick='openCatSvg("${motherHair}", ${JSON.stringify(m)});'>🐱</span></p>`;
 	html += lociToHtml(m);
 	html += `<p>FIFe: ${denominazioneFIFE(m)}</p>`;
 	html += `</div><div class="group">`;
-	html += `<p class="img-search" onclick="openGoogleImages('${fatherHair}'); return false;"><strong>🩵 Padre:</strong> ${fatherHair} 🔍</p>`;
+	html += `<p><strong>🩵 Padre:</strong> ${fatherHair} <span class="img-search" onclick="openGoogleImages('${fatherHair}'); return false;">🔍</span><span class="img-search" onclick='openCatSvg("${fatherHair}", ${JSON.stringify(f)});'>🐱</span></p>`;
 	html += lociToHtml(f);
 	html += `<p>FIFe: ${denominazioneFIFE(f)}</p>`;
 	html += `</div></div>`;
 
 	html += `<h3>Combinazioni:</h3>`;
 	html += `<table class="summary"><tr><th>Fenotipo</th><th>Probabilità</th></tr>`;
-	Object.entries(summary).sort((a, b) => b[1] - a[1]).forEach(([ph, p]) => {
+	Object.entries(summary)
+		.sort((a, b) => b[1].prob - a[1].prob)
+		.forEach(([ph, p]) => {
 		html +=
-			`<tr class="${getColorClass(ph)} img-search" onclick="openGoogleImages('${ph}');return false;"><td>${ph} 🔍</td><td>${p.toFixed(2)}%</td></tr>`;
+			`<tr class="${getColorClass(ph)}">
+				<td>${ph} <span class="img-search" onclick="openGoogleImages('${ph}');return false;">🔍</span><span 
+				class="img-search" onclick='openCatSvg("${ph}", ${JSON.stringify(p.genotipo)});'>🐱</span><br/>
+				<br/>${genotipoToString(p.genotipo)}</td>
+				<td>${p.prob.toFixed(2)}%</td>
+			</tr>`;
 	});
 	html += `</table>`;
 
