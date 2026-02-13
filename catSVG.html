@@ -605,6 +605,17 @@ setInterval(() => {
 
 
 selects.forEach(s => s.addEventListener("change", updateRocky));
+
+//?f_agouti=A_a&f_
+const params = new URLSearchParams(window.location.search);
+params.forEach((value, key) => {
+	const el = document.getElementById(key);
+	if (!el) return;
+	if ([...el.options].some(o => o.value === value)) {
+		el.value = value;
+	}
+});
+
 updateRocky();
 </script>
 		</body>
