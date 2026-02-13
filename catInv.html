@@ -480,12 +480,29 @@ function getColorClass(ph) {
 	return "";
 }
 
-function openGoogleImages(query) {
+function openGoogleImages(query, genotipo) {
 	const q = encodeURIComponent("gatto " + query);
 	const url = `https://www.google.com/search?tbm=isch&q=${q}`;
 	window.open(
 		url,
 		"imgPopup",
+		"width=900,height=700,scrollbars=yes,resizable=yes"
+	);
+}
+
+function openCatSvg(query, genotipo) {
+	const optSvg = 'f_redblack='+genotipo.O
+				+'&f_agouti='+genotipo.A
+				+'&f_chocolate='+genotipo.B
+				+'&f_siamese='+genotipo.Cs
+				+'&f_diluizione='+genotipo.D
+				+'&f_spotted='+genotipo.S
+				+'&f_white='+genotipo.W
+				+'&f_hair='+genotipo.H;				
+	const urlSvg = './catSVG.html?'+optSvg;
+	window.open(
+		urlSvg,
+		"svgPopup",
 		"width=900,height=700,scrollbars=yes,resizable=yes"
 	);
 }
@@ -621,7 +638,7 @@ function calcola() {
 		<p>FIFe: ${denominazioneFIFE(geni, sex)}</p>
 		<hr/>`;
 	document.getElementById("result").innerHTML = htmlCucciolo;
-
+	
 	const perGene = [
 		genitoriOrange(geni.O, sex),
 		genitoriAutosomico("A", geni.A),
@@ -655,13 +672,11 @@ function calcola() {
 
 	comb.forEach(c => {
 		html += `<tr>
-        <td onclick="openGoogleImages('${fenotipo(c.madre)}');" 
-			class="${getColorClass(fenotipo(c.madre))}">${fenotipo(c.madre)} 🔍<br/>
+        <td class="${getColorClass(fenotipo(c.madre))}">${fenotipo(c.madre)} <span class="img-search" onclick='openGoogleImages("${fenotipo(c.madre)}", ${JSON.stringify(c.madre)});'>🔍</span><span class="img-search" onclick='openCatSvg("${fenotipo(c.madre)}", ${JSON.stringify(c.madre)});'>🐱</span><br/>
 			<br/>${Object.values(c.madre).join(", ").replaceAll("_","/")}<br/>
 			<br/>FIFe: ${denominazioneFIFE(c.madre, "F")}
 			</td>
-		<td onclick="openGoogleImages('${fenotipo(c.padre)}');"
-			class="${getColorClass(fenotipo(c.padre))}">${fenotipo(c.padre)} 🔍<br/>
+		<td class="${getColorClass(fenotipo(c.padre))}">${fenotipo(c.padre)} <span class="img-search" onclick='openGoogleImages("${fenotipo(c.padre)}",${JSON.stringify(c.padre)});'>🔍</span><span class="img-search" onclick='openCatSvg("${fenotipo(c.padre)}", ${JSON.stringify(c.padre)});'>🐱</span><br/>
 			<br/>${Object.values(c.padre).join(", ").replaceAll("_","/")}<br/>
 			<br/>FIFe: ${denominazioneFIFE(c.padre, "M")}
 			</td>
