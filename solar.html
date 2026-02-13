@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<title>Sistema Solare</title>
+<style>
+body { margin:0; background:black; overflow:hidden; font-family: monospace; color: #fff; }
+canvas { display:block; }
+#controls { position: absolute; top:0; left:0; }
+#info { position: absolute; bottom:0; left:0; color: #222; }
+p { margin: 0; }
+</style>
+</head>
+<body>
+<div id="controls">
+<button onclick="TIME_STEP /= 2;document.getElementById('TS').innerHTML=TIME_STEP">-</button>
+TIMESTEP
+<button onclick="TIME_STEP *= 2;document.getElementById('TS').innerHTML=TIME_STEP">+</button>
+= <span id="TS">86400</span>
+<br/>
+<button onclick="autocenter=!autocenter;document.getElementById('AC').innerHTML=autocenter">AUTOCENTER</button>
+= <span id="AC">true</span>
+<br/>
+MOUSE WHEEL = ZOOM
+<br/>
+MOUSE CLICK = CENTER
+<br/>
+<button onclick="paused=!paused;document.getElementById('PAUSED').innerHTML=paused">PAUSED</button>
+= <span id="PAUSED">false</span>
+<br/>
+<button onclick="if(document.getElementById('info').style.display=='none')document.getElementById('info').style.display='block';else document.getElementById('info').style.display='none';">INFO</button>
+</div>
+<div id="info">
+<p id="SUN">SUN</p>
+<p id="MERCURY">MERCURY</p>
+<p id="VENUS">VENUS</p>
+<p id="EARTH">EARTH</p>
+<p id="MOON">MOON</p>
+<p id="MARS">MARS</p>
+<p id="JUPITER">JUPITER</p>
+<p id="SATURN">SATURN</p>
+<p id="URANUS">URANUS</p>
+<p id="NEPTUNE">NEPTUNE</p>
+<p id="PLUTO">PLUTO</p>
+</div>
+<canvas id="space"></canvas>
+<script>
+
+// ===== COSTANTI REALI =====
+const G = 6.67430e-11;//costante gravitazione universale
+const AU = 1.496e11;//unita astronomica
+const DAY = 86400;//secondi
+const SCALE = 90 / AU;
+let zoom = 1;
+let TIME_STEP = DAY * 1; //1 giorno per frame (più stabile con Mercurio)
+let autocenter = true;//centra vista sul centro di massa CM calcolato ogni frame
+let paused = false;//pausa on/off
+
+const canvas = document.getElementById("space");
+const ctx = canvas.getContext("2d");
+
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+let CENTER_X = canvas.width/2;
+let CENTER_Y = canvas.height/2;
+
+class Body {
+    constructor(name, mass, x, y, vx, vy, radius, color, realRadius){
+        this.name = name;
+        this.mass = mass;
+        this.x = x;
+        this.y = y;
+        this.vx = vx;
+        this.vy = vy;
+        this.radius = radius;//px per render
+		this.realRadius = realRadius;
+        this.color = color;
+		this.path = [];//percorso=posizioni passate
+    }
+
+    updateForces(bodies){
+        let ax = 0;
+        let ay = 0;
+
+        for(let other of bodies){
+            if(other === this) continue;
+
+            const dx = other.x - this.x;
+            const dy = other.y - this.y;
+            const distSq = dx*dx + dy*dy;
+            const dist = Math.sqrt(distSq);
+
+            const a = G * other.mass / distSq;
+
+            ax += a * dx / dist;
+            ay += a * dy / dist;
+        }
+
+        this.vx += ax * TIME_STEP;
+        this.vy += ay * TIME_STEP;
+    }
+
+    updatePosition() {
+		this.x += this.vx * TIME_STEP;
+		this.y += this.vy * TIME_STEP;
+
+		const lastIdx = this.path.length - 1;
+		const lastPos = lastIdx === -1 ? {x: 0, y: 0} : this.path[lastIdx];
+
+		// angolo attuale rispetto al sole
+		const angle = Math.atan2(this.y, this.x);
+		const lastAngle = Math.atan2(lastPos.y, lastPos.x);
+
+		let deltaAngle = Math.abs(angle - lastAngle);
+		deltaAngle = deltaAngle % (2*Math.PI);
+		if (deltaAngle > Math.PI) deltaAngle = 2*Math.PI - deltaAngle;
+
+		const threshold = Math.PI / 180; // 1 grado in rad
+		if (deltaAngle > threshold) {
+			this.path.push({x: this.x, y: this.y});
+			if(this.path.length > 5000) this.path.shift();
+		}
+	}
+
+    draw(){
+        const px = CENTER_X + this.x * SCALE * zoom;
+        const py = CENTER_Y + this.y * SCALE * zoom;
+
+        const dx = -this.x;
+        const dy = -this.y;
+        const angleToSun = Math.atan2(dy, dx);
+
+        const gradient = ctx.createRadialGradient(
+            px + Math.cos(angleToSun)*this.radius*0.3,
+            py + Math.sin(angleToSun)*this.radius*0.3,
+            this.radius*0.1,
+            px, py, this.radius
+        );
+
+        gradient.addColorStop(0,"white");
+        gradient.addColorStop(0.2,this.color);
+        gradient.addColorStop(1,"black");
+
+		ctx.strokeStyle = '#fff';
+        ctx.beginPath();
+        ctx.arc(px, py, this.radius, 0, Math.PI*2);
+        ctx.fillStyle = gradient;
+        ctx.fill();
+		ctx.stroke();
+		
+		ctx.fillStyle = '#fff';
+		ctx.fillText(this.name, px + this.radius * Math.sqrt(zoom) + 10, py - this.radius * Math.sqrt(zoom) - 10);
+    }
+	
+	drawPath(){
+		if(this.path.length < 1) return;
+
+		ctx.fillStyle = this.color;
+		
+		for(let i = 0; i < this.path.length; i++){
+			const px = CENTER_X + this.path[i].x * SCALE * zoom;
+			const py = CENTER_Y + this.path[i].y * SCALE * zoom;
+			ctx.fillRect(px-0.5, py-0.5, 1, 1);
+		}
+	}
+
+}
+
+// ===== CORPI =====
+
+// Sole
+const sun = new Body("SUN", 1.989e30, 0,0, 0,0, 20, "yellow", 6.9634e8);
+// Mercurio
+const mercury = new Body("MERCURY", 3.301e23, 0.387 * AU, 0, 0, 47870, 4, "#bbbbbb", 2.4397e6);
+// Venere
+const venus = new Body("VENUS", 4.867e24, 0.723 * AU, 0, 0, 35020, 5, "#d4a373", 6.0518e6);
+// Terra
+const earth = new Body("EARTH", 5.972e24, AU, 0, 0, 29780, 6, "#3a86ff", 6.371e6);
+// Luna
+const moon = new Body("MOON", 7.342e22, AU + 384400000, 0, 0, 29780 + 1022, 3, "white", 1.7371e6);
+// Marte
+const mars = new Body("MARS", 6.39e23, 1.524 * AU, 0, 0, 24077, 4, "#c1121f", 3.3895e6);
+// Giove
+const jupiter = new Body("JUPITER", 1.898e27, 5.204 * AU, 0, 0, 13070, 10, "#c19a6b", 6.9911e7);
+// Saturno
+const saturn = new Body("SATURN", 5.683e26, 9.582 * AU, 0, 0, 9680, 9, "#e0c097", 5.8232e7);
+// Urano
+const uranus = new Body("URANUS", 8.681e25, 19.191 * AU, 0, 0, 6800, 8, "#7fdbff", 2.5362e7);
+// Nettuno
+const neptune = new Body("NEPTUNE", 1.024e26, 30.07 * AU, 0, 0, 5400, 8, "#4169e1", 2.4622e7);
+// Plutone
+const pluto = new Body("PLUTO", 1.309e22, 39.48 * AU, 0, 0, 4700, 3, "#c2b280", 1.1883e6);
+
+
+const bodies = [ sun, mercury, venus, earth, moon, mars, jupiter, saturn, uranus, neptune, pluto ];
+
+function drawSaturnRings(body){
+    const px = CENTER_X + body.x * SCALE * zoom;
+    const py = CENTER_Y + body.y * SCALE * zoom;
+
+    ctx.save();
+    ctx.translate(px, py);
+    ctx.rotate(Math.PI/4);
+
+    ctx.beginPath();
+    ctx.ellipse(0,0, body.radius*2, body.radius*1.2, 0,0,Math.PI*2);
+    ctx.strokeStyle="rgba(200,180,120,0.5)";
+    ctx.lineWidth=5;
+    ctx.stroke();
+
+    ctx.restore();
+}
+
+function animate(){
+	if (!paused){
+		ctx.clearRect(0,0,canvas.width,canvas.height);
+
+		for(let body of bodies){
+			body.updateForces(bodies);
+		}
+
+		for(let body of bodies){
+			body.updatePosition();
+		}
+		
+		
+		if (autocenter) {
+			const cm = computeCenterOfMass(bodies);
+			CENTER_X = canvas.width / 2 - cm.x * SCALE * zoom;
+			CENTER_Y = canvas.height / 2 - cm.y * SCALE * zoom;
+		}
+		
+		for(let body of bodies) {
+			body.draw();
+			body.drawPath();
+
+			if(body.name === "Saturno"){
+				drawSaturnRings(body);
+			}
+		}
+		
+		drawStats();
+	}
+	
+    requestAnimationFrame(animate);
+}
+
+canvas.addEventListener("wheel", (e) => {
+    e.preventDefault();
+
+    const zoomFactor = 1.1;
+    const mouseX = e.clientX;
+    const mouseY = e.clientY;
+
+    const worldX = (mouseX - CENTER_X) / (zoom * SCALE);
+    const worldY = (mouseY - CENTER_Y) / (zoom * SCALE);
+
+    if (e.deltaY < 0) zoom *= zoomFactor;
+    else zoom /= zoomFactor;
+
+    CENTER_X = mouseX - worldX * zoom * SCALE;
+    CENTER_Y = mouseY - worldY * zoom * SCALE;
+});
+
+
+canvas.addEventListener("click", (e) => {
+
+    const mouseX = e.clientX;
+    const mouseY = e.clientY;
+
+    // coordinate mondo prima del click
+    const worldX = (mouseX - CENTER_X) / (zoom * SCALE);
+    const worldY = (mouseY - CENTER_Y) / (zoom * SCALE);
+
+    // nuovo offset per mettere quel punto al centro
+    CENTER_X = canvas.width / 2 - worldX * zoom * SCALE;
+    CENTER_Y = canvas.height / 2 - worldY * zoom * SCALE;
+});
+
+function fixCenterOfMass(bodies){
+    let totalMass = 0;
+    let px = 0;
+    let py = 0;
+
+    for (let b of bodies){
+        totalMass += b.mass;
+        px += b.mass * b.vx;
+        py += b.mass * b.vy;
+    }
+
+    const vxCM = px / totalMass;
+    const vyCM = py / totalMass;
+
+    for (let b of bodies){
+        b.vx -= vxCM;
+        b.vy -= vyCM;
+    }
+}
+
+function computeCenterOfMass(bodies){
+    let totalMass = 0;
+    let x = 0;
+    let y = 0;
+
+    for (let b of bodies){
+        totalMass += b.mass;
+        x += b.mass * b.x;
+        y += b.mass * b.y;
+    }
+
+    return {
+        x: x / totalMass,
+        y: y / totalMass
+    };
+}
+
+function drawStats() {
+	bodies.forEach(item => { 
+	document.getElementById(item.name).innerHTML = 
+	'<span style="color: '+item.color+'">' + item.name + '</span>:' +
+	' mass=' + item.mass + 'kg ' +
+	' radius=' + item.realRadius + 'm ' +
+	' x=' + item.x + 'm ' +
+	' y=' + item.y + 'm ' +
+	' vx=' + item.vx + 'm/s ' +
+	' vy=' + item.vy + 'm/s '
+	});
+}
+
+fixCenterOfMass(bodies);
+
+animate();
+
+</script>
+</body>
+</html>
