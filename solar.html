@@ -7,43 +7,134 @@
 body { margin:0; background:black; overflow:hidden; font-family: monospace; color: #fff; }
 canvas { display:block; }
 #controls { position: absolute; top:0; left:0; }
-#info { position: absolute; bottom:0; left:0; color: #222; }
-p { margin: 0; }
+#info { position: absolute; bottom:0; left:0; color: #333; }
+p { margin: 0 0 0 10px; }
+.planet { display: flex; justify-content: flex-start; align-items: center; }
 </style>
 </head>
 <body>
 <div id="controls">
-<button onclick="TIME_STEP /= 2;document.getElementById('TS').innerHTML=TIME_STEP">-</button>
-TIMESTEP
-<button onclick="TIME_STEP *= 2;document.getElementById('TS').innerHTML=TIME_STEP">+</button>
-= <span id="TS">86400</span>
-<br/>
-<button onclick="autocenter=!autocenter;document.getElementById('AC').innerHTML=autocenter">AUTOCENTER</button>
-= <span id="AC">true</span>
-<br/>
-MOUSE WHEEL = ZOOM
-<br/>
-MOUSE CLICK = CENTER
-<br/>
-<button onclick="paused=!paused;document.getElementById('PAUSED').innerHTML=paused">PAUSED</button>
-= <span id="PAUSED">false</span>
-<br/>
-<button onclick="if(document.getElementById('info').style.display=='none')document.getElementById('info').style.display='block';else document.getElementById('info').style.display='none';">INFO</button>
+	<button onclick="TIME_STEP /= 2;document.getElementById('TS').innerHTML=TIME_STEP">-</button>
+	TIMESTEP
+	<button onclick="TIME_STEP *= 2;document.getElementById('TS').innerHTML=TIME_STEP">+</button>
+	= <span id="TS">86400</span>
+	<br/>
+	<button onclick="autocenter=!autocenter;document.getElementById('AC').innerHTML=autocenter">AUTOCENTER</button>
+	= <span id="AC">true</span>
+	<br/>
+	MOUSE WHEEL = ZOOM
+	<br/>
+	MOUSE CLICK = CENTER
+	<br/>
+	<button onclick="paused=!paused;document.getElementById('PAUSED').innerHTML=paused">PAUSED</button>
+	= <span id="PAUSED">false</span>
+	<br/>
+	<button onclick="if(document.getElementById('info').style.display=='none')document.getElementById('info').style.display='block';else document.getElementById('info').style.display='none';">INFO</button>
 </div>
 <div id="info">
-<p id="SUN">SUN</p>
-<p id="MERCURY">MERCURY</p>
-<p id="VENUS">VENUS</p>
-<p id="EARTH">EARTH</p>
-<p id="MOON">MOON</p>
-<p id="MARS">MARS</p>
-<p id="JUPITER">JUPITER</p>
-<p id="SATURN">SATURN</p>
-<p id="URANUS">URANUS</p>
-<p id="NEPTUNE">NEPTUNE</p>
-<p id="PLUTO">PLUTO</p>
+	<div class="planet">
+		<p>MASS:</p>
+		<button onclick="sun.mass/=mass">-</button>
+		<button onclick="sun.mass*=mass">+</button>
+		<p>SPEED:</p>
+		<button onclick="sun.vx/=spd;sun.vy/=spd">-</button>
+		<button onclick="sun.vx*=spd;sun.vy*=spd">+</button>
+		<p id="SUN">SUN</p>
+	</div>
+	<div class="planet">
+		<p>MASS:</p>
+		<button onclick="mercury.mass/=mass">-</button>
+		<button onclick="mercury.mass*=mass">+</button>
+		<p>SPEED:</p>
+		<button onclick="mercury.vx/=spd;mercury.vy/=spd">-</button>
+		<button onclick="mercury.vx*=spd;mercury.vy*=spd">+</button>
+		<p id="MERCURY">MERCURY</p>
+	</div>
+	<div class="planet">
+		<p>MASS:</p>
+		<button onclick="venus.mass/=mass">-</button>
+		<button onclick="venus.mass*=mass">+</button>
+		<p>SPEED:</p>
+		<button onclick="venus.vx/=spd;venus.vy/=spd">-</button>
+		<button onclick="venus.vx*=spd;venus.vy*=spd">+</button>
+		<p id="VENUS">VENUS</p>
+	</div>
+	<div class="planet">
+		<p>MASS:</p>
+		<button onclick="earth.mass/=mass">-</button>
+		<button onclick="earth.mass*=mass">+</button>
+		<p>SPEED:</p>
+		<button onclick="earth.vx/=spd;earth.vy/=spd">-</button>
+		<button onclick="earth.vx*=spd;earth.vy*=spd">+</button>
+		<p id="EARTH">EARTH</p>
+	</div>
+	<div class="planet">
+		<p>MASS:</p>
+		<button onclick="moon.mass/=mass">-</button>
+		<button onclick="moon.mass*=mass">+</button>
+		<p>SPEED:</p>
+		<button onclick="moon.vx/=spd;moon.vy/=spd">-</button>
+		<button onclick="moon.vx*=spd;moon.vy*=spd">+</button>
+		<p id="MOON">MOON</p>
+	</div>
+	<div class="planet">
+		<p>MASS:</p>
+		<button onclick="mars.mass/=mass">-</button>
+		<button onclick="mars.mass*=mass">+</button>
+		<p>SPEED:</p>
+		<button onclick="mars.vx/=spd;mars.vy/=spd">-</button>
+		<button onclick="mars.vx*=spd;mars.vy*=spd">+</button>
+		<p id="MARS">MARS</p>
+	</div>
+	<div class="planet">
+		<p>MASS:</p>
+		<button onclick="jupiter.mass/=mass">-</button>
+		<button onclick="jupiter.mass*=mass">+</button>
+		<p>SPEED:</p>
+		<button onclick="jupiter.vx/=spd;jupiter.vy/=spd">-</button>
+		<button onclick="jupiter.vx*=spd;jupiter.vy*=spd">+</button>
+		<p id="JUPITER">JUPITER</p>
+	</div>
+	<div class="planet">
+		<p>MASS:</p>
+		<button onclick="saturn.mass/=mass">-</button>
+		<button onclick="saturn.mass*=mass">+</button>
+		<p>SPEED:</p>
+		<button onclick="saturn.vx/=spd;saturn.vy/=spd">-</button>
+		<button onclick="saturn.vx*=spd;saturn.vy*=spd">+</button>
+		<p id="SATURN">SATURN</p>
+	</div>
+	<div class="planet">
+		<p>MASS:</p>
+		<button onclick="uranus.mass/=mass">-</button>
+		<button onclick="uranus.mass*=mass">+</button>
+		<p>SPEED:</p>
+		<button onclick="uranus.vx/=spd;uranus.vy/=spd">-</button>
+		<button onclick="uranus.vx*=spd;uranus.vy*=spd">+</button>
+		<p id="URANUS">URANUS</p>
+	</div>
+	<div class="planet">
+		<p>MASS:</p>
+		<button onclick="neptune.mass/=mass">-</button>
+		<button onclick="neptune.mass*=mass">+</button>
+		<p>SPEED:</p>
+		<button onclick="neptune.vx/=spd;neptune.vy/=spd">-</button>
+		<button onclick="neptune.vx*=spd;neptune.vy*=spd">+</button>
+		<p id="NEPTUNE">NEPTUNE</p>
+	</div>
+	<div class="planet">
+		<p>MASS:</p>
+		<button onclick="pluto.mass/=mass">-</button>
+		<button onclick="pluto.mass*=mass">+</button>
+		<p>SPEED:</p>
+		<button onclick="pluto.vx/=spd;pluto.vy/=spd">-</button>
+		<button onclick="pluto.vx*=spd;pluto.vy*=spd">+</button>
+		<p id="PLUTO">PLUTO</p>
+	</div>
 </div>
+
 <canvas id="space"></canvas>
+
 <script>
 
 // ===== COSTANTI REALI =====
@@ -55,6 +146,8 @@ let zoom = 1;
 let TIME_STEP = DAY * 1; //1 giorno per frame (più stabile con Mercurio)
 let autocenter = true;//centra vista sul centro di massa CM calcolato ogni frame
 let paused = false;//pausa on/off
+let spd = 1.05;
+let mass = 1.05;
 
 const canvas = document.getElementById("space");
 const ctx = canvas.getContext("2d");
@@ -168,9 +261,9 @@ class Body {
 }
 
 // ===== CORPI =====
-
+//name, mass, x, y, vx, vy, radius, color, realRadius
 // Sole
-const sun = new Body("SUN", 1.989e30, 0,0, 0,0, 20, "yellow", 6.9634e8);
+const sun = new Body("SUN", 1.989e30, 0,0, 0,0, 20, "#ffff00", 6.9634e8);
 // Mercurio
 const mercury = new Body("MERCURY", 3.301e23, 0.387 * AU, 0, 0, 47870, 4, "#bbbbbb", 2.4397e6);
 // Venere
@@ -178,7 +271,7 @@ const venus = new Body("VENUS", 4.867e24, 0.723 * AU, 0, 0, 35020, 5, "#d4a373",
 // Terra
 const earth = new Body("EARTH", 5.972e24, AU, 0, 0, 29780, 6, "#3a86ff", 6.371e6);
 // Luna
-const moon = new Body("MOON", 7.342e22, AU + 384400000, 0, 0, 29780 + 1022, 3, "white", 1.7371e6);
+const moon = new Body("MOON", 7.342e22, AU + 384400000, 0, 0, 29780 + 1022, 3, "#eeeeee", 1.7371e6);
 // Marte
 const mars = new Body("MARS", 6.39e23, 1.524 * AU, 0, 0, 24077, 4, "#c1121f", 3.3895e6);
 // Giove
