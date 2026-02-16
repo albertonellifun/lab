@@ -26,6 +26,8 @@ p { margin: 0 0 0 10px; }
 	<br/>
 	MOUSE CLICK = CENTER
 	<br/>
+	AUTOCENTER 0..9 / S
+	<br/>
 	<button onclick="paused=!paused;document.getElementById('PAUSED').innerHTML=paused">PAUSED</button>
 	= <span id="PAUSED">false</span>
 	<br/>
@@ -240,9 +242,9 @@ class Body {
 
 		const threshold = Math.PI / 180; // 1 grado in rad
 		if (deltaAngle > threshold) {
-			if(this.path.length >= 5000){
+			if(this.path.length >= 1000){
 				this.path[this.pathIndex] = {x:this.x, y:this.y};
-				this.pathIndex = (this.pathIndex + 1) % 5000;
+				this.pathIndex = (this.pathIndex + 1) % 1000;
 			} else {
 				this.path.push({x:this.x, y:this.y});
 			}
@@ -442,17 +444,19 @@ function animate(){
             b.vx += 0.5 * (b.ax + newAcc.ax) * TIME_STEP;
             b.vy += 0.5 * (b.ay + newAcc.ay) * TIME_STEP;
         }
-
 		
-		
-		
-		
-		
-		
+				
 		if (autocenter) {
-			const cm = computeCenterOfMass(bodies);
-			CENTER_X = canvas.width / 2 - cm.x * SCALE * zoom;
-			CENTER_Y = canvas.height / 2 - cm.y * SCALE * zoom;
+			if (forcedCenterBody) {
+				// centriamo sul corpo selezionato
+				CENTER_X = canvas.width / 2 - forcedCenterBody.x * SCALE * zoom;
+				CENTER_Y = canvas.height / 2 - forcedCenterBody.y * SCALE * zoom;
+			} else {
+				// centro di massa
+				const cm = computeCenterOfMass(bodies);
+				CENTER_X = canvas.width / 2 - cm.x * SCALE * zoom;
+				CENTER_Y = canvas.height / 2 - cm.y * SCALE * zoom;
+			}
 		}
 		
 		for (let body of bodies) {
@@ -470,6 +474,7 @@ function animate(){
     requestAnimationFrame(animate);
 }
 
+//zoom
 canvas.addEventListener("wheel", (e) => {
     e.preventDefault();
 
@@ -489,7 +494,7 @@ canvas.addEventListener("wheel", (e) => {
 	document.getElementById("ZOOM").innerHTML=zoom;
 });
 
-
+//click
 canvas.addEventListener("click", (e) => {
 
     const mouseX = e.clientX;
@@ -503,6 +508,24 @@ canvas.addEventListener("click", (e) => {
     CENTER_X = canvas.width / 2 - worldX * zoom * SCALE;
     CENTER_Y = canvas.height / 2 - worldY * zoom * SCALE;
 });
+
+//autocenter su pianeta
+let forcedCenterBody = null; // corpo su cui centrare con i tasti
+
+// Gestione tasti
+window.addEventListener("keydown", (e) => {
+    let index = -1;
+    if (e.key >= "1" && e.key <= "9") index = parseInt(e.key);
+    else if (e.key === "0") index = 10; // Plutone
+
+    if (index >= 0 && index < bodies.length) {
+        forcedCenterBody = bodies[index];
+    }
+    // tasto S per Sole
+    if (e.key === "s" || e.key === "S") forcedCenterBody = bodies[0];
+});
+
+
 
 function fixCenterOfMass(bodies){
     let totalMass = 0;
