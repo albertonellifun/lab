@@ -194,6 +194,7 @@ class Body {
 		this.realRadius = realRadius;
         this.color = color;
 		this.path = [];//percorso=posizioni passate
+		this.pathIndex = 0;
 		this.ax = 0;//accelerazione corrente (x)
 		this.ay = 0;//accelerazione corrente (y)
     }
@@ -230,7 +231,7 @@ class Body {
 		const lastPos = lastIdx === -1 ? {x: 0, y: 0} : this.path[lastIdx];
 
 		//angolo attuale rispetto al sole
-		const angle = Math.atan2(this.y - sun.y, this.x - sun.x);
+		const angle = Math.atan2(this.y, this.x);//this.y - sun.y, this.x - sun.x);//voglio vedere oscillazioni del sole!!!
 		const lastAngle = Math.atan2(lastPos.y, lastPos.x);
 
 		let deltaAngle = Math.abs(angle - lastAngle);
@@ -239,8 +240,12 @@ class Body {
 
 		const threshold = Math.PI / 180; // 1 grado in rad
 		if (deltaAngle > threshold) {
-			this.path.push({x: this.x, y: this.y});
-			if(this.path.length > 5000) this.path.shift();
+			if(this.path.length >= 5000){
+				this.path[this.pathIndex] = {x:this.x, y:this.y};
+				this.pathIndex = (this.pathIndex + 1) % 5000;
+			} else {
+				this.path.push({x:this.x, y:this.y});
+			}
 		}
 	}
 
