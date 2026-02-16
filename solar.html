@@ -14,20 +14,29 @@ p { margin: 0 0 0 10px; }
 </head>
 <body>
 <div id="controls">
-	<button onclick="TIME_STEP /= 2;document.getElementById('TS').innerHTML=TIME_STEP">-</button>
+	<button onclick="TIME_STEP /= ts;document.getElementById('TS').innerHTML=TIME_STEP">-</button>
 	TIMESTEP
-	<button onclick="TIME_STEP *= 2;document.getElementById('TS').innerHTML=TIME_STEP">+</button>
+	<button onclick="TIME_STEP *= ts;document.getElementById('TS').innerHTML=TIME_STEP">+</button>
 	= <span id="TS">86400</span>
 	<br/>
 	<button onclick="autocenter=!autocenter;document.getElementById('AC').innerHTML=autocenter">AUTOCENTER</button>
 	= <span id="AC">true</span>
 	<br/>
-	MOUSE WHEEL = ZOOM
+	MOUSE WHEEL = ZOOM = <span id="ZOOM">1</span>
 	<br/>
 	MOUSE CLICK = CENTER
 	<br/>
 	<button onclick="paused=!paused;document.getElementById('PAUSED').innerHTML=paused">PAUSED</button>
 	= <span id="PAUSED">false</span>
+	<br/>
+	<button onclick="BORDER=!BORDER;document.getElementById('BORDER').innerHTML=BORDER">BORDER</button>
+	= <span id="BORDER">true</span>
+	<br/>
+	<button onclick="LABEL=!LABEL;document.getElementById('LABEL').innerHTML=LABEL">LABEL</button>
+	= <span id="LABEL">true</span>
+	<br/>
+	<button onclick="PATH=!PATH;document.getElementById('PATH').innerHTML=PATH">PATH</button>
+	= <span id="PATH">true</span>
 	<br/>
 	<button onclick="if(document.getElementById('info').style.display=='none')document.getElementById('info').style.display='block';else document.getElementById('info').style.display='none';">INFO</button>
 </div>
@@ -39,6 +48,7 @@ p { margin: 0 0 0 10px; }
 		<p>SPEED:</p>
 		<button onclick="sun.vx/=spd;sun.vy/=spd">-</button>
 		<button onclick="sun.vx*=spd;sun.vy*=spd">+</button>
+		<button onclick="sun.vx*=-1;sun.vy*=-1">INV</button>
 		<p id="SUN">SUN</p>
 	</div>
 	<div class="planet">
@@ -48,6 +58,7 @@ p { margin: 0 0 0 10px; }
 		<p>SPEED:</p>
 		<button onclick="mercury.vx/=spd;mercury.vy/=spd">-</button>
 		<button onclick="mercury.vx*=spd;mercury.vy*=spd">+</button>
+		<button onclick="mercury.vx*=-1;mercury.vy*=-1">INV</button>
 		<p id="MERCURY">MERCURY</p>
 	</div>
 	<div class="planet">
@@ -57,6 +68,7 @@ p { margin: 0 0 0 10px; }
 		<p>SPEED:</p>
 		<button onclick="venus.vx/=spd;venus.vy/=spd">-</button>
 		<button onclick="venus.vx*=spd;venus.vy*=spd">+</button>
+		<button onclick="venus.vx*=-1;venus.vy*=-1">INV</button>
 		<p id="VENUS">VENUS</p>
 	</div>
 	<div class="planet">
@@ -66,6 +78,7 @@ p { margin: 0 0 0 10px; }
 		<p>SPEED:</p>
 		<button onclick="earth.vx/=spd;earth.vy/=spd">-</button>
 		<button onclick="earth.vx*=spd;earth.vy*=spd">+</button>
+		<button onclick="earth.vx*=-1;earth.vy*=-1">INV</button>
 		<p id="EARTH">EARTH</p>
 	</div>
 	<div class="planet">
@@ -75,6 +88,7 @@ p { margin: 0 0 0 10px; }
 		<p>SPEED:</p>
 		<button onclick="moon.vx/=spd;moon.vy/=spd">-</button>
 		<button onclick="moon.vx*=spd;moon.vy*=spd">+</button>
+		<button onclick="moon.vx*=-1;moon.vy*=-1">INV</button>
 		<p id="MOON">MOON</p>
 	</div>
 	<div class="planet">
@@ -84,6 +98,7 @@ p { margin: 0 0 0 10px; }
 		<p>SPEED:</p>
 		<button onclick="mars.vx/=spd;mars.vy/=spd">-</button>
 		<button onclick="mars.vx*=spd;mars.vy*=spd">+</button>
+		<button onclick="mars.vx*=-1;mars.vy*=-1">INV</button>
 		<p id="MARS">MARS</p>
 	</div>
 	<div class="planet">
@@ -93,6 +108,7 @@ p { margin: 0 0 0 10px; }
 		<p>SPEED:</p>
 		<button onclick="jupiter.vx/=spd;jupiter.vy/=spd">-</button>
 		<button onclick="jupiter.vx*=spd;jupiter.vy*=spd">+</button>
+		<button onclick="jupiter.vx*=-1;jupiter.vy*=-1">INV</button>
 		<p id="JUPITER">JUPITER</p>
 	</div>
 	<div class="planet">
@@ -102,6 +118,7 @@ p { margin: 0 0 0 10px; }
 		<p>SPEED:</p>
 		<button onclick="saturn.vx/=spd;saturn.vy/=spd">-</button>
 		<button onclick="saturn.vx*=spd;saturn.vy*=spd">+</button>
+		<button onclick="saturn.vx*=-1;saturn.vy*=-1">INV</button>
 		<p id="SATURN">SATURN</p>
 	</div>
 	<div class="planet">
@@ -111,6 +128,7 @@ p { margin: 0 0 0 10px; }
 		<p>SPEED:</p>
 		<button onclick="uranus.vx/=spd;uranus.vy/=spd">-</button>
 		<button onclick="uranus.vx*=spd;uranus.vy*=spd">+</button>
+		<button onclick="uranus.vx*=-1;uranus.vy*=-1">INV</button>
 		<p id="URANUS">URANUS</p>
 	</div>
 	<div class="planet">
@@ -120,6 +138,7 @@ p { margin: 0 0 0 10px; }
 		<p>SPEED:</p>
 		<button onclick="neptune.vx/=spd;neptune.vy/=spd">-</button>
 		<button onclick="neptune.vx*=spd;neptune.vy*=spd">+</button>
+		<button onclick="neptune.vx*=-1;neptune.vy*=-1">INV</button>
 		<p id="NEPTUNE">NEPTUNE</p>
 	</div>
 	<div class="planet">
@@ -129,6 +148,7 @@ p { margin: 0 0 0 10px; }
 		<p>SPEED:</p>
 		<button onclick="pluto.vx/=spd;pluto.vy/=spd">-</button>
 		<button onclick="pluto.vx*=spd;pluto.vy*=spd">+</button>
+		<button onclick="pluto.vx*=-1;pluto.vy*=-1">INV</button>
 		<p id="PLUTO">PLUTO</p>
 	</div>
 </div>
@@ -146,8 +166,12 @@ let zoom = 1;
 let TIME_STEP = DAY * 1; //1 giorno per frame (più stabile con Mercurio)
 let autocenter = true;//centra vista sul centro di massa CM calcolato ogni frame
 let paused = false;//pausa on/off
-let spd = 1.05;
-let mass = 1.05;
+let spd = 1.05;//speed +/-
+let mass = 1.05;//mass +/-
+let ts = 2;//time step +/-
+let BORDER = true;
+let LABEL = true;
+let PATH = true;
 
 const canvas = document.getElementById("space");
 const ctx = canvas.getContext("2d");
@@ -170,6 +194,8 @@ class Body {
 		this.realRadius = realRadius;
         this.color = color;
 		this.path = [];//percorso=posizioni passate
+		this.ax = 0;//accelerazione corrente (x)
+		this.ay = 0;//accelerazione corrente (y)
     }
 
     updateForces(bodies){
@@ -197,12 +223,14 @@ class Body {
     updatePosition() {
 		this.x += this.vx * TIME_STEP;
 		this.y += this.vy * TIME_STEP;
-
+	}
+	
+	updatePath() {
 		const lastIdx = this.path.length - 1;
 		const lastPos = lastIdx === -1 ? {x: 0, y: 0} : this.path[lastIdx];
 
-		// angolo attuale rispetto al sole
-		const angle = Math.atan2(this.y, this.x);
+		//angolo attuale rispetto al sole
+		const angle = Math.atan2(this.y - sun.y, this.x - sun.x);
 		const lastAngle = Math.atan2(lastPos.y, lastPos.x);
 
 		let deltaAngle = Math.abs(angle - lastAngle);
@@ -217,34 +245,68 @@ class Body {
 	}
 
     draw(){
-        const px = CENTER_X + this.x * SCALE * zoom;
-        const py = CENTER_Y + this.y * SCALE * zoom;
+		const px = CENTER_X + this.x * SCALE * zoom;
+		const py = CENTER_Y + this.y * SCALE * zoom;
+		const r = this.radius;// * zoom / 10;
 
-        const dx = -this.x;
-        const dy = -this.y;
-        const angleToSun = Math.atan2(dy, dx);
+		// Disegno base pianeta
+		ctx.beginPath();
+		ctx.arc(px, py, r, 0, Math.PI*2);
+		ctx.fillStyle = this.color;
+		ctx.fill();
 
-        const gradient = ctx.createRadialGradient(
-            px + Math.cos(angleToSun)*this.radius*0.3,
-            py + Math.sin(angleToSun)*this.radius*0.3,
-            this.radius*0.1,
-            px, py, this.radius
-        );
+		if (this !== sun) {
+			// ===== DIREZIONE LUCE DAL SOLE =====
+			const dx = sun.x - this.x;
+			const dy = sun.y - this.y;
+			const angle = Math.atan2(dy, dx);
 
-        gradient.addColorStop(0,"white");
-        gradient.addColorStop(0.2,this.color);
-        gradient.addColorStop(1,"black");
+			ctx.save();
 
-		ctx.strokeStyle = '#fff';
-        ctx.beginPath();
-        ctx.arc(px, py, this.radius, 0, Math.PI*2);
-        ctx.fillStyle = gradient;
-        ctx.fill();
-		ctx.stroke();
+			// Clip al cerchio del pianeta
+			ctx.beginPath();
+			ctx.arc(px, py, r, 0, Math.PI*2);
+			ctx.clip();
+
+			// Impostiamo modalità moltiplicazione (ombra realistica)
+			ctx.globalCompositeOperation = "multiply";
+
+			// Creiamo gradiente ombra
+			const shadowGradient = ctx.createLinearGradient(
+				px - Math.cos(angle) * r,
+				py - Math.sin(angle) * r,
+				px + Math.cos(angle) * r,
+				py + Math.sin(angle) * r
+			);
+
+			shadowGradient.addColorStop(0, "rgba(0,0,0,1)");
+			shadowGradient.addColorStop(0.5, "rgba(0,0,0,0.25)");
+			shadowGradient.addColorStop(1, "rgba(0,0,0,0)");
+
+			ctx.fillStyle = shadowGradient;
+			ctx.fillRect(px - r, py - r, r*2, r*2);
+			ctx.restore();
+		} else {
+			ctx.shadowColor = this.color;
+			ctx.shadowBlur = r * 3; // più grande = glow più ampio
+			ctx.fill();
+		}
 		
-		ctx.fillStyle = '#fff';
-		ctx.fillText(this.name, px + this.radius * Math.sqrt(zoom) + 10, py - this.radius * Math.sqrt(zoom) - 10);
-    }
+		if(BORDER){
+			ctx.strokeStyle = "#fff";
+			ctx.stroke();
+		}
+
+		if(LABEL){
+			ctx.fillStyle = "#fff";
+			ctx.fillText(
+				this.name,
+				px + r * Math.sqrt(zoom) + 10,
+				py - r * Math.sqrt(zoom) - 10
+			);
+		}
+	}
+
 	
 	drawPath(){
 		if(this.path.length < 1) return;
@@ -258,32 +320,57 @@ class Body {
 		}
 	}
 
+	computeAcceleration(bodies){
+		let ax = 0;
+		let ay = 0;
+
+		for(let other of bodies){
+			if(other === this) continue;
+
+			const dx = other.x - this.x;
+			const dy = other.y - this.y;
+			const distSq = dx*dx + dy*dy + 1e6;//evita divisione per zero, numero epsilon vicino alle dimensioni dei corpi
+			/*
+			const dist = Math.sqrt(distSq);
+			const a = G * other.mass / distSq;
+			ax += a * dx / dist;
+			ay += a * dy / dist;
+			*/
+			const invDist = 1 / Math.sqrt(distSq); // softening
+			const invDist3 = invDist * invDist * invDist;
+			ax += G * other.mass * dx * invDist3;
+			ay += G * other.mass * dy * invDist3;
+		}
+
+		return { ax, ay };
+	}
+
 }
 
 // ===== CORPI =====
 //name, mass, x, y, vx, vy, radius, color, realRadius
 // Sole
-const sun = new Body("SUN", 1.989e30, 0,0, 0,0, 20, "#ffff00", 6.9634e8);
+const sun = new Body("SUN", 1.989e30, 0,0, 0,0, 20, "#ffffdd", 6.9634e8);
 // Mercurio
-const mercury = new Body("MERCURY", 3.301e23, 0.387 * AU, 0, 0, 47870, 4, "#bbbbbb", 2.4397e6);
+const mercury = new Body("MERCURY", 3.301e23, 0.387 * AU, 0, 0, 47870, 4, "#cc9988", 2.4397e6);
 // Venere
-const venus = new Body("VENUS", 4.867e24, 0.723 * AU, 0, 0, 35020, 5, "#d4a373", 6.0518e6);
+const venus = new Body("VENUS", 4.867e24, 0.723 * AU, 0, 0, 35020, 5, "#ddddaa", 6.0518e6);
 // Terra
-const earth = new Body("EARTH", 5.972e24, AU, 0, 0, 29780, 6, "#3a86ff", 6.371e6);
+const earth = new Body("EARTH", 5.972e24, AU, 0, 0, 29780, 6, "#4499ee", 6.371e6);
 // Luna
-const moon = new Body("MOON", 7.342e22, AU + 384400000, 0, 0, 29780 + 1022, 3, "#eeeeee", 1.7371e6);
+const moon = new Body("MOON", 7.342e22, AU + 384400000, 0, 0, 29780 + 1022, 2, "#eeeeee", 1.7371e6);
 // Marte
-const mars = new Body("MARS", 6.39e23, 1.524 * AU, 0, 0, 24077, 4, "#c1121f", 3.3895e6);
+const mars = new Body("MARS", 6.39e23, 1.524 * AU, 0, 0, 24077, 4, "#cc3322", 3.3895e6);
 // Giove
-const jupiter = new Body("JUPITER", 1.898e27, 5.204 * AU, 0, 0, 13070, 10, "#c19a6b", 6.9911e7);
+const jupiter = new Body("JUPITER", 1.898e27, 5.204 * AU, 0, 0, 13070, 10, "#cc9966", 6.9911e7);
 // Saturno
-const saturn = new Body("SATURN", 5.683e26, 9.582 * AU, 0, 0, 9680, 9, "#e0c097", 5.8232e7);
+const saturn = new Body("SATURN", 5.683e26, 9.582 * AU, 0, 0, 9680, 9, "#eecc99", 5.8232e7);
 // Urano
-const uranus = new Body("URANUS", 8.681e25, 19.191 * AU, 0, 0, 6800, 8, "#7fdbff", 2.5362e7);
+const uranus = new Body("URANUS", 8.681e25, 19.191 * AU, 0, 0, 6800, 8, "#77ddff", 2.5362e7);
 // Nettuno
-const neptune = new Body("NEPTUNE", 1.024e26, 30.07 * AU, 0, 0, 5400, 8, "#4169e1", 2.4622e7);
+const neptune = new Body("NEPTUNE", 1.024e26, 30.07 * AU, 0, 0, 5400, 8, "#4477dd", 2.4622e7);
 // Plutone
-const pluto = new Body("PLUTO", 1.309e22, 39.48 * AU, 0, 0, 4700, 3, "#c2b280", 1.1883e6);
+const pluto = new Body("PLUTO", 1.309e22, 39.48 * AU, 0, 0, 4700, 3, "#ddccaa", 1.1883e6);
 
 
 const bodies = [ sun, mercury, venus, earth, moon, mars, jupiter, saturn, uranus, neptune, pluto ];
@@ -309,13 +396,52 @@ function animate(){
 	if (!paused){
 		ctx.clearRect(0,0,canvas.width,canvas.height);
 
+		/*
 		for(let body of bodies){
 			body.updateForces(bodies);
 		}
 
 		for(let body of bodies){
 			body.updatePosition();
+			body.updatePath();
 		}
+		*/
+		
+		// 1. Calcoliamo le accelerazioni ATTUALI (a_t) per tutti
+        // Invece di sovrascrivere body.ax subito, usiamo una costante temporanea
+        // o assicuriamoci che il calcolo sia atomico.
+        let accelerations = bodies.map(body => body.computeAcceleration(bodies));
+
+        // 2. Aggiorniamo le POSIZIONI di tutti
+        for (let i = 0; i < bodies.length; i++) {
+            let b = bodies[i];
+            let a = accelerations[i];
+            
+            // x(t + dt) = x(t) + v(t)*dt + 0.5 * a(t) * dt^2
+            b.x += b.vx * TIME_STEP + 0.5 * a.ax * TIME_STEP * TIME_STEP;
+            b.y += b.vy * TIME_STEP + 0.5 * a.ay * TIME_STEP * TIME_STEP;
+            
+            // Memorizziamo l'accelerazione vecchia per il calcolo della velocità dopo
+            b.ax = a.ax;
+            b.ay = a.ay;
+			
+			b.updatePath();
+        }
+
+        // 3. Aggiorniamo le VELOCITÀ di tutti
+        for (let b of bodies) {
+            // Calcoliamo la NUOVA accelerazione (a_t+dt) nella nuova posizione
+            let newAcc = b.computeAcceleration(bodies);
+            
+            // v(t + dt) = v(t) + 0.5 * (a(t) + a(t + dt)) * dt
+            b.vx += 0.5 * (b.ax + newAcc.ax) * TIME_STEP;
+            b.vy += 0.5 * (b.ay + newAcc.ay) * TIME_STEP;
+        }
+
+		
+		
+		
+		
 		
 		
 		if (autocenter) {
@@ -324,11 +450,11 @@ function animate(){
 			CENTER_Y = canvas.height / 2 - cm.y * SCALE * zoom;
 		}
 		
-		for(let body of bodies) {
+		for (let body of bodies) {
 			body.draw();
-			body.drawPath();
+			if (PATH) body.drawPath();
 
-			if(body.name === "Saturno"){
+			if (body === saturn){
 				drawSaturnRings(body);
 			}
 		}
@@ -354,6 +480,8 @@ canvas.addEventListener("wheel", (e) => {
 
     CENTER_X = mouseX - worldX * zoom * SCALE;
     CENTER_Y = mouseY - worldY * zoom * SCALE;
+	
+	document.getElementById("ZOOM").innerHTML=zoom;
 });
 
 
