@@ -40,6 +40,10 @@ p { margin: 0 0 0 10px; }
 	<button onclick="PATH=!PATH;document.getElementById('PATH').innerHTML=PATH">PATH</button>
 	= <span id="PATH">true</span>
 	<br/>
+	OBJECTS = <span id="OBJECTS"></span>
+	<br/>
+	PATH LEN = <span id="PATHLEN"></span>
+	<br/>
 	<button onclick="if(document.getElementById('info').style.display=='none')document.getElementById('info').style.display='block';else document.getElementById('info').style.display='none';">INFO</button>
 </div>
 <div id="info">
@@ -240,11 +244,13 @@ class Body {
 		deltaAngle = deltaAngle % (2*Math.PI);
 		if (deltaAngle > Math.PI) deltaAngle = 2*Math.PI - deltaAngle;
 
-		const threshold = Math.PI / 180; // 1 grado in rad
+		const threshold = Math.PI / 180 * 5; //5 gradi in radianti
+		const maxLen = Math.floor(50000 / bodies.length);//5000 per pianeta circa
+		
 		if (deltaAngle > threshold) {
-			if(this.path.length >= 1000){
+			if(this.path.length >= maxLen) {
 				this.path[this.pathIndex] = {x:this.x, y:this.y};
-				this.pathIndex = (this.pathIndex + 1) % 1000;
+				this.pathIndex = (this.pathIndex + 1) % maxLen;
 			} else {
 				this.path.push({x:this.x, y:this.y});
 			}
@@ -254,7 +260,7 @@ class Body {
     draw(){
 		const px = CENTER_X + this.x * SCALE * zoom;
 		const py = CENTER_Y + this.y * SCALE * zoom;
-		const r = this.radius;// * zoom / 10;
+		const r = this.radius * zoom / 10;//
 
 		// Disegno base pianeta
 		ctx.beginPath();
@@ -262,7 +268,7 @@ class Body {
 		ctx.fillStyle = this.color;
 		ctx.fill();
 
-		if (this !== sun) {
+		if (this !== sun && this.name.indexOf("SUN") === -1) {
 			// ===== DIREZIONE LUCE DAL SOLE =====
 			const dx = sun.x - this.x;
 			const dy = sun.y - this.y;
@@ -293,6 +299,16 @@ class Body {
 			ctx.fillStyle = shadowGradient;
 			ctx.fillRect(px - r, py - r, r*2, r*2);
 			ctx.restore();
+			
+			//saturn ringsss
+			if (this === saturn) {				
+				ctx.beginPath();
+				ctx.strokeStyle="rgba(200,180,120,0.25)";
+				ctx.lineWidth = 5 * zoom / 10;
+				ctx.ellipse(px, py, r*2.2, r*3.2, Math.PI/4, 0, Math.PI*2);
+				ctx.stroke();
+				ctx.lineWidth = 1;
+			}			
 		} else {
 			ctx.shadowColor = this.color;
 			ctx.shadowBlur = r * 3; // più grande = glow più ampio
@@ -336,7 +352,9 @@ class Body {
 
 			const dx = other.x - this.x;
 			const dy = other.y - this.y;
-			const distSq = dx*dx + dy*dy + 1e6;//evita divisione per zero, numero epsilon vicino alle dimensioni dei corpi
+			//const distSq = dx*dx + dy*dy + 1e6;//evita divisione per zero, numero epsilon vicino alle dimensioni dei corpi
+			const minDist = other.realRadius + this.realRadius;
+			const distSq = Math.max(dx*dx + dy*dy, minDist*minDist);
 			/*
 			const dist = Math.sqrt(distSq);
 			const a = G * other.mass / distSq;
@@ -382,22 +400,7 @@ const pluto = new Body("PLUTO", 1.309e22, 39.48 * AU, 0, 0, 4700, 3, "#ddccaa", 
 
 const bodies = [ sun, mercury, venus, earth, moon, mars, jupiter, saturn, uranus, neptune, pluto ];
 
-function drawSaturnRings(body){
-    const px = CENTER_X + body.x * SCALE * zoom;
-    const py = CENTER_Y + body.y * SCALE * zoom;
-
-    ctx.save();
-    ctx.translate(px, py);
-    ctx.rotate(Math.PI/4);
-
-    ctx.beginPath();
-    ctx.ellipse(0,0, body.radius*2, body.radius*1.2, 0,0,Math.PI*2);
-    ctx.strokeStyle="rgba(200,180,120,0.5)";
-    ctx.lineWidth=5;
-    ctx.stroke();
-
-    ctx.restore();
-}
+createOuterAsteroidBelt(300, 40, 55);//300 asteroidi tra 40->55 AU
 
 function animate(){
 	if (!paused){
@@ -459,13 +462,12 @@ function animate(){
 			}
 		}
 		
+		checkCollisions();
+		
 		for (let body of bodies) {
-			body.draw();
 			if (PATH) body.drawPath();
 
-			if (body === saturn){
-				drawSaturnRings(body);
-			}
+			body.draw();
 		}
 		
 		drawStats();
@@ -525,6 +527,36 @@ window.addEventListener("keydown", (e) => {
     if (e.key === "s" || e.key === "S") forcedCenterBody = bodies[0];
 });
 
+let newSunIdx = 0;
+canvas.addEventListener("contextmenu", (e) => {
+    e.preventDefault(); // evita il menu di default del browser
+	const mouseX = e.clientX;
+    const mouseY = e.clientY;
+	const worldX = (mouseX - CENTER_X) / (zoom * SCALE);
+    const worldY = (mouseY - CENTER_Y) / (zoom * SCALE);
+	newSunIdx++;
+	let mass = parseFloat(prompt("Insert SUN"+newSunIdx+" mass (in kg, default = SUN mass / 4)", sun.mass/4));
+	let realRadius = parseFloat(prompt("Insert SUN"+newSunIdx+" radius (in m, default = SUN radius / 3)", sun.realRadius/3));
+	let speedX = parseFloat(prompt("Insert SUN"+newSunIdx+" vx (in m/s, default = -5000)", -5000));
+	let speedY = parseFloat(prompt("Insert SUN"+newSunIdx+" vy (in m/s, default = 5000)", 5000));
+	let radius = parseFloat(prompt("Insert SUN"+newSunIdx+" draw radius (in px, default = 10)", 10));
+    const sun2 = new Body(
+            "SUN"+newSunIdx,
+            mass,//massa
+            worldX,
+            worldY,
+            speedX, 
+			speedY,         // velocità iniziale
+            radius,         // raggio render più piccolo
+            "#ffff99",      // colore leggermente diverso
+            realRadius      //raggio
+    );
+    const acc = sun2.computeAcceleration(bodies);
+    sun2.ax = acc.ax;
+    sun2.ay = acc.ay;
+    bodies.push(sun2);
+});
+
 
 
 function fixCenterOfMass(bodies){
@@ -566,16 +598,205 @@ function computeCenterOfMass(bodies){
 
 function drawStats() {
 	bodies.forEach(item => { 
-	document.getElementById(item.name).innerHTML = 
-	'<span style="color: '+item.color+'">' + item.name + '</span>:' +
-	' mass=' + item.mass + 'kg ' +
-	' radius=' + item.realRadius + 'm ' +
-	' x=' + item.x + 'm ' +
-	' y=' + item.y + 'm ' +
-	' vx=' + item.vx + 'm/s ' +
-	' vy=' + item.vy + 'm/s '
+		let exists = document.getElementById(item.name) != null;
+		if(exists) {
+			document.getElementById(item.name).innerHTML = 
+			'<span style="color: '+item.color+'">' + item.name + '</span>:' +
+			' mass=' + item.mass + 'kg ' +
+			' radius=' + item.realRadius + 'm ' +
+			' x=' + item.x + 'm ' +
+			' y=' + item.y + 'm ' +
+			' vx=' + item.vx + 'm/s ' +
+			' vy=' + item.vy + 'm/s '
+		}
 	});
+	document.getElementById("OBJECTS").innerHTML = bodies.length;
+	document.getElementById("PATHLEN").innerHTML = bodies.length > 2 ? bodies[1].path.length : bodies[0].path.length;
 }
+
+
+//GESTIONE COLLISIONI
+function checkCollisions() {
+    for (let i = 0; i < bodies.length; i++) {
+        for (let j = i + 1; j < bodies.length; j++) {
+
+            const b1 = bodies[i];
+            const b2 = bodies[j];
+
+            const dx = b2.x - b1.x;
+            const dy = b2.y - b1.y;
+            const dist = Math.sqrt(dx*dx + dy*dy);
+
+            const collisionDistance = b1.realRadius + b2.realRadius;
+
+			if (dist < collisionDistance * 32 && TIME_STEP > 86400) {
+				TIME_STEP /= 2;
+				document.getElementById('TS').innerHTML=TIME_STEP;
+			}
+			
+			if (dist < collisionDistance * 16 && TIME_STEP > 10800) {
+				TIME_STEP /= 2;
+				document.getElementById('TS').innerHTML=TIME_STEP;
+			}
+			
+            if (dist <= collisionDistance * 4) {
+				resolveImpact(b1, b2, dist, dx, dy);
+                return;
+            }
+        }
+    }
+}
+//impatto fonde o frantuma?
+function resolveImpact(b1, b2, dist, dx, dy) {
+
+    const dvx = b1.vx - b2.vx;//delta velocita x
+    const dvy = b1.vy - b2.vy;//delta velocita y
+
+    const reducedMass = (b1.mass * b2.mass) / (b1.mass + b2.mass);
+    const relativeSpeedSq = dvx*dvx + dvy*dvy;
+
+    const kineticEnergy = 0.5 * reducedMass * relativeSpeedSq;//1/2mv2
+
+    const gravitationalBinding = G * b1.mass * b2.mass / (b1.realRadius + b2.realRadius);
+
+    if (kineticEnergy > gravitationalBinding) {
+        fragmentBodies(b1, b2);
+    } else {
+        mergeBodies(b1, b2);
+    }
+}
+//fusione
+function mergeBodies(b1, b2){
+
+    const newMass = b1.mass + b2.mass;
+
+    const newVx =
+        (b1.mass*b1.vx + b2.mass*b2.vx) / newMass;
+
+    const newVy =
+        (b1.mass*b1.vy + b2.mass*b2.vy) / newMass;
+
+    const newX =
+        (b1.mass*b1.x + b2.mass*b2.x) / newMass;
+
+    const newY =
+        (b1.mass*b1.y + b2.mass*b2.y) / newMass;
+
+    const newRealRadius = Math.cbrt(
+        Math.pow(b1.realRadius,3) +
+        Math.pow(b2.realRadius,3)
+    );
+
+    const merged = new Body(
+        b1.name + "+" + b2.name,
+        newMass,
+        newX,
+        newY,
+        newVx,
+        newVy,
+        Math.cbrt(b1.radius**3 + b2.radius**3),
+        "#ffff55",
+        newRealRadius
+    );
+
+    bodies.splice(bodies.indexOf(b1),1);
+    bodies.splice(bodies.indexOf(b2),1);
+    bodies.push(merged);
+	forcedCenterBody = merged;
+}
+//frantumazione
+function fragmentBodies(b1, b2){
+    const fragments = 100;
+    const totalMass = b1.mass + b2.mass;
+
+    // Velocità e quantità di moto centro di massa
+    const px = b1.mass*b1.vx + b2.mass*b2.vx;
+    const py = b1.mass*b1.vy + b2.mass*b2.vy;
+    const vcmX = px / totalMass;
+    const vcmY = py / totalMass;
+
+    // Posizione centro di massa
+    const centerX = (b1.mass*b1.x + b2.mass*b2.x) / totalMass;
+    const centerY = (b1.mass*b1.y + b2.mass*b2.y) / totalMass;
+
+    // Energia cinetica totale dei due corpi
+    const kineticBefore = 0.5 * b1.mass * (b1.vx**2 + b1.vy**2) +
+                          0.5 * b2.mass * (b2.vx**2 + b2.vy**2);
+
+    // Percentuale di energia da distribuire ai frammenti
+    const explosionEnergyFraction = 0.01; // 10% dell'energia totale viene ai frammenti
+    const energyForFragments = kineticBefore * explosionEnergyFraction;
+
+    const massPerFragment = totalMass / fragments;
+
+    // Energia per frammento
+    const energyPerFragment = energyForFragments / fragments;
+
+    for (let i = 0; i < fragments; i++) {
+
+        const angle = Math.random() * 2 * Math.PI;
+
+        // Modulo della velocità del frammento da energia cinetica
+        const speed = Math.sqrt(2 * energyPerFragment / massPerFragment);
+
+        // Velocità totale = centro massa + esplosione
+        const vx = vcmX + Math.cos(angle) * speed;
+        const vy = vcmY + Math.sin(angle) * speed;
+
+        const frag = new Body(
+            "frag",
+            massPerFragment,
+            centerX,
+            centerY,
+            vx,
+            vy,
+            2,
+            "#ffaa00",
+            1e6
+        );
+
+        bodies.push(frag);
+    }
+
+    // Rimuovi corpi originali
+    bodies.splice(bodies.indexOf(b1),1);
+    bodies.splice(bodies.indexOf(b2),1);
+}
+
+
+function createOuterAsteroidBelt(count = 100, innerAU = 40, outerAU = 55){
+    for(let i = 0; i < count; i++){
+        const r = (innerAU + Math.random()*(outerAU-innerAU)) * AU;
+        const angle = Math.random() * 2*Math.PI;
+
+        const x = r * Math.cos(angle);
+        const y = r * Math.sin(angle);
+
+        // velocità orbitale circolare
+        const v = Math.sqrt(G * sun.mass / r);
+
+        // direzione tangenziale
+        const vx = -v * Math.sin(angle);
+        const vy =  v * Math.cos(angle);
+
+        const asteroid = new Body(
+            "AST" + i,
+            1e18,                 // massa piccola
+            x,
+            y,
+            vx,
+            vy,
+            1.5,                  // raggio render piccolo
+            "#888888",
+            5e5                   // raggio reale
+        );
+
+        bodies.push(asteroid);
+    }
+}
+
+
+
 
 fixCenterOfMass(bodies);
 
