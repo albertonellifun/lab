@@ -9,7 +9,7 @@ canvas { display:block; }
 #controls { position: absolute; top:0; left:0; }
 #info { position: absolute; bottom:0; left:0; color: #333; }
 p { margin: 0 0 0 10px; }
-.planet { display: flex; justify-content: flex-start; align-items: center; }
+.planet { display: flex; justify-content: flex-start; align-items: center; white-space: nowrap; overflow: hidden; }
 </style>
 </head>
 <body>
@@ -28,6 +28,8 @@ p { margin: 0 0 0 10px; }
 	<br/>
 	AUTOCENTER 0..9 / S
 	<br/>
+	MOUSE RIGHT CLICK = ADD SUN
+	<br/>
 	<button onclick="paused=!paused;document.getElementById('PAUSED').innerHTML=paused">PAUSED</button>
 	= <span id="PAUSED">false</span>
 	<br/>
@@ -44,120 +46,13 @@ p { margin: 0 0 0 10px; }
 	<br/>
 	PATH LEN = <span id="PATHLEN"></span>
 	<br/>
+	EXPLO COUNT = <span id="EXPLOCOUNT"></span>
+	<br/>
+	MERGE COUNT = <span id="MERGECOUNT"></span>
+	<br/>
 	<button onclick="if(document.getElementById('info').style.display=='none')document.getElementById('info').style.display='block';else document.getElementById('info').style.display='none';">INFO</button>
 </div>
-<div id="info">
-	<div class="planet">
-		<p>MASS:</p>
-		<button onclick="sun.mass/=mass">-</button>
-		<button onclick="sun.mass*=mass">+</button>
-		<p>SPEED:</p>
-		<button onclick="sun.vx/=spd;sun.vy/=spd">-</button>
-		<button onclick="sun.vx*=spd;sun.vy*=spd">+</button>
-		<button onclick="sun.vx*=-1;sun.vy*=-1">INV</button>
-		<p id="SUN">SUN</p>
-	</div>
-	<div class="planet">
-		<p>MASS:</p>
-		<button onclick="mercury.mass/=mass">-</button>
-		<button onclick="mercury.mass*=mass">+</button>
-		<p>SPEED:</p>
-		<button onclick="mercury.vx/=spd;mercury.vy/=spd">-</button>
-		<button onclick="mercury.vx*=spd;mercury.vy*=spd">+</button>
-		<button onclick="mercury.vx*=-1;mercury.vy*=-1">INV</button>
-		<p id="MERCURY">MERCURY</p>
-	</div>
-	<div class="planet">
-		<p>MASS:</p>
-		<button onclick="venus.mass/=mass">-</button>
-		<button onclick="venus.mass*=mass">+</button>
-		<p>SPEED:</p>
-		<button onclick="venus.vx/=spd;venus.vy/=spd">-</button>
-		<button onclick="venus.vx*=spd;venus.vy*=spd">+</button>
-		<button onclick="venus.vx*=-1;venus.vy*=-1">INV</button>
-		<p id="VENUS">VENUS</p>
-	</div>
-	<div class="planet">
-		<p>MASS:</p>
-		<button onclick="earth.mass/=mass">-</button>
-		<button onclick="earth.mass*=mass">+</button>
-		<p>SPEED:</p>
-		<button onclick="earth.vx/=spd;earth.vy/=spd">-</button>
-		<button onclick="earth.vx*=spd;earth.vy*=spd">+</button>
-		<button onclick="earth.vx*=-1;earth.vy*=-1">INV</button>
-		<p id="EARTH">EARTH</p>
-	</div>
-	<div class="planet">
-		<p>MASS:</p>
-		<button onclick="moon.mass/=mass">-</button>
-		<button onclick="moon.mass*=mass">+</button>
-		<p>SPEED:</p>
-		<button onclick="moon.vx/=spd;moon.vy/=spd">-</button>
-		<button onclick="moon.vx*=spd;moon.vy*=spd">+</button>
-		<button onclick="moon.vx*=-1;moon.vy*=-1">INV</button>
-		<p id="MOON">MOON</p>
-	</div>
-	<div class="planet">
-		<p>MASS:</p>
-		<button onclick="mars.mass/=mass">-</button>
-		<button onclick="mars.mass*=mass">+</button>
-		<p>SPEED:</p>
-		<button onclick="mars.vx/=spd;mars.vy/=spd">-</button>
-		<button onclick="mars.vx*=spd;mars.vy*=spd">+</button>
-		<button onclick="mars.vx*=-1;mars.vy*=-1">INV</button>
-		<p id="MARS">MARS</p>
-	</div>
-	<div class="planet">
-		<p>MASS:</p>
-		<button onclick="jupiter.mass/=mass">-</button>
-		<button onclick="jupiter.mass*=mass">+</button>
-		<p>SPEED:</p>
-		<button onclick="jupiter.vx/=spd;jupiter.vy/=spd">-</button>
-		<button onclick="jupiter.vx*=spd;jupiter.vy*=spd">+</button>
-		<button onclick="jupiter.vx*=-1;jupiter.vy*=-1">INV</button>
-		<p id="JUPITER">JUPITER</p>
-	</div>
-	<div class="planet">
-		<p>MASS:</p>
-		<button onclick="saturn.mass/=mass">-</button>
-		<button onclick="saturn.mass*=mass">+</button>
-		<p>SPEED:</p>
-		<button onclick="saturn.vx/=spd;saturn.vy/=spd">-</button>
-		<button onclick="saturn.vx*=spd;saturn.vy*=spd">+</button>
-		<button onclick="saturn.vx*=-1;saturn.vy*=-1">INV</button>
-		<p id="SATURN">SATURN</p>
-	</div>
-	<div class="planet">
-		<p>MASS:</p>
-		<button onclick="uranus.mass/=mass">-</button>
-		<button onclick="uranus.mass*=mass">+</button>
-		<p>SPEED:</p>
-		<button onclick="uranus.vx/=spd;uranus.vy/=spd">-</button>
-		<button onclick="uranus.vx*=spd;uranus.vy*=spd">+</button>
-		<button onclick="uranus.vx*=-1;uranus.vy*=-1">INV</button>
-		<p id="URANUS">URANUS</p>
-	</div>
-	<div class="planet">
-		<p>MASS:</p>
-		<button onclick="neptune.mass/=mass">-</button>
-		<button onclick="neptune.mass*=mass">+</button>
-		<p>SPEED:</p>
-		<button onclick="neptune.vx/=spd;neptune.vy/=spd">-</button>
-		<button onclick="neptune.vx*=spd;neptune.vy*=spd">+</button>
-		<button onclick="neptune.vx*=-1;neptune.vy*=-1">INV</button>
-		<p id="NEPTUNE">NEPTUNE</p>
-	</div>
-	<div class="planet">
-		<p>MASS:</p>
-		<button onclick="pluto.mass/=mass">-</button>
-		<button onclick="pluto.mass*=mass">+</button>
-		<p>SPEED:</p>
-		<button onclick="pluto.vx/=spd;pluto.vy/=spd">-</button>
-		<button onclick="pluto.vx*=spd;pluto.vy*=spd">+</button>
-		<button onclick="pluto.vx*=-1;pluto.vy*=-1">INV</button>
-		<p id="PLUTO">PLUTO</p>
-	</div>
-</div>
+<div id="info"></div>
 
 <canvas id="space"></canvas>
 
@@ -178,6 +73,8 @@ let ts = 2;//time step +/-
 let BORDER = true;
 let LABEL = true;
 let PATH = true;
+let exploCount = 0;
+let mergeCount = 0;
 
 const canvas = document.getElementById("space");
 const ctx = canvas.getContext("2d");
@@ -233,34 +130,40 @@ class Body {
 	}
 	
 	updatePath() {
+		const maxLen = Math.floor(50000 / bodies.length);//lunghezza massima path, circa 5000 per pianeta
 		const lastIdx = this.path.length - 1;
-		const lastPos = lastIdx === -1 ? {x: 0, y: 0} : this.path[lastIdx];
+		const lastPos = lastIdx === -1 ? { x: 0, y: 0 } : this.path[lastIdx];
 
+		// distanza in pixel sul canvas dal punto precedente
+		const dx = (this.x - lastPos.x) * SCALE * zoom;
+		const dy = (this.y - lastPos.y) * SCALE * zoom;
+		const dist = Math.sqrt(dx*dx + dy*dy);
+		const thresholdPx = 20;//distanza minima in px per aggiungere un nuovo punto
+		
 		//angolo attuale rispetto al sole
 		const angle = Math.atan2(this.y, this.x);//this.y - sun.y, this.x - sun.x);//voglio vedere oscillazioni del sole!!!
 		const lastAngle = Math.atan2(lastPos.y, lastPos.x);
-
 		let deltaAngle = Math.abs(angle - lastAngle);
 		deltaAngle = deltaAngle % (2*Math.PI);
 		if (deltaAngle > Math.PI) deltaAngle = 2*Math.PI - deltaAngle;
-
-		const threshold = Math.PI / 180 * 5; //5 gradi in radianti
-		const maxLen = Math.floor(50000 / bodies.length);//5000 per pianeta circa
+		const thresholdAngle = Math.PI / 180 * 10;//10 gradi in radianti
 		
-		if (deltaAngle > threshold) {
-			if(this.path.length >= maxLen) {
-				this.path[this.pathIndex] = {x:this.x, y:this.y};
+		if (dist > thresholdPx || deltaAngle > thresholdAngle) {
+			if (this.path.length >= maxLen) {
+				this.path[this.pathIndex] = { x: this.x, y: this.y };
 				this.pathIndex = (this.pathIndex + 1) % maxLen;
 			} else {
-				this.path.push({x:this.x, y:this.y});
+				this.path.push({ x: this.x, y: this.y });
 			}
 		}
 	}
 
+
     draw(){
 		const px = CENTER_X + this.x * SCALE * zoom;
 		const py = CENTER_Y + this.y * SCALE * zoom;
-		const r = this.radius * zoom / 10;//
+		const zf = zoom / 50;
+		const r = this.radius * zf;//
 
 		// Disegno base pianeta
 		ctx.beginPath();
@@ -304,7 +207,7 @@ class Body {
 			if (this === saturn) {				
 				ctx.beginPath();
 				ctx.strokeStyle="rgba(200,180,120,0.25)";
-				ctx.lineWidth = 5 * zoom / 10;
+				ctx.lineWidth = 5 * zf;
 				ctx.ellipse(px, py, r*2.2, r*3.2, Math.PI/4, 0, Math.PI*2);
 				ctx.stroke();
 				ctx.lineWidth = 1;
@@ -374,18 +277,23 @@ class Body {
 
 // ===== CORPI =====
 //name, mass, x, y, vx, vy, radius, color, realRadius
+//sole circa 10 volte giove
+//giove appena piu grande saturno
+//giove 3 volte nettuno
+//giove 11 volte la terra
+//nettuno 4 volte la terra
 // Sole
-const sun = new Body("SUN", 1.989e30, 0,0, 0,0, 20, "#ffffdd", 6.9634e8);
+const sun = new Body("SUN", 1.989e30, 0,0, 0,0, 50, "#ffffdd", 6.9634e8);
 // Mercurio
-const mercury = new Body("MERCURY", 3.301e23, 0.387 * AU, 0, 0, 47870, 4, "#cc9988", 2.4397e6);
+const mercury = new Body("MERCURY", 3.301e23, 0.387 * AU, 0, 0, 47870, 5, "#cc9988", 2.4397e6);
 // Venere
-const venus = new Body("VENUS", 4.867e24, 0.723 * AU, 0, 0, 35020, 5, "#ddddaa", 6.0518e6);
+const venus = new Body("VENUS", 4.867e24, 0.723 * AU, 0, 0, 35020, 6, "#ddddaa", 6.0518e6);
 // Terra
-const earth = new Body("EARTH", 5.972e24, AU, 0, 0, 29780, 6, "#4499ee", 6.371e6);
+const earth = new Body("EARTH", 5.972e24, AU, 0, 0, 29780, 7, "#4499ee", 6.371e6);
 // Luna
 const moon = new Body("MOON", 7.342e22, AU + 384400000, 0, 0, 29780 + 1022, 2, "#eeeeee", 1.7371e6);
 // Marte
-const mars = new Body("MARS", 6.39e23, 1.524 * AU, 0, 0, 24077, 4, "#cc3322", 3.3895e6);
+const mars = new Body("MARS", 6.39e23, 1.524 * AU, 0, 0, 24077, 6, "#cc3322", 3.3895e6);
 // Giove
 const jupiter = new Body("JUPITER", 1.898e27, 5.204 * AU, 0, 0, 13070, 10, "#cc9966", 6.9911e7);
 // Saturno
@@ -393,32 +301,34 @@ const saturn = new Body("SATURN", 5.683e26, 9.582 * AU, 0, 0, 9680, 9, "#eecc99"
 // Urano
 const uranus = new Body("URANUS", 8.681e25, 19.191 * AU, 0, 0, 6800, 8, "#77ddff", 2.5362e7);
 // Nettuno
-const neptune = new Body("NEPTUNE", 1.024e26, 30.07 * AU, 0, 0, 5400, 8, "#4477dd", 2.4622e7);
+const neptune = new Body("NEPTUNE", 1.024e26, 30.07 * AU, 0, 0, 5400, 7, "#4477dd", 2.4622e7);
 // Plutone
-const pluto = new Body("PLUTO", 1.309e22, 39.48 * AU, 0, 0, 4700, 3, "#ddccaa", 1.1883e6);
+const pluto = new Body("PLUTO", 1.309e22, 39.48 * AU, 0, 0, 4700, 6, "#ddccaa", 1.1883e6);
 
 
 const bodies = [ sun, mercury, venus, earth, moon, mars, jupiter, saturn, uranus, neptune, pluto ];
 
-createOuterAsteroidBelt(300, 40, 55);//300 asteroidi tra 40->55 AU
+createOuterAsteroidBelt(100, 40, 55);//100 asteroidi tra 40->55 AU
+
+rebuildInfoPanel();
 
 function animate(){
-	if (!paused){
-		ctx.clearRect(0,0,canvas.width,canvas.height);
+	ctx.clearRect(0,0,canvas.width,canvas.height);
 
-		/*
-		for(let body of bodies){
-			body.updateForces(bodies);
-		}
+	/*
+	for(let body of bodies){
+		body.updateForces(bodies);
+	}
 
-		for(let body of bodies){
-			body.updatePosition();
-			body.updatePath();
-		}
-		*/
+	for(let body of bodies){
+		body.updatePosition();
+		body.updatePath();
+	}
+	*/
 		
+	if (!paused){
 		// 1. Calcoliamo le accelerazioni ATTUALI (a_t) per tutti
-        // Invece di sovrascrivere body.ax subito, usiamo una costante temporanea
+		// Invece di sovrascrivere body.ax subito, usiamo una costante temporanea
         // o assicuriamoci che il calcolo sia atomico.
         let accelerations = bodies.map(body => body.computeAcceleration(bodies));
 
@@ -447,31 +357,31 @@ function animate(){
             b.vx += 0.5 * (b.ax + newAcc.ax) * TIME_STEP;
             b.vy += 0.5 * (b.ay + newAcc.ay) * TIME_STEP;
         }
-		
-				
-		if (autocenter) {
-			if (forcedCenterBody) {
-				// centriamo sul corpo selezionato
-				CENTER_X = canvas.width / 2 - forcedCenterBody.x * SCALE * zoom;
-				CENTER_Y = canvas.height / 2 - forcedCenterBody.y * SCALE * zoom;
-			} else {
-				// centro di massa
-				const cm = computeCenterOfMass(bodies);
-				CENTER_X = canvas.width / 2 - cm.x * SCALE * zoom;
-				CENTER_Y = canvas.height / 2 - cm.y * SCALE * zoom;
-			}
-		}
-		
-		checkCollisions();
-		
-		for (let body of bodies) {
-			if (PATH) body.drawPath();
-
-			body.draw();
-		}
-		
-		drawStats();
 	}
+				
+	if (autocenter) {
+		if (forcedCenterBody) {
+			// centriamo sul corpo selezionato
+			CENTER_X = canvas.width / 2 - forcedCenterBody.x * SCALE * zoom;
+			CENTER_Y = canvas.height / 2 - forcedCenterBody.y * SCALE * zoom;
+		} else {
+			// centro di massa
+			const cm = computeCenterOfMass(bodies);
+			CENTER_X = canvas.width / 2 - cm.x * SCALE * zoom;
+			CENTER_Y = canvas.height / 2 - cm.y * SCALE * zoom;
+		}
+	}
+	
+	checkCollisions();
+	
+	for (let body of bodies) {
+		if (PATH) body.drawPath();
+
+		body.draw();
+	}
+	
+	drawStats();
+	
 	
     requestAnimationFrame(animate);
 }
@@ -535,11 +445,11 @@ canvas.addEventListener("contextmenu", (e) => {
 	const worldX = (mouseX - CENTER_X) / (zoom * SCALE);
     const worldY = (mouseY - CENTER_Y) / (zoom * SCALE);
 	newSunIdx++;
-	let mass = parseFloat(prompt("Insert SUN"+newSunIdx+" mass (in kg, default = SUN mass / 4)", sun.mass/4));
-	let realRadius = parseFloat(prompt("Insert SUN"+newSunIdx+" radius (in m, default = SUN radius / 3)", sun.realRadius/3));
-	let speedX = parseFloat(prompt("Insert SUN"+newSunIdx+" vx (in m/s, default = -5000)", -5000));
-	let speedY = parseFloat(prompt("Insert SUN"+newSunIdx+" vy (in m/s, default = 5000)", 5000));
-	let radius = parseFloat(prompt("Insert SUN"+newSunIdx+" draw radius (in px, default = 10)", 10));
+	let mass = parseFloat(prompt("Insert SUN"+newSunIdx+" mass (in kg, default = SUN mass / 4)", sun.mass/4)) || sun.mass/4;
+	let realRadius = parseFloat(prompt("Insert SUN"+newSunIdx+" radius (in m, default = SUN radius / 3)", sun.realRadius/3)) || sun.realRadius/3;
+	let speedX = parseFloat(prompt("Insert SUN"+newSunIdx+" vx (in m/s, default = -5000)", -5000)) || 0;
+	let speedY = parseFloat(prompt("Insert SUN"+newSunIdx+" vy (in m/s, default = 5000)", 5000)) || 0;
+	let radius = parseFloat(prompt("Insert SUN"+newSunIdx+" draw radius (in px, default = 10)", 10)) || 10;
     const sun2 = new Body(
             "SUN"+newSunIdx,
             mass,//massa
@@ -612,6 +522,8 @@ function drawStats() {
 	});
 	document.getElementById("OBJECTS").innerHTML = bodies.length;
 	document.getElementById("PATHLEN").innerHTML = bodies.length > 2 ? bodies[1].path.length : bodies[0].path.length;
+	document.getElementById("EXPLOCOUNT").innerHTML = exploCount;
+	document.getElementById("MERGECOUNT").innerHTML = mergeCount;
 }
 
 
@@ -629,17 +541,12 @@ function checkCollisions() {
 
             const collisionDistance = b1.realRadius + b2.realRadius;
 
-			if (dist < collisionDistance * 32 && TIME_STEP > 86400) {
+			if (dist < collisionDistance * 32 && TIME_STEP > 5400) {
 				TIME_STEP /= 2;
 				document.getElementById('TS').innerHTML=TIME_STEP;
 			}
-			
-			if (dist < collisionDistance * 16 && TIME_STEP > 10800) {
-				TIME_STEP /= 2;
-				document.getElementById('TS').innerHTML=TIME_STEP;
-			}
-			
-            if (dist <= collisionDistance * 4) {
+				
+			if (dist <= collisionDistance * 4) {
 				resolveImpact(b1, b2, dist, dx, dy);
                 return;
             }
@@ -661,8 +568,12 @@ function resolveImpact(b1, b2, dist, dx, dy) {
 
     if (kineticEnergy > gravitationalBinding) {
         fragmentBodies(b1, b2);
+		exploCount++;
+		rebuildInfoPanel();
     } else {
         mergeBodies(b1, b2);
+		mergeCount++;
+		rebuildInfoPanel();
     }
 }
 //fusione
@@ -744,7 +655,7 @@ function fragmentBodies(b1, b2){
         const vy = vcmY + Math.sin(angle) * speed;
 
         const frag = new Body(
-            "frag",
+            "FRAG",
             massPerFragment,
             centerX,
             centerY,
@@ -795,6 +706,75 @@ function createOuterAsteroidBelt(count = 100, innerAU = 40, outerAU = 55){
     }
 }
 
+
+
+function rebuildInfoPanel() {
+    const info = document.getElementById("info");
+    info.innerHTML = "";
+
+    const maxItems = Math.min(11, bodies.length);
+	let done = 0;
+    for (let i = 0; i < bodies.length && done < maxItems; i++) {
+		const body = bodies[i];
+		if (body.name.indexOf("AST") === 0 || body.name.indexOf("FRAG") === 0) continue;
+		done++;
+		
+        const wrapper = document.createElement("div");
+        wrapper.className = "planet";
+
+        // MASS LABEL
+        const massLabel = document.createElement("p");
+        massLabel.textContent = "MASS:";
+
+        const massMinus = document.createElement("button");
+        massMinus.textContent = "-";
+        massMinus.onclick = () => body.mass /= mass;
+
+        const massPlus = document.createElement("button");
+        massPlus.textContent = "+";
+        massPlus.onclick = () => body.mass *= mass;
+
+        // SPEED LABEL
+        const speedLabel = document.createElement("p");
+        speedLabel.textContent = "SPEED:";
+
+        const speedMinus = document.createElement("button");
+        speedMinus.textContent = "-";
+        speedMinus.onclick = () => {
+            body.vx /= spd;
+            body.vy /= spd;
+        };
+
+        const speedPlus = document.createElement("button");
+        speedPlus.textContent = "+";
+        speedPlus.onclick = () => {
+            body.vx *= spd;
+            body.vy *= spd;
+        };
+
+        const speedInvert = document.createElement("button");
+        speedInvert.textContent = "INV";
+        speedInvert.onclick = () => {
+            body.vx *= -1;
+            body.vy *= -1;
+        };
+
+        // INFO TEXT
+        const infoText = document.createElement("p");
+        infoText.id = body.name;
+
+        wrapper.appendChild(massLabel);
+        wrapper.appendChild(massMinus);
+        wrapper.appendChild(massPlus);
+        wrapper.appendChild(speedLabel);
+        wrapper.appendChild(speedMinus);
+        wrapper.appendChild(speedPlus);
+        wrapper.appendChild(speedInvert);
+        wrapper.appendChild(infoText);
+
+        info.appendChild(wrapper);
+    }
+}
 
 
 
