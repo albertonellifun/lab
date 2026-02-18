@@ -370,6 +370,18 @@ function animate(){
 			CENTER_X = canvas.width / 2 - cm.x * SCALE * zoom;
 			CENTER_Y = canvas.height / 2 - cm.y * SCALE * zoom;
 		}
+		// disegna il centro (di massa?)
+		ctx.strokeStyle = '#fff';
+		ctx.lineWidth = 0.2;
+		ctx.beginPath();
+		ctx.moveTo(canvas.width / 2, 0);
+		ctx.lineTo(canvas.width / 2, canvas.height);
+		ctx.stroke();
+		ctx.beginPath();
+		ctx.moveTo(0, canvas.height / 2);
+		ctx.lineTo(canvas.width, canvas.height / 2);
+		ctx.stroke();
+		ctx.fillText('CENTER OF MASS', canvas.width / 2 - 50, 10);
 	}
 	
 	checkCollisions();
@@ -464,7 +476,8 @@ canvas.addEventListener("contextmenu", (e) => {
     const acc = sun2.computeAcceleration(bodies);
     sun2.ax = acc.ax;
     sun2.ay = acc.ay;
-    bodies.push(sun2);
+	
+	bodies.push(sun2);
 });
 
 
