@@ -7,11 +7,11 @@
 <style>
 body { margin:0; background:black; overflow:hidden; font-family: monospace; color: #fff; }
 canvas { display:block; touch-action: none; }
-#controls { position: absolute; top:0; left:0; overflow: hidden; }
-#info { position: absolute; bottom:0; left:0; color: #333; overflow: hidden; }
+#controls { position: absolute; top:0; left:0; overflow: hidden; z-index: 10; }
+#info { position: absolute; bottom:0; left:0; color: #333; overflow: hidden; filter: opacity(0.9); }
 p { margin: 0 0 0 10px; }
 .planet { display: flex; justify-content: flex-start; align-items: center; white-space: nowrap; overflow: hidden; }
-button { min-width: 20px; min-height: 20px; }
+button { min-width: 30px; min-height: 30px; }
 </style>
 </head>
 <body>
@@ -31,6 +31,8 @@ button { min-width: 20px; min-height: 20px; }
 	AUTOCENTER 0..9 / S=sun / C=center of mass
 	<br/>
 	MOUSE RIGHT CLICK = ADD SUN
+	<br/>
+	<button onclick="forcedCenterBody=null;autocenter=true;document.getElementById('AC').innerHTML=autocenter;">C</button>CENTER OF MASS = <span id="CENTEROFMASS"></span>
 	<br/>
 	<button onclick="paused=!paused;document.getElementById('PAUSED').innerHTML=paused">PAUSED</button>
 	= <span id="PAUSED">false</span>
@@ -284,6 +286,7 @@ class Body {
 //giove 3 volte nettuno
 //giove 11 volte la terra
 //nettuno 4 volte la terra
+//sole 400 volte la luna
 // Sole
 const sun = new Body("SUN", 1.989e30, 0,0, 0,0, 50, "#ffffdd", 6.9634e8);
 // Mercurio
@@ -578,6 +581,9 @@ function drawStats() {
 	document.getElementById("PATHLEN").innerHTML = bodies.length > 2 ? bodies[1].path.length : bodies[0].path.length;
 	document.getElementById("EXPLOCOUNT").innerHTML = exploCount;
 	document.getElementById("MERGECOUNT").innerHTML = mergeCount;
+	
+	const cm = computeCenterOfMass(bodies);
+	document.getElementById("CENTEROFMASS").innerHTML = "x = " + cm.x.toExponential(3) + " m | " + "y = " + cm.y.toExponential(3) + " m";
 }
 
 
@@ -773,7 +779,7 @@ function rebuildInfoPanel() {
 		if (body.name.indexOf("AST") === 0 || body.name.indexOf("FRAG") === 0) continue;
 		done++;
 		
-        const wrapper = document.createElement("div");
+		const wrapper = document.createElement("div");
         wrapper.className = "planet";
 
         // MASS LABEL
@@ -813,10 +819,16 @@ function rebuildInfoPanel() {
             body.vy *= -1;
         };
 
-        // INFO TEXT
+        //INFO TEXT
         const infoText = document.createElement("p");
         infoText.id = body.name;
-
+		
+		//CENTER VIEW
+		const centerButton = document.createElement("button");
+		centerButton.textContent = "C";
+		centerButton.onclick = () => { forcedCenterBody = body; autocenter = true; document.getElementById('AC').innerHTML = autocenter; };
+		
+		wrapper.appendChild(centerButton);
         wrapper.appendChild(massLabel);
         wrapper.appendChild(massMinus);
         wrapper.appendChild(massPlus);
@@ -831,11 +843,93 @@ function rebuildInfoPanel() {
 }
 
 
+//DIO BENEDICA CHATGPT
+async function initSolarSystemFromNASA() {
 
-fixCenterOfMass(bodies);
+    const ids = {
+        sun: 10,
+        mercury: 199,
+        venus: 299,
+        earth: 399,
+        moon: 301,
+        mars: 499,
+        jupiter: 599,
+        saturn: 699,
+        uranus: 799,
+        neptune: 899,
+        pluto: 999
+    };
 
-animate();
+    const today = new Date().toISOString().split("T")[0];
 
+    async function fetchWithTimeout(url, timeout = 8000) {
+        return Promise.race([
+            fetch(url),
+            new Promise((_, reject) =>
+                setTimeout(() => reject(new Error("Timeout NASA API")), timeout)
+            )
+        ]);
+    }
+
+    async function fetchBody(body, id) {
+        const url =
+`https://ssd.jpl.nasa.gov/api/horizons.api?format=json
+&COMMAND='${id}'
+&OBJ_DATA='NO'
+&MAKE_EPHEM='YES'
+&EPHEM_TYPE='VECTORS'
+&CENTER='500@10'
+&START_TIME='${today}'
+&STOP_TIME='${today}'
+&STEP_SIZE='1 d'`.replace(/\n/g,'');
+
+        const res = await fetchWithTimeout(url);
+        const json = await res.json();
+        if (!json.result) throw new Error("Risposta NASA non valida");
+        const lines = json.result.split("\n");
+        const vectorLine = lines.find(l => l.includes("X ="));
+        if (!vectorLine) throw new Error("Dati vettoriali non trovati");
+        const values = vectorLine.match(/-?\d+\.\d+E[+-]\d+/g);
+        const KM = 1000;
+        body.x  = parseFloat(values[0]) * KM;
+        body.y  = parseFloat(values[1]) * KM;
+        body.vx = parseFloat(values[3]) * KM;
+        body.vy = parseFloat(values[4]) * KM;
+    }
+    try {
+        document.body.style.cursor = "wait";
+        await Promise.all([
+            fetchBody(sun, ids.sun),
+            fetchBody(mercury, ids.mercury),
+            fetchBody(venus, ids.venus),
+            fetchBody(earth, ids.earth),
+            fetchBody(moon, ids.moon),
+            fetchBody(mars, ids.mars),
+            fetchBody(jupiter, ids.jupiter),
+            fetchBody(saturn, ids.saturn),
+            fetchBody(uranus, ids.uranus),
+            fetchBody(neptune, ids.neptune),
+            fetchBody(pluto, ids.pluto)
+        ]);
+        alert("Sistema solare inizializzato con API NASA");
+    } catch (err) {
+        console.log("ERRORE", err);
+        alert("NASA API init fallito -> uso orbite di default");
+    } finally {
+        document.body.style.cursor = "default";
+    }
+}
+
+
+
+
+initSolarSystemFromNASA()
+    .catch(() => {})  // sicurezza extra
+
+    .finally(() => {
+        fixCenterOfMass(bodies);
+        animate();
+});
 </script>
 </body>
 </html>
