@@ -24,7 +24,7 @@ button { min-width: 30px; min-height: 30px; }
 	<button onclick="autocenter=!autocenter;document.getElementById('AC').innerHTML=autocenter">AUTOCENTER</button>
 	= <span id="AC">true</span>
 	<br/>
-	MOUSE WHEEL = ZOOM = <span id="ZOOM">1</span>
+	<button onclick="zoom=1;document.getElementById('ZOOM').innerHTML=zoom">Z</button>MOUSE WHEEL = ZOOM = <span id="ZOOM">1</span>
 	<br/>
 	MOUSE CLICK = CENTER
 	<br/>
@@ -56,7 +56,7 @@ button { min-width: 30px; min-height: 30px; }
 	<br/>
 	<button onclick="if(document.getElementById('info').style.display=='none')document.getElementById('info').style.display='block';else document.getElementById('info').style.display='none';">INFO</button>
 </div>
-<div id="info"></div>
+<div id="info" style="display:none"></div>
 
 <canvas id="space"></canvas>
 
@@ -455,6 +455,7 @@ window.addEventListener("keydown", (e) => {
     // tasto S per Sole
     if (e.key === "s" || e.key === "S") forcedCenterBody = bodies[0];
 	if (e.key === "c" || e.key === "C") forcedCenterBody = null;
+	if (e.key === "z" || e.key === "Z") zoom = 1;
 });
 
 
@@ -563,18 +564,19 @@ function computeCenterOfMass(bodies){
     };
 }
 
+//mostro i dati in formato esponenziale con un paio di decimali
 function drawStats() {
 	bodies.forEach(item => { 
 		let exists = document.getElementById(item.name) != null;
 		if(exists) {
 			document.getElementById(item.name).innerHTML = 
 			'<span style="color: '+item.color+'">' + item.name + '</span>:' +
-			' mass=' + item.mass + 'kg ' +
-			' radius=' + item.realRadius + 'm ' +
-			' x=' + item.x + 'm ' +
-			' y=' + item.y + 'm ' +
-			' vx=' + item.vx + 'm/s ' +
-			' vy=' + item.vy + 'm/s '
+			' mass=' + (item.mass.toExponential(2)) + 'kg ' +
+			' radius=' + (item.realRadius.toExponential(2)) + 'm ' +
+			' x=' + (item.x.toExponential(2)) + 'm ' +
+			' y=' + (item.y.toExponential(2)) + 'm ' +
+			' vx=' + (item.vx.toExponential(2)) + 'm/s ' +
+			' vy=' + (item.vy.toExponential(2)) + 'm/s '
 		}
 	});
 	document.getElementById("OBJECTS").innerHTML = bodies.length;
@@ -583,7 +585,7 @@ function drawStats() {
 	document.getElementById("MERGECOUNT").innerHTML = mergeCount;
 	
 	const cm = computeCenterOfMass(bodies);
-	document.getElementById("CENTEROFMASS").innerHTML = "x = " + cm.x.toExponential(3) + " m | " + "y = " + cm.y.toExponential(3) + " m";
+	document.getElementById("CENTEROFMASS").innerHTML = "x=" + (cm.x.toExponential(2)) + " y=" + (cm.y.toExponential(2));
 }
 
 
