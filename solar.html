@@ -16,10 +16,10 @@ button { min-width: 30px; min-height: 30px; }
 </head>
 <body>
 <div id="controls">
-	<button onclick="TIME_STEP /= ts;document.getElementById('TS').innerHTML=TIME_STEP">-</button>
+	<button onclick="TIME_STEP /= ts;document.getElementById('TS').innerHTML=TIME_STEP+'s'">-</button>
 	TIMESTEP
-	<button onclick="TIME_STEP *= ts;document.getElementById('TS').innerHTML=TIME_STEP">+</button>
-	= <span id="TS">86400</span>
+	<button onclick="TIME_STEP *= ts;document.getElementById('TS').innerHTML=TIME_STEP+'s'">+</button>
+	= <span id="TS">86400s</span>
 	<br/>
 	<button onclick="autocenter=!autocenter;document.getElementById('AC').innerHTML=autocenter">AUTOCENTER</button>
 	= <span id="AC">true</span>
@@ -68,7 +68,7 @@ const AU = 1.496e11;//unita astronomica
 const DAY = 86400;//secondi
 const SCALE = 90 / AU;
 let zoom = 1;
-let TIME_STEP = DAY * 1; //1 giorno per frame (più stabile con Mercurio)
+let TIME_STEP = DAY * 1; //1 giorno per frame (limite stabilità con Mercurio)
 let autocenter = true;//centra vista sul centro di massa CM calcolato ogni frame
 let paused = false;//pausa on/off
 let spd = 1.05;//speed +/-
@@ -79,6 +79,7 @@ let LABEL = true;
 let PATH = true;
 let exploCount = 0;
 let mergeCount = 0;
+let nasaApiErrors = true;//se ci sono errori con api nasa -> pianeti ed asteroidi hanno solo X/Y, Z=0
 
 const canvas = document.getElementById("space");
 const ctx = canvas.getContext("2d");
@@ -88,6 +89,8 @@ canvas.height = window.innerHeight;
 
 let CENTER_X = canvas.width/2;
 let CENTER_Y = canvas.height/2;
+
+let forcedCenterBody = null; //corpo su cui centrare l'autocenter (== follow)
 
 class Body {
     constructor(name, mass, x, y, z, vx, vy, vz, radius, color, realRadius){
@@ -109,47 +112,20 @@ class Body {
 		this.az = 0;//accelerazione corrente (z)
     }
 
-	/*
-    updateForces(bodies){
-        let ax = 0;
-        let ay = 0;
-
-        for(let other of bodies){
-            if(other === this) continue;
-
-            const dx = other.x - this.x;
-            const dy = other.y - this.y;
-            const distSq = dx*dx + dy*dy;
-            const dist = Math.sqrt(distSq);
-
-            const a = G * other.mass / distSq;
-
-            ax += a * dx / dist;
-            ay += a * dy / dist;
-        }
-
-        this.vx += ax * TIME_STEP;
-        this.vy += ay * TIME_STEP;
-    }
-	
-    updatePosition() {
-		this.x += this.vx * TIME_STEP;
-		this.y += this.vy * TIME_STEP;
-	}
-	*/
-	
 	updatePath() {
 		const maxLen = Math.floor(50000 / bodies.length);//lunghezza massima path, circa 5000 per pianeta
 		const lastIdx = this.path.length - 1;
-		const lastPos = lastIdx === -1 ? { x: 0, y: 0 } : this.path[lastIdx];
+		const lastPos = lastIdx === -1 ? { x: 0, y: 0, z:0 } : this.path[lastIdx];
 
 		// distanza in pixel sul canvas dal punto precedente
 		const dx = (this.x - lastPos.x) * SCALE * zoom;
 		const dy = (this.y - lastPos.y) * SCALE * zoom;
-		const dist = Math.sqrt(dx*dx + dy*dy);
+		const dz = (this.z - lastPos.z) * SCALE * zoom;
+		const dist = Math.sqrt(dx*dx + dy*dy + dz*dz);
+		
 		const thresholdPx = 20;//distanza minima in px per aggiungere un nuovo punto
 		
-		//angolo attuale rispetto al sole
+		//angolo attuale rispetto al sole, basta il 2d
 		const angle = Math.atan2(this.y, this.x);//this.y - sun.y, this.x - sun.x);//voglio vedere oscillazioni del sole!!!
 		const lastAngle = Math.atan2(lastPos.y, lastPos.x);
 		let deltaAngle = Math.abs(angle - lastAngle);
@@ -159,18 +135,19 @@ class Body {
 		
 		if (dist > thresholdPx || deltaAngle > thresholdAngle) {
 			if (this.path.length >= maxLen) {
-				this.path[this.pathIndex] = { x: this.x, y: this.y };
+				this.path[this.pathIndex] = { x: this.x, y: this.y, z: this.z };
 				this.pathIndex = (this.pathIndex + 1) % maxLen;
 			} else {
-				this.path.push({ x: this.x, y: this.y });
+				this.path.push({ x: this.x, y: this.y, z: this.z });
 			}
 		}
 	}
 
 
     draw(){
-		const px = CENTER_X + this.x * SCALE * zoom;
-		const py = CENTER_Y + this.y * SCALE * zoom;
+		const p = worldToCanvas(this.x, this.y);
+		const px = p.x;
+		const py = p.y;
 		const zf = zoom / 50;
 		const r = this.radius * zf;//
 
@@ -249,9 +226,8 @@ class Body {
 		ctx.fillStyle = this.color;
 		
 		for(let i = 0; i < this.path.length; i++){
-			const px = CENTER_X + this.path[i].x * SCALE * zoom;
-			const py = CENTER_Y + this.path[i].y * SCALE * zoom;
-			ctx.fillRect(px-0.5, py-0.5, 1, 1);
+			const p = worldToCanvas(this.path[i].x, this.path[i].y);
+			ctx.fillRect(p.x-0.5, p.y-0.5, 1, 1);
 		}
 	}
 
@@ -354,60 +330,77 @@ const pluto = new Body("PLUTO", 1.309e22,
 
 const bodies = [ sun, mercury, venus, earth, moon, mars, jupiter, saturn, uranus, neptune, pluto ];
 
-createOuterAsteroidBelt(100, 40, 55);//100 asteroidi tra 40->55 AU
-
-rebuildInfoPanel();
+//ho invertito y perchè altrimenti rotazione oraria (sul sito nasa è antioraria)
+//nel canvas, origine in alto a sinistra, y verso il basso, x verso destra
+//nel sito nata, origine è basso a sinitra, y verso alto, x verso destra (== SCUOLA)
+function worldToCanvas(x, y) {
+    return { x: CENTER_X + x * SCALE * zoom, y: CENTER_Y - y * SCALE * zoom };
+}
 
 function animate(){
 	ctx.clearRect(0,0,canvas.width,canvas.height);
 
-	/*
-	for(let body of bodies){
-		body.updateForces(bodies);
-	}
-
-	for(let body of bodies){
-		body.updatePosition();
-		body.updatePath();
-	}
-	*/
-		
 	if (!paused){
-		// 1. Calcoliamo le accelerazioni ATTUALI (a_t) per tutti
-		// Invece di sovrascrivere body.ax subito, usiamo una costante temporanea
-        // o assicuriamoci che il calcolo sia atomico.
-        let accelerations = bodies.map(body => body.computeAcceleration(bodies));
-
-        // 2. Aggiorniamo le POSIZIONI di tutti
-        for (let i = 0; i < bodies.length; i++) {
-            let b = bodies[i];
-            let a = accelerations[i];
-            
-            // x(t + dt) = x(t) + v(t)*dt + 0.5 * a(t) * dt^2
-            b.x += b.vx * TIME_STEP + 0.5 * a.ax * TIME_STEP * TIME_STEP;
-            b.y += b.vy * TIME_STEP + 0.5 * a.ay * TIME_STEP * TIME_STEP;
-			b.z += b.vz * TIME_STEP + 0.5 * a.az * TIME_STEP * TIME_STEP;
-			
-			// Memorizziamo l'accelerazione vecchia per il calcolo della velocità dopo
-            b.ax = a.ax;
-            b.ay = a.ay;
-			b.az = a.az;
-			
-			b.updatePath();
-        }
-
-        // 3. Aggiorniamo le VELOCITÀ di tutti
-        for (let b of bodies) {
-            // Calcoliamo la NUOVA accelerazione (a_t+dt) nella nuova posizione
-            let newAcc = b.computeAcceleration(bodies);
-            
-            // v(t + dt) = v(t) + 0.5 * (a(t) + a(t + dt)) * dt
-            b.vx += 0.5 * (b.ax + newAcc.ax) * TIME_STEP;
-            b.vy += 0.5 * (b.ay + newAcc.ay) * TIME_STEP;
-			b.vz += 0.5 * (b.az + newAcc.az) * TIME_STEP;
-        }
+		updateAllBodies();
 	}
-				
+		
+	drawCanvasCenter();
+	
+	checkCollisions();
+	
+	drawAllBodies();
+	//drawAllBodies3D();
+	
+	drawStats();
+	
+    requestAnimationFrame(animate);
+}
+
+function updateAllBodies() {
+	// 1. Calcoliamo le accelerazioni ATTUALI (a_t) per tutti
+	// Invece di sovrascrivere body.ax subito, usiamo una costante temporanea
+    // o assicuriamoci che il calcolo sia atomico.
+    let accelerations = bodies.map(body => body.computeAcceleration(bodies));
+
+    // 2. Aggiorniamo le POSIZIONI di tutti
+    for (let i = 0; i < bodies.length; i++) {
+        let b = bodies[i];
+        let a = accelerations[i];
+        
+		// x(t + dt) = x(t) + v(t)*dt + 0.5 * a(t) * dt^2
+        b.x += b.vx * TIME_STEP + 0.5 * a.ax * TIME_STEP * TIME_STEP;
+        b.y += b.vy * TIME_STEP + 0.5 * a.ay * TIME_STEP * TIME_STEP;
+		b.z += b.vz * TIME_STEP + 0.5 * a.az * TIME_STEP * TIME_STEP;
+		
+		// Memorizziamo l'accelerazione vecchia per il calcolo della velocità dopo
+		b.ax = a.ax;
+		b.ay = a.ay;
+		b.az = a.az;
+	
+		b.updatePath();
+	}
+
+    // 3. Aggiorniamo le VELOCITÀ di tutti
+    for (let b of bodies) {
+		// Calcoliamo la NUOVA accelerazione (a_t+dt) nella nuova posizione
+		let newAcc = b.computeAcceleration(bodies);
+		
+		// v(t + dt) = v(t) + 0.5 * (a(t) + a(t + dt)) * dt
+		b.vx += 0.5 * (b.ax + newAcc.ax) * TIME_STEP;
+		b.vy += 0.5 * (b.ay + newAcc.ay) * TIME_STEP;
+		b.vz += 0.5 * (b.az + newAcc.az) * TIME_STEP;
+	}
+}
+
+function drawAllBodies() {
+	for (let body of bodies) {
+		if (PATH) body.drawPath();
+
+		body.draw();
+	}
+}
+
+function drawCanvasCenter() {
 	if (autocenter) {
 		if (forcedCenterBody) {
 			// centriamo sul corpo selezionato
@@ -433,20 +426,8 @@ function animate(){
 		ctx.lineTo(canvas.width, canvas.height / 2);
 		ctx.stroke();
 	}
-	
-	checkCollisions();
-	
-	for (let body of bodies) {
-		if (PATH) body.drawPath();
-
-		body.draw();
-	}
-	
-	drawStats();
-	
-	
-    requestAnimationFrame(animate);
 }
+
 
 //zoom
 canvas.addEventListener("wheel", (e) => {
@@ -468,6 +449,7 @@ canvas.addEventListener("wheel", (e) => {
 	document.getElementById("ZOOM").innerHTML=zoom;
 });
 
+
 //gestione click
 canvas.addEventListener("click", (e) => {
     handleLeftClick(e);
@@ -483,9 +465,6 @@ function handleLeftClick(pointer) {
     CENTER_Y = canvas.height / 2 - worldY * zoom * SCALE;
 }
 
-
-//autocenter su pianeta
-let forcedCenterBody = null; // corpo su cui centrare con i tasti
 
 // Gestione tasti
 window.addEventListener("keydown", (e) => {
@@ -549,6 +528,7 @@ function handleRightClick(pointer) {
     bodies.push(sun2);
 }
 
+
 //gestione zoom mobile
 let initialDistance = null;
 let initialZoom = null;
@@ -573,9 +553,7 @@ canvas.addEventListener("touchend", () => {
     initialDistance = null;
 });
 
-
-
-
+//fix cm
 function fixCenterOfMass(bodies){
     let totalMass = 0;
     let px = 0;
@@ -600,6 +578,7 @@ function fixCenterOfMass(bodies){
     }
 }
 
+//calcolo cm
 function computeCenterOfMass(bodies){
     let totalMass = 0;
     let x = 0;
@@ -646,7 +625,6 @@ function drawStats() {
 	document.getElementById("CENTEROFMASS").innerHTML = "x=" + (cm.x.toExponential(2)) + "m y=" + (cm.y.toExponential(2))+"m z=" + (cm.z.toExponential(2))+"m";
 }
 
-
 //GESTIONE COLLISIONI
 function checkCollisions() {
     for (let i = 0; i < bodies.length; i++) {
@@ -674,6 +652,7 @@ function checkCollisions() {
         }
     }
 }
+
 //impatto fonde o frantuma?
 function resolveImpact(b1, b2, dist, dx, dy, dz) {
 
@@ -698,7 +677,8 @@ function resolveImpact(b1, b2, dist, dx, dy, dz) {
 		rebuildInfoPanel();
     }
 }
-//fusione
+
+//fusione tra 2 corpi
 function mergeBodies(b1, b2){
 
     const newMass = b1.mass + b2.mass;
@@ -735,7 +715,8 @@ function mergeBodies(b1, b2){
     bodies.push(merged);
 	forcedCenterBody = merged;
 }
-//frantumazione
+
+//frantumazione tra 2 corpi
 function fragmentBodies(b1, b2){
     const fragments = 100;
     const totalMass = b1.mass + b2.mass;
@@ -765,16 +746,16 @@ function fragmentBodies(b1, b2){
 
     // Energia per frammento
     const energyPerFragment = energyForFragments / fragments;
-	const speed = Math.sqrt(2 * energyForFragments / massPerFragment);
+	const speed = Math.sqrt(2 * energyPerFragment / massPerFragment);//energy per ogni fragment, non energy for fragments!
 	
     for (let i = 0; i < fragments; i++) {
 
         const angleXY = Math.random() * 2 * Math.PI;//xy
-		const angleZ = Math.acos(2 * Math.random() - 1);//z
+		const angleZ = nasaApiErrors ? (Math.PI / 2) : Math.acos(2 * Math.random() - 1);//z
 
         const vx = vcmX + speed * Math.sin(angleZ) * Math.cos(angleXY);
         const vy = vcmY + speed * Math.sin(angleZ) * Math.sin(angleXY);
-        const vz = vcmZ + speed * Math.cos(angleZ);
+        const vz = nasaApiErrors ? 0 : vcmZ + speed * Math.cos(angleZ);//cos(90) puo essere non esattamente zero
 		
         const frag = new Body(
             "FRAG",
@@ -798,7 +779,7 @@ function fragmentBodies(b1, b2){
     bodies.splice(bodies.indexOf(b2),1);
 }
 
-
+//crea cintura di asteroidi (Z=0 se nasa ko)
 function createOuterAsteroidBelt(count = 100, innerAU = 40, outerAU = 55){
     for(let i = 0; i < count; i++){
         const r = (innerAU + Math.random()*(outerAU-innerAU)) * AU;
@@ -806,15 +787,15 @@ function createOuterAsteroidBelt(count = 100, innerAU = 40, outerAU = 55){
 
         const x = r * Math.cos(angle);
         const y = r * Math.sin(angle);
-        const z = (Math.random() - 0.5) * 0.1 * AU; // piccolo offset verticale
+        const z = nasaApiErrors ? 0 : (Math.random() - 0.5) * 0.1 * AU;//piccolo offset verticale, zero se sto in orbita simulata (solo XY)
 
-        // velocità orbitale circolare
+        //velocità orbitale circolare
         const v = Math.sqrt(G * sun.mass / r);
 
         // direzione tangenziale
         const vx = -v * Math.sin(angle);
         const vy =  v * Math.cos(angle);
-        const vz = 0; // movimento principale nel piano XY
+        const vz = 0; //movimento principale nel piano XY
 
         const asteroid = new Body(
             "AST" + i,
@@ -830,9 +811,7 @@ function createOuterAsteroidBelt(count = 100, innerAU = 40, outerAU = 55){
     }
 }
 
-
-
-
+//ui
 function rebuildInfoPanel() {
     const info = document.getElementById("info");
     info.innerHTML = "";
@@ -991,6 +970,7 @@ async function initSolarSystemFromNASA() {
         } catch (err) {
             console.warn(`Errore init ${body.name}:`, err);
 			body.status = 'ko';
+			nasaApiErrors = true;
         }
     }
 
@@ -1004,7 +984,78 @@ async function initSolarSystemFromNASA() {
 	let errors = '';
 	bodies.forEach(item => { if(item.status==='ko') errors += item.name +' ';});
     alert("Sistema solare inizializzato con i dati NASA" + (errors ? ' (in errore: '+errors+')' : ''));
+	if (!errors && !nasaApiErrors) {
+		TIME_STEP = 1;//simulazione real time
+		document.getElementById("TS").innerHTML=TIME_STEP+"s";
+	}
 }
+
+
+
+
+
+// Parametri globali per la proiezione
+const CAMERA_Z = 60 * AU;  // distanza della camera lungo Z
+let camAlpha = Math.PI / 3; // rotazione verticale, 60°
+let camBeta  = 0; // rotazione orizzontale 0°
+
+function rotate3D(x, y, z) {
+    // Rotazione attorno Y (orizzontale)
+    let xr = x * Math.cos(camBeta) + z * Math.sin(camBeta);
+    let zr = -x * Math.sin(camBeta) + z * Math.cos(camBeta);
+
+    // Rotazione attorno X (verticale)
+    let yr = y * Math.cos(camAlpha) - zr * Math.sin(camAlpha);
+    let zr2 = y * Math.sin(camAlpha) + zr * Math.cos(camAlpha);
+
+    return { x: xr, y: yr, z: zr2 };
+}
+
+function project3D(x, y, z) {
+    const rotated = rotate3D(x, y, z);
+    const safeZ = Math.min(rotated.z, CAMERA_Z - 0.1); // evita divisione negativa
+    const scale = CAMERA_Z / (CAMERA_Z - safeZ);
+    const px = CENTER_X + rotated.x * SCALE * zoom * scale;
+    const py = CENTER_Y + rotated.y * SCALE * zoom * scale;
+    const rScale = scale;
+    return { px, py, rScale, depth: rotated.z };
+}
+
+Body.prototype.draw3D = function() {
+    const { px, py, rScale, depth } = project3D(this.x, this.y, this.z);
+	
+	ctx.beginPath();
+    ctx.arc(px, py, Math.abs(this.radius * rScale / 10), 0, Math.PI*2);
+    ctx.fillStyle = this.color;
+    ctx.fill();
+
+    if(BORDER){
+        ctx.strokeStyle = "#fff";
+        ctx.lineWidth = 0.5 * rScale;
+        ctx.stroke();
+    }
+
+    if(LABEL){
+        ctx.fillStyle = "#fff";
+        ctx.font = `${12 * rScale}px monospace`;
+        ctx.fillText(this.name, px + 5, py - 5);
+    }
+}
+
+function drawAllBodies3D() {
+    // calcola profondità e ordina dal più lontano al più vicino
+    const sortedBodies = bodies.slice().sort((a, b) => {
+        const aDepth = project3D(a.x, a.y, a.z).depth;
+        const bDepth = project3D(b.x, b.y, b.z).depth;
+        return aDepth - bDepth; // disegna prima quelli lontani
+    });
+
+    for (let body of sortedBodies) {
+        body.draw3D();
+    }
+}
+
+
 
 
 
@@ -1013,9 +1064,13 @@ initSolarSystemFromNASA()
     .catch(() => {})
 
     .finally(() => {
+		createOuterAsteroidBelt(100, 40, 55);//100 asteroidi tra 40->55 AU
+		rebuildInfoPanel();
+
         fixCenterOfMass(bodies);
         animate();
 });
+
 </script>
 </body>
 </html>
