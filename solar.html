@@ -2,14 +2,16 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, height=device-height, maximum-scale=1.0">
 <title>Sistema Solare</title>
 <style>
 body { margin:0; background:black; overflow:hidden; font-family: monospace; color: #fff; }
-canvas { display:block; }
-#controls { position: absolute; top:0; left:0; }
-#info { position: absolute; bottom:0; left:0; color: #333; }
+canvas { display:block; touch-action: none; }
+#controls { position: absolute; top:0; left:0; overflow: hidden; }
+#info { position: absolute; bottom:0; left:0; color: #333; overflow: hidden; }
 p { margin: 0 0 0 10px; }
 .planet { display: flex; justify-content: flex-start; align-items: center; white-space: nowrap; overflow: hidden; }
+button { min-width: 20px; min-height: 20px; }
 </style>
 </head>
 <body>
@@ -419,20 +421,21 @@ canvas.addEventListener("wheel", (e) => {
 	document.getElementById("ZOOM").innerHTML=zoom;
 });
 
-//click
+//gestione click
 canvas.addEventListener("click", (e) => {
-
-    const mouseX = e.clientX;
-    const mouseY = e.clientY;
-
-    // coordinate mondo prima del click
+    handleLeftClick(e);
+});
+function handleLeftClick(pointer) {
+    const mouseX = pointer.clientX;
+    const mouseY = pointer.clientY;
+	//coordinate world prima del click
     const worldX = (mouseX - CENTER_X) / (zoom * SCALE);
     const worldY = (mouseY - CENTER_Y) / (zoom * SCALE);
-
-    // nuovo offset per mettere quel punto al centro
+	//nuovo offset per centrare rispetto a quel punto
     CENTER_X = canvas.width / 2 - worldX * zoom * SCALE;
     CENTER_Y = canvas.height / 2 - worldY * zoom * SCALE;
-});
+}
+
 
 //autocenter su pianeta
 let forcedCenterBody = null; // corpo su cui centrare con i tasti
@@ -451,36 +454,72 @@ window.addEventListener("keydown", (e) => {
 	if (e.key === "c" || e.key === "C") forcedCenterBody = null;
 });
 
-let newSunIdx = 0;
+
+//gestione click destro
 canvas.addEventListener("contextmenu", (e) => {
-    e.preventDefault(); // evita il menu di default del browser
-	const mouseX = e.clientX;
-    const mouseY = e.clientY;
-	const worldX = (mouseX - CENTER_X) / (zoom * SCALE);
+    e.preventDefault();
+    handleRightClick(e);
+});
+let newSunIdx = 0;
+function handleRightClick(pointer) {
+
+    const mouseX = pointer.clientX;
+    const mouseY = pointer.clientY;
+
+    const worldX = (mouseX - CENTER_X) / (zoom * SCALE);
     const worldY = (mouseY - CENTER_Y) / (zoom * SCALE);
-	newSunIdx++;
-	let mass = parseFloat(prompt("Insert SUN"+newSunIdx+" mass (in kg, default = SUN mass / 4)", sun.mass/4)) || sun.mass/4;
-	let realRadius = parseFloat(prompt("Insert SUN"+newSunIdx+" radius (in m, default = SUN radius / 3)", sun.realRadius/3)) || sun.realRadius/3;
-	let speedX = parseFloat(prompt("Insert SUN"+newSunIdx+" vx (in m/s, default = -5000)", -5000)) || 0;
-	let speedY = parseFloat(prompt("Insert SUN"+newSunIdx+" vy (in m/s, default = 5000)", 5000)) || 0;
-	let radius = parseFloat(prompt("Insert SUN"+newSunIdx+" draw radius (in px, default = 10)", 10)) || 10;
+
+    newSunIdx++;
+
+    let mass = parseFloat(prompt("Insert SUN"+newSunIdx+" mass", sun.mass/4)) || sun.mass/4;
+    let realRadius = parseFloat(prompt("Insert SUN"+newSunIdx+" radius", sun.realRadius/3)) || sun.realRadius/3;
+    let speedX = parseFloat(prompt("Insert SUN"+newSunIdx+" vx", -5000)) || 0;
+    let speedY = parseFloat(prompt("Insert SUN"+newSunIdx+" vy", 5000)) || 0;
+    let radius = parseFloat(prompt("Insert SUN"+newSunIdx+" draw radius", 10)) || 10;
+
     const sun2 = new Body(
-            "SUN"+newSunIdx,
-            mass,//massa
-            worldX,
-            worldY,
-            speedX, 
-			speedY,         // velocità iniziale
-            radius,         // raggio render più piccolo
-            "#ffff99",      // colore leggermente diverso
-            realRadius      //raggio
+        "SUN"+newSunIdx,
+        mass,
+        worldX,
+        worldY,
+        speedX,		// velocità iniziale x
+        speedY,		// velocità iniziale x
+        radius,		// raggio render più piccolo
+        "#ffff99",	// colore leggermente diverso
+        realRadius	//raggio
     );
+
     const acc = sun2.computeAcceleration(bodies);
     sun2.ax = acc.ax;
     sun2.ay = acc.ay;
-	
-	bodies.push(sun2);
+
+    bodies.push(sun2);
+}
+
+//gestione zoom mobile
+let initialDistance = null;
+let initialZoom = null;
+canvas.addEventListener("touchmove", (e) => {
+    if (e.touches.length === 2) {
+        e.preventDefault();
+
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        const distance = Math.sqrt(dx*dx + dy*dy);
+
+        if (!initialDistance) {
+            initialDistance = distance;
+            initialZoom = zoom;
+        } else {
+            zoom = initialZoom * (distance / initialDistance);
+            document.getElementById("ZOOM").innerHTML = zoom;
+        }
+    }
+}, { passive: false });
+canvas.addEventListener("touchend", () => {
+    initialDistance = null;
 });
+
 
 
 
