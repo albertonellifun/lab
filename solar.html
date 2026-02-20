@@ -21,6 +21,8 @@ button { min-width: 30px; min-height: 30px; }
 	<button onclick="TIME_STEP *= ts;document.getElementById('TS').innerHTML=TIME_STEP+'s'">+</button>
 	= <span id="TS">86400s</span>
 	<br/>
+	SIM DATE = <span id="SIMDATE"></span>
+	<br/>
 	<button onclick="autocenter=!autocenter;document.getElementById('AC').innerHTML=autocenter">AUTOCENTER</button>
 	= <span id="AC">true</span>
 	<br/>
@@ -84,6 +86,8 @@ let exploCount = 0;
 let mergeCount = 0;
 let nasaApiErrors = true;//se ci sono errori con api nasa -> pianeti ed asteroidi hanno solo X/Y, Z=0
 let draw3D = false;//drawAllBodies / drawAllBodies3D
+let simulationTime = 0;//secondi simulati trascorsi
+let simulationStartDate = new Date();//data iniziale simulazione
 
 const canvas = document.getElementById("space");
 const ctx = canvas.getContext("2d");
@@ -381,6 +385,7 @@ function animate(){
 }
 
 function updateAllBodies() {
+	simulationTime += TIME_STEP;
 	// 1. Calcoliamo le accelerazioni ATTUALI (a_t) per tutti
 	// Invece di sovrascrivere body.ax subito, usiamo una costante temporanea
     // o assicuriamoci che il calcolo sia atomico.
@@ -662,6 +667,8 @@ function drawStats() {
 	
 	const cm = computeCenterOfMass(bodies);
 	document.getElementById("CENTEROFMASS").innerHTML = "x=" + (cm.x.toExponential(2)) + "m y=" + (cm.y.toExponential(2))+"m z=" + (cm.z.toExponential(2))+"m";
+	
+	document.getElementById("SIMDATE").innerHTML = getSimulationDate();
 }
 
 //GESTIONE COLLISIONI
@@ -943,7 +950,9 @@ async function initSolarSystemFromNASA() {
     };
 
     const bodiesMap = { sun, mercury, venus, earth, moon, mars, jupiter, saturn, uranus, neptune, pluto };
-    const today = new Date().toISOString().split("T")[0];
+    const todayDate = new Date();
+	simulationStartDate = new Date(todayDate);
+	const today = todayDate.toISOString().split("T")[0];
     const tomorrow = new Date(Date.now() + 86400000).toISOString().split("T")[0];
 
     async function fetchWithTimeout(url, timeout = 8000) {
@@ -1096,7 +1105,10 @@ function drawAllBodies3D() {
 }
 
 
-
+function getSimulationDate() {
+    const current = new Date(simulationStartDate.getTime() + simulationTime * 1000);
+    return current.toLocaleString("it-IT");
+}
 
 
 
