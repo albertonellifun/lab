@@ -434,14 +434,23 @@ function drawCanvasCenter() {
     if (!autocenter) return;
 
     let target = forcedCenterBody || computeCenterOfMass(bodies);
-    const targetPos = worldToCanvas(target.x, target.y);//posizione canvas del target
+
+    let targetPos;
+
+    if (draw3D) {
+        const p = project3D(target.x, target.y, target.z);
+        targetPos = { x: p.px, y: p.py };
+    } else {
+        targetPos = worldToCanvas(target.x, target.y);
+    }
+
     const dx = canvas.width / 2 - targetPos.x;
     const dy = canvas.height / 2 - targetPos.y;
 
     CENTER_X += dx;
     CENTER_Y += dy;
 
-    // disegna croce al centro
+    // croce centrale
     ctx.strokeStyle = '#fff';
     ctx.lineWidth = 0.2;
     ctx.beginPath();
@@ -581,6 +590,14 @@ function handleRightClick(pointer) {
 	sun2.az = acc.az;
 
     bodies.push(sun2);
+	
+	if (sun2.mass > 1e34) {
+		TIME_STEP = Math.min(TIME_STEP, 60); // 60 secondi max
+		document.getElementById("TS").innerHTML = TIME_STEP + "s";
+	} else if(sun2.mass > 1e36) {
+		TIME_STEP = Math.min(TIME_STEP, 1); // 1 secondi max
+		document.getElementById("TS").innerHTML = TIME_STEP + "s";
+	}
 }
 
 
