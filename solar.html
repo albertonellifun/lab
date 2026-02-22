@@ -510,16 +510,15 @@ function handleLeftClick(pointer) {
 
 
 
-// Gestione tasti
+//gestione tasti center view on object 0..9 + S=Sun + C=Center of mass + Zoom=1
 window.addEventListener("keydown", (e) => {
     let index = -1;
-    if (e.key >= "1" && e.key <= "9") index = parseInt(e.key);
-    else if (e.key === "0") index = 10; // Plutone
-
+    if (e.key >= "0" && e.key <= "9") index = parseInt(e.key);
+    
     if (index >= 0 && index < bodies.length) {
         forcedCenterBody = bodies[index];
     }
-    // tasto S per Sole
+    //tasto S per Sole
     if (e.key === "s" || e.key === "S") forcedCenterBody = bodies[0];
 	if (e.key === "c" || e.key === "C") forcedCenterBody = null;
 	if (e.key === "z" || e.key === "Z") zoom = 1;
@@ -531,6 +530,18 @@ canvas.addEventListener("contextmenu", (e) => {
     e.preventDefault();
     handleRightClick(e);
 });
+
+//gestione modifica
+function handleModify(body) {
+	body.mass = parseFloat(prompt("Insert "+body.name+" mass", body.mass)) || sun.mass;
+    body.realRadius = parseFloat(prompt("Insert "+body.name+" radius", body.realRadius)) || body.realRadius;
+    body.vx = parseFloat(prompt("Insert "+body.name+" vx", body.vx)) || body.vx;
+    body.vy = parseFloat(prompt("Insert "+body.name+" vy", body.vy)) || body.vy;
+	body.vz = parseFloat(prompt("Insert "+body.name+" vz", body.vz)) || body.vz;
+    body.radius = parseFloat(prompt("Insert "+body.name+" draw radius", body.radius)) || body.radius;
+}
+
+
 let newSunIdx = 0;
 function handleRightClick(pointer) {
 
@@ -918,7 +929,20 @@ function rebuildInfoPanel() {
 		centerButton.textContent = "C";
 		centerButton.onclick = () => { forcedCenterBody = body; autocenter = true; document.getElementById('AC').innerHTML = autocenter; };
 		
+		//MODIFY OBJECT
+		const modifyButton = document.createElement("button");
+		modifyButton.textContent = "Mod";
+		modifyButton.onclick = function() { handleModify(body); rebuildInfoPanel(); }
+		
+		//DELETE OBJECT
+		const deleteButton = document.createElement("button");
+		deleteButton.textContent = "Del";
+		deleteButton.onclick = function() { for(let i=0; i<bodies.length; i++) if(bodies[i].name===body.name) bodies.splice(i,1); rebuildInfoPanel(); }
+		
+		
 		wrapper.appendChild(centerButton);
+		wrapper.appendChild(modifyButton);
+		wrapper.appendChild(deleteButton);
         wrapper.appendChild(massLabel);
         wrapper.appendChild(massMinus);
         wrapper.appendChild(massPlus);
