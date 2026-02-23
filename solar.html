@@ -40,7 +40,7 @@ button { min-width: 30px; min-height: 30px; }
 	= <span id="PAUSED">false</span>
 	<br/>
 	<button onclick="BORDER=!BORDER;document.getElementById('BORDER').innerHTML=BORDER">BORDER</button>
-	= <span id="BORDER">true</span>
+	= <span id="BORDER">false</span>
 	<br/>
 	<button onclick="LABEL=!LABEL;document.getElementById('LABEL').innerHTML=LABEL">LABEL</button>
 	= <span id="LABEL">true</span>
@@ -82,7 +82,7 @@ let paused = false;//pausa on/off
 let spd = 1.05;//speed +/-
 let mass = 1.05;//mass +/-
 let ts = 2;//time step +/-
-let BORDER = true;
+let BORDER = false;
 let LABEL = true;
 let PATH = true;
 let GRID = true;
@@ -106,14 +106,15 @@ let forcedCenterBody = null; //corpo su cui centrare l'autocenter (== follow)
 
 let moonTexture = generateMoonTexture();
 let sunTexture = generateSunTexture();
-
+let gasPlanetTexture = generateGasPlanetTexture();
+let rockyPlanetTexture = generateRockyPlanetTexture();
 
 function generateMoonTexture() {
 		const c = document.createElement('canvas');
 		c.width = 100;
 		c.height = 100;
 		const ctx = c.getContext('2d');
-		const colors = ['#777', '#555', '#333'];
+		const colors = ['#777', '#555', '#aaa'];
 
 		//disegna puntini random
 		for (let i = 0; i < 1000; i++) {
@@ -126,8 +127,8 @@ function generateMoonTexture() {
 
 		//aggiungi qualche cratere (fill e/o stroke)
 		for (let i = 0; i < 100; i++) {
-			const x = Math.random() * 100;
-			const y = Math.random() * 100;
+			const x = 3 + Math.random() * 97;
+			const y = 3 + Math.random() * 97;
 			const r = Math.random() * 5 + 1;
 			const col = Math.random() * colors.length;
 			ctx.fillStyle = colors[Math.floor(col)];
@@ -139,9 +140,9 @@ function generateMoonTexture() {
 			if (i % 4 === 0) ctx.stroke();
 			else ctx.fill();
 		}
-
 		return ctx.createPattern(c, 'repeat');
 	}
+	
 function generateSunTexture() {
     const size = 256;
     const c = document.createElement('canvas');
@@ -160,8 +161,60 @@ function generateSunTexture() {
         ctx.fillStyle = `rgba(255, ${150 + Math.random()*100}, 0, 0.1)`;
         ctx.fill();
     }
-
     return ctx.createPattern(c, 'repeat');
+}
+
+function generateGasPlanetTexture() {
+    const size = 256;
+    const c = document.createElement("canvas");
+    c.width = size;
+    c.height = size;
+    const ctx = c.getContext("2d");
+
+    let y = 0;
+
+    while (y < size) {
+        const bandHeight = 8 + Math.random() * 18;
+		const g = 120 + Math.random() * 80;
+        ctx.fillStyle = `rgb(${g},${g},${g})`;
+        ctx.fillRect(0, y, size, bandHeight);
+        y += bandHeight;
+    }
+	
+	ctx.filter = "blur(3px)";
+    ctx.drawImage(c, 0, 0);
+    ctx.filter = "none";
+	
+    return ctx.createPattern(c, "repeat");
+}
+
+function generateRockyPlanetTexture() {
+    const size = 256;
+    const c = document.createElement("canvas");
+    c.width = size;
+    c.height = size;
+    const ctx = c.getContext("2d");
+
+    // colore base roccioso
+    ctx.fillStyle = "#7a5a3a";
+    ctx.fillRect(0, 0, size, size);
+
+    // macchie irregolari
+    for (let i = 0; i < 800; i++) {
+        const x = Math.random() * size;
+        const y = Math.random() * size;
+        const r = Math.random() * 6 + 1;
+
+        const shade = 80 + Math.random() * 80; // grigi/marroni
+        ctx.fillStyle = `rgba(${shade},${shade*0.8},${shade*0.6},0.4)`;
+
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+
+    return ctx.createPattern(c, "repeat");
 }
 
 class Body {
@@ -261,6 +314,24 @@ class Body {
 			ctx.fillRect(px - r, py - r, r*2, r*2);
 			ctx.restore();
 			
+			//texture lunare presa in prestito da lunar lander, altra creata al volo
+			if (this === moon || 
+				this === jupiter || this === saturn || 
+				this === mercury || this === mars || this === pluto || this === earth) {
+				//applica texture
+				ctx.save();
+				ctx.translate(px, py);
+				ctx.globalCompositeOperation = 'multiply';
+				this.globalAlpha = 0.3;
+				ctx.fillStyle = this === moon ? moonTexture : 
+								this === jupiter || this === saturn ? gasPlanetTexture :
+								rockyPlanetTexture;
+				ctx.fill();
+				ctx.restore();			
+				ctx.globalCompositeOperation = 'source-over';
+				this.globalAlpha = 1;
+			}
+			
 			//saturn ringsss
 			if (this === saturn) {				
 				ctx.beginPath();
@@ -270,17 +341,6 @@ class Body {
 				ctx.stroke();
 				ctx.lineWidth = 1;
 			}	
-			//texture lunare presa in prestito da lunar lander
-			if (this === moon) {
-				//applica texture
-				ctx.save();
-				ctx.translate(px, py);
-				ctx.globalCompositeOperation = 'multiply';
-				ctx.fillStyle = moonTexture;
-				ctx.fill();
-				ctx.restore();			
-				ctx.globalCompositeOperation = 'source-over';
-			}
 		} else {
 			ctx.shadowColor = this.color;
 			ctx.shadowBlur = r * 3; // più grande = glow più ampio
@@ -294,6 +354,7 @@ class Body {
 			ctx.fill();
 			ctx.restore();			
 			ctx.globalCompositeOperation = 'source-over';
+			ctx.shadowBlur = 0;
 		}
 		
 		if(BORDER){
@@ -409,12 +470,12 @@ const mars = new Body("MARS", 6.39e23,
 const jupiter = new Body("JUPITER", 1.898e27, 
 5.204 * AU, 0, 0,
 0, 13070, 0,
-10, "#cc9966", 6.9911e7);
+10, "#ddbbaa", 6.9911e7);
 // Saturno
 const saturn = new Body("SATURN", 5.683e26, 
 9.582 * AU, 0, 0,
 0, 9680, 0,
-9, "#eecc99", 5.8232e7);
+9, "#ffdd99", 5.8232e7);
 // Urano
 const uranus = new Body("URANUS", 8.681e25, 
 19.191 * AU, 0, 0,
@@ -1169,7 +1230,7 @@ async function initSolarSystemFromNASA() {
 	let errors = '';
 	bodies.forEach(item => { if(item.status==='ko') errors += item.name +' ';});
     alert("Solar system initialized with NASA API data" + (errors ? ' (in error: '+errors+') \n\nCheck CORS policy - install a plugin to add Access-Control-Allow-Origin header in request' : ''));
-	debugger;if (!errors && !nasaApiErrors) {
+	if (!errors && !nasaApiErrors) {
 		TIME_STEP = 1;//simulazione real time
 		document.getElementById("TS").innerHTML=TIME_STEP+"s";
 	}
@@ -1208,11 +1269,101 @@ function project3D(x, y, z) {
 
 Body.prototype.draw3D = function() {
     const { px, py, rScale, depth } = project3D(this.x, this.y, this.z);
-	
+	const zf = zoom / 50;//stesso fattore usato nel 2D
+	const r = Math.abs(this.radius * rScale * zf);//calcolo qui e basta
+
+	//cerchio base
 	ctx.beginPath();
-    ctx.arc(px, py, Math.abs(this.radius * rScale / 10), 0, Math.PI*2);
-    ctx.fillStyle = this.color;
-    ctx.fill();
+	ctx.arc(px, py, r, 0, Math.PI*2);
+	ctx.fillStyle = this.color;
+	ctx.fill();
+
+	// ===== OMBREGGIATURA 3D =====
+	if (this !== sun && this.name.indexOf("SUN") === -1) {
+
+		// vettore luce reale nello spazio 3D
+		const dx = sun.x - this.x;
+		const dy = sun.y - this.y;
+		const dz = sun.z - this.z;
+
+		// ruotiamo anche il vettore luce con la camera
+		const rotatedLight = rotate3D(dx, dy, dz);
+
+		// direzione luce proiettata su schermo
+		const angle = Math.atan2(-rotatedLight.y, rotatedLight.x);
+
+		ctx.save();
+
+		// clip sul pianeta
+		ctx.beginPath();
+		ctx.arc(px, py, r, 0, Math.PI*2);
+		ctx.clip();
+
+		ctx.globalCompositeOperation = "multiply";
+
+		const shadowGradient = ctx.createLinearGradient(
+			px - Math.cos(angle) * r,
+			py - Math.sin(angle) * r,
+			px + Math.cos(angle) * r,
+			py + Math.sin(angle) * r
+		);
+
+		shadowGradient.addColorStop(0, "rgba(0,0,0,1)");
+		shadowGradient.addColorStop(0.5, "rgba(0,0,0,0.3)");
+		shadowGradient.addColorStop(1, "rgba(0,0,0,0)");
+
+		ctx.fillStyle = shadowGradient;
+		ctx.fillRect(px - r, py - r, r*2, r*2);
+
+		ctx.restore();
+		ctx.globalCompositeOperation = "source-over";
+	}
+	
+	//texture lunare presa in prestito da lunar lander, altra creata al volo
+	if (this === moon || 
+		this === jupiter || this === saturn || 
+		this === mercury || this === mars || this === pluto || this === earth) {
+		//applica texture
+		ctx.save();
+		ctx.translate(px, py);
+		ctx.globalCompositeOperation = 'multiply';
+		this.globalAlpha = 0.3;
+		ctx.fillStyle = this === moon ? moonTexture : 
+						this === jupiter || this === saturn ? gasPlanetTexture :
+						rockyPlanetTexture;
+		ctx.fill();
+		ctx.restore();			
+		ctx.globalCompositeOperation = 'source-over';
+		this.globalAlpha = 1;
+	}
+			
+	//saturn ringsss
+	if (this === saturn) {		
+		const r = this.radius * rScale * zf;	
+		ctx.beginPath();
+		ctx.strokeStyle="rgba(200,180,120,0.25)";
+		ctx.lineWidth = 5 * zf;
+		ctx.ellipse(px, py, r*2.2, r*3.2, Math.PI/4, 0, Math.PI*2);
+		ctx.stroke();
+		ctx.lineWidth = 1;
+	}	
+	
+	if (this === sun || this.name.indexOf("SUN") > -1) {
+		ctx.shadowColor = this.color;
+		ctx.shadowBlur = this.radius * 3; // più grande = glow più ampio
+		ctx.fill();
+			
+		//applica texture
+		ctx.save();
+		ctx.translate(px, py);
+		ctx.globalCompositeOperation = 'multiply';
+		ctx.fillStyle = sunTexture;
+		ctx.fill();
+		ctx.restore();			
+		ctx.globalCompositeOperation = 'source-over';
+		ctx.shadowBlur = 0;
+	}
+	
 
     if(BORDER){
         ctx.strokeStyle = "#fff";
