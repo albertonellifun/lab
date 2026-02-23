@@ -48,6 +48,12 @@ button { min-width: 30px; min-height: 30px; }
 	<button onclick="PATH=!PATH;document.getElementById('PATH').innerHTML=PATH">PATH</button>
 	= <span id="PATH">true</span>
 	<br/>
+	<button onclick="GRID=!GRID;document.getElementById('GRID').innerHTML=GRID">GRID</button>
+	= <span id="GRID">true</span>
+	<br/>
+	<button onclick="draw3D=!draw3D;document.getElementById('DRAW3D').innerHTML=draw3D">DRAW 3D</button>
+	= <span id="DRAW3D">false</span>
+	<br/>
 	OBJECTS = <span id="OBJECTS"></span>
 	<br/>
 	PATH LEN = <span id="PATHLEN"></span>
@@ -55,9 +61,6 @@ button { min-width: 30px; min-height: 30px; }
 	EXPLO COUNT = <span id="EXPLOCOUNT"></span>
 	<br/>
 	MERGE COUNT = <span id="MERGECOUNT"></span>
-	<br/>
-	<button onclick="draw3D=!draw3D;document.getElementById('DRAW3D').innerHTML=draw3D">DRAW 3D</button>
-	= <span id="DRAW3D">false</span>
 	<br/>
 	<button onclick="if(document.getElementById('info').style.display=='none')document.getElementById('info').style.display='block';else document.getElementById('info').style.display='none';">INFO</button>
 </div>
@@ -82,9 +85,10 @@ let ts = 2;//time step +/-
 let BORDER = true;
 let LABEL = true;
 let PATH = true;
+let GRID = true;
 let exploCount = 0;
 let mergeCount = 0;
-let nasaApiErrors = true;//se ci sono errori con api nasa -> pianeti ed asteroidi hanno solo X/Y, Z=0
+let nasaApiErrors = false;//se ci sono errori con api nasa -> pianeti ed asteroidi hanno solo X/Y, Z=0
 let draw3D = false;//drawAllBodies / drawAllBodies3D
 let simulationTime = 0;//secondi simulati trascorsi
 let simulationStartDate = new Date();//data iniziale simulazione
@@ -100,6 +104,66 @@ let CENTER_Y = canvas.height/2;
 
 let forcedCenterBody = null; //corpo su cui centrare l'autocenter (== follow)
 
+let moonTexture = generateMoonTexture();
+let sunTexture = generateSunTexture();
+
+
+function generateMoonTexture() {
+		const c = document.createElement('canvas');
+		c.width = 100;
+		c.height = 100;
+		const ctx = c.getContext('2d');
+		const colors = ['#777', '#555', '#333'];
+
+		//disegna puntini random
+		for (let i = 0; i < 1000; i++) {
+			const x = Math.random() * 100;
+			const y = Math.random() * 100;
+			const col = Math.random() * colors.length;
+			ctx.fillStyle = colors[Math.floor(col)];
+			ctx.fillRect(x, y, 1, 1);
+		}
+
+		//aggiungi qualche cratere (fill e/o stroke)
+		for (let i = 0; i < 100; i++) {
+			const x = Math.random() * 100;
+			const y = Math.random() * 100;
+			const r = Math.random() * 5 + 1;
+			const col = Math.random() * colors.length;
+			ctx.fillStyle = colors[Math.floor(col)];
+			ctx.strokeStyle = colors[Math.floor(col)];
+			
+			ctx.beginPath();
+			ctx.arc(x, y, r, 0, Math.PI * 2);
+			ctx.closePath();
+			if (i % 4 === 0) ctx.stroke();
+			else ctx.fill();
+		}
+
+		return ctx.createPattern(c, 'repeat');
+	}
+function generateSunTexture() {
+    const size = 256;
+    const c = document.createElement('canvas');
+    c.width = size;
+    c.height = size;
+    const ctx = c.getContext('2d');
+
+    // ===== GRANULAZIONE SOLARE (celle convettive) =====
+    for (let i = 0; i < 5000; i++) {
+        const x = Math.random() * size;
+        const y = Math.random() * size;
+        const r = Math.random() * 5 + 0.5;
+
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255, ${150 + Math.random()*100}, 0, 0.1)`;
+        ctx.fill();
+    }
+
+    return ctx.createPattern(c, 'repeat');
+}
+
 class Body {
     constructor(name, mass, x, y, z, vx, vy, vz, radius, color, realRadius){
         this.name = name;
@@ -113,7 +177,7 @@ class Body {
         this.radius = radius;//px per render
 		this.realRadius = realRadius;
         this.color = color;
-		this.path = [{x:this.x, y:this.y, z:this.z}];//percorso=posizioni passate
+		this.path = [];//percorso=posizioni passate
 		this.pathIndex = 0;
 		this.ax = 0;//accelerazione corrente (x)
 		this.ay = 0;//accelerazione corrente (y)
@@ -125,7 +189,7 @@ class Body {
 		const thresholdDistance = 5e9; // 5 miliardi di metri (~0.033 AU)
 
 		const lastIdx = this.path.length - 1;
-		const lastPos = this.path[lastIdx];
+		const lastPos = lastIdx > -1 ? this.path[lastIdx] : null;
 
 		if(!lastPos){
 			this.path.push({x:this.x, y:this.y, z:this.z});
@@ -205,11 +269,31 @@ class Body {
 				ctx.ellipse(px, py, r*2.2, r*3.2, Math.PI/4, 0, Math.PI*2);
 				ctx.stroke();
 				ctx.lineWidth = 1;
-			}			
+			}	
+			//texture lunare presa in prestito da lunar lander
+			if (this === moon) {
+				//applica texture
+				ctx.save();
+				ctx.translate(px, py);
+				ctx.globalCompositeOperation = 'multiply';
+				ctx.fillStyle = moonTexture;
+				ctx.fill();
+				ctx.restore();			
+				ctx.globalCompositeOperation = 'source-over';
+			}
 		} else {
 			ctx.shadowColor = this.color;
 			ctx.shadowBlur = r * 3; // più grande = glow più ampio
 			ctx.fill();
+			
+			//applica texture
+			ctx.save();
+			ctx.translate(px, py);
+			ctx.globalCompositeOperation = 'multiply';
+			ctx.fillStyle = sunTexture;
+			ctx.fill();
+			ctx.restore();			
+			ctx.globalCompositeOperation = 'source-over';
 		}
 		
 		if(BORDER){
@@ -422,6 +506,8 @@ function updateAllBodies() {
 }
 
 function drawAllBodies() {
+	if(GRID) drawReferencePlane2D();
+
 	for (let body of bodies) {
 		if (PATH) body.drawPath();
 
@@ -591,11 +677,11 @@ function handleRightClick(pointer) {
 
     bodies.push(sun2);
 	
-	if (sun2.mass > 1e34) {
-		TIME_STEP = Math.min(TIME_STEP, 60); // 60 secondi max
-		document.getElementById("TS").innerHTML = TIME_STEP + "s";
-	} else if(sun2.mass > 1e36) {
+	if(sun2.mass > 1e36) {
 		TIME_STEP = Math.min(TIME_STEP, 1); // 1 secondi max
+		document.getElementById("TS").innerHTML = TIME_STEP + "s";
+	} else if (sun2.mass > 1e34) {
+		TIME_STEP = Math.min(TIME_STEP, 60); // 60 secondi max
 		document.getElementById("TS").innerHTML = TIME_STEP + "s";
 	}
 }
@@ -707,19 +793,29 @@ function checkCollisions() {
             const b1 = bodies[i];
             const b2 = bodies[j];
 
+			//delta posizioni
             const dx = b2.x - b1.x;
             const dy = b2.y - b1.y;
 			const dz = b2.z - b1.z;
             const dist = Math.sqrt(dx*dx + dy*dy + dz*dz);
-
             const collisionDistance = b1.realRadius + b2.realRadius;
-
-			if (dist < collisionDistance * 32 && TIME_STEP > 5400) {
-				TIME_STEP /= 2;
+			
+			//delta velocita
+			const dvx = b1.vx - b2.vx;
+            const dvy = b1.vy - b2.vy;
+            const dvz = b1.vz - b2.vz;
+			const relativeSpeed = Math.sqrt(dvx*dvx + dvy*dvy + dvz*dvz);
+			const maxTravel = relativeSpeed * TIME_STEP;
+			const MIN_TIMESTEP = 1; // 1 secondo minimo
+			
+            //se stanno per toccarsi -> riduci velocita simulazione
+			if (dist <= collisionDistance + maxTravel && TIME_STEP > MIN_TIMESTEP) {
+				TIME_STEP /= 4;
 				document.getElementById('TS').innerHTML=TIME_STEP;
 			}
 				
-			if (dist <= collisionDistance * 4) {
+			//se si toccano -> esplosione/fusione
+			if (dist <= collisionDistance * 2) {
 				resolveImpact(b1, b2, dist, dx, dy, dz);
                 return;
             }
@@ -1072,8 +1168,8 @@ async function initSolarSystemFromNASA() {
     document.body.style.cursor = "default";
 	let errors = '';
 	bodies.forEach(item => { if(item.status==='ko') errors += item.name +' ';});
-    alert("Sistema solare inizializzato con i dati NASA" + (errors ? ' (in errore: '+errors+')' : ''));
-	if (!errors && !nasaApiErrors) {
+    alert("Solar system initialized with NASA API data" + (errors ? ' (in error: '+errors+') \n\nCheck CORS policy - install a plugin to add Access-Control-Allow-Origin header in request' : ''));
+	debugger;if (!errors && !nasaApiErrors) {
 		TIME_STEP = 1;//simulazione real time
 		document.getElementById("TS").innerHTML=TIME_STEP+"s";
 	}
@@ -1133,7 +1229,7 @@ Body.prototype.draw3D = function() {
 }
 
 function drawAllBodies3D() {
-	if (PATH) drawReferencePlane3D();
+	if (GRID) drawReferencePlane3D();
 	
     // calcola profondità e ordina dal più lontano al più vicino
     const sortedBodies = bodies.slice().sort((a, b) => {
@@ -1154,6 +1250,41 @@ function getSimulationDate() {
     return current.toLocaleString("it-IT");
 }
 
+//disegna griglia piana anche per il 2d
+function drawReferencePlane2D(sizeAU = 60, stepAU = 1) {
+	const size = sizeAU * AU;
+    const step = stepAU * AU;
+
+    ctx.lineWidth = 0.5;
+    
+	// Linee parallele asse X
+	let i = -1;
+    for (let y = -size; y <= size; y += step / 4) {
+		i = (i+1)%4;
+        const p1 = worldToCanvas(-size, y);
+        const p2 = worldToCanvas(size, y);
+		ctx.strokeStyle = i === 0 ? "rgba(128,196,255,0.3)" : "rgba(128,196,255,0.15)";
+        ctx.beginPath();
+        ctx.moveTo(p1.x, p1.y);
+        ctx.lineTo(p2.x, p2.y);
+        ctx.stroke();
+    }
+
+    // Linee parallele asse Y
+	i = -1;
+    for (let x = -size; x <= size; x += step / 4) {
+		i = (i+1)%4;
+		const p1 = worldToCanvas(x,-size);
+        const p2 = worldToCanvas(x,size);
+		ctx.strokeStyle = i === 0 ? "rgba(128,196,255,0.3)" : "rgba(128,196,255,0.15)";
+        ctx.beginPath();
+        ctx.moveTo(p1.x, p1.y);
+        ctx.lineTo(p2.x, p2.y);
+        ctx.stroke();
+    }
+	
+	ctx.lineWidth = 1;
+}
 
 //disegna piano (altrimenti non si capisce la prospettiva)
 function drawReferencePlane3D(sizeAU = 60, stepAU = 1) {
