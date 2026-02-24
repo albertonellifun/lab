@@ -71,6 +71,7 @@ button { min-width: 30px; min-height: 30px; }
 <script>
 
 // ===== COSTANTI REALI =====
+const C = 299792458; //velocita luce in m/s
 const G = 6.67430e-11;//costante gravitazione universale
 const AU = 1.496e11;//unita astronomica
 const DAY = 86400;//secondi
@@ -874,7 +875,7 @@ function checkCollisions() {
             //se stanno per toccarsi -> riduci velocita simulazione
 			if (dist <= collisionDistance + maxTravel && TIME_STEP > MIN_TIMESTEP) {
 				TIME_STEP /= 4;
-				document.getElementById('TS').innerHTML=TIME_STEP;
+				document.getElementById('TS').innerHTML=TIME_STEP+"s";
 			}
 				
 			//se si toccano -> esplosione/fusione
@@ -930,7 +931,7 @@ function mergeBodies(b1, b2){
     );
 
     const merged = new Body(
-        b1.name + "+" + b2.name,
+        b1.mass > b2.mass ? b1.name + "+" + b2.name : b2.name + "+" + b1.name,
         newMass,
         newX,
         newY,
@@ -979,10 +980,13 @@ function fragmentBodies(b1, b2){
 
     // Energia per frammento
     const energyPerFragment = energyForFragments / fragments;
-	const speed = Math.sqrt(2 * energyPerFragment / massPerFragment);//energy per ogni fragment, non energy for fragments!
+	let speed = Math.sqrt(2 * energyPerFragment / massPerFragment);//energy per ogni fragment, non energy for fragments!
+	if (speed > C) {
+		console.log('FRAGMENT SPEED = '+speed);
+		speed = C / 10000;
+	}
 	
     for (let i = 0; i < fragments; i++) {
-
         const angleXY = Math.random() * 2 * Math.PI;//xy
 		const angleZ = nasaApiErrors ? (Math.PI / 2) : Math.acos(2 * Math.random() - 1);//z
 
