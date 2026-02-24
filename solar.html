@@ -554,7 +554,7 @@ function updateAllBodies() {
 		b.ay = a.ay;
 		b.az = a.az;
 	
-		b.updatePath();
+		if (PATH) b.updatePath();
 	}
 
     // 3. Aggiorniamo le VELOCITÀ di tutti
@@ -981,19 +981,28 @@ function fragmentBodies(b1, b2){
     // Energia per frammento
     const energyPerFragment = energyForFragments / fragments;
 	let speed = Math.sqrt(2 * energyPerFragment / massPerFragment);//energy per ogni fragment, non energy for fragments!
-	if (speed > C) {
-		console.log('FRAGMENT SPEED = '+speed);
-		speed = C / 10000;
+	let maxSpeed = C / 10000;
+	if (speed > maxSpeed) {
+		speed = maxSpeed;
 	}
 	
     for (let i = 0; i < fragments; i++) {
         const angleXY = Math.random() * 2 * Math.PI;//xy
 		const angleZ = nasaApiErrors ? (Math.PI / 2) : Math.acos(2 * Math.random() - 1);//z
 
-        const vx = vcmX + speed * Math.sin(angleZ) * Math.cos(angleXY);
-        const vy = vcmY + speed * Math.sin(angleZ) * Math.sin(angleXY);
-        const vz = nasaApiErrors ? 0 : vcmZ + speed * Math.cos(angleZ);//cos(90) puo essere non esattamente zero
+        let vx = vcmX + speed * Math.sin(angleZ) * Math.cos(angleXY);
+        let vy = vcmY + speed * Math.sin(angleZ) * Math.sin(angleXY);
+        let vz = nasaApiErrors ? 0 : vcmZ + speed * Math.cos(angleZ);//cos(90) puo essere non esattamente zero
 		
+		//ocho: vcm + maxSpeed supera tranquillamente maxSpeed
+		const v = Math.sqrt(vx*vx + vy*vy + vz*vz);
+		if (v > maxSpeed) {
+			const scale = maxSpeed / v;
+			vx *= scale;
+			vy *= scale;
+			vz *= scale;
+		}
+				
         const frag = new Body(
             "FRAG",
             massPerFragment,
