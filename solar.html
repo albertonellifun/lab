@@ -333,12 +333,14 @@ class Body {
 			}
 			
 			//saturn ringsss
-			if (this === saturn) {				
-				ctx.beginPath();
-				ctx.strokeStyle="rgba(200,180,120,0.25)";
-				ctx.lineWidth = 5 * zf;
-				ctx.ellipse(px, py, r*2.2, r*3.2, Math.PI/4, 0, Math.PI*2);
-				ctx.stroke();
+			if (this === saturn) {		
+				for (let i=0; i<8; i++) {
+					ctx.beginPath();
+					ctx.strokeStyle="rgba(200,180,120,"+(0.25-i/50)+")";
+					ctx.lineWidth = zf;
+					ctx.ellipse(px, py, r*(1.6+(i*i)/50), r*(2.6+(i*i)/50), Math.PI/4, 0, Math.PI*2);
+					ctx.stroke();
+				}
 				ctx.lineWidth = 1;
 			}	
 		} else {
@@ -1339,12 +1341,14 @@ Body.prototype.draw3D = function() {
 			
 	//saturn ringsss
 	if (this === saturn) {		
-		const r = this.radius * rScale * zf;	
-		ctx.beginPath();
-		ctx.strokeStyle="rgba(200,180,120,0.25)";
-		ctx.lineWidth = 5 * zf;
-		ctx.ellipse(px, py, r*2.2, r*3.2, Math.PI/4, 0, Math.PI*2);
-		ctx.stroke();
+		const r = this.radius * rScale * zf;
+		for (let i=0; i<8; i++) {
+			ctx.beginPath();
+			ctx.strokeStyle="rgba(200,180,120,"+(0.25-i/50)+")";
+			ctx.lineWidth = zf;
+			ctx.ellipse(px, py, r*(1.6+(i*i)/50), r*(2.6+(i*i)/50), Math.PI/4, 0, Math.PI*2);
+			ctx.stroke();
+		}
 		ctx.lineWidth = 1;
 	}	
 	
