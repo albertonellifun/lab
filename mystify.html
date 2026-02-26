@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="it">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, height=device-height, maximum-scale=1.0">
+		<title>MYSTIFY SCREEN SAVER</title>
+		<style>
+			body { margin:0; background:black; overflow:hidden; font-family: monospace; color: #fff; }
+			canvas { display:block; touch-action: none; }
+		</style>
+	</head>
+	<body>
+		
+		<canvas id="game"></canvas>	
+
+<script>
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+let polygons = [];//
+let paused = false;//gestione pausa
+let rounded = 0;//gestione line/quadratic/ribbons
+
+class Point {
+	constructor(x, y, vx, vy) {
+		this.x = x;
+		this.y = y;
+		this.vx = vx;
+		this.vy = vy;
+	}
+}
+
+class Color {
+	constructor(r,g,b) {
+		this.r = r;
+		this.g = g;
+		this.b = b;
+	}
+}
+
+let COLORS = [	new Color(255,150,0),   new Color(50,255,50),   new Color(60,130,255),
+				new Color(170,0,0),     new Color(0,120,20),    new Color(0,0,150),
+				new Color(255,255,255), new Color(255,255,0),   new Color(255,0,255),
+				new Color(255,0,0),     new Color(0,255,255),   new Color(0,0,255)];
+
+
+class Polygon {
+    constructor(name, points, color){
+        this.name = name;
+		this.color = color;
+		this.points = [];
+		this.queue = [];
+		
+		let maxSpeed = 250;
+		
+		for(let i=0; i<points; i++) {
+			let x = Math.random() * canvas.width;
+			let y = Math.random() * canvas.height;
+			let vx = (Math.random()*2 - 1) * maxSpeed;
+			let vy = (Math.random()*2 - 1) * maxSpeed;
+			this.points.push(new Point(x,y,vx,vy));
+		}
+		
+		this.trailTimer = 0;
+		this.trailInterval = 0.03;//salva la scia ogni 0.0x secondi
+    }
+	
+	update(dt) {
+		//scia
+		this.trailTimer += dt;
+		if (this.trailTimer >= this.trailInterval){
+
+			let oldPoints = [];
+			for (let i=0;i<this.points.length;i++) {
+				oldPoints.push(new Point(this.points[i].x,this.points[i].y,this.points[i].vx,this.points[i].vy));
+			}
+			this.queue.push(oldPoints);
+			
+			this.trailTimer = 0;
+		}
+	
+		//aggiorna punti
+		for(let i=0;i<this.points.length;i++){
+			let p = this.points[i];
+			let nx = p.x + p.vx * dt;
+			let ny = p.y + p.vy * dt;
+			
+			if (nx <= 0) { nx = 0; p.vx = -p.vx; }
+			if (nx >= canvas.width) { nx = canvas.width; p.vx = -p.vx; }
+			if (ny <= 0) { ny = 0; p.vy = -p.vy; }
+			if (ny >= canvas.height) { ny = canvas.height; p.vy = -p.vy; }
+			
+			p.x = nx;
+			p.y = ny;
+		}
+		
+		//tronca scia lunga
+		if(this.queue.length > 10) this.queue.splice(0, 1);
+	}
+	
+	drawLine() {
+		ctx.lineWidth = 1;
+		ctx.lineJoin = "miter";
+		ctx.lineCap = "butt";
+		this.trailInterval = 0.03;//ripristino
+		
+		for(let j=0; j<this.queue.length; j++) {
+			let points = this.queue[j];
+			
+			let alpha = 1 - (j / this.queue.length);
+			ctx.strokeStyle = 'rgba('+this.color.r + ',' + this.color.g + ',' + this.color.b + ',' + alpha +')';
+			
+			ctx.beginPath();		
+			for(let i=0;i<points.length;i++){
+				let p = points[i];
+				if(i===0) ctx.moveTo(p.x, p.y); 
+				else ctx.lineTo(p.x, p.y);
+			}
+			ctx.closePath();
+			
+			ctx.stroke();
+		}
+	}
+	
+	drawQuadratic() {
+		ctx.lineWidth = 2;
+		ctx.lineJoin = "round";
+		ctx.lineCap = "round";
+		this.trailInterval = 0.03;//ripristino
+		
+		for(let j=0; j<this.queue.length; j++) {
+			let points = this.queue[j];
+			if(points.length < 3) continue; // Servono almeno 3 punti per una curva chiusa
+
+			let alpha = 1 - (j / this.queue.length);
+			ctx.strokeStyle = `rgba(${this.color.r},${this.color.g},${this.color.b},${alpha})`;
+			
+
+			ctx.beginPath();
+			
+			// 1. Trova il punto medio tra l'ultimo e il primo punto
+			let lastP = points[points.length - 1];
+			let firstP = points[0];
+			let midX = (lastP.x + firstP.x) / 2;
+			let midY = (lastP.y + firstP.y) / 2;
+
+			// 2. Inizia dal punto medio (non dal vertice)
+			ctx.moveTo(midX, midY);
+
+			// 3. Cicla su tutti i punti
+			for(let i=0; i < points.length; i++){
+				let curr = points[i];
+				let next = points[(i + 1) % points.length]; 
+				
+				let cpX = curr.x;
+				let cpY = curr.y;
+				let endX = (curr.x + next.x) / 2;
+				let endY = (curr.y + next.y) / 2;
+				
+				ctx.quadraticCurveTo(cpX, cpY, endX, endY);
+			}
+
+			ctx.closePath();
+			ctx.stroke();
+		}
+	}
+	
+	drawRibbons() {
+		ctx.lineWidth = 2;
+		ctx.lineJoin = "round";
+		ctx.lineCap = "round";
+		this.trailInterval = 0.01;//coda piu vicina
+			
+		for(let j=0; j<this.queue.length; j++) {
+			let points = this.queue[j];
+			if(points.length < 3) continue; // Servono almeno 3 punti per una curva chiusa
+
+			let alpha = 1 - (j / this.queue.length);
+
+			ctx.beginPath();
+			ctx.moveTo(points[0].x, points[0].y);
+
+			for(let i=0; i < points.length; i++){
+				let curr = points[i];
+				let next = points[(i + 1) % points.length]; 
+				
+				let cpX = curr.x;
+				let cpY = curr.y;
+				let endX = (curr.x + next.x) / 2;
+				let endY = (curr.y + next.y) / 2;
+				
+				ctx.quadraticCurveTo(cpX, cpY, endX, endY);
+				
+				this.color.r = (Math.sin(performance.now() * (0.003) + i*5 ) * 127 + 128);
+				this.color.g = (Math.sin(performance.now() * (0.004) + i*5 ) * 127 + 128);
+				this.color.b = (Math.sin(performance.now() * (0.005) + i*5 ) * 127 + 128);
+				
+				ctx.strokeStyle = `rgba(${this.color.r},${this.color.g},${this.color.b},${alpha})`;
+				ctx.stroke();
+			}
+		}
+	}
+}
+
+//crea poligono con N>3 lati
+function createPoly() {
+	if (polygons.length > 20) return;
+	
+	let color = COLORS[polygons.length % COLORS.length];
+	let poly = new Polygon(polygons.length,  3 + (Math.random() * 2)|0, color);
+	
+	polygons.push(poly);
+}
+
+
+function init() {
+	createPoly();
+}
+
+//gestione pausa/rounded/aggiunta poly
+document.addEventListener('keydown', e => {
+	if (e.key === 'p' || e.key === 'P') { paused = !paused; return; }
+	if (e.key === 'r' || e.key === 'R') { rounded = (rounded + 1) % 3; return; }
+	createPoly();
+});
+
+
+//gestione click/doppioclick
+let lastTap = 0;
+document.addEventListener("pointerup", (e) => {
+  const now = Date.now();
+  
+  if (now - lastTap < 300) rounded = (rounded + 1) % 3;
+  else createPoly();
+  
+  lastTap = now;
+});
+
+
+
+//loop
+let lastTime = 0;
+
+function animate(now){
+
+    if(!lastTime) {
+        lastTime = now;
+        requestAnimationFrame(animate);
+        return;
+    }
+
+    let dt = Math.min((now - lastTime)/1000, 0.033);
+    lastTime = now;
+
+    if(paused) dt = 0;
+
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    for(let poly of polygons) {
+        poly.update(dt);
+        if (rounded === 0) poly.drawLine();
+		else if (rounded === 1) poly.drawQuadratic();
+		else poly.drawRibbons();
+	}
+	
+    requestAnimationFrame(animate);
+}
+
+
+init();
+animate();	
+		
+</script>
+
+
+
+	</body>
+</html>
