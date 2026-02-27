@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="it">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, height=device-height, maximum-scale=1.0">
+		<title>PIPES 3D</title>
+		<style>
+			body { margin:0; background:black; overflow:hidden; font-family: monospace; color: #fff; }
+			canvas { display:block; touch-action: none; }
+		</style>
+	</head>
+	<body>
+		
+		<canvas id="game"></canvas>
+
+<script>
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+let SIZE_X = 0;
+let SIZE_Y = 0;
+let SIZE_Z = 0;
+
+
+function onresize() {
+	canvas.width = innerWidth;
+	canvas.height = innerHeight;
+	SIZE_X = canvas.width/70;//20;//20x20x20
+	SIZE_Y = canvas.height/70;//10;//20x20x20
+	SIZE_Z = 1;//20x20x20
+}
+
+addEventListener("resize", onresize);
+onresize();
+
+//gestione profondita da tastiera -> banale
+document.addEventListener('keydown', e => {
+	if (e.key === '+') { SIZE_Z++; if (SIZE_Z > 20) SIZE_Z = 20; console.log(SIZE_Z); return; }
+	if (e.key === '-') { SIZE_Z--; if (SIZE_Z < 1) SIZE_Z = 1; console.log(SIZE_Z); return; }
+	pipes.push(new Pipe());
+});
+
+//gestione profondita da touch -> mortouchi vostri
+let startY = null;
+let startTime = null;
+let dragging = false;
+document.addEventListener("pointerdown", (e) => {
+    dragging = true;
+    startY = e.clientY;
+    startTime = performance.now();
+});
+
+document.addEventListener("pointerup", (e) => {
+    if (!dragging) return;
+
+    //colpetto - che ti prendesse
+    if ((performance.now() - startTime) < 200) {
+        pipes.push(new Pipe());
+		return;
+    }
+	
+	//trascinamento - di cadavere
+	const dy = (e.clientY - startY)/20;
+	SIZE_Z = SIZE_Z + (dy|0);
+	if (SIZE_Z > 20) SIZE_Z = 20;
+	if (SIZE_Z < 1) SIZE_Z = 1;
+	console.log(SIZE_Z);
+	
+    dragging = false;
+    startY = null;
+    startTime = null;
+});
+
+document.addEventListener("pointercancel", () => {
+    dragging = false;
+});
+
+
+
+
+function rndInt(min, max) {
+	return (rnd(min, max)) | 0;
+}
+
+function rnd(min, max) {
+	return ((Math.random() * (max - min)) + min);
+}
+
+const occupied = new Set();
+
+function buildKey(x, y, z) {
+	return `${x}|${y}|${z}`;
+}
+
+function isFree(x, y, z) {
+	return !occupied.has(buildKey(x, y, z));
+}
+
+function occupy(x, y, z) {
+	occupied.add(buildKey(x, y, z));
+}
+
+//PER IL 3D
+const FOV = 1000;
+
+function project(p) {
+	const s = FOV / (FOV + p.z);
+	return {
+		x: p.x * s + canvas.width / 2,
+		y: p.y * s + canvas.height / 2,
+		z: p.z,
+		s
+	};
+}
+
+//DIRECTIONS
+const DIRS = [
+	[1, 0, 0],
+	[-1, 0, 0],
+	[0, 1, 0],
+	[0, -1, 0],
+	[0, 0, 1],
+	[0, 0, -1]
+];
+
+//CYLINDER
+function cylinder(a, b) {
+	let r = 6;
+	let steps = 8;
+	let dir = {
+		x: b.x - a.x,
+		y: b.y - a.y,
+		z: b.z - a.z
+	};
+	dir = normalize(dir);
+	
+	//trova vettore perpendicolare
+	let up = Math.abs(dir.y) < 0.99 ? { x: 0, y: 1, z: 0 } : { x: 1, y: 0, z: 0 };
+
+	//base ortonormale
+	let right = normalize({
+		x: dir.y * up.z - dir.z * up.y,
+		y: dir.z * up.x - dir.x * up.z,
+		z: dir.x * up.y - dir.y * up.x
+	});
+
+	let forward = {
+		x: dir.y * right.z - dir.z * right.y,
+		y: dir.z * right.x - dir.x * right.z,
+		z: dir.x * right.y - dir.y * right.x
+	};
+
+	let polys = [];
+
+	for (let i = 0; i < steps; i++) {
+
+		let t1 = i / steps * Math.PI * 2;
+		let t2 = (i + 1) / steps * Math.PI * 2;
+
+		let ca = {
+			x: right.x * Math.cos(t1) * r + forward.x * Math.sin(t1) * r,
+			y: right.y * Math.cos(t1) * r + forward.y * Math.sin(t1) * r,
+			z: right.z * Math.cos(t1) * r + forward.z * Math.sin(t1) * r
+		};
+
+		let cb = {
+			x: right.x * Math.cos(t2) * r + forward.x * Math.sin(t2) * r,
+			y: right.y * Math.cos(t2) * r + forward.y * Math.sin(t2) * r,
+			z: right.z * Math.cos(t2) * r + forward.z * Math.sin(t2) * r
+		};
+
+		let v1 = {
+			x: a.x + ca.x,
+			y: a.y + ca.y,
+			z: a.z + ca.z
+		};
+		let v2 = {
+			x: a.x + cb.x,
+			y: a.y + cb.y,
+			z: a.z + cb.z
+		};
+		let v3 = {
+			x: b.x + cb.x,
+			y: b.y + cb.y,
+			z: b.z + cb.z
+		};
+		let v4 = {
+			x: b.x + ca.x,
+			y: b.y + ca.y,
+			z: b.z + ca.z
+		};
+
+		polys.push([v1, v2, v3, v4]);
+	}
+
+	return polys;
+}
+
+//giunti a sfera
+function sphere(center, radius) {
+
+	let latSteps = 6;
+	let lonSteps = 6;
+
+	let polys = [];
+
+	for (let i = 0; i < latSteps; i++) {
+
+		let t1 = i / latSteps * Math.PI;
+		let t2 = (i + 1) / latSteps * Math.PI;
+
+		for (let j = 0; j < lonSteps; j++) {
+
+			let p1 = j / lonSteps * Math.PI * 2;
+			let p2 = (j + 1) / lonSteps * Math.PI * 2;
+
+			function v(t, p) {
+				return {
+					x: center.x + radius * Math.sin(t) * Math.cos(p),
+					y: center.y + radius * Math.cos(t),
+					z: center.z + radius * Math.sin(t) * Math.sin(p)
+				};
+			}
+
+			polys.push([
+				v(t1, p1),
+				v(t1, p2),
+				v(t2, p2),
+				v(t2, p1)
+			]);
+		}
+	}
+
+	return polys;
+}
+
+
+//PIPE
+class PipeSegment {
+	constructor(x,y,z,polygons) {
+		this.cellKey = buildKey(x, y, z);
+		this.polygons = polygons;
+	}
+};
+
+class Pipe {
+	constructor() {
+		this.alive = true;
+		this.mesh = [];
+		this.dir = DIRS[rndInt(0, 6)];
+		this.prevDir = this.dir;
+		lastPipeColor = (lastPipeColor+1)%COLORS.length;
+		this.color = COLORS[lastPipeColor];
+		
+		let attempts = 0;
+		for (;;) {
+			let nx = rndInt(-SIZE_X, SIZE_X);
+			let ny = rndInt(-SIZE_Y, SIZE_Y);
+			let nz = rndInt(-SIZE_Z, SIZE_Z);
+
+			if (isFree(nx, ny, nz)) {
+				this.cell = {
+					x: nx,
+					y: ny,
+					z: nz
+				};
+				occupy(nx, ny, nz);
+				break;
+			}
+			
+			attempts++;
+			if(attempts > 100) {
+				this.alive = false;
+				this.color = {r:this.color.r/2, g:this.color.g/2, b:this.color.b/2};
+				return;
+			}
+		}
+	}
+
+	step() {
+		if (!this.alive) return false;
+		
+		let options = DIRS.filter(d => {
+			let nx = this.cell.x + d[0];
+			let ny = this.cell.y + d[1];
+			let nz = this.cell.z + d[2];
+
+			return Math.abs(nx) < SIZE_X && Math.abs(ny) < SIZE_Y && Math.abs(nz) < SIZE_Z && isFree(nx, ny, nz);
+		});
+
+		if (!options.length) {
+			this.alive = false;
+			this.color = {r:this.color.r/2, g:this.color.g/2, b:this.color.b/2};
+			return false;
+		}
+
+		//continua diritto se possibile
+		let forward = options.find(d =>
+			d[0] === this.dir[0] &&
+			d[1] === this.dir[1] &&
+			d[2] === this.dir[2]
+		);
+		this.prevDir = this.dir;
+
+		if (forward && rndInt(0, 100) < 98) this.dir = forward;
+		else this.dir = options[rndInt(0, options.length)];
+
+
+		let next = {
+			x: this.cell.x + this.dir[0],
+			y: this.cell.y + this.dir[1],
+			z: this.cell.z + this.dir[2]
+		};
+
+		occupy(next.x, next.y, next.z);
+		let segment = new PipeSegment(next.x, next.y, next.z, []);
+			
+		let scale = 30;
+
+		//giunto se ha girato
+		let turned =
+			this.prevDir[0] !== this.dir[0] ||
+			this.prevDir[1] !== this.dir[1] ||
+			this.prevDir[2] !== this.dir[2];
+
+		if (turned) {
+			let jointCenter = {
+				x: this.cell.x * scale,
+				y: this.cell.y * scale,
+				z: this.cell.z * scale
+			};
+			
+			segment.polygons.push(...sphere(jointCenter,6));
+		}
+
+		let a = {
+			x: this.cell.x * scale,
+			y: this.cell.y * scale,
+			z: this.cell.z * scale
+		};
+		let b = {
+			x: next.x * scale,
+			y: next.y * scale,
+			z: next.z * scale
+		};
+
+		if (this.mesh.length > 1000) {
+			let oldSegment = this.mesh.shift();//Rimuove il più vecchio
+			occupied.delete(oldSegment.cellKey);//LIBERA LO SPAZIO!
+		}
+
+		segment.polygons.push(...cylinder(a,b));
+		this.mesh.push(segment);
+		
+		this.cell = next;
+
+		return true;
+	}
+
+	draw() {
+		let faces = [];
+		this.mesh.forEach(segm => {
+			segm.polygons.forEach(poly => {
+				let proj = poly.map(project);
+				let depth = proj.reduce((s, p) => s + p.z, 0) / 4;
+				//faces.push({proj,depth});
+				faces.push({
+					proj,
+					depth,
+					world: poly
+				});
+			});
+		});
+
+		faces.sort((a, b) => b.depth - a.depth);
+
+		faces.forEach(f => {
+			let n = normalize(
+				normal(
+					f.world[0],
+					f.world[1],
+					f.world[2]
+				)
+			);
+
+			let light = n.x * LIGHT.x + n.y * LIGHT.y + n.z * LIGHT.z;
+			light = Math.max(0.3, light);
+
+			ctx.fillStyle = `rgb( ${this.color.r*light}, ${this.color.g*light}, ${this.color.b*light} )`;
+
+			ctx.beginPath();
+			ctx.moveTo(f.proj[0].x, f.proj[0].y);
+			for (let i = 1; i < 4; i++)
+				ctx.lineTo(f.proj[i].x, f.proj[i].y);
+			ctx.closePath();
+			ctx.fill();
+
+			ctx.strokeStyle = ctx.fillStyle;
+			ctx.lineWidth = 0.5;
+			ctx.stroke();
+		});
+	}
+}
+
+const LIGHT = { x: 0.4, y: -0.6, z: -1 };
+
+function normal(a, b, c) {
+	let ux = b.x - a.x;
+	let uy = b.y - a.y;
+	let uz = b.z - a.z;
+
+	let vx = c.x - a.x;
+	let vy = c.y - a.y;
+	let vz = c.z - a.z;
+
+	return {
+		x: uy * vz - uz * vy,
+		y: uz * vx - ux * vz,
+		z: ux * vy - uy * vx
+	};
+}
+
+function normalize(v) {
+	let l = Math.hypot(v.x, v.y, v.z) || 1;
+	return {
+		x: v.x / l,
+		y: v.y / l,
+		z: v.z / l
+	};
+}
+
+
+
+//WORLD
+let pipes = [];
+let lastPipeColor = -1;
+
+
+//COLORS
+class Color {
+	constructor(r, g, b) {
+		this.r = r;
+		this.g = g;
+		this.b = b;
+	}
+}
+
+let COLORS = [new Color(255, 150, 0), new Color(50, 255, 50), new Color(60, 130, 255),
+	new Color(170, 0, 0), new Color(0, 120, 20), new Color(0, 0, 150),
+	new Color(255, 255, 255), new Color(255, 255, 0), new Color(255, 0, 255),
+	new Color(255, 0, 0), new Color(0, 255, 255), new Color(0, 0, 255),
+	new Color(100, 100, 100), new Color(100, 100, 0), new Color(100, 0, 100),
+	new Color(100, 0, 0), new Color(0, 100, 100), new Color(0, 0, 100),
+];
+
+
+
+function loop() {
+	ctx.fillStyle = '#000';
+	ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+	let totalPipesAlive = 0;
+
+	for (let p of pipes) {
+		let isAlive = p.step();
+		if (isAlive) totalPipesAlive++;
+		p.draw();
+	}
+
+	if (totalPipesAlive === 0 || rndInt(0, 100) > 98) {
+		pipes.push(new Pipe());
+	}
+	
+	let totalCells = (SIZE_X * 2 - 1) * (SIZE_Y * 2 - 1) * (SIZE_Z * 2 - 1);
+	
+	if (occupied.size >= totalCells) {
+		occupied.clear();
+        pipes = [];
+	}
+
+	requestAnimationFrame(loop);
+}
+
+loop();
+</script>
+</body>
+</html>
