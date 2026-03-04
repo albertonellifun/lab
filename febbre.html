@@ -145,6 +145,7 @@ var horseNames = [
 	{name:"Pelandrone",           maxSpeed:0.70, stamina:70},
 	{name:"Lolita", 	          maxSpeed:0.70, stamina:70},
 	{name:"Gianduiotto",          maxSpeed:0.70, stamina:70},
+	{name:"Clarabella", 	      maxSpeed:0.70, stamina:70},
 ];
 
 function initDirtParticles() {
@@ -152,7 +153,15 @@ function initDirtParticles() {
 	for (let i = 0; i < 1000; i++) {
         dirtParticles.push({
             x: Math.random() * canvas.width,
-            y: GRASS_HEIGHT + Math.random() * (canvas.height - GRASS_HEIGHT * 2),
+            y: 3 + GRASS_HEIGHT + (Math.random() * (canvas.height - GRASS_HEIGHT * 2 - 6)),
+            size: Math.random() * 2 + 1
+        });
+    }
+	grassParticles = [];
+	for (let i = 0; i < 1000; i++) {
+        grassParticles.push({
+            x: Math.random() * canvas.width,
+            y: 3 + (Math.random() * (GRASS_HEIGHT - 6)),
             size: Math.random() * 2 + 1
         });
     }
@@ -168,7 +177,7 @@ function changeLanes(delta) {
     if (racing) return; // blocca durante gara
     lanes += delta;
     if (lanes < 2) lanes = 2;
-    if (lanes > 20) lanes = 20;
+    if (lanes > 30) lanes = 30;
     updateLaneGeometry();
     selectedBetLane = null;
     stopRace = false;
@@ -326,39 +335,75 @@ function updateHorses() {
 ===================================================== */
 let trackOffset = 0;
 let dirtParticles = [];
+let grassParticles = [];
 
 function drawTrack() {
     ctx.fillStyle = "#2e7d32";
-    ctx.fillRect(0, 0, canvas.width, GRASS_HEIGHT);//erba/siepe sopra
+	var grassGrad = ctx.createLinearGradient(0, 0, 0, GRASS_HEIGHT);
+	grassGrad.addColorStop(0, "#2e7d32");
+	grassGrad.addColorStop(1, "#1a5c1e");	
+	ctx.fillStyle = grassGrad;
+	ctx.fillRect(0, 0, canvas.width, GRASS_HEIGHT);//erba/siepe sopra
+	
+	grassGrad = ctx.createLinearGradient(0, canvas.height - GRASS_HEIGHT, 0, canvas.height);
+	grassGrad.addColorStop(0, "#1a5c1e");	
+	grassGrad.addColorStop(1, "#2e7d32");
+	ctx.fillStyle = grassGrad;
     ctx.fillRect(0, canvas.height - GRASS_HEIGHT, canvas.width, GRASS_HEIGHT);//erba/siepe sotto
 	
     ctx.fillStyle = "#caa472";
-    ctx.fillRect(0, GRASS_HEIGHT, canvas.width, canvas.height - GRASS_HEIGHT * 2);//terra marrone
+	var dirtGrad = ctx.createLinearGradient(0, GRASS_HEIGHT, 0, canvas.height - GRASS_HEIGHT);
+	dirtGrad.addColorStop(0, "#9a7040");
+	dirtGrad.addColorStop(0.5, "#ba9462");
+	dirtGrad.addColorStop(1, "#9a7040");
+	ctx.fillStyle = dirtGrad;
+	ctx.fillRect(0, GRASS_HEIGHT, canvas.width, canvas.height - GRASS_HEIGHT * 2);//terra marrone
 	
     var avgSpeed = 0;
     for (var i = 0; i < horses.length; i++) avgSpeed += horses[i].speed;
-    trackOffset += avgSpeed * 0.5;
+    trackOffset +=  avgSpeed / horses.length;
 	
+	//crea nuove particles
     for (let i = 0; i < 8; i++) {
         dirtParticles.push({
             x: canvas.width,
-            y: GRASS_HEIGHT + Math.random() * (canvas.height - GRASS_HEIGHT * 2),
+            y: 3 + GRASS_HEIGHT + (Math.random() * (canvas.height - GRASS_HEIGHT * 2 - 6)),
             size: Math.random() * 2 + 1
         });
-    }
+    }	
+	for (let i = 0; i < 4; i++) {
+		grassParticles.push({
+            x: canvas.width,
+            y: 3 + (Math.random() * (GRASS_HEIGHT - 6)),
+            size: Math.random() * 2 + 1
+        });
+	}
+	
+	//disegna particles
     for (let i = 0; i < dirtParticles.length; i++) {
         let p = dirtParticles[i];
         p.x -= avgSpeed * 2;
         ctx.fillStyle = "#b89560";
         ctx.fillRect(p.x, p.y, p.size, p.size);
     }
+	for (let i = 0; i < grassParticles.length; i++) {
+        let p = grassParticles[i];
+        p.x -= avgSpeed * 2;
+        ctx.fillStyle = "#006600";
+        ctx.fillRect(p.x, p.y, p.size, p.size);
+		ctx.fillRect(p.x, p.y+canvas.height-(GRASS_HEIGHT), p.size, p.size);
+    }
+	
+	//rimuove vecchie particles fuori schermo
     dirtParticles = dirtParticles.filter(p => p.x > 0);
-    ctx.strokeStyle = "rgba(255,255,255,0.4)";
+	grassParticles = grassParticles.filter(p => p.x > 0);
+	
+    ctx.strokeStyle = "rgba(255,255,255,0.3)";
     
 	//corsie tratteggiate
 	ctx.setLineDash([8, 12]);
     ctx.lineDashOffset = -trackOffset;
-    for (var i = 0; i <= lanes; i++) {
+    for (var i = 1; i < lanes; i++) {
         ctx.beginPath();
         ctx.moveTo(0, GRASS_HEIGHT + i * LANE_HEIGHT);
         ctx.lineTo(canvas.width, GRASS_HEIGHT + i * LANE_HEIGHT);
@@ -442,11 +487,30 @@ function drawHorse(h) {
     /* bounce verticale del galoppo */
     var bounce = Math.sin(t * 2) * 3;
     ctx.translate(0, bounce);
+	
+	
+	//// ombra ellittica a terra
+	var shadowY = 60 - bounce * 0.5; // rimane "a terra" mentre il cavallo balla
+	ctx.save();
+	ctx.translate(0, shadowY);
+	var shadowGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, 100);
+	shadowGrad.addColorStop(0, "rgba(0,0,0,0.3)");
+	shadowGrad.addColorStop(1, "rgba(0,0,0,0)");
+	ctx.fillStyle = shadowGrad;
+	ctx.scale(1, 0.2); // schiaccia per renderla ellittica
+	ctx.beginPath();
+	ctx.arc(0, 0, 100, 0, Math.PI * 2);
+	ctx.fill();
+	ctx.restore();	
+	
+	
 
     var bodyColor  = h.color;
     var maneColor  = h.maneColor;
     var hoofColor  = "#1a1a1a";
     var skinColor  = h.color;
+	
+	var windX = h.speed * 5;
 
     /* -------------------------------------------------------
        OMBRE / PROFONDITÀ
@@ -454,133 +518,105 @@ function drawHorse(h) {
     ctx.shadowColor = "rgba(0,0,0,0.35)";
     ctx.shadowBlur  = 4;
 
-    /* -------------------------------------------------------
-       CORPO principale
-       centro ~(0,0), lunghezza ~120, altezza ~45
-    ------------------------------------------------------- */
-    ctx.fillStyle = bodyColor;
-    ctx.beginPath();
-    /* groppa (sinistra, coda) */
-    ctx.moveTo(-58, -8);
-    /* schiena arcuata */
-    ctx.bezierCurveTo(-40, -28, 20, -30, 50, -22);
-    /* garrese → collo */
-    ctx.bezierCurveTo(60, -18, 65, -10, 60, 0);
-    /* petto */
-    ctx.bezierCurveTo(62, 8, 55, 16, 45, 18);
-    /* pancia */
-    ctx.bezierCurveTo(20, 22, -30, 22, -55, 14);
-    /* anca */
-    ctx.bezierCurveTo(-60, 10, -62, 2, -58, -8);
-    ctx.closePath();
-    ctx.fill();
-
-    /* -------------------------------------------------------
-       MUSCOLO COSCIA posteriore
-    ------------------------------------------------------- */
-    ctx.beginPath();
-    ctx.ellipse(-45, 8, 18, 14, 0.3, 0, Math.PI * 2);
-    ctx.fillStyle = shadeColor(bodyColor, -15);
-    ctx.fill();
-
-    /* -------------------------------------------------------
-       COLLO
-    ------------------------------------------------------- */
-    ctx.fillStyle = bodyColor;
-    ctx.beginPath();
-    ctx.moveTo(48, -20);
-    ctx.bezierCurveTo(58, -40, 72, -50, 78, -42);
-    ctx.bezierCurveTo(82, -35, 75, -18, 60, -5);
-    ctx.bezierCurveTo(55, -2, 50, -6, 48, -20);
-    ctx.closePath();
-    ctx.fill();
-
-    /* -------------------------------------------------------
-       TESTA
-    ------------------------------------------------------- */
-    ctx.fillStyle = bodyColor;
-    ctx.beginPath();
-    /* attacco collo */
-    ctx.moveTo(74, -44);
-    /* fronte */
-    ctx.bezierCurveTo(80, -60, 100, -62, 106, -52);
-    /* muso */
-    ctx.bezierCurveTo(112, -44, 112, -34, 108, -28);
-    /* froge / labbra */
-    ctx.bezierCurveTo(104, -22, 96, -20, 90, -22);
-    /* mandibola */
-    ctx.bezierCurveTo(82, -24, 72, -32, 74, -44);
-    ctx.closePath();
-    ctx.fill();
-
-    
-    /* -------------------------------------------------------
-       OCCHIO
-    ------------------------------------------------------- */
-    ctx.fillStyle = "#111";
-    ctx.beginPath();
-    ctx.ellipse(98, -48, 4, 3, -0.2, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = "#fff";
-    ctx.beginPath();
-    ctx.arc(100, -49, 1.2, 0, Math.PI * 2);
-    ctx.fill();
-
-    /* -------------------------------------------------------
-       CRINIERA
-    ------------------------------------------------------- */
-    ctx.fillStyle = maneColor;
-	/* criniera sul collo */
+	/* CORPO */
+	ctx.fillStyle = bodyColor;
 	ctx.beginPath();
-	ctx.moveTo(78, -53);
-	ctx.bezierCurveTo(67, -61, 57, -57, 52, -47);
-	ctx.bezierCurveTo(57, -51, 64, -57, 70, -49);
-	ctx.bezierCurveTo(64, -55, 60, -47, 54, -37);
-	ctx.lineTo(62, -14);
-	ctx.bezierCurveTo(68, -27, 72, -41, 78, -53);
-	ctx.closePath();
-	ctx.fill();
-    /* ciuffo frontale */
-    ctx.beginPath();
-    ctx.moveTo(82, -62);
-    ctx.bezierCurveTo(88, -72, 94, -68, 92, -58);
-    ctx.bezierCurveTo(86, -64, 84, -60, 82, -62);
-    ctx.fill();
+	ctx.moveTo(-58, -8);
+	ctx.bezierCurveTo(-47,-39, 1,-10, 40,-29);
+	ctx.bezierCurveTo(60,-18, 62,-11, 60,0);
+	ctx.bezierCurveTo(62,8, 55,16, 45,18);
+	ctx.bezierCurveTo(16,15, -20,29, -55,16);
+	ctx.bezierCurveTo(-60,10, -62,2, -58,-8);
+	ctx.closePath(); ctx.fill();
+	//chiappa scura
+	ctx.beginPath(); ctx.ellipse(-43, 0, 18, 18, 0.3, 0, Math.PI * 2);
+	ctx.fillStyle = shadeColor(bodyColor, -15); ctx.fill();
 
-    /* -------------------------------------------------------
-       CODA
-    ------------------------------------------------------- */
-    var tailSwing = Math.sin(t * 1.5) * 10;
-	var tailSwing2 = Math.sin(t * 1.5 + 0.8) * 8;
-	var tailSwing3 = Math.sin(t * 1.5 + 1.6) * 6;
+	/* COLLO */
+	ctx.fillStyle = bodyColor; ctx.beginPath();
+	ctx.moveTo(37, -26);
+	ctx.bezierCurveTo(62,-57, 89,-74, 85,-38);
+	ctx.bezierCurveTo(82,-35, 83,-21, 58,11);
+	ctx.bezierCurveTo(55,-2, 50,-6, 37,-26);
+	ctx.closePath(); ctx.fill();
+
+	/* TESTA */
+	ctx.fillStyle = bodyColor; ctx.beginPath();
+	ctx.moveTo(79, -57);
+	ctx.bezierCurveTo(80,-60, 100,-62, 103,-53);
+	ctx.bezierCurveTo(108,-44, 112,-34, 110,-26);
+	ctx.bezierCurveTo(95,-13, 96,-32, 90,-31);
+	ctx.bezierCurveTo(84,-31, 70,-47, 79,-57);
+	ctx.closePath(); ctx.fill();
+	ctx.fillStyle = shadeColor(bodyColor, -30);
+	ctx.beginPath(); ctx.ellipse(105, -30, 3, 2, -0.3, 0, Math.PI * 2); ctx.fill();
+	//occhio
+	ctx.fillStyle = "#111"; ctx.beginPath(); ctx.ellipse(98,-48,4,3,-0.2,0,Math.PI*2); ctx.fill();
+	ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(100,-49,1.2,0,Math.PI*2); ctx.fill();
+
+	/* CRINIERA */
+	ctx.fillStyle = maneColor;
+	ctx.beginPath();
+	ctx.moveTo(82, -58);
+	ctx.bezierCurveTo(67,-61, 57,-57, 51,-49);
+	ctx.bezierCurveTo(57,-51, 64,-57, 65,-54);
+	ctx.bezierCurveTo(64,-55, 60,-47, 50,-46);
+	ctx.lineTo(37, -28);
+	ctx.bezierCurveTo(51,-14, 67,-40, 82,-58);
+	ctx.closePath(); ctx.fill();
+  
+	//orecchio dietro
+	ctx.fillStyle = bodyColor;
+	ctx.beginPath(); ctx.moveTo(90,-60); ctx.lineTo(88,-66); ctx.lineTo(98,-58); ctx.closePath(); ctx.fill();
+	
+	//ciuffo1
+	ctx.fillStyle = maneColor;
+	ctx.beginPath(); ctx.moveTo(82,-62);
+	ctx.bezierCurveTo(88,-72, 94,-68, 92,-58); ctx.bezierCurveTo(86,-64, 84,-60, 82,-62); ctx.closePath(); ctx.fill();
+	//ciuffo2
+	ctx.fillStyle = maneColor;
+	ctx.beginPath(); ctx.moveTo(74,-60);
+	ctx.bezierCurveTo(80,-70, 86,-66, 84,-56); ctx.bezierCurveTo(78,-62, 76,-58, 74,-60); ctx.closePath(); ctx.fill();
+
+	//orecchio avanti
+	ctx.fillStyle = bodyColor;
+	ctx.beginPath(); ctx.moveTo(84,-52); ctx.lineTo(80,-66); ctx.lineTo(90,-60); ctx.closePath(); ctx.fill();
+	ctx.fillStyle = "#c08080";
+	ctx.beginPath(); ctx.moveTo(84,-54); ctx.lineTo(81,-64); ctx.lineTo(88,-59); ctx.closePath(); ctx.fill();
+	
+    //CODA
+	var tailSwing = Math.sin(t * 1.5) * 8;
+	var tailSwing2 = Math.sin(t * 1.5 + 0.8) * 6;
+	var tailSwing3 = Math.sin(t * 1.5 + 1.6) * 4;
 	ctx.fillStyle = maneColor;
 
-	/* ciocca principale */
+	//principale
 	ctx.beginPath();
 	ctx.moveTo(-62, -8);
-	ctx.bezierCurveTo(-68, 5 + tailSwing, -80, 20 + tailSwing, -72, 40 + tailSwing);
-	ctx.bezierCurveTo(-70, 44 + tailSwing, -67, 42 + tailSwing, -66, 38 + tailSwing);
-	ctx.bezierCurveTo(-72, 18 + tailSwing, -62, 4 + tailSwing, -58, -6);
+	ctx.bezierCurveTo(-68-windX, 5 + tailSwing,  -80-windX, 20 + tailSwing, -72-windX, 40 + tailSwing);
+	ctx.bezierCurveTo(-70-windX, 44 + tailSwing, -67-windX, 42 + tailSwing, -66-windX, 38 + tailSwing);
+	ctx.bezierCurveTo(-72-windX, 18 + tailSwing, -62-windX, 4 + tailSwing,  -58-windX, -6);
 	ctx.closePath();
 	ctx.fill();
 
-	/* ciocca sinistra */
+	//sx
 	ctx.beginPath();
 	ctx.moveTo(-64, -4);
-	ctx.bezierCurveTo(-76, 8 + tailSwing2, -88, 22 + tailSwing2, -78, 44 + tailSwing2);
-	ctx.bezierCurveTo(-76, 48 + tailSwing2, -73, 46 + tailSwing2, -72, 42 + tailSwing2);
-	ctx.bezierCurveTo(-80, 22 + tailSwing2, -70, 8 + tailSwing2, -60, -2);
+	ctx.bezierCurveTo(-76-windX, 8 + tailSwing2,  -88-windX, 22 + tailSwing2, -78-windX, 44 + tailSwing2);
+	ctx.bezierCurveTo(-76-windX, 48 + tailSwing2, -73-windX, 46 + tailSwing2, -72-windX, 42 + tailSwing2);
+	ctx.bezierCurveTo(-80-windX, 22 + tailSwing2, -70-windX, 8 + tailSwing2,  -60-windX, -2);
 	ctx.closePath();
 	ctx.fill();
 
-	/* ciocca destra / corta */
+	//dx corta
 	ctx.beginPath();
 	ctx.moveTo(-60, -6);
-	ctx.bezierCurveTo(-64, 6 + tailSwing3, -70, 18 + tailSwing3, -62, 32 + tailSwing3);
-	ctx.bezierCurveTo(-60, 36 + tailSwing3, -57, 34 + tailSwing3, -57, 30 + tailSwing3);
-	ctx.bezierCurveTo(-63, 18 + tailSwing3, -58, 6 + tailSwing3, -56, -4);
+	ctx.bezierCurveTo(-64-windX, 6 + tailSwing3,  -70-windX, 18 + tailSwing3, -62-windX, 32 + tailSwing3);
+	ctx.bezierCurveTo(-60-windX, 36 + tailSwing3, -57-windX, 34 + tailSwing3, -57-windX, 30 + tailSwing3);
+	ctx.bezierCurveTo(-63-windX, 18 + tailSwing3, -58-windX, 6 + tailSwing3,  -56-windX, -4);
 	ctx.closePath();
 	ctx.fill();
+	
     /* -------------------------------------------------------
        GAMBE — galoppo a 4 tempi
        Le 4 gambe: FL front-left(vicina), FR front-right(lontana)
@@ -739,7 +775,7 @@ function drawSaddle(ctx, t, h) {
     ctx.shadowBlur = 0;
     ctx.font = "12px Arial";
     ctx.textAlign = "center";
-    ctx.fillStyle = selectedBetLane === h.lane ? '#ff0' : '#aaa';
+    ctx.fillStyle = selectedBetLane === h.lane ? '#fff' : '#aaa';
     ctx.strokeStyle = "#000";
     ctx.lineWidth = 3;
     ctx.strokeText(h.id, 3, 20);
@@ -753,12 +789,12 @@ function drawSaddle(ctx, t, h) {
    isBack: posteriore (angolazione diversa)
 ------------------------------------------------------- */
 function drawLeg(ctx, sx, sy, phase, bodyCol, hoofCol, isBack) {
-    var liftAngle  = phase * 0.6;          /* oscillazione coscia */
+    var liftAngle  = phase * 0.7;          /* oscillazione coscia */
     var kneeAngle  = Math.abs(phase) * 0.7; /* piega ginocchio */
 
     var thighLen = 18;
-    var shinLen  = 16;
-    var hoofH    = 5;
+    var shinLen  = 20;
+    var hoofH    = 7;
 
     var baseAngle = isBack ? 0.15 : -0.05;
 
@@ -773,7 +809,7 @@ function drawLeg(ctx, sx, sy, phase, bodyCol, hoofCol, isBack) {
 
     /* coscia */
     ctx.strokeStyle = bodyCol;
-    ctx.lineWidth = 6;
+    ctx.lineWidth = isBack ? 10 : 8;
     ctx.lineCap = "round";
     ctx.beginPath();
     ctx.moveTo(sx, sy);
@@ -790,7 +826,7 @@ function drawLeg(ctx, sx, sy, phase, bodyCol, hoofCol, isBack) {
     /* zoccolo */
     ctx.fillStyle = hoofCol;
     ctx.beginPath();
-    ctx.ellipse(kx, ky + hoofH * 0.5, 5, hoofH * 0.5, 0, 0, Math.PI * 2);
+    ctx.ellipse(kx, ky + hoofH * 0.5, 4, hoofH * 0.5, 0, 0, Math.PI * 2);
     ctx.fill();
 }
 

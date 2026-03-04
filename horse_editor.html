@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Horse Editor</title>
+<style>
+* { box-sizing:border-box; margin:0; padding:0; }
+html,body { width:100%; height:100%; overflow:hidden; background:#111; }
+body { display:flex; flex-direction:column; font-family:'Courier New',monospace; color:#e0e0e0; }
+#toolbar {
+  display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+  padding:5px 12px; background:#0a0a1a; border-bottom:2px solid #c8a040; flex-shrink:0;
+}
+#toolbar h1 { font-size:13px; letter-spacing:3px; color:#c8a040; margin-right:6px; }
+.tab-btn {
+  background:#222; color:#aaa; border:1px solid #444;
+  padding:4px 10px; font-family:'Courier New',monospace; font-size:11px; cursor:pointer;
+}
+.tab-btn.active { background:#c8a040; color:#111; border-color:#c8a040; }
+.tab-btn:hover:not(.active) { background:#333; color:#fff; }
+.action {
+  background:#2a4a2a; color:#7fff7f; border:1px solid #4a8a4a;
+  padding:4px 10px; font-family:'Courier New',monospace; font-size:11px; cursor:pointer;
+}
+.action:hover { background:#3a6a3a; }
+.export {
+  background:#c8a040; color:#111; border:none;
+  padding:4px 12px; font-family:'Courier New',monospace; font-weight:bold; font-size:11px; cursor:pointer;
+}
+.export:hover { background:#e8c060; }
+#selectedInfo { font-size:11px; color:#7fff7f; min-width:200px; }
+#zoomInfo     { font-size:11px; color:#666; }
+.hint         { font-size:10px; color:#555; }
+#main { display:flex; flex:1; overflow:hidden; }
+#canvas { flex:1; display:block; cursor:crosshair; }
+#sidebar {
+  width:200px; background:#0d0d1a; border-left:1px solid #333;
+  display:flex; flex-direction:column; overflow-y:auto; flex-shrink:0; padding:8px; gap:10px;
+}
+.ss h3 { font-size:10px; letter-spacing:2px; color:#c8a040; margin-bottom:6px; }
+.sr { display:flex; align-items:center; gap:6px; margin-bottom:4px; font-size:11px; }
+.sr label { color:#888; width:55px; flex-shrink:0; font-size:10px; }
+.sr input[type=range] { flex:1; }
+.sr input[type=color] { width:30px; height:18px; padding:0; border:none; cursor:pointer; background:none; }
+.sr span { color:#c8a040; font-size:10px; width:28px; }
+#codepanel {
+  height:120px; background:#0a0a0a; border-top:1px solid #333; flex-shrink:0; display:flex; flex-direction:column;
+}
+#codepanel textarea {
+  flex:1; background:transparent; color:#7fff7f;
+  font-family:'Courier New',monospace; font-size:10px;
+  padding:6px 12px; border:none; resize:none; outline:none;
+}
+</style>
+</head>
+<body>
+
+<div id="toolbar">
+  <h1>🐎 HORSE EDITOR</h1>
+  <button class="tab-btn active" onclick="setTab('body')">CORPO</button>
+  <button class="tab-btn" onclick="setTab('mane')">CRINIERA</button>
+  <button class="tab-btn" onclick="setTab('tail')">CODA</button>
+  <button class="tab-btn" onclick="setTab('legs')">GAMBE</button>
+  <button class="tab-btn" onclick="setTab('jockey')">FANTINO</button>
+  <span style="flex:1"></span>
+  <span id="selectedInfo">—</span>
+  <span id="zoomInfo">zoom 4x</span>
+  <button class="action" onclick="resetZoom()">⊙ zoom</button>
+  <button class="action" onclick="resetTab()">↩ reset tab</button>
+  <button class="export" onclick="exportCode()">📋 ESPORTA</button>
+  <span class="hint">rotella=zoom • drag=pan/muovi</span>
+</div>
+
+<div id="main">
+  <canvas id="canvas"></canvas>
+  <div id="sidebar">
+    <div class="ss">
+      <h3>COLORI</h3>
+      <div class="sr"><label>Corpo</label><input type="color" id="c_body" value="#5a2d0c" oninput="draw()"></div>
+      <div class="sr"><label>Criniera</label><input type="color" id="c_mane" value="#2a1005" oninput="draw()"></div>
+      <div class="sr"><label>Zoccoli</label><input type="color" id="c_hoof" value="#1a1a1a" oninput="draw()"></div>
+      <div class="sr"><label>Fantino</label><input type="color" id="c_jockey" value="#cc3333" oninput="draw()"></div>
+    </div>
+    <div class="ss">
+      <h3>ANIMAZIONE</h3>
+      <div class="sr">
+        <label>fase t</label>
+        <input type="range" id="anim_t" min="0" max="628" value="0"
+          oninput="animT=this.value/100; document.getElementById('anim_t_v').textContent=animT.toFixed(2); draw()">
+        <span id="anim_t_v">0</span>
+      </div>
+      <button class="action" style="width:100%;margin-top:4px" id="playbtn" onclick="toggleAnim()">▶ PLAY</button>
+    </div>
+    <div class="ss">
+      <h3>LEGENDA</h3>
+      <div style="font-size:10px;color:#777;line-height:2">
+        🔴 anchor<br>🔵 control pt<br>🟡 selezionato<br><br>
+        Ogni tab mostra<br>solo i punti<br>di quella sezione.
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="codepanel">
+  <textarea id="code" readonly placeholder="Clicca ESPORTA per generare il codice drawHorse pronto da incollare"></textarea>
+</div>
+
+<script>
+const canvas = document.getElementById('canvas');
+const ctx    = canvas.getContext('2d');
+
+/* ================================================================ VIEWPORT */
+let viewX=0, viewY=0, scale=4;
+function toSc(gx,gy){ return {x:viewX+gx*scale, y:viewY+gy*scale}; }
+function toGm(sx,sy){ return {x:(sx-viewX)/scale, y:(sy-viewY)/scale}; }
+
+function resize(){
+  const tb=document.getElementById('toolbar').offsetHeight;
+  const cp=document.getElementById('codepanel').offsetHeight;
+  canvas.width  = window.innerWidth - 200;
+  canvas.height = window.innerHeight - tb - cp;
+  draw();
+}
+window.addEventListener('resize', resize);
+
+/* ================================================================ DATI */
+function dc(o){ return JSON.parse(JSON.stringify(o)); }
+
+/* --- CORPO --- */
+const D_BODY = {
+  body:[
+    {x:-58,y:-8,t:'a',l:'B0'},{x:-40,y:-28,t:'c',l:'B1a'},{x:20,y:-30,t:'c',l:'B1b'},
+    {x:50,y:-22,t:'a',l:'B1'},{x:60,y:-18,t:'c',l:'B2a'},{x:65,y:-10,t:'c',l:'B2b'},
+    {x:60,y:0,t:'a',l:'B2'},{x:62,y:8,t:'c',l:'B3a'},{x:55,y:16,t:'c',l:'B3b'},
+    {x:45,y:18,t:'a',l:'B3'},{x:20,y:22,t:'c',l:'B4a'},{x:-30,y:22,t:'c',l:'B4b'},
+    {x:-55,y:14,t:'a',l:'B4'},{x:-60,y:10,t:'c',l:'B5a'},{x:-62,y:2,t:'c',l:'B5b'},
+  ],
+  neck:[
+    {x:48,y:-20,t:'a',l:'N0'},{x:58,y:-40,t:'c',l:'N1a'},{x:72,y:-50,t:'c',l:'N1b'},
+    {x:78,y:-42,t:'a',l:'N1'},{x:82,y:-35,t:'c',l:'N2a'},{x:75,y:-18,t:'c',l:'N2b'},
+    {x:60,y:-5,t:'a',l:'N2'},{x:55,y:-2,t:'c',l:'N3a'},{x:50,y:-6,t:'c',l:'N3b'},
+  ],
+  head:[
+    {x:74,y:-44,t:'a',l:'H0'},{x:80,y:-60,t:'c',l:'H1a'},{x:100,y:-62,t:'c',l:'H1b'},
+    {x:106,y:-52,t:'a',l:'H1'},{x:112,y:-44,t:'c',l:'H2a'},{x:112,y:-34,t:'c',l:'H2b'},
+    {x:108,y:-28,t:'a',l:'H2'},{x:104,y:-22,t:'c',l:'H3a'},{x:96,y:-20,t:'c',l:'H3b'},
+    {x:90,y:-22,t:'a',l:'H3'},{x:82,y:-24,t:'c',l:'H4a'},{x:72,y:-32,t:'c',l:'H4b'},
+  ],
+};
+/* --- CRINIERA --- */
+const D_MANE = {
+  mane:[
+    {x:78,y:-53,t:'a',l:'M'},
+    {x:67,y:-61,t:'c',l:'1a'},{x:57,y:-57,t:'c',l:'1b'},{x:52,y:-47,t:'a',l:'1'},
+    {x:57,y:-51,t:'c',l:'2a'},{x:64,y:-57,t:'c',l:'2b'},{x:70,y:-49,t:'a',l:'2'},
+    {x:64,y:-55,t:'c',l:'3a'},{x:60,y:-47,t:'c',l:'3b'},{x:54,y:-37,t:'a',l:'3'},
+    {x:62,y:-14,t:'a',l:'L'},{x:68,y:-27,t:'c',l:'4a'},{x:72,y:-41,t:'c',l:'4b'},
+  ],
+  tuft1:[
+    {x:82,y:-62,t:'a',l:'T1'},{x:88,y:-72,t:'c',l:'T1a'},{x:94,y:-68,t:'c',l:'T1b'},
+    {x:92,y:-58,t:'a',l:'T1e'},{x:86,y:-64,t:'c',l:'T1c'},{x:84,y:-60,t:'c',l:'T1d'},
+  ],
+  tuft2:[
+    {x:76,y:-60,t:'a',l:'T2'},{x:82,y:-70,t:'c',l:'T2a'},{x:88,y:-66,t:'c',l:'T2b'},
+    {x:86,y:-56,t:'a',l:'T2e'},{x:80,y:-62,t:'c',l:'T2c'},{x:78,y:-58,t:'c',l:'T2d'},
+  ],
+};
+/* --- CODA --- */
+const D_TAIL = {
+  c1:[
+    {x:-62,y:-8,t:'a',l:'C1'},{x:-68,y:5,t:'c',l:'C1a'},{x:-80,y:20,t:'c',l:'C1b'},
+    {x:-72,y:40,t:'a',l:'C1e'},{x:-70,y:44,t:'c',l:'C1c'},{x:-67,y:42,t:'c',l:'C1d'},
+    {x:-66,y:38,t:'a',l:'C1f'},{x:-72,y:18,t:'c',l:'C1g'},{x:-62,y:4,t:'c',l:'C1h'},
+  ],
+  c2:[
+    {x:-64,y:-4,t:'a',l:'C2'},{x:-76,y:8,t:'c',l:'C2a'},{x:-88,y:22,t:'c',l:'C2b'},
+    {x:-78,y:44,t:'a',l:'C2e'},{x:-76,y:48,t:'c',l:'C2c'},{x:-73,y:46,t:'c',l:'C2d'},
+    {x:-72,y:42,t:'a',l:'C2f'},{x:-80,y:22,t:'c',l:'C2g'},{x:-70,y:8,t:'c',l:'C2h'},
+  ],
+  c3:[
+    {x:-60,y:-6,t:'a',l:'C3'},{x:-64,y:6,t:'c',l:'C3a'},{x:-70,y:18,t:'c',l:'C3b'},
+    {x:-62,y:32,t:'a',l:'C3e'},{x:-60,y:36,t:'c',l:'C3c'},{x:-57,y:34,t:'c',l:'C3d'},
+    {x:-57,y:30,t:'a',l:'C3f'},{x:-63,y:18,t:'c',l:'C3g'},{x:-58,y:6,t:'c',l:'C3h'},
+  ],
+};
+/* --- GAMBE --- */
+const D_LEGS = {
+  fl:[{x:26,y:18,t:'a',l:'FL'}],
+  fr:[{x:18,y:18,t:'a',l:'FR'}],
+  bl:[{x:-30,y:20,t:'a',l:'BL'}],
+  br:[{x:-38,y:20,t:'a',l:'BR'}],
+  dims:[
+    {x:5,y:-18,t:'a',l:'THIGH'},
+    {x:5,y:-34,t:'a',l:'SHIN'},
+  ],
+};
+/* --- FANTINO --- */
+const D_JOCKEY = {
+  jbody:[
+    {x:20,y:0,t:'a',l:'J0'},{x:12,y:-5,t:'c',l:'J1a'},{x:10,y:-18,t:'c',l:'J1b'},
+    {x:18,y:-22,t:'a',l:'J1'},{x:26,y:-26,t:'c',l:'J2a'},{x:30,y:-20,t:'c',l:'J2b'},
+    {x:28,y:-10,t:'a',l:'J2'},{x:26,y:-4,t:'c',l:'J3a'},{x:24,y:0,t:'c',l:'J3b'},
+  ],
+  jhead:[{x:22,y:-26,t:'a',l:'JH'}],
+  jwhip:[{x:28,y:-10,t:'a',l:'JW0'},{x:40,y:-2,t:'a',l:'JW1'}],
+};
+
+/* STATO */
+let currentTab='body', animT=0, animPlaying=false;
+let data={ body:dc(D_BODY), mane:dc(D_MANE), tail:dc(D_TAIL), legs:dc(D_LEGS), jockey:dc(D_JOCKEY) };
+let selected=null, dragging=null, panning=false, panStart=null, panV=null;
+
+/* ================================================================ COLORI PUNTI */
+const GC = {
+  body:{a:'#ff6666',c:'#5588ff'}, neck:{a:'#ff9900',c:'#ffcc44'}, head:{a:'#ff55cc',c:'#ffaaee'},
+  mane:{a:'#ff4444',c:'#4488ff'}, tuft1:{a:'#ff44ff',c:'#ff99ff'}, tuft2:{a:'#44ffcc',c:'#99ffee'},
+  c1:{a:'#ff4444',c:'#4488ff'}, c2:{a:'#ff9900',c:'#ffcc44'}, c3:{a:'#44ffcc',c:'#99ffee'},
+  fl:{a:'#ff4444',c:'#ff4444'}, fr:{a:'#ff9900',c:'#ff9900'}, bl:{a:'#44ff88',c:'#44ff88'}, br:{a:'#44ccff',c:'#44ccff'},
+  dims:{a:'#ffffff',c:'#ffffff'},
+  jbody:{a:'#ff4444',c:'#4488ff'}, jhead:{a:'#ffcc00',c:'#ffcc00'}, jwhip:{a:'#cccccc',c:'#cccccc'},
+};
+function gc(group,type){ const g=GC[group]||{a:'#ff4444',c:'#4488ff'}; return type==='a'?g.a:g.c; }
+
+/* ================================================================ HELPERS */
+function shadeColor(col,amt){
+  let c=col.replace('#','');
+  if(c.length===3) c=c[0]+c[0]+c[1]+c[1]+c[2]+c[2];
+  const num=parseInt(c,16);
+  const r=Math.min(255,Math.max(0,(num>>16)+amt));
+  const g=Math.min(255,Math.max(0,((num>>8)&0xff)+amt));
+  const b=Math.min(255,Math.max(0,(num&0xff)+amt));
+  return '#'+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);
+}
+function col(){ return { body:document.getElementById('c_body').value, mane:document.getElementById('c_mane').value, hoof:document.getElementById('c_hoof').value, jockey:document.getElementById('c_jockey').value }; }
+
+function centerView(){
+  let xs=[],ys=[];
+  Object.values(data[currentTab]).forEach(pts=>pts.forEach(p=>{xs.push(p.x);ys.push(p.y);}));
+  if(!xs.length)return;
+  const mx=(Math.min(...xs)+Math.max(...xs))/2, my=(Math.min(...ys)+Math.max(...ys))/2;
+  viewX=canvas.width/2-mx*scale; viewY=canvas.height/2-my*scale;
+}
+
+/* ================================================================ DRAW */
+function draw(){
+  if(!canvas.width)return;
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle='#c8a060'; ctx.fillRect(0,0,canvas.width,canvas.height);
+  drawGrid();
+  // cavallo completo in coordinate game
+  ctx.save(); ctx.translate(viewX,viewY); ctx.scale(scale,scale);
+  drawHorseAll(animT);
+  ctx.restore();
+  // overlay punti tab corrente
+  drawOverlay();
+  document.getElementById('zoomInfo').textContent='zoom '+scale.toFixed(1)+'x';
+}
+
+/* ================================================================ CAVALLO COMPLETO */
+function drawHorseAll(t){
+  const C=col();
+  const bodyColor=C.body, maneColor=C.mane, hoofColor=C.hoof;
+  const L=data.legs;
+  const thighLen=Math.abs(L.dims[0].y);
+  const shinLen=Math.abs(L.dims[1].y)-thighLen;
+
+  ctx.translate(0,Math.sin(t*2)*3);
+  ctx.shadowColor='rgba(0,0,0,0.3)'; ctx.shadowBlur=3;
+
+  // gambe lontane
+  drawLegShape(L.fr[0].x,L.fr[0].y,Math.sin(t+Math.PI*0.5),shadeColor(bodyColor,-25),hoofColor,thighLen,shinLen,false);
+  drawLegShape(L.br[0].x,L.br[0].y,Math.sin(t),shadeColor(bodyColor,-25),hoofColor,thighLen,shinLen,true);
+
+  // corpo
+  const b=data.body;
+  ctx.fillStyle=bodyColor;
+  const bp=b.body;
+  ctx.beginPath();
+  ctx.moveTo(bp[0].x,bp[0].y);
+  ctx.bezierCurveTo(bp[1].x,bp[1].y,bp[2].x,bp[2].y,bp[3].x,bp[3].y);
+  ctx.bezierCurveTo(bp[4].x,bp[4].y,bp[5].x,bp[5].y,bp[6].x,bp[6].y);
+  ctx.bezierCurveTo(bp[7].x,bp[7].y,bp[8].x,bp[8].y,bp[9].x,bp[9].y);
+  ctx.bezierCurveTo(bp[10].x,bp[10].y,bp[11].x,bp[11].y,bp[12].x,bp[12].y);
+  ctx.bezierCurveTo(bp[13].x,bp[13].y,bp[14].x,bp[14].y,bp[0].x,bp[0].y);
+  ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(-45,8,18,14,0.3,0,Math.PI*2);
+  ctx.fillStyle=shadeColor(bodyColor,-15); ctx.fill();
+
+  // collo
+  const np=b.neck;
+  ctx.fillStyle=bodyColor; ctx.beginPath();
+  ctx.moveTo(np[0].x,np[0].y);
+  ctx.bezierCurveTo(np[1].x,np[1].y,np[2].x,np[2].y,np[3].x,np[3].y);
+  ctx.bezierCurveTo(np[4].x,np[4].y,np[5].x,np[5].y,np[6].x,np[6].y);
+  ctx.bezierCurveTo(np[7].x,np[7].y,np[8].x,np[8].y,np[0].x,np[0].y);
+  ctx.closePath(); ctx.fill();
+
+  // testa
+  const hp=b.head;
+  ctx.fillStyle=bodyColor; ctx.beginPath();
+  ctx.moveTo(hp[0].x,hp[0].y);
+  ctx.bezierCurveTo(hp[1].x,hp[1].y,hp[2].x,hp[2].y,hp[3].x,hp[3].y);
+  ctx.bezierCurveTo(hp[4].x,hp[4].y,hp[5].x,hp[5].y,hp[6].x,hp[6].y);
+  ctx.bezierCurveTo(hp[7].x,hp[7].y,hp[8].x,hp[8].y,hp[9].x,hp[9].y);
+  ctx.bezierCurveTo(hp[10].x,hp[10].y,hp[11].x,hp[11].y,hp[0].x,hp[0].y);
+  ctx.closePath(); ctx.fill();
+
+  // dettagli fissi testa
+  ctx.fillStyle=shadeColor(bodyColor,-30);
+  ctx.beginPath(); ctx.ellipse(105,-30,3,2,-0.3,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle=bodyColor;
+  ctx.beginPath(); ctx.moveTo(84,-60); ctx.lineTo(80,-74); ctx.lineTo(90,-68); ctx.closePath(); ctx.fill();
+  ctx.fillStyle='#c08080';
+  ctx.beginPath(); ctx.moveTo(84,-62); ctx.lineTo(81,-72); ctx.lineTo(88,-67); ctx.closePath(); ctx.fill();
+  ctx.fillStyle='#111';
+  ctx.beginPath(); ctx.ellipse(98,-48,4,3,-0.2,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#fff';
+  ctx.beginPath(); ctx.arc(100,-49,1.2,0,Math.PI*2); ctx.fill();
+
+  // criniera
+  const M=data.mane;
+  ctx.fillStyle=maneColor;
+  const mm=M.mane;
+  ctx.beginPath();
+  ctx.moveTo(mm[0].x,mm[0].y);
+  ctx.bezierCurveTo(mm[1].x,mm[1].y,mm[2].x,mm[2].y,mm[3].x,mm[3].y);
+  ctx.bezierCurveTo(mm[4].x,mm[4].y,mm[5].x,mm[5].y,mm[6].x,mm[6].y);
+  ctx.bezierCurveTo(mm[7].x,mm[7].y,mm[8].x,mm[8].y,mm[9].x,mm[9].y);
+  ctx.lineTo(mm[10].x,mm[10].y);
+  ctx.bezierCurveTo(mm[11].x,mm[11].y,mm[12].x,mm[12].y,mm[0].x,mm[0].y);
+  ctx.closePath(); ctx.fill();
+  drawTuftShape(ctx, M.tuft1, maneColor);
+  drawTuftShape(ctx, M.tuft2, maneColor);
+
+  // coda
+  const T=data.tail;
+  const sw1=Math.sin(t*1.5)*10, sw2=Math.sin(t*1.5+0.8)*8, sw3=Math.sin(t*1.5+1.6)*6;
+  drawTailShape(ctx,T.c1,maneColor,sw1);
+  drawTailShape(ctx,T.c2,maneColor,sw2);
+  drawTailShape(ctx,T.c3,maneColor,sw3);
+
+  ctx.shadowBlur=0;
+
+  // gambe vicine
+  drawLegShape(L.fl[0].x,L.fl[0].y,Math.sin(t),bodyColor,hoofColor,thighLen,shinLen,false);
+  drawLegShape(L.bl[0].x,L.bl[0].y,Math.sin(t+Math.PI*0.5),bodyColor,hoofColor,thighLen,shinLen,true);
+
+  // fantino
+  const J=data.jockey;
+  const jb2=Math.sin(t*2)*2;
+  ctx.save(); ctx.translate(0,jb2);
+  const jbp=J.jbody;
+  ctx.fillStyle=C.jockey;
+  ctx.beginPath();
+  ctx.moveTo(jbp[0].x,jbp[0].y);
+  ctx.bezierCurveTo(jbp[1].x,jbp[1].y,jbp[2].x,jbp[2].y,jbp[3].x,jbp[3].y);
+  ctx.bezierCurveTo(jbp[4].x,jbp[4].y,jbp[5].x,jbp[5].y,jbp[6].x,jbp[6].y);
+  ctx.bezierCurveTo(jbp[7].x,jbp[7].y,jbp[8].x,jbp[8].y,jbp[0].x,jbp[0].y);
+  ctx.closePath(); ctx.fill();
+  const jh=J.jhead[0];
+  ctx.fillStyle='#f0c080'; ctx.beginPath(); ctx.arc(jh.x,jh.y,6,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle=C.jockey; ctx.beginPath(); ctx.arc(jh.x,jh.y-2,6,Math.PI,0); ctx.fill();
+  ctx.fillStyle='#333'; ctx.fillRect(jh.x-5,jh.y-4,14,3);
+  const jw=J.jwhip;
+  ctx.strokeStyle='#333'; ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.moveTo(jw[0].x,jw[0].y); ctx.lineTo(jw[1].x,jw[1].y); ctx.stroke();
+  ctx.restore();
+}
+
+function drawTuftShape(ctx,pts,color){
+  ctx.fillStyle=color; ctx.beginPath();
+  ctx.moveTo(pts[0].x,pts[0].y);
+  ctx.bezierCurveTo(pts[1].x,pts[1].y,pts[2].x,pts[2].y,pts[3].x,pts[3].y);
+  ctx.bezierCurveTo(pts[4].x,pts[4].y,pts[5].x,pts[5].y,pts[0].x,pts[0].y);
+  ctx.closePath(); ctx.fill();
+}
+
+function drawTailShape(ctx,pts,color,sw){
+  ctx.fillStyle=color; ctx.beginPath();
+  ctx.moveTo(pts[0].x,pts[0].y);
+  ctx.bezierCurveTo(pts[1].x,pts[1].y+sw,pts[2].x,pts[2].y+sw,pts[3].x,pts[3].y+sw);
+  ctx.bezierCurveTo(pts[4].x,pts[4].y+sw,pts[5].x,pts[5].y+sw,pts[6].x,pts[6].y+sw);
+  ctx.bezierCurveTo(pts[7].x,pts[7].y+sw*0.5,pts[8].x,pts[8].y+sw*0.5,pts[0].x,pts[0].y);
+  ctx.closePath(); ctx.fill();
+}
+
+function drawLegShape(sx,sy,phase,bodyCol,hoofCol,thighLen,shinLen,isBack){
+  const la=phase*0.5, ka=Math.abs(phase)*0.6, ba=isBack?0.15:-0.05;
+  const ta=ba+la*0.6;
+  const tx=sx+Math.sin(ta)*thighLen, ty=sy+Math.cos(ta)*thighLen;
+  const kd=isBack?-1:1, sa=ta+kd*ka*0.8;
+  const kx=tx+Math.sin(sa)*shinLen, ky=ty+Math.cos(sa)*shinLen;
+  ctx.strokeStyle=bodyCol; ctx.lineWidth=6; ctx.lineCap='round';
+  ctx.beginPath(); ctx.moveTo(sx,sy); ctx.lineTo(tx,ty); ctx.stroke();
+  ctx.lineWidth=4.5; ctx.beginPath(); ctx.moveTo(tx,ty); ctx.lineTo(kx,ky); ctx.stroke();
+  ctx.fillStyle=hoofCol; ctx.beginPath(); ctx.ellipse(kx,ky+2.5,5,2.5,0,0,Math.PI*2); ctx.fill();
+}
+
+/* ================================================================ OVERLAY */
+function getAllPtsTab(){
+  const res=[];
+  Object.entries(data[currentTab]).forEach(([grp,pts])=>{
+    pts.forEach((p,i)=>res.push({p,grp,i}));
+  });
+  return res;
+}
+
+function drawOverlay(){
+  // linee ctrl
+  ctx.setLineDash([4,5]); ctx.lineWidth=1;
+  drawCtrlLinesForTab();
+  ctx.setLineDash([]);
+
+  const RA=11, RC=7;
+  getAllPtsTab().forEach(({p,grp,i})=>{
+    const s=toSc(p.x,p.y);
+    const r=p.t==='a'?RA:RC;
+    const sel=selected&&selected.grp===grp&&selected.i===i;
+    ctx.beginPath(); ctx.arc(s.x,s.y,r,0,Math.PI*2);
+    ctx.fillStyle=sel?'#ffff00':gc(grp,p.t);
+    ctx.fill(); ctx.strokeStyle='#000'; ctx.lineWidth=1.5; ctx.stroke();
+    const fs=Math.max(8,Math.min(11,scale*1.1));
+    ctx.fillStyle='#fff'; ctx.font='bold '+fs+'px Courier New'; ctx.textAlign='center';
+    ctx.fillText(p.l,s.x,s.y-r-3);
+  });
+}
+
+function cl(list,i,j){
+  if(!list||!list[i]||!list[j])return;
+  const a=toSc(list[i].x,list[i].y), b=toSc(list[j].x,list[j].y);
+  ctx.strokeStyle='rgba(255,255,255,0.2)';
+  ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke();
+}
+
+function drawCtrlLinesForTab(){
+  const d=data[currentTab];
+  if(currentTab==='body'){
+    [d.body,d.neck,d.head].forEach(pts=>{for(let i=0;i<pts.length-1;i++)cl(pts,i,i+1);});
+  } else if(currentTab==='mane'){
+    const m=d.mane;
+    cl(m,0,1);cl(m,2,3);cl(m,3,4);cl(m,5,6);cl(m,6,7);cl(m,8,9);cl(m,9,10);cl(m,10,11);cl(m,12,0);
+    [d.tuft1,d.tuft2].forEach(t=>{cl(t,0,1);cl(t,2,3);cl(t,3,4);cl(t,5,0);});
+  } else if(currentTab==='tail'){
+    [d.c1,d.c2,d.c3].forEach(pts=>{for(let i=0;i<pts.length-1;i++)cl(pts,i,i+1);});
+  } else if(currentTab==='legs'){
+    const s0=toSc(d.dims[0].x,d.dims[0].y), s1=toSc(0,0), s2=toSc(d.dims[1].x,d.dims[1].y);
+    ctx.strokeStyle='rgba(255,255,100,0.4)';
+    ctx.beginPath();ctx.moveTo(s1.x,s1.y);ctx.lineTo(s0.x,s0.y);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(s0.x,s0.y);ctx.lineTo(s2.x,s2.y);ctx.stroke();
+  } else if(currentTab==='jockey'){
+    const jb=d.jbody; for(let i=0;i<jb.length-1;i++)cl(jb,i,i+1);
+    cl(d.jwhip,0,1);
+  }
+}
+
+/* ================================================================ GRIGLIA */
+function drawGrid(){
+  const step=10,tl=toGm(0,0),br=toGm(canvas.width,canvas.height);
+  const x0=Math.floor(tl.x/step)*step, y0=Math.floor(tl.y/step)*step;
+  ctx.strokeStyle='rgba(0,0,0,0.09)'; ctx.lineWidth=1;
+  for(let gx=x0;gx<=br.x+step;gx+=step){const sx=toSc(gx,0).x;ctx.beginPath();ctx.moveTo(sx,0);ctx.lineTo(sx,canvas.height);ctx.stroke();}
+  for(let gy=y0;gy<=br.y+step;gy+=step){const sy=toSc(0,gy).y;ctx.beginPath();ctx.moveTo(0,sy);ctx.lineTo(canvas.width,sy);ctx.stroke();}
+  ctx.strokeStyle='rgba(0,0,0,0.25)'; ctx.lineWidth=1.5;
+  const ox=toSc(0,0);
+  ctx.beginPath();ctx.moveTo(ox.x,0);ctx.lineTo(ox.x,canvas.height);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(0,ox.y);ctx.lineTo(canvas.width,ox.y);ctx.stroke();
+}
+
+/* ================================================================ INPUT */
+canvas.addEventListener('wheel',e=>{
+  e.preventDefault();
+  const m=gmp(e),f=e.deltaY<0?1.15:1/1.15;
+  viewX=m.x-(m.x-viewX)*f; viewY=m.y-(m.y-viewY)*f;
+  scale=Math.max(0.3,Math.min(80,scale*f)); draw();
+},{passive:false});
+
+function hitTest(sx,sy){
+  let best=null,bestD=15;
+  getAllPtsTab().forEach(({p,grp,i})=>{
+    const s=toSc(p.x,p.y),d=Math.hypot(s.x-sx,s.y-sy);
+    if(d<bestD){bestD=d;best={grp,i};}
+  });
+  return best;
+}
+
+canvas.addEventListener('mousedown',e=>{
+  const m=gmp(e),hit=hitTest(m.x,m.y);
+  if(hit){dragging=hit;selected=hit;}
+  else{panning=true;panStart=m;panV={x:viewX,y:viewY};selected=null;}
+  draw();
+});
+canvas.addEventListener('mousemove',e=>{
+  const m=gmp(e);
+  if(dragging){
+    const g=toGm(m.x,m.y);
+    data[currentTab][dragging.grp][dragging.i].x=Math.round(g.x);
+    data[currentTab][dragging.grp][dragging.i].y=Math.round(g.y);
+    const p=data[currentTab][dragging.grp][dragging.i];
+    document.getElementById('selectedInfo').textContent='['+p.l+'] x:'+p.x+' y:'+p.y;
+    draw();
+  } else if(panning){
+    viewX=panV.x+(m.x-panStart.x); viewY=panV.y+(m.y-panStart.y); draw();
+  }
+});
+canvas.addEventListener('mouseup',()=>{dragging=null;panning=false;});
+canvas.addEventListener('mouseleave',()=>{dragging=null;panning=false;});
+function gmp(e){const r=canvas.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top};}
+
+/* ================================================================ TAB / ANIM */
+function setTab(tab){
+  currentTab=tab;selected=null;
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  event.target.classList.add('active');
+  scale=4; centerView(); draw();
+}
+function resetTab(){
+  const defs={body:D_BODY,mane:D_MANE,tail:D_TAIL,legs:D_LEGS,jockey:D_JOCKEY};
+  data[currentTab]=dc(defs[currentTab]); selected=null; draw();
+}
+function resetZoom(){scale=4;centerView();draw();}
+
+function toggleAnim(){
+  animPlaying=!animPlaying;
+  document.getElementById('playbtn').textContent=animPlaying?'⏹ STOP':'▶ PLAY';
+  if(animPlaying)(function loop(){if(!animPlaying)return;animT+=0.08;if(animT>Math.PI*2)animT-=Math.PI*2;draw();requestAnimationFrame(loop);})();
+}
+
+/* ================================================================ ESPORTA */
+function pv(pts){ return pts.map(p=>p.x+','+p.y).join(', '); }
+function bez(pts,i){ return pts[i].x+','+pts[i].y+', '+pts[i+1].x+','+pts[i+1].y+', '+pts[i+2].x+','+pts[i+2].y; }
+function bezC(pts,i){ return pts[i].x+','+pts[i].y+', '+pts[i+1].x+','+pts[i+1].y+', '+pts[0].x+','+pts[0].y; }
+function pta(pts){ return '['+pts.map(p=>'{x:'+p.x+',y:'+p.y+'}').join(',')+']'; }
+
+function exportCode(){
+  const B=data.body, M=data.mane, T=data.tail, L=data.legs, J=data.jockey;
+  const b=B.body,n=B.neck,h=B.head;
+  const mm=M.mane,t1=M.tuft1,t2=M.tuft2;
+  const thighLen=Math.abs(L.dims[0].y);
+  const shinLen=Math.abs(L.dims[1].y)-thighLen;
+  const jbp=J.jbody,jh=J.jhead[0],jw=J.jwhip;
+
+  const lines = [
+'function drawHorse(h) {',
+'  var x = h.x;',
+'  var y = LANE_HEIGHT * h.lane + LANE_HEIGHT / 2 + GRASS_HEIGHT;',
+'  var t = h.anim;',
+'  ctx.save();',
+'  ctx.translate(x, y);',
+'  ctx.scale(0.62, 0.62);',
+'  ctx.translate(0, Math.sin(t * 2) * 3);',
+'  var bodyColor = h.color;',
+'  var maneColor = h.maneColor;',
+'  var hoofColor = "#1a1a1a";',
+'  ctx.shadowColor = "rgba(0,0,0,0.35)"; ctx.shadowBlur = 4;',
+'',
+'  /* GAMBE LONTANE */',
+`  drawLeg(${L.fr[0].x}, ${L.fr[0].y}, Math.sin(t + Math.PI * 0.5), shadeColor(bodyColor, -25), hoofColor, false);`,
+`  drawLeg(${L.br[0].x}, ${L.br[0].y}, Math.sin(t),                 shadeColor(bodyColor, -25), hoofColor, true);`,
+'',
+'  /* CORPO */',
+'  ctx.fillStyle = bodyColor;',
+'  ctx.beginPath();',
+`  ctx.moveTo(${b[0].x}, ${b[0].y});`,
+`  ctx.bezierCurveTo(${bez(b,1)});`,
+`  ctx.bezierCurveTo(${bez(b,4)});`,
+`  ctx.bezierCurveTo(${bez(b,7)});`,
+`  ctx.bezierCurveTo(${bez(b,10)});`,
+`  ctx.bezierCurveTo(${bezC(b,13)});`,
+'  ctx.closePath(); ctx.fill();',
+`  ctx.beginPath(); ctx.ellipse(-45, 8, 18, 14, 0.3, 0, Math.PI * 2);`,
+'  ctx.fillStyle = shadeColor(bodyColor, -15); ctx.fill();',
+'',
+'  /* COLLO */',
+'  ctx.fillStyle = bodyColor; ctx.beginPath();',
+`  ctx.moveTo(${n[0].x}, ${n[0].y});`,
+`  ctx.bezierCurveTo(${bez(n,1)});`,
+`  ctx.bezierCurveTo(${bez(n,4)});`,
+`  ctx.bezierCurveTo(${bezC(n,7)});`,
+'  ctx.closePath(); ctx.fill();',
+'',
+'  /* TESTA */',
+'  ctx.fillStyle = bodyColor; ctx.beginPath();',
+`  ctx.moveTo(${h[0].x}, ${h[0].y});`,
+`  ctx.bezierCurveTo(${bez(h,1)});`,
+`  ctx.bezierCurveTo(${bez(h,4)});`,
+`  ctx.bezierCurveTo(${bez(h,7)});`,
+`  ctx.bezierCurveTo(${bezC(h,10)});`,
+'  ctx.closePath(); ctx.fill();',
+'  ctx.fillStyle = shadeColor(bodyColor, -30);',
+'  ctx.beginPath(); ctx.ellipse(105, -30, 3, 2, -0.3, 0, Math.PI * 2); ctx.fill();',
+'  ctx.fillStyle = bodyColor;',
+'  ctx.beginPath(); ctx.moveTo(84,-60); ctx.lineTo(80,-74); ctx.lineTo(90,-68); ctx.closePath(); ctx.fill();',
+'  ctx.fillStyle = "#c08080";',
+'  ctx.beginPath(); ctx.moveTo(84,-62); ctx.lineTo(81,-72); ctx.lineTo(88,-67); ctx.closePath(); ctx.fill();',
+'  ctx.fillStyle = "#111"; ctx.beginPath(); ctx.ellipse(98,-48,4,3,-0.2,0,Math.PI*2); ctx.fill();',
+'  ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(100,-49,1.2,0,Math.PI*2); ctx.fill();',
+'',
+'  /* CRINIERA */',
+'  ctx.fillStyle = maneColor;',
+'  ctx.beginPath();',
+`  ctx.moveTo(${mm[0].x}, ${mm[0].y});`,
+`  ctx.bezierCurveTo(${bez(mm,1)});`,
+`  ctx.bezierCurveTo(${bez(mm,4)});`,
+`  ctx.bezierCurveTo(${bez(mm,7)});`,
+`  ctx.lineTo(${mm[10].x}, ${mm[10].y});`,
+`  ctx.bezierCurveTo(${mm[11].x},${mm[11].y}, ${mm[12].x},${mm[12].y}, ${mm[0].x},${mm[0].y});`,
+'  ctx.closePath(); ctx.fill();',
+`  ctx.beginPath(); ctx.moveTo(${t1[0].x},${t1[0].y});`,
+`  ctx.bezierCurveTo(${bez(t1,1)}); ctx.bezierCurveTo(${bezC(t1,4)}); ctx.closePath(); ctx.fill();`,
+`  ctx.beginPath(); ctx.moveTo(${t2[0].x},${t2[0].y});`,
+`  ctx.bezierCurveTo(${bez(t2,1)}); ctx.bezierCurveTo(${bezC(t2,4)}); ctx.closePath(); ctx.fill();`,
+'',
+'  /* CODA */',
+'  var sw1=Math.sin(t*1.5)*10, sw2=Math.sin(t*1.5+0.8)*8, sw3=Math.sin(t*1.5+1.6)*6;',
+`  var tailPts = [${pta(T.c1)}, ${pta(T.c2)}, ${pta(T.c3)}];`,
+'  var tailSw  = [sw1, sw2, sw3];',
+'  for (var ti=0; ti<3; ti++) {',
+'    var tp=tailPts[ti], sw=tailSw[ti];',
+'    ctx.fillStyle = maneColor; ctx.beginPath();',
+'    ctx.moveTo(tp[0].x, tp[0].y);',
+'    ctx.bezierCurveTo(tp[1].x,tp[1].y+sw,tp[2].x,tp[2].y+sw,tp[3].x,tp[3].y+sw);',
+'    ctx.bezierCurveTo(tp[4].x,tp[4].y+sw,tp[5].x,tp[5].y+sw,tp[6].x,tp[6].y+sw);',
+'    ctx.bezierCurveTo(tp[7].x,tp[7].y+sw*0.5,tp[8].x,tp[8].y+sw*0.5,tp[0].x,tp[0].y);',
+'    ctx.closePath(); ctx.fill();',
+'  }',
+'',
+'  ctx.shadowBlur = 0;',
+'',
+'  /* GAMBE VICINE */',
+`  drawLeg(${L.fl[0].x}, ${L.fl[0].y}, Math.sin(t),             bodyColor, hoofColor, false);`,
+`  drawLeg(${L.bl[0].x}, ${L.bl[0].y}, Math.sin(t + Math.PI * 0.5), bodyColor, hoofColor, true);`,
+'',
+'  /* FANTINO */',
+'  ctx.save(); ctx.translate(0, Math.sin(t * 2) * 2);',
+'  ctx.fillStyle = h.jockeyColor; ctx.beginPath();',
+`  ctx.moveTo(${jbp[0].x},${jbp[0].y});`,
+`  ctx.bezierCurveTo(${bez(jbp,1)}); ctx.bezierCurveTo(${bez(jbp,4)}); ctx.bezierCurveTo(${bezC(jbp,7)});`,
+'  ctx.closePath(); ctx.fill();',
+`  ctx.fillStyle="#f0c080"; ctx.beginPath(); ctx.arc(${jh.x},${jh.y},6,0,Math.PI*2); ctx.fill();`,
+`  ctx.fillStyle=h.jockeyColor; ctx.beginPath(); ctx.arc(${jh.x},${jh.y}-2,6,Math.PI,0); ctx.fill();`,
+`  ctx.fillStyle="#333"; ctx.fillRect(${jh.x}-5,${jh.y}-4,14,3);`,
+`  ctx.strokeStyle="#333"; ctx.lineWidth=1.5; ctx.beginPath(); ctx.moveTo(${jw[0].x},${jw[0].y}); ctx.lineTo(${jw[1].x},${jw[1].y}); ctx.stroke();`,
+'  ctx.restore();',
+'',
+'  ctx.font="bold 16px Arial"; ctx.textAlign="center";',
+'  ctx.fillStyle = selectedBetLane === h.lane ? "#ff3300" : "#fff";',
+'  ctx.strokeStyle="#000"; ctx.lineWidth=3;',
+'  ctx.strokeText(h.id, -10, 5); ctx.fillText(h.id, -10, 5);',
+'  ctx.restore();',
+'}',
+'',
+`function drawLeg(sx, sy, phase, bodyCol, hoofCol, isBack) {`,
+`  var thighLen = ${thighLen}, shinLen = ${shinLen};`,
+'  var la=phase*0.5, ka=Math.abs(phase)*0.6, ba=isBack?0.15:-0.05;',
+'  var ta=ba+la*0.6;',
+'  var tx=sx+Math.sin(ta)*thighLen, ty=sy+Math.cos(ta)*thighLen;',
+'  var kd=isBack?-1:1, sa=ta+kd*ka*0.8;',
+'  var kx=tx+Math.sin(sa)*shinLen, ky=ty+Math.cos(sa)*shinLen;',
+'  ctx.strokeStyle=bodyCol; ctx.lineWidth=6; ctx.lineCap="round";',
+'  ctx.beginPath(); ctx.moveTo(sx,sy); ctx.lineTo(tx,ty); ctx.stroke();',
+'  ctx.lineWidth=4.5; ctx.beginPath(); ctx.moveTo(tx,ty); ctx.lineTo(kx,ky); ctx.stroke();',
+'  ctx.fillStyle=hoofCol; ctx.beginPath(); ctx.ellipse(kx,ky+2.5,5,2.5,0,0,Math.PI*2); ctx.fill();',
+'}',
+'',
+'function shadeColor(col, amt) {',
+'  var c=col.replace("#",""); if(c.length===3)c=c[0]+c[0]+c[1]+c[1]+c[2]+c[2];',
+'  var num=parseInt(c,16);',
+'  var r=Math.min(255,Math.max(0,(num>>16)+amt));',
+'  var g=Math.min(255,Math.max(0,((num>>8)&0xff)+amt));',
+'  var b=Math.min(255,Math.max(0,(num&0xff)+amt));',
+'  return "#"+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);',
+'}',
+  ];
+
+  const code=lines.join('\n');
+  document.getElementById('code').value=code;
+  navigator.clipboard.writeText(code).then(()=>{
+    const btn=event.target; btn.textContent='✅ COPIATO!';
+    setTimeout(()=>btn.textContent='📋 ESPORTA',2000);
+  });
+}
+
+/* INIT */
+resize(); centerView(); draw();
+</script>
+</body>
+</html>
