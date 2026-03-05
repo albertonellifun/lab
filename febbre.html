@@ -2,6 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, height=device-height, maximum-scale=1.0">
 <title>FEBBRE DA CAVALLO</title>
 <style>
 body{
@@ -22,6 +23,10 @@ h1 {
 canvas{
     background:#4a4;
     border:4px solid white;
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 0 auto;
 }
 button{
     padding:0 8px;
@@ -36,6 +41,7 @@ button{
 	display: flex;
     justify-content: space-between;
     align-items: baseline;
+	overflow: hidden;
 }
 </style>
 </head>
@@ -74,13 +80,11 @@ var colors = [
     "#443322",
     "#996633",
     "#332211",
-	"#662200",
-	
+	"#662200",	
     "#222222",
     "#dddddd",
     "#eeddcc",
-    "#ccaa44",
-	
+    "#ccaa44",	
 	"#ffffaa",
 	"#000000"
 ];
@@ -90,13 +94,11 @@ var maneColors = [
 	"#221100",
 	"#663322",
 	"#111100",
-	"#000000",
-    
+	"#000000",    
 	"#000000",
 	"#888888",
 	"#bb9977",
-	"#886600",
-	
+	"#886600",	
 	"#221100",
 	"#222222"
 ];
@@ -149,6 +151,18 @@ var horseNames = [
 	{name:"Gianduiotto",          maxSpeed:0.70, stamina:80},
 	{name:"Clarabella", 	      maxSpeed:0.70, stamina:80},
 ];
+
+function resizeCanvas() {
+    const canvas = document.getElementById('game');
+    const container = document.body;
+    const maxW = container.clientWidth - 8; // 8 = border*2
+	//const maxH = container.clientHeight - 8; //
+    
+    canvas.style.width = maxW + 'px';
+    canvas.style.height = "85vh";//(maxW*0.4) + 'px';
+}
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
 
 function initDirtParticles() {
 	dirtParticles = [];//potrebbero essere state create precedentemente con coordinate sballate
@@ -516,8 +530,8 @@ function drawHorse(h) {
     ctx.scale(S, S);
 
     /* bounce verticale del galoppo */
-    //var bounce = Math.sin(t * 2) * 3;
 	var bounce = Math.sin(t * 2) * (h.speed * 3);//dipende dalla velocita: 1==bounce 3 circa, 0==bounce 0 circa
+    //var bounce = Math.sin(t * 2) * 3;
     ctx.translate(0, bounce);
 	
 	if(h.injured) {
@@ -670,11 +684,10 @@ function drawHorse(h) {
 	//sella
 	drawSaddle(ctx, t, h);
 
-    /* -------------------------------------------------------
-       FANTINO (silhouette semplice)
-    ------------------------------------------------------- */
-	drawReins(ctx, t, h.jockeyColor);//redini/briglie
-    var jockeyBounce = Math.sin(t * 2) * 2;
+    //FANTINO
+    drawReins(ctx, t, h.jockeyColor);//redini/briglie
+    
+	var jockeyBounce = Math.sin(t * 2) * 2;
     drawJockey(ctx, 20, -30 + jockeyBounce, h.jockeyColor);
 
     ctx.restore();
@@ -691,30 +704,21 @@ function drawSaddle(ctx, t, h) {
     // --- QUARTIERE (flap laterale) ---
     ctx.fillStyle = "#5c2800";
     ctx.beginPath();
-    ctx.moveTo(-14, -8);
-    ctx.bezierCurveTo(-18, 8, -16, 22, -10, 26);
-    ctx.bezierCurveTo(-4, 30, 8, 30, 14, 26);
-    ctx.bezierCurveTo(20, 22, 20, 8, 16, -8);
+    ctx.moveTo(-14, -4);
+    ctx.bezierCurveTo(-18,12, -16, 26, -10, 30);
+    ctx.bezierCurveTo(-4, 34, 8, 34, 14, 30);
+    ctx.bezierCurveTo(20, 26, 20,12, 16, -4);
     ctx.closePath();
     ctx.fill();
 
-    // --- PANNELLO (imbottitura sotto) ---
-    ctx.fillStyle = "#3d1a00";
-    ctx.beginPath();
-    ctx.moveTo(-10, 10);
-    ctx.bezierCurveTo(-14, 18, -12, 28, -6, 30);
-    ctx.bezierCurveTo(0, 32, 8, 32, 12, 29);
-    ctx.bezierCurveTo(17, 26, 16, 16, 12, 10);
-    ctx.closePath();
-    ctx.fill();
 
-    // --- ARCIONE POSTERIORE (cantle) ---
+    // --- ARCIONE POSTERIORE (cantle) ---	
     ctx.fillStyle = "#6b3010";
     ctx.beginPath();
     ctx.moveTo(-15, 2);
-    ctx.bezierCurveTo(-20, -4, -18, -14, -10, -16);
-    ctx.bezierCurveTo(-5, -18, 2, -16, 4, -10);
-    ctx.bezierCurveTo(5, -5, 2, 0, -2, 2);
+    ctx.bezierCurveTo(-17, -1, -16, -7, -12, -8);
+    ctx.bezierCurveTo(-9, -9, -4, -8, -3, -4);
+    ctx.bezierCurveTo(-2, -1, -4, 2, -8, 2);
     ctx.closePath();
     ctx.fill();
     // bordo highlight arcione post.
@@ -722,39 +726,25 @@ function drawSaddle(ctx, t, h) {
     ctx.lineWidth = 1.2;
     ctx.beginPath();
     ctx.moveTo(-15, 2);
-    ctx.bezierCurveTo(-20, -4, -18, -14, -10, -16);
-    ctx.bezierCurveTo(-5, -18, 2, -16, 4, -10);
+    ctx.bezierCurveTo(-17, -1, -16, -7, -12, -8);
+    ctx.bezierCurveTo(-9, -9, -4, -8, -3, -4);
+    ctx.bezierCurveTo(-2, -1, -4, 2, -8, 2);
     ctx.stroke();
-
-    // --- SEDE (seat) — parte su cui siede il fantino ---
-    ctx.fillStyle = "#7a3812";
-    ctx.beginPath();
-    ctx.moveTo(-2, 2);
-    ctx.bezierCurveTo(2, -8, 14, -10, 18, -4);
-    ctx.bezierCurveTo(21, 0, 18, 6, 14, 8);
-    ctx.bezierCurveTo(8, 10, -2, 8, -2, 2);
-    ctx.closePath();
-    ctx.fill();
-    // texture/ombra sulla sede
-    ctx.fillStyle = "rgba(0,0,0,0.18)";
-    ctx.beginPath();
-    ctx.ellipse(8, 2, 9, 4, -0.2, 0, Math.PI * 2);
-    ctx.fill();
-
-    // --- ARCIONE ANTERIORE (pommel) ---
+    
+	// --- ARCIONE ANTERIORE (pommel) ---
     ctx.fillStyle = "#6b3010";
     ctx.beginPath();
-    ctx.moveTo(14, 8);
-    ctx.bezierCurveTo(22, 4, 26, -6, 20, -12);
-    ctx.bezierCurveTo(16, -16, 10, -14, 8, -8);
-    ctx.bezierCurveTo(7, -3, 10, 3, 14, 8);
+    ctx.moveTo(14, 4);
+    ctx.bezierCurveTo(22, 4,   26, -6,    20, -12);
+    ctx.bezierCurveTo(16, -16, 10, -14,    8, -8);
+    ctx.bezierCurveTo(7, -3,   10, 3,     14, 4);
     ctx.closePath();
     ctx.fill();
-    // bordo highlight arcione ant.
+	// bordo highlight arcione ant.
     ctx.strokeStyle = "#8b4820";
     ctx.lineWidth = 1.2;
     ctx.beginPath();
-    ctx.moveTo(14, 8);
+    ctx.moveTo(14, 4);
     ctx.bezierCurveTo(22, 4, 26, -6, 20, -12);
     ctx.bezierCurveTo(16, -16, 10, -14, 8, -8);
     ctx.stroke();
@@ -774,7 +764,7 @@ function drawSaddle(ctx, t, h) {
     // --- STAFFA (stirrup) ---
     let stirrupSwing = Math.sin(t * 2) * 4;
     ctx.save();
-    ctx.translate(4, 30);
+    ctx.translate(4, 25);
     ctx.rotate(stirrupSwing * 0.04);
     // correggia
     ctx.strokeStyle = "#2a1000";
@@ -796,17 +786,15 @@ function drawSaddle(ctx, t, h) {
     ctx.restore();
 	
 	
-	/* -------------------------------------------------------
-    NUMERO sul fianco
-    ------------------------------------------------------- */
+	//NUMERO sul fianco
     ctx.shadowBlur = 0;
     ctx.font = "12px Arial";
     ctx.textAlign = "center";
     ctx.fillStyle = selectedBetLane === h.lane ? '#fff' : '#aaa';
     ctx.strokeStyle = "#000";
     ctx.lineWidth = 3;
-    ctx.strokeText(h.id, 3, 20);
-    ctx.fillText(h.id, 3, 20);
+    ctx.strokeText(h.id, 3, 21);
+    ctx.fillText(h.id, 3, 21);
 
     ctx.restore();
 }
@@ -922,7 +910,7 @@ function drawReins(ctx, t, jockeyColor) {
     var mouthX = 104;
     var mouthY = -30;
 
-    // Mani del fantino (approssimativamente)
+    // posizione mani del fantino (approssimativamente)
     var handX = 28;
     var handY = -38;
 
@@ -949,44 +937,67 @@ function drawReins(ctx, t, jockeyColor) {
     ctx.fill();
 }
 
-/* -------------------------------------------------------
-   FANTINO semplice
-------------------------------------------------------- */
+//fantino semplice
 function drawJockey(ctx, x, y, col) {
-    /* corpo */
+    /* mano dietro */
+    ctx.fillStyle = "#f0c080";
+    ctx.beginPath();
+    ctx.arc(x + 10, y - 12, 3, 0, Math.PI * 2);
+    ctx.fill();
+	/* corpo */
     ctx.fillStyle = col;
     ctx.beginPath();
-    ctx.moveTo(x, y);
-    ctx.bezierCurveTo(x - 8, y - 5, x - 10, y - 18, x - 2, y - 22);
-    ctx.bezierCurveTo(x + 6, y - 26, x + 10, y - 20, x + 8, y - 10);
-    ctx.bezierCurveTo(x + 6, y - 4, x + 4, y, x, y);
+    ctx.moveTo(x-6, y+4);
+    ctx.bezierCurveTo(x - 8, y - 5,  x - 10, y - 18,  x - 2, y - 22);
+    ctx.bezierCurveTo(x + 6, y - 26, x + 10, y - 20,  x + 8, y - 10);
+    ctx.bezierCurveTo(x + 6, y - 4,  x + 4,  y,       x-6,     y+4);
     ctx.closePath();
     ctx.fill();
-
+	//coscia
+    ctx.fillStyle = "#444";
+    ctx.beginPath();
+    ctx.ellipse(x + 5, y + 5, 15, 6, 0.3, 0, Math.PI * 2);//inclinata verso il basso
+    ctx.fill();
+	//stivale piu scuro
+	ctx.fillStyle = "#222";
+    ctx.beginPath();
+    ctx.ellipse(x + 5, y + 12, 15, 5, -0.2, 0, Math.PI * 2);//inclinata verso l'alto
+    ctx.fill();
+	
     /* testa */
     ctx.fillStyle = "#f0c080";
     ctx.beginPath();
     ctx.arc(x + 2, y - 26, 6, 0, Math.PI * 2);
     ctx.fill();
-
+	ctx.lineWidth = 1;
+	ctx.strokeStyle = "#d0a060";
+    ctx.beginPath();
+    ctx.arc(x + 2, y - 26, 6, 0, Math.PI * 2);
+    ctx.stroke();
     /* caschetto */
     ctx.fillStyle = col;
     ctx.beginPath();
     ctx.arc(x + 2, y - 30, 8, Math.PI, 0);
     ctx.fill();
-
     /* visiera */
     ctx.fillStyle = shadeColor(col, -30);
-    ctx.fillRect(x - 5, y - 30, 16, 3);
-
-    /* frustino */
+    ctx.fillRect(x - 5, y - 31, 16, 3);
+	
+	/* frustino */
     ctx.strokeStyle = "#333";
     ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.moveTo(x + 8, y - 10);
     ctx.lineTo(x + 25, y - 2);
     ctx.stroke();
+	/* mano avanti */
+    ctx.fillStyle = "#f0c080";
+    ctx.beginPath();
+    ctx.arc(x + 10, y - 8, 3, 0, Math.PI * 2);
+    ctx.fill();
 }
+
+
 
 /* utility: schiarisce/scurisce un colore hex */
 function shadeColor(col, amt) {
