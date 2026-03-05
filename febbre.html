@@ -49,7 +49,7 @@ button{
 <h1>🏇🐎 FEBBRE DA CAVALLO 🏇🐎<span id="timer"></span></h1>
 <canvas id="game" width="1000" height="400"></canvas>
 <div id="controls">
-	<button onclick="center=!center">👁️</button>
+	<button onclick="changeCenter()">👁️</button>
 	<button onclick="mute=!mute">🔊</button>
 	<span id="bets"></span>
 	<button id="startRace" onclick="startRace()" disabled>🐎 VAI! 🧲</button>
@@ -70,6 +70,8 @@ var mute = true;
 var finishX = 900;
 var GRASS_HEIGHT = 10 + 80 / lanes;
 var LANE_HEIGHT = (canvas.height - (2 * GRASS_HEIGHT)) / lanes;
+/* scala per stare nella corsia (alt corsia ~70px, cavallo ~55px alto) */
+var HORSE_SCALE = 3/lanes;//1c = 2..3, 2c = 1..1.5, 4c = 0.7, 6c = 0.5
 
 var raceTime = 0;
 var timerInterval = null;
@@ -194,8 +196,18 @@ function updateLaneGeometry() {
 	initDirtParticles();
 }
 
+function changeCenter() {
+	if (!racing) return;//funziona solo durante la gara
+	center=!center;
+	if (lanes > 3) {
+		HORSE_SCALE = center ? 4.5/lanes : 3/lanes;
+	} else {
+		HORSE_SCALE = center ? 3/lanes : 2.5/lanes;
+	}
+}
+
 function changeLanes(delta) {
-    if (racing) return; // blocca durante gara
+	if (racing) return;//blocca durante gara
     lanes += delta;
     if (lanes < 2) lanes = 2;
     if (lanes > horseNames.length) lanes = horseNames.length;
@@ -203,6 +215,13 @@ function changeLanes(delta) {
     selectedBetLane = null;
     stopRace = false;
     document.getElementById("laneCount").innerHTML = "CORSIE: " + lanes;
+	
+	if (lanes > 3) {
+		HORSE_SCALE = center ? 4.5/lanes : 3/lanes;
+	} else {
+		HORSE_SCALE = center ? 3/lanes : 2.5/lanes;
+	}
+	
     createRace();
 }
 
@@ -526,10 +545,7 @@ function drawHorses() {
 function drawHorse(h) {
     var t = h.anim;
 
-    /* scala per stare nella corsia (alt corsia ~70px, cavallo ~55px alto) */
-    var HORSE_SCALE = 3/horses.length;//1c = 2..3, 2c = 1..1.5, 4c = 0.7, 6c = 0.5
-	
-	var cx = h.x - 60*HORSE_SCALE;//spostato a sinistra, non centrato su X (MUSO!!!)
+    var cx = h.x - 60*HORSE_SCALE;//spostato a sinistra, non centrato su X (MUSO!!!)
     var cy = LANE_HEIGHT * h.lane + LANE_HEIGHT / 2 + GRASS_HEIGHT/3;//un po in alto
 	
 	if (center) {
@@ -538,16 +554,31 @@ function drawHorse(h) {
 		cy = trackCenter + (normalCy - trackCenter) * 0.8;
 	}
 
+	//per le zampe — fasi del vero galoppo
+    var FL = Math.sin(t);                    // ant vicina
+    var FR = Math.sin(t + Math.PI * 0.9);    // ant lontana (leggermente sfasata)
+    var BL = Math.sin(t + Math.PI * 0.5);    // post vicina
+    var BR = Math.sin(t + Math.PI * 1.4);    // post lontana
 	
+	//bounce verticale del galoppo
+	var bounce = Math.sin(t * 2) * (h.speed * 1.5);//dipende dalla velocita: 1==bounce 3 circa, 0==bounce 0 circa
+	
+	//vento == movimento coda/ciuffi/etc
+	var windX = h.speed * 5;
+
+	//colori
+	var bodyColor  = h.color;
+    var maneColor  = h.maneColor;
+    var hoofColor  = "#1a1a1a";
+    var skinColor  = h.color;
+	
+	
+	//DISEGNO
     ctx.save();
-    ctx.translate(cx, cy);
+    ctx.translate(cx, cy + bounce);
     ctx.scale(HORSE_SCALE, HORSE_SCALE);
 
-    /* bounce verticale del galoppo */
-	var bounce = Math.sin(t * 2) * (h.speed * 3);//dipende dalla velocita: 1==bounce 3 circa, 0==bounce 0 circa
-    //var bounce = Math.sin(t * 2) * 3;
-    ctx.translate(0, bounce);
-	
+	//croce rossa
 	if(h.injured) {
 		ctx.fillStyle = '#f00';
 		ctx.fillRect(-20,-90,36,36);//bordo
@@ -575,18 +606,21 @@ function drawHorse(h) {
 	
 	
 
-    var bodyColor  = h.color;
-    var maneColor  = h.maneColor;
-    var hoofColor  = "#1a1a1a";
-    var skinColor  = h.color;
-	
-	var windX = h.speed * 5;
+    
 
     /* -------------------------------------------------------
        OMBRE / PROFONDITÀ
     ------------------------------------------------------- */
     ctx.shadowColor = "rgba(0,0,0,0.35)";
     ctx.shadowBlur  = 4;
+
+
+    /* gamba lontana posteriore */
+    drawLeg(ctx, -38, 15, BL, shadeColor(bodyColor, -25), hoofColor, true);
+    /* gamba lontana anteriore */
+    drawLeg(ctx,  38, 13, FR, shadeColor(bodyColor, -25), hoofColor, false);
+	
+	
 
 	/* CORPO */
 	ctx.fillStyle = bodyColor;
@@ -675,16 +709,6 @@ function drawHorse(h) {
 	
 	
 	
-	/* angoli galoppo — fasi del vero galoppo */
-    var FL = Math.sin(t);                    // ant vicina
-    var FR = Math.sin(t + Math.PI * 0.9);    // ant lontana (leggermente sfasata)
-    var BL = Math.sin(t + Math.PI * 0.5);    // post vicina
-    var BR = Math.sin(t + Math.PI * 1.4);    // post lontana
-
-    /* gamba lontana posteriore */
-    drawLeg(ctx, -38, 20, BL, shadeColor(bodyColor, -25), hoofColor, true);
-    /* gamba lontana anteriore */
-    drawLeg(ctx,  38, 18, FR, shadeColor(bodyColor, -25), hoofColor, false);
     /* gamba vicina posteriore */
     drawLeg(ctx, -40, 20, BR, bodyColor, hoofColor, true);
     /* gamba vicina anteriore */
@@ -816,8 +840,8 @@ function drawSaddle(ctx, t, h) {
 
 
 function drawLeg(ctx, sx, sy, phase, bodyCol, hoofCol, isBack) {
-    var thighLen = isBack ? 12 : 16;//parte alta della zampa
-    var shinLen  = isBack ? 30 : 26;//parte bassa della zampa
+    var thighLen = isBack ? 14 : 18;//parte alta della zampa
+    var shinLen  = isBack ? 32 : 28;//parte bassa della zampa
     var hoofH    = 7;
 
     var thighAngle, shinAngle;
