@@ -82,7 +82,7 @@ var colors = [
     "#ccaa44",
 	
 	"#ffffaa",
-	"#eeeedd"
+	"#000000"
 ];
 /* mane/tail dark color per ogni colore corpo */
 var maneColors = [
@@ -98,7 +98,7 @@ var maneColors = [
 	"#886600",
 	
 	"#221100",
-	"#663322"
+	"#222222"
 ];
 
 var horseNames = [
@@ -119,35 +119,35 @@ var horseNames = [
     {name:"Antonello da Messina", maxSpeed:0.75, stamina:80},
     {name:"Marco Polo",           maxSpeed:0.85, stamina:85},
 	//ASSO
-	{name:"Lumacone",             maxSpeed:0.70, stamina:90},
-	{name:"Tartaruga",            maxSpeed:0.70, stamina:70},
-	{name:"Impetuoso",            maxSpeed:0.70, stamina:70},
+	{name:"Lumacone",             maxSpeed:0.65, stamina:90},
+	{name:"Tartaruga",            maxSpeed:0.65, stamina:90},
+	{name:"Impetuoso",            maxSpeed:0.75, stamina:70},
 	{name:"Ermellino",            maxSpeed:0.70, stamina:70},
-	{name:"Corsaro",              maxSpeed:0.70, stamina:70},
-	{name:"Hannover",             maxSpeed:0.70, stamina:70},
+	{name:"Corsaro",              maxSpeed:0.75, stamina:70},
+	{name:"Hannover",             maxSpeed:0.75, stamina:70},
 	{name:"Sinclair",             maxSpeed:0.70, stamina:70},
 	//ALTRI
-	{name:"Eclisse",	          maxSpeed:0.70, stamina:90},
-	{name:"Robin Hood",           maxSpeed:0.70, stamina:70},
-    {name:"Maria Antonietta",     maxSpeed:0.70, stamina:70},
-    {name:"Royal Flash",          maxSpeed:0.70, stamina:70},
-    {name:"Bingo Bongo",          maxSpeed:0.70, stamina:70},
-    {name:"Jolly Blue",           maxSpeed:0.70, stamina:70},
-    {name:"Charlotte",            maxSpeed:0.70, stamina:70},
-    {name:"O Sole Mio",           maxSpeed:0.70, stamina:70},
-    {name:"Furfante",             maxSpeed:0.70, stamina:70},
-    {name:"Caligola",             maxSpeed:0.70, stamina:70},
-    {name:"Brigantello",          maxSpeed:0.70, stamina:70},
-    {name:"Paganini",             maxSpeed:0.70, stamina:70},
-    {name:"Pendolino",            maxSpeed:0.70, stamina:70},
-    {name:"Arma Letale",          maxSpeed:0.70, stamina:70},
-    {name:"Cleopatra",            maxSpeed:0.70, stamina:70},
-    {name:"Rombo di Tuono",       maxSpeed:0.70, stamina:70},
-    {name:"Lucifero",             maxSpeed:0.70, stamina:70},
-	{name:"Pelandrone",           maxSpeed:0.70, stamina:70},
-	{name:"Lolita", 	          maxSpeed:0.70, stamina:70},
-	{name:"Gianduiotto",          maxSpeed:0.70, stamina:70},
-	{name:"Clarabella", 	      maxSpeed:0.70, stamina:70},
+	{name:"Eclisse",	          maxSpeed:0.70, stamina:80},
+	{name:"Robin Hood",           maxSpeed:0.70, stamina:80},
+    {name:"Maria Antonietta",     maxSpeed:0.70, stamina:80},
+    {name:"Royal Flash",          maxSpeed:0.70, stamina:80},
+    {name:"Bingo Bongo",          maxSpeed:0.70, stamina:80},
+    {name:"Jolly Blue",           maxSpeed:0.70, stamina:80},
+    {name:"Charlotte",            maxSpeed:0.70, stamina:80},
+    {name:"O Sole Mio",           maxSpeed:0.70, stamina:80},
+    {name:"Furfante",             maxSpeed:0.70, stamina:80},
+    {name:"Caligola",             maxSpeed:0.70, stamina:80},
+    {name:"Brigantello",          maxSpeed:0.70, stamina:80},
+    {name:"Paganini",             maxSpeed:0.70, stamina:80},
+    {name:"Pendolino",            maxSpeed:0.70, stamina:80},
+    {name:"Arma Letale",          maxSpeed:0.70, stamina:80},
+    {name:"Cleopatra",            maxSpeed:0.70, stamina:80},
+    {name:"Rombo di Tuono",       maxSpeed:0.70, stamina:80},
+    {name:"Lucifero",             maxSpeed:0.70, stamina:80},
+	{name:"Pelandrone",           maxSpeed:0.70, stamina:80},
+	{name:"Lolita", 	          maxSpeed:0.70, stamina:80},
+	{name:"Gianduiotto",          maxSpeed:0.70, stamina:80},
+	{name:"Clarabella", 	      maxSpeed:0.70, stamina:80},
 ];
 
 function initDirtParticles() {
@@ -196,6 +196,9 @@ function createRace() {
         if (horses.some(h => h.name === rndHorse.name)) { i--; continue; }
         var id = getHorseNumber(rndHorse.name);
         var colIdx = getColorIndex(rndHorse.name);
+		var jColor = "hsl(" + Math.floor(Math.random()*360) + ","
+							+(Math.floor(80+Math.random()*20)) + "%,"
+							+(Math.floor(50+Math.random()*20)) + "%)";//col, saturation, lightness
 		
         horses.push({
             name: rndHorse.name,
@@ -211,7 +214,7 @@ function createRace() {
             anim: Math.random() * Math.PI * 2,
             color: colors[colIdx],
             maneColor: maneColors[colIdx],
-            jockeyColor: "hsl(" + Math.floor(Math.random()*360) + ",80%,50%)"//fantino
+            jockeyColor: jColor//fantino
         });
     }
     drawTrack();
@@ -290,8 +293,11 @@ function loop() {
     requestAnimationFrame(loop);
 }
 
+
+//CONFETTI == CORIANDOLI
 var confetti = [];
 var showConfetti = false;
+
 function spawnConfetti(x, y) {
     for (let i = 0; i < 200; i++) {
         confetti.push({
@@ -305,6 +311,7 @@ function spawnConfetti(x, y) {
     }
     showConfetti = true;
 }
+
 function updateAndDrawConfetti() {
     if (!showConfetti) return;
     for (let i = 0; i < confetti.length; i++) {
@@ -343,12 +350,14 @@ function updateHorses() {
         if (raceProgress > 0.80 && h.stamina < 10) h.speed *= 0.90;
         else if (raceProgress > 0.50 && h.stamina < 20) h.speed *= 0.95;
         if (h.speed < 0.2) h.speed = 0.2;
-        h.x += h.speed;
-        h.anim += h.speed * 0.35;
-		
+        
 		//azzoppato!
 		if (!h.injured && Math.random() < 0.0001) h.injured = true;
-		if (h.injured) h.speed = 0.1;
+		if (h.injured) { h.speed = 0.1; h.stamina = 10; }
+		
+		h.x += h.speed;
+        //h.anim += h.speed * 0.35;
+		h.anim += Math.max(h.speed, 0.6) * 0.35;
     }
 }
 
@@ -386,14 +395,14 @@ function drawTrack() {
     trackOffset +=  avgSpeed / horses.length;
 	
 	//crea nuove particles
-    for (let i = 0; i < 8; i++) {
-        dirtParticles.push({
+    for (let i = 0; i < 8 && dirtParticles.length < 1000; i++) {
+		dirtParticles.push({
             x: canvas.width,
             y: 3 + GRASS_HEIGHT + (Math.random() * (canvas.height - GRASS_HEIGHT * 2 - 6)),
             size: Math.random() * 2 + 1
         });
     }	
-	for (let i = 0; i < 4; i++) {
+	for (let i = 0; i < 4 && grassParticles.length < 1000; i++) {
 		grassParticles.push({
             x: canvas.width,
             y: 3 + (Math.random() * (GRASS_HEIGHT - 6)),
@@ -448,7 +457,7 @@ function drawTrack() {
         let ry = GRASS_HEIGHT + LANE_HEIGHT * horses[i].lane + LANE_HEIGHT / 2;
         ctx.font = "9px Arial";
 		ctx.fillStyle = horses[i].injured ? '#f00' : '#000';
-		ctx.fillText(horses[i].name, rx, ry);
+		ctx.fillText(horses[i].name + (i === selectedBetLane ? ' 💰':''), rx, ry);
 		
 		ctx.font = "7px Arial";
 		ctx.fillStyle = '#fff';
@@ -507,7 +516,8 @@ function drawHorse(h) {
     ctx.scale(S, S);
 
     /* bounce verticale del galoppo */
-    var bounce = Math.sin(t * 2) * 3;
+    //var bounce = Math.sin(t * 2) * 3;
+	var bounce = Math.sin(t * 2) * (h.speed * 3);//dipende dalla velocita: 1==bounce 3 circa, 0==bounce 0 circa
     ctx.translate(0, bounce);
 	
 	if(h.injured) {
@@ -616,50 +626,32 @@ function drawHorse(h) {
 	ctx.fillStyle = "#c08080";
 	ctx.beginPath(); ctx.moveTo(84,-54); ctx.lineTo(81,-64); ctx.lineTo(88,-59); ctx.closePath(); ctx.fill();
 	
-    //CODA
-	var tailSwing = Math.sin(t * 1.5) * 8;
-	var tailSwing2 = Math.sin(t * 1.5 + 0.8) * 6;
-	var tailSwing3 = Math.sin(t * 1.5 + 1.6) * 4;
-	ctx.fillStyle = maneColor;
 
-	//principale
-	ctx.beginPath();
-	ctx.moveTo(-62, -8);
-	ctx.bezierCurveTo(-68-windX, 5 + tailSwing,  -80-windX, 20 + tailSwing, -72-windX, 40 + tailSwing);
-	ctx.bezierCurveTo(-70-windX, 44 + tailSwing, -67-windX, 42 + tailSwing, -66-windX, 38 + tailSwing);
-	ctx.bezierCurveTo(-72-windX, 18 + tailSwing, -62-windX, 4 + tailSwing,  -58-windX, -6);
-	ctx.closePath();
-	ctx.fill();
-
-	//sx
-	ctx.beginPath();
-	ctx.moveTo(-64, -4);
-	ctx.bezierCurveTo(-76-windX, 8 + tailSwing2,  -88-windX, 22 + tailSwing2, -78-windX, 44 + tailSwing2);
-	ctx.bezierCurveTo(-76-windX, 48 + tailSwing2, -73-windX, 46 + tailSwing2, -72-windX, 42 + tailSwing2);
-	ctx.bezierCurveTo(-80-windX, 22 + tailSwing2, -70-windX, 8 + tailSwing2,  -60-windX, -2);
-	ctx.closePath();
-	ctx.fill();
-
-	//dx corta
-	ctx.beginPath();
-	ctx.moveTo(-60, -6);
-	ctx.bezierCurveTo(-64-windX, 6 + tailSwing3,  -70-windX, 18 + tailSwing3, -62-windX, 32 + tailSwing3);
-	ctx.bezierCurveTo(-60-windX, 36 + tailSwing3, -57-windX, 34 + tailSwing3, -57-windX, 30 + tailSwing3);
-	ctx.bezierCurveTo(-63-windX, 18 + tailSwing3, -58-windX, 6 + tailSwing3,  -56-windX, -4);
-	ctx.closePath();
-	ctx.fill();
+	//CODA
+    var tailSwing = Math.sin(t * 1.5) * 4 * Math.min(h.speed * 0.8, 1);
+	var tailSwing1 = tailSwing*0.25;
+	var tailSwing2 = tailSwing*0.5;
+	var tailSwing3 = tailSwing*0.75;
+    ctx.fillStyle = maneColor;
+    ctx.beginPath();
+    ctx.moveTo(-55, -12);
+    ctx.bezierCurveTo(-68,-20+tailSwing1, -73,-18+tailSwing1, -84,-13+tailSwing1); // bordo superiore
+    ctx.bezierCurveTo(-94,-17+tailSwing2, -93,-6+tailSwing2, -108,-6+tailSwing2); // bordo superiore
+    ctx.bezierCurveTo(-105,-7+tailSwing3, -89,-2+tailSwing3, -120,1+tailSwing3); // bordo superiore -> punta
+    ctx.bezierCurveTo(-106,3+tailSwing, -105,8+tailSwing, -93,0+tailSwing); // punta
+    ctx.bezierCurveTo(-103,14+tailSwing3, -94,2+tailSwing3, -86,3+tailSwing3); // bordo inferiore
+    ctx.bezierCurveTo(-89,-8+tailSwing2, -68,1+tailSwing2, -64,-5+tailSwing2); // bordo inferiore
+    ctx.bezierCurveTo(-74,-11+tailSwing1, -64,-8+tailSwing1, -57,-10); // bordo inferiore
+    ctx.closePath();
+    ctx.fill();
 	
-    /* -------------------------------------------------------
-       GAMBE — galoppo a 4 tempi
-       Le 4 gambe: FL front-left(vicina), FR front-right(lontana)
-                   BL back-left(vicina),  BR back-right(lontana)
-       "lontane" = più scure, disegnate prima
-    ------------------------------------------------------- */
-    /* angoli galoppo */
-	var FL = Math.sin(t);
-	var FR = Math.sin(t + Math.PI);
-	var BL = Math.sin(t + Math.PI/2);
-	var BR = Math.sin(t + 3*Math.PI/2);
+	
+	
+	/* angoli galoppo — fasi del vero galoppo */
+    var FL = Math.sin(t);                    // ant vicina
+    var FR = Math.sin(t + Math.PI * 0.9);    // ant lontana (leggermente sfasata)
+    var BL = Math.sin(t + Math.PI * 0.5);    // post vicina
+    var BR = Math.sin(t + Math.PI * 1.4);    // post lontana
 
     /* gamba lontana posteriore */
     drawLeg(ctx, -38, 20, BL, shadeColor(bodyColor, -25), hoofColor, true);
@@ -669,6 +661,9 @@ function drawHorse(h) {
     drawLeg(ctx, -40, 20, BR, bodyColor, hoofColor, true);
     /* gamba vicina anteriore */
     drawLeg(ctx,  46, 18, FL, bodyColor, hoofColor, false);
+	
+	
+	
 
     ctx.shadowBlur = 0;
 
@@ -816,11 +811,70 @@ function drawSaddle(ctx, t, h) {
     ctx.restore();
 }
 
+
+
+function drawLeg(ctx, sx, sy, phase, bodyCol, hoofCol, isBack) {
+    var thighLen = isBack ? 12 : 16;//parte alta della zampa
+    var shinLen  = isBack ? 30 : 26;//parte bassa della zampa
+    var hoofH    = 7;
+
+    var thighAngle, shinAngle;
+
+    if (!isBack) {
+        // ANTERIORE: si estende in avanti (acchiappa), poi tira indietro sotto il corpo
+        // phase va da -1 a +1
+        // avanti = angolo negativo (verso muso), indietro = positivo
+        thighAngle = -phase * 0.4;          // la coscia batte avanti/indietro
+        // il ginocchio si piega nella fase di raccolta (phase < 0 = gamba in aria avanti)
+        var kneeBend = Math.max(0, -phase) * 0.5;
+        shinAngle = thighAngle + kneeBend;   // stinco piega in avanti quando in aria
+    } else {
+        // POSTERIORE: si raccoglie sotto il corpo (piega), poi spinge indietro
+        // push = phase positivo → gamba estesa indietro
+        thighAngle = phase * 0.4;            // la coscia spinge indietro
+        // il garretto si piega quando la gamba è in raccolta (phase < 0)
+        var hockBend = Math.max(0, -phase) * 0.5;
+        shinAngle = thighAngle - hockBend;   // il garretto piega indietro (verso il corpo)
+    }
+
+    // Punto coscia
+    var tx = sx + Math.sin(thighAngle) * thighLen;
+    var ty = sy + Math.cos(thighAngle) * thighLen;
+
+    // Punto zoccolo
+    var kx = tx + Math.sin(shinAngle) * shinLen;
+    var ky = ty + Math.cos(shinAngle) * shinLen;
+
+    /* coscia */
+    ctx.strokeStyle = bodyCol;
+    ctx.lineWidth = isBack ? 12 : 8;
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.moveTo(sx, sy);
+    ctx.lineTo(tx, ty);
+    ctx.stroke();
+
+    /* stinco */
+    ctx.lineWidth = isBack ? 5 : 4;
+    ctx.beginPath();
+    ctx.moveTo(tx, ty);
+    ctx.lineTo(kx, ky);
+    ctx.stroke();
+
+    /* zoccolo */
+    ctx.fillStyle = hoofCol;
+    ctx.beginPath();
+    ctx.ellipse(kx, ky + hoofH * 0.5, 4, hoofH * 0.5, 0, 0, Math.PI * 2);
+    ctx.fill();
+}
+
+
+
 /* -------------------------------------------------------
    GAMBA: anca → ginocchio → stinco → zoccolo
    isBack: posteriore (angolazione diversa)
 ------------------------------------------------------- */
-function drawLeg(ctx, sx, sy, phase, bodyCol, hoofCol, isBack) {
+function drawLegOLD(ctx, sx, sy, phase, bodyCol, hoofCol, isBack) {
     var liftAngle  = phase * 0.7;          /* oscillazione coscia */
     var kneeAngle  = Math.abs(phase) * 0.7; /* piega ginocchio */
 

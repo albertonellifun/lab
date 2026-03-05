@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>TAIL EDITOR</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+    background: #1a1a1a;
+    color: #eee;
+    font-family: monospace;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 16px;
+    gap: 12px;
+}
+h2 { color: #f0c060; letter-spacing: 2px; font-size: 14px; }
+#canvasWrap {
+    position: relative;
+    border: 2px solid #444;
+    background: #2a2a2a;
+    cursor: crosshair;
+}
+canvas { display: block; }
+#output {
+    width: 900px;
+    background: #111;
+    border: 1px solid #333;
+    padding: 10px;
+    font-size: 11px;
+    color: #7ef07e;
+    white-space: pre;
+    line-height: 1.6;
+    border-radius: 4px;
+}
+#controls {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+button {
+    background: #333;
+    color: #eee;
+    border: 1px solid #555;
+    padding: 5px 12px;
+    cursor: pointer;
+    font-family: monospace;
+    font-size: 12px;
+    border-radius: 3px;
+}
+button:hover { background: #444; }
+button.active { background: #614; border-color: #f06; color: #f99; }
+label { font-size: 12px; color: #aaa; }
+select {
+    background: #333; color: #eee; border: 1px solid #555;
+    padding: 4px 8px; font-family: monospace; font-size: 12px;
+    border-radius: 3px;
+}
+#hint { font-size: 11px; color: #666; }
+</style>
+</head>
+<body>
+<h2>🐴 TAIL PATH EDITOR — zoom 4×</h2>
+
+<div id="controls">
+    <button onclick="resetPoints()">↺ Reset</button>
+    <button id="toggleGuide" class="active" onclick="toggleGuide()">👁 Corpo cavallo</button>
+    <button onclick="toggleHandles()">⬡ Handles ON/OFF</button>
+    <label>Selezionato: <select id="pointSelect" onchange="selectFromDropdown()"></select></label>
+    <button onclick="copyOutput()">📋 Copia codice</button>
+</div>
+
+<div id="canvasWrap">
+    <canvas id="c" width="900" height="500"></canvas>
+</div>
+
+<div id="hint">
+    🖱 Trascina i punti — <b style="color:#f0c060">●</b> anchor &nbsp;|&nbsp; <b style="color:#60c0f0">●</b> control handle &nbsp;|&nbsp; SHIFT+click = aggiungi punto &nbsp;|&nbsp; DEL = rimuovi selezionato
+</div>
+
+<div id="output"></div>
+
+<script>
+const ZOOM = 4;
+const OX = 450; // origin x nel canvas (pixel)
+const OY = 200; // origin y nel canvas (pixel)
+
+// Converti coordinate cavallo → canvas
+function tc(x, y) { return [OX + x * ZOOM, OY + y * ZOOM]; }
+// Converti canvas → coordinate cavallo
+function fc(px, py) { return [(px - OX) / ZOOM, (py - OY) / ZOOM]; }
+
+// Struttura path: array di segmenti
+// Ogni segmento: { cp1: {x,y}, cp2: {x,y}, anchor: {x,y} }
+// Il moveTo è il primo punto separato
+let startPoint = { x: -56, y: -14 };
+
+let segments = [
+    { cp1: {x:-68, y:-20}, cp2: {x:-74, y:-16}, anchor: {x:-76, y:-12} },
+    { cp1: {x:-80, y:-20}, cp2: {x:-86, y:-18}, anchor: {x:-88, y:-12} },
+    { cp1: {x:-92, y:-20}, cp2: {x:-97, y:-16}, anchor: {x:-100, y:-4} },
+    { cp1: {x:-103, y:2},  cp2: {x:-102, y:6},  anchor: {x:-99, y:8}  },
+    { cp1: {x:-91, y:4},   cp2: {x:-88, y:8},   anchor: {x:-83, y:4}  },
+    { cp1: {x:-77, y:-2},  cp2: {x:-74, y:4},   anchor: {x:-68, y:0}  },
+    { cp1: {x:-62, y:-6},  cp2: {x:-58, y:-10}, anchor: {x:-56, y:-14}},
+];
+
+// Stato UI
+let selected = null; // { segIdx, role } role = 'start'|'anchor'|'cp1'|'cp2'
+let dragging = false;
+let showGuide = true;
+let showHandles = true;
+let dragOffset = { x: 0, y: 0 };
+
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+
+function getPointPos(ref) {
+    if (ref.role === 'start') return startPoint;
+    const seg = segments[ref.segIdx];
+    return seg[ref.role];
+}
+
+function allHandles() {
+    let list = [{ role: 'start', segIdx: -1, label: 'start' }];
+    segments.forEach((seg, i) => {
+        list.push({ role: 'cp1',    segIdx: i, label: `seg${i} cp1`    });
+        list.push({ role: 'cp2',    segIdx: i, label: `seg${i} cp2`    });
+        list.push({ role: 'anchor', segIdx: i, label: `seg${i} anchor` });
+    });
+    return list;
+}
+
+function hitTest(px, py) {
+    const R = 8;
+    const handles = allHandles();
+    for (let h of handles) {
+        const p = h.role === 'start' ? startPoint : segments[h.segIdx][h.role];
+        const [cx2, cy2] = tc(p.x, p.y);
+        if (Math.hypot(px - cx2, py - cy2) < R) return h;
+    }
+    return null;
+}
+
+function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Griglia
+    ctx.strokeStyle = '#2e2e2e';
+    ctx.lineWidth = 1;
+    for (let x = OX % (10*ZOOM); x < canvas.width; x += 10*ZOOM) {
+        ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,canvas.height); ctx.stroke();
+    }
+    for (let y = OY % (10*ZOOM); y < canvas.height; y += 10*ZOOM) {
+        ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(canvas.width,y); ctx.stroke();
+    }
+    // Assi
+    ctx.strokeStyle = '#3a3a3a'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(OX,0); ctx.lineTo(OX,canvas.height); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0,OY); ctx.lineTo(canvas.width,OY); ctx.stroke();
+
+    // Corpo cavallo (guida)
+    if (showGuide) drawHorseGuide();
+
+    // Handles lines
+    if (showHandles) {
+        ctx.strokeStyle = 'rgba(100,150,255,0.3)';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([3,3]);
+        let prev = startPoint;
+        segments.forEach(seg => {
+            const [px,py] = tc(prev.x, prev.y);
+            const [c1x,c1y] = tc(seg.cp1.x, seg.cp1.y);
+            const [ax,ay] = tc(seg.anchor.x, seg.anchor.y);
+            const [c2x,c2y] = tc(seg.cp2.x, seg.cp2.y);
+            ctx.beginPath(); ctx.moveTo(px,py); ctx.lineTo(c1x,c1y); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(ax,ay); ctx.lineTo(c2x,c2y); ctx.stroke();
+            prev = seg.anchor;
+        });
+        ctx.setLineDash([]);
+    }
+
+    // Path coda
+    ctx.fillStyle = '#3d2200';
+    ctx.strokeStyle = '#c8860a';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    const [sx,sy] = tc(startPoint.x, startPoint.y);
+    ctx.moveTo(sx, sy);
+    segments.forEach(seg => {
+        const [c1x,c1y] = tc(seg.cp1.x, seg.cp1.y);
+        const [c2x,c2y] = tc(seg.cp2.x, seg.cp2.y);
+        const [ax,ay]   = tc(seg.anchor.x, seg.anchor.y);
+        ctx.bezierCurveTo(c1x,c1y,c2x,c2y,ax,ay);
+    });
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    // Punti
+    if (showHandles) {
+        allHandles().forEach(h => {
+            const p = h.role === 'start' ? startPoint : segments[h.segIdx][h.role];
+            const [px,py] = tc(p.x, p.y);
+            const isAnchor = h.role === 'anchor' || h.role === 'start';
+            const isSel = selected && selected.role === h.role && selected.segIdx === h.segIdx;
+
+            ctx.beginPath();
+            if (isAnchor) {
+                ctx.arc(px, py, 6, 0, Math.PI*2);
+                ctx.fillStyle = isSel ? '#fff' : '#f0c060';
+            } else {
+                ctx.arc(px, py, 4, 0, Math.PI*2);
+                ctx.fillStyle = isSel ? '#fff' : '#60c0f0';
+            }
+            ctx.fill();
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+
+            // Label coords
+            ctx.fillStyle = isSel ? '#fff' : '#888';
+            ctx.font = '9px monospace';
+            ctx.fillText(`${p.x.toFixed(0)},${p.y.toFixed(0)}`, px+7, py-4);
+        });
+    }
+
+    updateOutput();
+    updateDropdown();
+}
+
+function drawHorseGuide() {
+    ctx.save();
+    ctx.globalAlpha = 0.25;
+    ctx.fillStyle = '#996633';
+
+    // Corpo semplificato
+    ctx.beginPath();
+    const pts = [
+        [-58,-8], [-47,-39], [1,-10], [40,-29],
+        [60,-18], [62,-11], [60,0], [62,8], [55,16], [45,18],
+        [16,15], [-20,29], [-55,16], [-60,10], [-62,2]
+    ];
+    const [fx,fy] = tc(pts[0][0], pts[0][1]);
+    ctx.moveTo(fx,fy);
+    ctx.bezierCurveTo(...tc(-47,-39), ...tc(1,-10), ...tc(40,-29));
+    ctx.bezierCurveTo(...tc(60,-18), ...tc(62,-11), ...tc(60,0));
+    ctx.bezierCurveTo(...tc(62,8), ...tc(55,16), ...tc(45,18));
+    ctx.bezierCurveTo(...tc(16,15), ...tc(-20,29), ...tc(-55,16));
+    ctx.bezierCurveTo(...tc(-60,10), ...tc(-62,2), ...tc(-58,-8));
+    ctx.closePath();
+    ctx.fill();
+
+    // Punto attacco coda
+    ctx.globalAlpha = 0.7;
+    ctx.fillStyle = '#f06060';
+    ctx.beginPath();
+    ctx.arc(...tc(-56,-14), 5, 0, Math.PI*2);
+    ctx.fill();
+
+    ctx.restore();
+}
+
+function updateOutput() {
+    let lines = [];
+    lines.push('//CODA');
+    lines.push('var tailSwing = Math.sin(t * 1.5) * 4 * Math.min(h.speed * 0.8, 1);');
+    lines.push('ctx.fillStyle = maneColor;');
+    lines.push('ctx.beginPath();');
+    lines.push(`ctx.moveTo(${startPoint.x}, ${startPoint.y});`);
+    segments.forEach((seg, i) => {
+        const label = i === 3 ? '// punta' : i < 3 ? '// bordo superiore' : '// bordo inferiore';
+        lines.push(`ctx.bezierCurveTo(${seg.cp1.x},${seg.cp1.y}, ${seg.cp2.x},${seg.cp2.y}, ${seg.anchor.x},${seg.anchor.y}); ${label}`);
+    });
+    lines.push('ctx.closePath();');
+    lines.push('ctx.fill();');
+    document.getElementById('output').textContent = lines.join('\n');
+}
+
+function updateDropdown() {
+    const sel = document.getElementById('pointSelect');
+    const prev = sel.value;
+    sel.innerHTML = '';
+    allHandles().forEach((h,i) => {
+        const p = h.role === 'start' ? startPoint : segments[h.segIdx][h.role];
+        const opt = document.createElement('option');
+        opt.value = i;
+        opt.textContent = `${h.label}: (${p.x.toFixed(0)}, ${p.y.toFixed(0)})`;
+        sel.appendChild(opt);
+    });
+    sel.value = prev;
+}
+
+function selectFromDropdown() {
+    const idx = parseInt(document.getElementById('pointSelect').value);
+    selected = allHandles()[idx];
+    draw();
+}
+
+// Mouse events
+canvas.addEventListener('mousedown', e => {
+    const rect = canvas.getBoundingClientRect();
+    const px = e.clientX - rect.left;
+    const py = e.clientY - rect.top;
+    const hit = hitTest(px, py);
+    if (hit) {
+        selected = hit;
+        dragging = true;
+        const p = hit.role === 'start' ? startPoint : segments[hit.segIdx][hit.role];
+        const [cx2,cy2] = tc(p.x, p.y);
+        dragOffset = { x: px - cx2, y: py - cy2 };
+        draw();
+    }
+});
+
+canvas.addEventListener('mousemove', e => {
+    if (!dragging || !selected) return;
+    const rect = canvas.getBoundingClientRect();
+    const px = e.clientX - rect.left - dragOffset.x;
+    const py = e.clientY - rect.top  - dragOffset.y;
+    const [nx, ny] = fc(px, py);
+    const rounded = { x: Math.round(nx), y: Math.round(ny) };
+    if (selected.role === 'start') {
+        startPoint.x = rounded.x; startPoint.y = rounded.y;
+    } else {
+        segments[selected.segIdx][selected.role] = rounded;
+    }
+    draw();
+});
+
+canvas.addEventListener('mouseup', () => { dragging = false; });
+canvas.addEventListener('mouseleave', () => { dragging = false; });
+
+// Keyboard
+document.addEventListener('keydown', e => {
+    if (!selected) return;
+    const step = e.shiftKey ? 5 : 1;
+    const p = selected.role === 'start' ? startPoint : segments[selected.segIdx][selected.role];
+    if (e.key === 'ArrowLeft')  { p.x -= step; draw(); e.preventDefault(); }
+    if (e.key === 'ArrowRight') { p.x += step; draw(); e.preventDefault(); }
+    if (e.key === 'ArrowUp')    { p.y -= step; draw(); e.preventDefault(); }
+    if (e.key === 'ArrowDown')  { p.y += step; draw(); e.preventDefault(); }
+});
+
+function resetPoints() {
+    startPoint = { x: -56, y: -14 };
+    segments = [
+        { cp1: {x:-68, y:-20}, cp2: {x:-74, y:-16}, anchor: {x:-76, y:-12} },
+        { cp1: {x:-80, y:-20}, cp2: {x:-86, y:-18}, anchor: {x:-88, y:-12} },
+        { cp1: {x:-92, y:-20}, cp2: {x:-97, y:-16}, anchor: {x:-100, y:-4} },
+        { cp1: {x:-103, y:2},  cp2: {x:-102, y:6},  anchor: {x:-99, y:8}  },
+        { cp1: {x:-91, y:4},   cp2: {x:-88, y:8},   anchor: {x:-83, y:4}  },
+        { cp1: {x:-77, y:-2},  cp2: {x:-74, y:4},   anchor: {x:-68, y:0}  },
+        { cp1: {x:-62, y:-6},  cp2: {x:-58, y:-10}, anchor: {x:-56, y:-14}},
+    ];
+    selected = null;
+    draw();
+}
+
+function toggleGuide() {
+    showGuide = !showGuide;
+    document.getElementById('toggleGuide').classList.toggle('active', showGuide);
+    draw();
+}
+
+function toggleHandles() { showHandles = !showHandles; draw(); }
+
+function copyOutput() {
+    navigator.clipboard.writeText(document.getElementById('output').textContent);
+}
+
+draw();
+</script>
+</body>
+</html>
