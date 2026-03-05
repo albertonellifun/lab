@@ -49,8 +49,10 @@ button{
 <h1>🏇🐎 FEBBRE DA CAVALLO 🏇🐎<span id="timer"></span></h1>
 <canvas id="game" width="1000" height="400"></canvas>
 <div id="controls">
+	<button onclick="center=!center">👁️</button>
+	<button onclick="mute=!mute">🔊</button>
 	<span id="bets"></span>
-	<button id="startRace" onclick="startRace()" disabled>🐎 VAIII!!!</button>
+	<button id="startRace" onclick="startRace()" disabled>🐎 VAI! 🧲</button>
 	<span id="ui">VITE:<span id="lives">💰💰💰💰💰</span></span>
 
 	<span id="laneCount">CORSIE: 4</span>
@@ -62,9 +64,11 @@ var canvas = document.getElementById("game");
 var ctx = canvas.getContext("2d");
 
 var lanes = 4;
+var center = false;//schiaccia i cavalli verso il centro
+var mute = true;
 
 var finishX = 900;
-var GRASS_HEIGHT = 10 + 80/lanes;
+var GRASS_HEIGHT = 10 + 80 / lanes;
 var LANE_HEIGHT = (canvas.height - (2 * GRASS_HEIGHT)) / lanes;
 
 var raceTime = 0;
@@ -186,6 +190,7 @@ function initDirtParticles() {
 function updateLaneGeometry() {
     GRASS_HEIGHT = 10 + 80 / lanes;
     LANE_HEIGHT = (canvas.height - (2 * GRASS_HEIGHT)) / lanes;
+	console.log('GRASS='+GRASS_HEIGHT+' LANE='+LANE_HEIGHT+ ' CANVAS='+canvas.height);
 	initDirtParticles();
 }
 
@@ -399,14 +404,15 @@ function drawTrack() {
     ctx.fillStyle = "#caa472";
 	var dirtGrad = ctx.createLinearGradient(0, GRASS_HEIGHT, 0, canvas.height - GRASS_HEIGHT);
 	dirtGrad.addColorStop(0, "#9a7040");
-	dirtGrad.addColorStop(0.5, "#ba9462");
+	dirtGrad.addColorStop(0.5, "#aa8050");
 	dirtGrad.addColorStop(1, "#9a7040");
 	ctx.fillStyle = dirtGrad;
 	ctx.fillRect(0, GRASS_HEIGHT, canvas.width, canvas.height - GRASS_HEIGHT * 2);//terra marrone
 	
     var avgSpeed = 0;
     for (var i = 0; i < horses.length; i++) avgSpeed += horses[i].speed;
-    trackOffset +=  avgSpeed / horses.length;
+	avgSpeed /= horses.length;
+	trackOffset +=  avgSpeed;
 	
 	//crea nuove particles
     for (let i = 0; i < 8 && dirtParticles.length < 1000; i++) {
@@ -428,7 +434,7 @@ function drawTrack() {
     for (let i = 0; i < dirtParticles.length; i++) {
         let p = dirtParticles[i];
         p.x -= avgSpeed * 2;
-        ctx.fillStyle = "#b89560";
+        ctx.fillStyle = "#ba9060";
         ctx.fillRect(p.x, p.y, p.size, p.size);
     }
 	for (let i = 0; i < grassParticles.length; i++) {
@@ -444,17 +450,19 @@ function drawTrack() {
 	grassParticles = grassParticles.filter(p => p.x > 0);
 	
     //corsie tratteggiate
-	ctx.strokeStyle = "rgba(255,255,255,0.3)";
-	ctx.lineDashOffset = -trackOffset;
-	ctx.setLineDash([8, 12]);
-    for (var i = 1; i < lanes; i++) {
-		ctx.beginPath();
-        ctx.moveTo(0, GRASS_HEIGHT + i * LANE_HEIGHT);
-        ctx.lineTo(canvas.width, GRASS_HEIGHT + i * LANE_HEIGHT);
-        ctx.stroke();
-    }
-    ctx.setLineDash([]);
-    ctx.lineDashOffset = 0;
+	if (!center) {
+		ctx.strokeStyle = "rgba(255,255,255,0.3)";
+		ctx.lineDashOffset = -trackOffset;
+		ctx.setLineDash([8, 12]);
+		for (var i = 1; i < lanes; i++) {
+			ctx.beginPath();
+			ctx.moveTo(0, GRASS_HEIGHT + i * LANE_HEIGHT);
+			ctx.lineTo(canvas.width, GRASS_HEIGHT + i * LANE_HEIGHT);
+			ctx.stroke();
+		}
+		ctx.setLineDash([]);
+		ctx.lineDashOffset = 0;
+	}
 	
 	//traguardo a scacchi
     let tile = 5;
@@ -519,15 +527,21 @@ function drawHorse(h) {
     var t = h.anim;
 
     /* scala per stare nella corsia (alt corsia ~70px, cavallo ~55px alto) */
-    var S = 3/horses.length;//1c = 2..3, 2c = 1..1.5, 4c = 0.7, 6c = 0.5
+    var HORSE_SCALE = 3/horses.length;//1c = 2..3, 2c = 1..1.5, 4c = 0.7, 6c = 0.5
 	
-	var cx = h.x - 60*S;
-    var cy = LANE_HEIGHT * h.lane + LANE_HEIGHT / 2 + GRASS_HEIGHT/2;//un po in alto
+	var cx = h.x - 60*HORSE_SCALE;//spostato a sinistra, non centrato su X (MUSO!!!)
+    var cy = LANE_HEIGHT * h.lane + LANE_HEIGHT / 2 + GRASS_HEIGHT/3;//un po in alto
+	
+	if (center) {
+		var trackCenter = GRASS_HEIGHT + (canvas.height - 2*GRASS_HEIGHT) / 2;
+		var normalCy = LANE_HEIGHT * h.lane + LANE_HEIGHT / 2 + GRASS_HEIGHT/3;
+		cy = trackCenter + (normalCy - trackCenter) * 0.8;
+	}
 
 	
     ctx.save();
     ctx.translate(cx, cy);
-    ctx.scale(S, S);
+    ctx.scale(HORSE_SCALE, HORSE_SCALE);
 
     /* bounce verticale del galoppo */
 	var bounce = Math.sin(t * 2) * (h.speed * 3);//dipende dalla velocita: 1==bounce 3 circa, 0==bounce 0 circa
@@ -824,6 +838,8 @@ function drawLeg(ctx, sx, sy, phase, bodyCol, hoofCol, isBack) {
         var hockBend = Math.max(0, -phase) * 0.5;
         shinAngle = thighAngle - hockBend;   // il garretto piega indietro (verso il corpo)
     }
+	
+	if (!mute && Math.abs(shinAngle) < 0.05) playHoofBeat(audioCtx);
 
     // Punto coscia
     var tx = sx + Math.sin(thighAngle) * thighLen;
@@ -1009,6 +1025,40 @@ function shadeColor(col, amt) {
     var b = Math.min(255, Math.max(0, (num & 0xff) + amt));
     return (usePound ? "#" : "") +
         ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+}
+
+
+//SOUND-ON
+var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+function playHoofBeat(audioCtx) {
+    var t = audioCtx.currentTime;
+
+    // Rumore impatto (basso e sordo)
+    var bufferSize = audioCtx.sampleRate * 0.15;
+    var buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+    var data = buffer.getChannelData(0);
+    for (var i = 0; i < bufferSize; i++) {
+        data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / bufferSize, 3);
+    }
+    var noise = audioCtx.createBufferSource();
+    noise.buffer = buffer;
+
+    // Filtro passa-basso: suono sordo/terroso
+    var filter = audioCtx.createBiquadFilter();
+    filter.type = "lowpass";
+    filter.frequency.setValueAtTime(300, t);
+    filter.frequency.exponentialRampToValueAtTime(80, t + 0.12);
+
+    // Inviluppo volume: attacco rapido, decay breve
+    var gain = audioCtx.createGain();
+    gain.gain.setValueAtTime(0.8, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
+
+    noise.connect(filter);
+    filter.connect(gain);
+    gain.connect(audioCtx.destination);
+    noise.start(t);
+    noise.stop(t + 0.15);
 }
 
 updateLaneGeometry();
