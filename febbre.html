@@ -51,8 +51,9 @@ button{
 <div id="controls">
 	<button onclick="changeCenter()">👁️</button>
 	<button onclick="mute=!mute">🔊</button>
+	<button onclick="changeStats()">🐴</button>
 	<span id="bets"></span>
-	<button id="startRace" onclick="startRace()" disabled>🐎 VAI! 🧲</button>
+	<button id="startRace" onclick="startRace()" disabled>🍀 VAI! 🧲</button>
 	<span id="ui">VITE:<span id="lives">💰💰💰💰💰</span></span>
 
 	<span id="laneCount">CORSIE: 4</span>
@@ -66,6 +67,7 @@ var ctx = canvas.getContext("2d");
 var lanes = 4;
 var center = false;//schiaccia i cavalli verso il centro
 var mute = true;
+var stats = 1;
 
 var finishX = 900;
 var GRASS_HEIGHT = 10 + 80 / lanes;
@@ -141,7 +143,7 @@ var horseNames = [
     {name:"Royal Flash",          maxSpeed:0.70, stamina:80},
     {name:"Bingo Bongo",          maxSpeed:0.70, stamina:80},
     {name:"Jolly Blue",           maxSpeed:0.70, stamina:80},
-    {name:"Charlotte",            maxSpeed:0.70, stamina:80},
+    {name:"Tornado",	          maxSpeed:0.70, stamina:80},
     {name:"O Sole Mio",           maxSpeed:0.70, stamina:80},
     {name:"Furfante",             maxSpeed:0.70, stamina:80},
     {name:"Caligola",             maxSpeed:0.70, stamina:80},
@@ -154,8 +156,15 @@ var horseNames = [
     {name:"Lucifero",             maxSpeed:0.70, stamina:80},
 	{name:"Pelandrone",           maxSpeed:0.70, stamina:80},
 	{name:"Lolita", 	          maxSpeed:0.70, stamina:80},
-	{name:"Gianduiotto",          maxSpeed:0.70, stamina:80},
-	{name:"Clarabella", 	      maxSpeed:0.70, stamina:80},
+	{name:"Nitro",		          maxSpeed:0.70, stamina:80},
+	{name:"Superpippo", 	      maxSpeed:0.70, stamina:80},
+	{name:"Grande Puffo", 	      maxSpeed:0.70, stamina:80},
+	{name:"Mascalzone", 	      maxSpeed:0.70, stamina:80},
+	{name:"Trinità", 	          maxSpeed:0.70, stamina:80},
+	{name:"Cuore Matto", 	      maxSpeed:0.70, stamina:80},
+	{name:"Caffè Borghetti",	  maxSpeed:0.70, stamina:80},
+	{name:"Fortunello", 	      maxSpeed:0.70, stamina:80},
+	{name:"Cavallo Pazzo", 	      maxSpeed:0.70, stamina:80},
 ];
 
 function resizeCanvas() {
@@ -196,13 +205,26 @@ function updateLaneGeometry() {
 	initDirtParticles();
 }
 
+function changeStats() {
+	stats = (stats + 1) % 2;
+	if (!racing) {
+		drawTrack();
+		drawStats();
+		drawHorses();
+	}
+}
+
 function changeCenter() {
-	if (!racing) return;//funziona solo durante la gara
 	center=!center;
 	if (lanes > 3) {
 		HORSE_SCALE = center ? 4.5/lanes : 3/lanes;
 	} else {
 		HORSE_SCALE = center ? 3/lanes : 2.5/lanes;
+	}
+	if (!racing) {
+		drawTrack();
+		drawStats();
+		drawHorses();
 	}
 }
 
@@ -229,7 +251,6 @@ function changeLanes(delta) {
 function createRace() {
     horses = [];
     for (var i = 0; i < lanes; i++) {
-        var prob = Math.random();
         var rndHorse = horseNames[Math.floor(Math.random() * horseNames.length)];
         if (horses.some(h => h.name === rndHorse.name)) { i--; continue; }
         var id = getHorseNumber(rndHorse.name);
@@ -243,9 +264,9 @@ function createRace() {
             id: id,
             x: 20,
             lane: i,
-            maxSpeed: rndHorse.maxSpeed + prob,
+            maxSpeed: rndHorse.maxSpeed + Math.random() * 0.3,
             speed: 0,
-            accel: 0.04 + prob * 0.05,
+            accel: 0.04 + Math.random() * 0.05,
             stamina: rndHorse.stamina + Math.random() * 20,
             staminaDrain: 0.20 + Math.random() * 0.1,
             recovery: 0.05,
@@ -256,6 +277,7 @@ function createRace() {
         });
     }
     drawTrack();
+	drawStats();
     drawHorses();
     createBetButtons();
 }
@@ -315,6 +337,7 @@ function loop() {
     if (!racing) return;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     drawTrack();
+	drawStats();
     updateHorses();
     drawHorses();
     updateAndDrawConfetti();
@@ -373,29 +396,44 @@ function updateHorses() {
         var h = horses[i];
         var raceProgress = h.x / finishX;
         var targetSpeed;
-        if (raceProgress < 0.15)      targetSpeed = h.maxSpeed * 0.9 + Math.random() * 0.3;
-        else if (raceProgress < 0.75) targetSpeed = h.maxSpeed * 0.7;
-        else                          targetSpeed = h.maxSpeed * 1.1;
+        if (raceProgress < 0.15)      targetSpeed = h.maxSpeed * 0.90 + Math.random() * 0.1;//sprint iniziale
+        else if (raceProgress < 0.75) targetSpeed = h.maxSpeed * 0.75;  //era 0.7, parte centrale
+        else                          targetSpeed = h.maxSpeed * 1.05;  //era 1.1, sprint finale
+
         var effort = h.speed / h.maxSpeed;
-        h.stamina -= effort * 0.6;
-        h.stamina += 0.15;
+        h.stamina -= effort * 0.4;   // era 0.6 - diminuito consumo altrimenti stamina sempre verso 0
+        h.stamina += 0.12;           // era 0.15 - ridotto recupero
         if (h.stamina < 0) h.stamina = 0;
         if (h.stamina > 100) h.stamina = 100;
-        var staminaFactor = 0.5 + (h.stamina / 100);
+
+        var staminaFactor = 0.75 + (h.stamina / 100) * 0.5;  // range 0.75–1.25 invece di 0.5–1.5
         targetSpeed *= staminaFactor;
+
         h.speed += (targetSpeed - h.speed) * 0.05;
         h.speed += (Math.random() - 0.5) * 0.15;
+
         if (raceProgress > 0.80 && h.stamina < 10) h.speed *= 0.90;
         else if (raceProgress > 0.50 && h.stamina < 20) h.speed *= 0.95;
+
         if (h.speed < 0.2) h.speed = 0.2;
-        
-		//azzoppato!
-		if (!h.injured && Math.random() < 0.0001) h.injured = true;
-		if (h.injured) { h.speed = 0.1; h.stamina = 10; }
-		
-		h.x += h.speed;
-        //h.anim += h.speed * 0.35;
-		h.anim += Math.max(h.speed, 0.6) * 0.35;
+
+        // azzoppato!
+        if (!h.injured && Math.random() < 0.0001) { h.injured = true; h.devilInside = false; }
+        if (h.injured) { h.speed = 0.1; h.stamina = 10; }
+
+		// indemoniato!
+		if (!h.injured && !h.devilInside && raceProgress > 0.25 && Math.random() < 0.0001) {
+			var pos = horses.slice().sort((a, b) => b.x - a.x).indexOf(h);
+			if (pos>0) {
+				//se non sono primo -> mettici la grinta!
+				h.devilInside = true;
+				h.maxSpeed = Math.max(h.maxSpeed * 1.2, 0.8 + Math.random() * 0.2);//turboooo
+				h.stamina = 100 - raceProgress * 50;//stamina si ricarica in base a quanto manca
+			}
+		}
+
+        h.x += h.speed;
+        h.anim += Math.max(h.speed, 0.6) * 0.35;
     }
 }
 
@@ -409,14 +447,16 @@ let grassParticles = [];
 function drawTrack() {
     ctx.fillStyle = "#2e7d32";
 	var grassGrad = ctx.createLinearGradient(0, 0, 0, GRASS_HEIGHT);
-	grassGrad.addColorStop(0, "#2e7d32");
-	grassGrad.addColorStop(1, "#1a5c1e");	
+	grassGrad.addColorStop(0, "#308030");
+	grassGrad.addColorStop(0.3, "#106010");	
+	grassGrad.addColorStop(1, "#106010");	
 	ctx.fillStyle = grassGrad;
 	ctx.fillRect(0, 0, canvas.width, GRASS_HEIGHT);//erba/siepe sopra
 	
 	grassGrad = ctx.createLinearGradient(0, canvas.height - GRASS_HEIGHT, 0, canvas.height);
-	grassGrad.addColorStop(0, "#1a5c1e");	
-	grassGrad.addColorStop(1, "#2e7d32");
+	grassGrad.addColorStop(0, "#106010");
+	grassGrad.addColorStop(0.7, "#106010");	
+	grassGrad.addColorStop(1, "#308030");
 	ctx.fillStyle = grassGrad;
     ctx.fillRect(0, canvas.height - GRASS_HEIGHT, canvas.width, GRASS_HEIGHT);//erba/siepe sotto
 	
@@ -490,19 +530,24 @@ function drawTrack() {
             ctx.fillStyle = (Math.floor(y/tile) + Math.floor(x/tile)) % 2 === 0 ? "#fff" : "#000";
             ctx.fillRect(finishX + x, y, tile, tile);
         }
-    }
-	
-    let rx = canvas.width - 5;
+    }    
+}
+
+function drawStats() {
+	let rx = canvas.width - 5;
     for (let i = 0; i < horses.length; i++) {
         ctx.textAlign = "right";
         let ry = GRASS_HEIGHT + LANE_HEIGHT * horses[i].lane + LANE_HEIGHT / 2;
         ctx.font = "9px Arial";
-		ctx.fillStyle = horses[i].injured ? '#f00' : '#000';
+		ctx.fillStyle = horses[i].injured ? '#f00' : horses[i].devilInside ? '#ff0' : '#000';
 		ctx.fillText(horses[i].name + (i === selectedBetLane ? ' 💰':''), rx, ry);
 		
-		ctx.font = "7px Arial";
-		ctx.fillStyle = '#fff';
-        ctx.fillText('X='+horses[i].x.toFixed(0)+' SPD=' + horses[i].speed.toFixed(1)+' STAM=' + horses[i].stamina.toFixed(0), rx, ry + 10);
+		if (stats == 1) {
+			ctx.font = "7px Arial";
+			ctx.fillStyle = '#fff';
+			ctx.fillText('X='+horses[i].x.toFixed(0)+' SPD=' + horses[i].speed.toFixed(1), rx, ry + 10);
+			ctx.fillText('STAM=' + horses[i].stamina.toFixed(0)+ ' MAX='+horses[i].maxSpeed.toFixed(1), rx, ry + 18);
+		}
     }
 }
 
@@ -511,6 +556,9 @@ function drawTrack() {
 ===================================================== */
 function finishRace(winner) {
     racing = false;
+	
+	alert("🏆 " + horses[winner].name + " ha VINTO col tempo di " + raceTime.toFixed(1) + " 🏆");
+	
     if (winner === selectedBetLane) {
         lives += (lanes-1);
     } else {
@@ -520,7 +568,6 @@ function finishRace(winner) {
             location.reload();
         }
     }
-	alert("🏆 " + horses[winner].name + " ha VINTO col tempo di " + raceTime.toFixed(1) + " 🏆");
 	
     stopRace = false;
     selectedBetLane = null;
@@ -579,14 +626,32 @@ function drawHorse(h) {
     ctx.scale(HORSE_SCALE, HORSE_SCALE);
 
 	//croce rossa
-	if(h.injured) {
+	if (h.injured) {
 		ctx.fillStyle = '#f00';
-		ctx.fillRect(-20,-90,36,36);//bordo
+		ctx.fillRect(-20, -90, 28, 28); // bordo rosso
 		ctx.fillStyle = '#fff';
-		ctx.fillRect(-18,-88,32,32);//bianco
+		ctx.fillRect(-18, -88, 24, 24); // bianco: da (-18,-88) a (6,-64)
 		ctx.fillStyle = '#f00';
-		ctx.fillRect(-7, -86, 10, 28);//barra verticale
-		ctx.fillRect(-16, -78, 28, 10);//barra orizzontale
+		ctx.fillRect(-9, -86, 6, 20);  // barra verticale: centrata in X=-6, piena altezza
+		ctx.fillRect(-16, -79, 20, 6); // barra orizzontale: piena larghezza, centrata in Y=-76
+	}
+	
+	//indemoniato!
+	if (h.devilInside) {
+		ctx.beginPath();
+		ctx.moveTo(-6, -86);   // vertice alto
+		ctx.lineTo(8, -67);    // vertice basso destra
+		ctx.lineTo(-20, -67);  // vertice basso sinistra
+		ctx.closePath();
+		ctx.fillStyle = '#ff0';
+		ctx.fill();
+		ctx.strokeStyle = '#000';
+		ctx.lineWidth = 1;
+		ctx.stroke();
+		// punto esclamativo
+		ctx.fillStyle = '#000';
+		ctx.fillRect(-7, -82, 3, 7);   // barra
+		ctx.fillRect(-7, -73, 3, 3);   // punto
 	}
 	
 	
@@ -604,8 +669,6 @@ function drawHorse(h) {
 	ctx.fill();
 	ctx.restore();	
 	
-	
-
     
 
     /* -------------------------------------------------------
