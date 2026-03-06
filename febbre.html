@@ -52,6 +52,7 @@ button{
 	<button onclick="changeCenter()">👁️</button>
 	<button onclick="mute=!mute">🔊</button>
 	<button onclick="changeStats()">🐴</button>
+	<button onclick="changeWestAndSoda()">🤠</button>
 	<span id="bets"></span>
 	<button id="startRace" onclick="startRace()" disabled>🍀 VAI! 🧲</button>
 	<span id="ui">VITE:<span id="lives">💰💰💰💰💰</span></span>
@@ -68,6 +69,7 @@ var lanes = 4;
 var center = false;//schiaccia i cavalli verso il centro
 var mute = true;
 var stats = 1;
+var westAndSoda = false;
 
 var finishX = 900;
 var GRASS_HEIGHT = 10 + 80 / lanes;
@@ -207,6 +209,15 @@ function updateLaneGeometry() {
 
 function changeStats() {
 	stats = (stats + 1) % 2;
+	if (!racing) {
+		drawTrack();
+		drawStats();
+		drawHorses();
+	}
+}
+
+function changeWestAndSoda() {
+	westAndSoda=!westAndSoda
 	if (!racing) {
 		drawTrack();
 		drawStats();
@@ -444,29 +455,110 @@ let trackOffset = 0;
 let dirtParticles = [];
 let grassParticles = [];
 
+
+
+
+function drawBozzettoBush(x, y, w, h, isTop) {
+    // Fondo base siepe - verde scuro piatto, alla Bozzetto
+    ctx.fillStyle = "#2a5c1a";
+    ctx.fillRect(x, y, w, h);
+
+    // Striscia di terra/suolo ai piedi della siepe
+    const soilH = Math.round(h * 0.18);
+    ctx.fillStyle = isTop ? "#1a3a0a" : "#1a3a0a";
+    if (isTop) {
+        ctx.fillRect(x, y + h - soilH, w, soilH);
+    } else {
+        ctx.fillRect(x, y, w, soilH);
+    }
+
+    // Cespugli stilizzati - semicerchi piatti, stile cartone anni '60
+    const bushColors = ["#3a7a20", "#4a9a28", "#2a6018", "#5aaa30", "#3a8020"];
+    const bushCount = Math.ceil(w / 38);
+    const bushBaseY = isTop ? (y + h - soilH) : (y + soilH);
+
+    ctx.save();
+    for (let i = 0; i < bushCount; i++) {
+        const bx = x + i * (w / bushCount) + (w / bushCount) * 0.1;
+        const bw = (w / bushCount) * 0.9;
+        const bh = h * (0.45 + Math.sin(i * 2.7) * 0.12); // altezze leggermente variabili
+        const col = bushColors[i % bushColors.length];
+
+        ctx.fillStyle = col;
+        ctx.beginPath();
+        if (isTop) {
+            // siepe sopra: cespugli che "scendono" verso la pista
+            ctx.ellipse(bx + bw / 2, bushBaseY, bw / 2, bh, 0, Math.PI, 2 * Math.PI);
+        } else {
+            // siepe sotto: cespugli che "salgono" verso la pista
+            ctx.ellipse(bx + bw / 2, bushBaseY, bw / 2, bh, 0, 0, Math.PI);
+        }
+        ctx.fill();
+
+        // Luce piatta in cima (stile Bozzetto: highlight netto, senza sfumatura)
+        ctx.fillStyle = "rgba(180,255,100,0.13)";
+        ctx.beginPath();
+        if (isTop) {
+            ctx.ellipse(bx + bw / 2, bushBaseY, bw * 0.3, bh * 0.35, 0, Math.PI, 2 * Math.PI);
+        } else {
+            ctx.ellipse(bx + bw / 2, bushBaseY, bw * 0.3, bh * 0.35, 0, 0, Math.PI);
+        }
+        ctx.fill();
+    }
+    ctx.restore();
+}
+
+
 function drawTrack() {
-    ctx.fillStyle = "#2e7d32";
-	var grassGrad = ctx.createLinearGradient(0, 0, 0, GRASS_HEIGHT);
-	grassGrad.addColorStop(0, "#308030");
-	grassGrad.addColorStop(0.3, "#106010");	
-	grassGrad.addColorStop(1, "#106010");	
-	ctx.fillStyle = grassGrad;
-	ctx.fillRect(0, 0, canvas.width, GRASS_HEIGHT);//erba/siepe sopra
-	
-	grassGrad = ctx.createLinearGradient(0, canvas.height - GRASS_HEIGHT, 0, canvas.height);
-	grassGrad.addColorStop(0, "#106010");
-	grassGrad.addColorStop(0.7, "#106010");	
-	grassGrad.addColorStop(1, "#308030");
-	ctx.fillStyle = grassGrad;
-    ctx.fillRect(0, canvas.height - GRASS_HEIGHT, canvas.width, GRASS_HEIGHT);//erba/siepe sotto
-	
-    ctx.fillStyle = "#caa472";
-	var dirtGrad = ctx.createLinearGradient(0, GRASS_HEIGHT, 0, canvas.height - GRASS_HEIGHT);
-	dirtGrad.addColorStop(0, "#9a7040");
-	dirtGrad.addColorStop(0.5, "#aa8050");
-	dirtGrad.addColorStop(1, "#9a7040");
-	ctx.fillStyle = dirtGrad;
-	ctx.fillRect(0, GRASS_HEIGHT, canvas.width, canvas.height - GRASS_HEIGHT * 2);//terra marrone
+	if (westAndSoda) {
+		// === TERRA ARSA - stile prateria western ===
+		var grassGrad = ctx.createLinearGradient(0, 0, 0, GRASS_HEIGHT);
+		grassGrad.addColorStop(0, "#9a7040");
+		grassGrad.addColorStop(0.3, "#aa8050");
+		grassGrad.addColorStop(1, "#aa8050");
+		ctx.fillStyle = grassGrad;
+		ctx.fillRect(0, 0, canvas.width, GRASS_HEIGHT);//erba/siepe sopra
+		
+		grassGrad = ctx.createLinearGradient(0, canvas.height - GRASS_HEIGHT, 0, canvas.height);
+		grassGrad.addColorStop(0, "#aa8050");
+		grassGrad.addColorStop(0.7, "#aa8050");	
+		grassGrad.addColorStop(1, "#9a7040");
+		ctx.fillStyle = grassGrad;
+		ctx.fillRect(0, canvas.height - GRASS_HEIGHT, canvas.width, GRASS_HEIGHT);//erba/siepe sotto
+		
+		// Bozzetto usa tinte piatte o quasi piatte, crema/ocra/terra bruciata
+		var dirtGrad = ctx.createLinearGradient(0, GRASS_HEIGHT, 0, canvas.height - GRASS_HEIGHT);
+		dirtGrad.addColorStop(0,   "#c8934a"); // terra ombra al bordo siepe
+		dirtGrad.addColorStop(0.15,"#dba455"); // ocra chiaro
+		dirtGrad.addColorStop(0.5, "#e8bc70"); // giallo sabbia caldo, piena luce
+		dirtGrad.addColorStop(0.85,"#dba455"); // ocra chiaro
+		dirtGrad.addColorStop(1,   "#c8934a"); // terra ombra al bordo siepe
+		ctx.fillStyle = dirtGrad;
+		ctx.fillRect(0, GRASS_HEIGHT, canvas.width, canvas.height - GRASS_HEIGHT * 2);//terra marrone
+	} else {
+		ctx.fillStyle = "#2e7d32";
+		var grassGrad = ctx.createLinearGradient(0, 0, 0, GRASS_HEIGHT);
+		grassGrad.addColorStop(0, "#308030");
+		grassGrad.addColorStop(0.3, "#106010");	
+		grassGrad.addColorStop(1, "#106010");	
+		ctx.fillStyle = grassGrad;
+		ctx.fillRect(0, 0, canvas.width, GRASS_HEIGHT);//erba/siepe sopra
+		
+		grassGrad = ctx.createLinearGradient(0, canvas.height - GRASS_HEIGHT, 0, canvas.height);
+		grassGrad.addColorStop(0, "#106010");
+		grassGrad.addColorStop(0.7, "#106010");	
+		grassGrad.addColorStop(1, "#308030");
+		ctx.fillStyle = grassGrad;
+		ctx.fillRect(0, canvas.height - GRASS_HEIGHT, canvas.width, GRASS_HEIGHT);//erba/siepe sotto
+		
+		ctx.fillStyle = "#caa472";
+		var dirtGrad = ctx.createLinearGradient(0, GRASS_HEIGHT, 0, canvas.height - GRASS_HEIGHT);
+		dirtGrad.addColorStop(0, "#9a7040");
+		dirtGrad.addColorStop(0.5, "#aa8050");
+		dirtGrad.addColorStop(1, "#9a7040");
+		ctx.fillStyle = dirtGrad;
+		ctx.fillRect(0, GRASS_HEIGHT, canvas.width, canvas.height - GRASS_HEIGHT * 2);//terra marrone
+	}
 	
     var avgSpeed = 0;
     for (var i = 0; i < horses.length; i++) avgSpeed += horses[i].speed;
@@ -499,7 +591,7 @@ function drawTrack() {
 	for (let i = 0; i < grassParticles.length; i++) {
         let p = grassParticles[i];
         p.x -= avgSpeed * 2;
-        ctx.fillStyle = "#006600";
+        ctx.fillStyle = westAndSoda ? "7a5020" : "#006600";
         ctx.fillRect(p.x, p.y, p.size, p.size);
 		ctx.fillRect(p.x, p.y+canvas.height-(GRASS_HEIGHT), p.size, p.size);
     }
@@ -586,7 +678,7 @@ function updateUI() {
    pivot: centro corsia, il muso punta a destra
 ===================================================== */
 function drawHorses() {
-    for (var i = 0; i < horses.length; i++) drawHorse(horses[i]);
+    for (var i = 0; i < horses.length; i++) westAndSoda ? drawHorseWestAndSoda(horses[i]) : drawHorse(horses[i]);
 }
 
 function drawHorse(h) {
@@ -786,7 +878,7 @@ function drawHorse(h) {
 	drawSaddle(ctx, t, h);
 
     //FANTINO
-    drawReins(ctx, t, h.jockeyColor);//redini/briglie
+    drawReins(ctx, t);//redini/briglie
     
 	var jockeyBounce = Math.sin(t * 2) * 2;
     drawJockey(ctx, 20, -30 + jockeyBounce, h.jockeyColor);
@@ -959,56 +1051,8 @@ function drawLeg(ctx, sx, sy, phase, bodyCol, hoofCol, isBack) {
     ctx.fill();
 }
 
-
-
-/* -------------------------------------------------------
-   GAMBA: anca → ginocchio → stinco → zoccolo
-   isBack: posteriore (angolazione diversa)
-------------------------------------------------------- */
-function drawLegOLD(ctx, sx, sy, phase, bodyCol, hoofCol, isBack) {
-    var liftAngle  = phase * 0.7;          /* oscillazione coscia */
-    var kneeAngle  = Math.abs(phase) * 0.7; /* piega ginocchio */
-
-    var thighLen = 18;
-    var shinLen  = 20;
-    var hoofH    = 7;
-
-    var baseAngle = isBack ? 0.15 : -0.05;
-
-    var thighAngle = baseAngle + liftAngle * 0.6;
-    var tx = sx + Math.sin(thighAngle) * thighLen;
-    var ty = sy + Math.cos(thighAngle) * thighLen;
-
-    var kneeDir = isBack ? -1 : 1;
-    var shinAngle = thighAngle + kneeDir * kneeAngle * 0.8;
-    var kx = tx + Math.sin(shinAngle) * shinLen;
-    var ky = ty + Math.cos(shinAngle) * shinLen;
-
-    /* coscia */
-    ctx.strokeStyle = bodyCol;
-    ctx.lineWidth = isBack ? 10 : 8;
-    ctx.lineCap = "round";
-    ctx.beginPath();
-    ctx.moveTo(sx, sy);
-    ctx.lineTo(tx, ty);
-    ctx.stroke();
-
-    /* stinco */
-    ctx.lineWidth = 4.5;
-    ctx.beginPath();
-    ctx.moveTo(tx, ty);
-    ctx.lineTo(kx, ky);
-    ctx.stroke();
-
-    /* zoccolo */
-    ctx.fillStyle = hoofCol;
-    ctx.beginPath();
-    ctx.ellipse(kx, ky + hoofH * 0.5, 4, hoofH * 0.5, 0, 0, Math.PI * 2);
-    ctx.fill();
-}
-
 //briglie/redini
-function drawReins(ctx, t, jockeyColor) {
+function drawReins(ctx, t) {
     // Punto di attacco alla bocca del cavallo (morso)
     var mouthX = 104;
     var mouthY = -30;
@@ -1147,6 +1191,488 @@ function playHoofBeat(audioCtx) {
     noise.start(t);
     noise.stop(t + 0.15);
 }
+
+
+
+
+
+
+
+//stile Bruno Bozzetto / West and Soda
+function drawHorseWestAndSoda(h) {
+    var t = h.anim;
+
+    var cx = h.x - 60 * HORSE_SCALE;
+    var cy = LANE_HEIGHT * h.lane + LANE_HEIGHT / 2 + GRASS_HEIGHT / 3;
+
+    if (center) {
+        var trackCenter = GRASS_HEIGHT + (canvas.height - 2 * GRASS_HEIGHT) / 2;
+        var normalCy    = LANE_HEIGHT * h.lane + LANE_HEIGHT / 2 + GRASS_HEIGHT / 3;
+        cy = trackCenter + (normalCy - trackCenter) * 0.8;
+    }
+
+    var FL = Math.sin(t);
+    var FR = Math.sin(t + Math.PI * 0.9);
+    var BL = Math.sin(t + Math.PI * 0.5);
+    var BR = Math.sin(t + Math.PI * 1.4);
+
+    var bounce = Math.sin(t * 2) * (h.speed * 1.2);
+
+    var bodyColor = h.color;
+    var maneColor = h.maneColor;
+    
+    ctx.save();
+    ctx.translate(cx, cy + bounce);
+    ctx.scale(HORSE_SCALE, HORSE_SCALE);
+
+    // ── icone stato ──
+    if (h.injured) {
+        ctx.fillStyle = '#f00';
+        ctx.fillRect(-20, -90, 28, 28);
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(-18, -88, 24, 24);
+        ctx.fillStyle = '#f00';
+        ctx.fillRect(-9, -86, 6, 20);
+        ctx.fillRect(-16, -79, 20, 6);
+    }
+    if (h.devilInside) {
+        ctx.beginPath();
+        ctx.moveTo(-6, -86); ctx.lineTo(8, -67); ctx.lineTo(-20, -67);
+        ctx.closePath();
+        ctx.fillStyle = '#ff0'; ctx.fill();
+        ctx.strokeStyle = '#000'; ctx.lineWidth = 1; ctx.stroke();
+        ctx.fillStyle = '#000';
+        ctx.fillRect(-7, -82, 3, 7);
+        ctx.fillRect(-7, -73, 3, 3);
+    }
+
+    // ── ombra piatta a terra ──
+    var shadowY = 58 - bounce * 0.4;
+    ctx.save();
+    ctx.translate(0, shadowY);
+    ctx.scale(1, 0.15);
+    ctx.beginPath(); ctx.arc(0, 0, 85, 0, Math.PI * 2);
+    ctx.fillStyle = "rgba(0,0,0,0.18)"; ctx.fill();
+    ctx.restore();
+
+
+    // ════════════════════════════════════════════
+    //  ZAMPE LONTANE  (sotto il corpo)
+    // ════════════════════════════════════════════
+    drawLegWestAndSoda(ctx, -28, 22, BL, shadeColor(bodyColor, -20), true,  t);
+    drawLegWestAndSoda(ctx,  32, 20, FR, shadeColor(bodyColor, -20), false, t);
+
+
+    // ════════════════════════════════════════════
+    //  CORPO — blob tozzo quasi rettangolare
+    // ════════════════════════════════════════════
+    ctx.fillStyle = bodyColor;
+    ctx.beginPath();
+    ctx.moveTo(-52,  -4);
+    ctx.bezierCurveTo(-54,-28, -20,-32,  20,-30);
+    ctx.bezierCurveTo( 48,-28,  58,-18,  56, -4);
+    ctx.bezierCurveTo( 58, 10,  48, 22,  20, 24);
+    ctx.bezierCurveTo(-10, 26, -46, 20, -54, 8);
+    ctx.bezierCurveTo(-56,  2, -52, -4, -52, -4);
+    ctx.closePath();
+    ctx.fill();
+	ctx.strokeStyle = maneColor;
+	ctx.lineWidth = 3;
+	ctx.stroke()
+
+    //cinghie della sella
+    ctx.strokeStyle = shadeColor(bodyColor, -30);
+    ctx.lineWidth = 5;
+    ctx.lineCap = "round";
+    [-8, 8, 24].forEach(function(xOff) {
+        ctx.beginPath();
+        ctx.moveTo(xOff, -28);
+        ctx.bezierCurveTo(xOff - 2, 0, xOff - 2, 14, xOff, 22);
+        ctx.stroke();
+    });
+
+
+    // ════════════════════════════════════════════
+    //  COLLO — cilindro: lati quasi paralleli, larghezza costante
+    // ════════════════════════════════════════════
+    ctx.fillStyle = bodyColor;
+    ctx.beginPath();
+    // base sinistra (attacca al corpo)
+    ctx.moveTo(30, -10);
+    ctx.lineTo(42, -30);   // lato sx del cilindro (quasi retto)
+    // cappello superiore arrotondato
+    ctx.bezierCurveTo(48,-52, 66,-64, 68,-44);
+    // lato dx del cilindro (quasi parallelo al sx)
+    ctx.lineTo(56,  6);
+    ctx.bezierCurveTo(50, 10, 36, 0, 30, -10);
+    ctx.closePath();
+    ctx.fill(); 
+	ctx.strokeStyle = maneColor;
+	ctx.lineWidth = 3;
+	ctx.stroke();
+
+
+    // ════════════════════════════════════════════
+    //  TESTA — forma a pera: piccola in cima, larga verso il muso
+    // ════════════════════════════════════════════
+	
+	// ── OCCHIO DIETRO
+    ctx.fillStyle = "#fff";
+    ctx.beginPath(); ctx.arc(94, -56, 5.5, 0, Math.PI * 2); ctx.fill();
+	ctx.strokeStyle = maneColor;
+	ctx.lineWidth = 3;
+	ctx.stroke();
+    ctx.fillStyle = "#111";
+    ctx.beginPath(); ctx.arc(96, -55, 2.8, 0, Math.PI * 2); ctx.fill();
+	
+	// narice dietro
+    ctx.fillStyle = "#111";
+    ctx.beginPath(); ctx.ellipse(114, -24, 7, 6,  0.2, 0, Math.PI * 2); ctx.fill();
+
+	
+    ctx.fillStyle = bodyColor;
+    ctx.beginPath();
+    // parte alta piccola (cranio)
+    ctx.moveTo(66, -62);
+    ctx.bezierCurveTo(72,-72, 86,-72, 90,-62);
+    // scende e si allarga verso il muso
+    ctx.bezierCurveTo(100,-54, 112,-44, 116,-30);
+    ctx.bezierCurveTo(118,-20, 114,-10, 106, -6);
+    ctx.bezierCurveTo( 96, -2,  80, -4,  72,-14);
+    ctx.bezierCurveTo( 62,-28,  60,-48,  66,-62);
+    ctx.closePath();
+    ctx.fill();
+	ctx.strokeStyle = maneColor;
+	ctx.lineWidth = 3;
+	ctx.stroke();
+	
+	//attacco briglia
+	ctx.strokeStyle = '#000';
+	ctx.beginPath();
+	ctx.moveTo(113,-40);
+	ctx.lineTo(72,-10);
+	ctx.moveTo(102,-28)
+	ctx.lineTo(60,-55);
+	ctx.stroke();
+
+    // narice davanti
+    ctx.fillStyle = "#111";
+    ctx.beginPath(); ctx.ellipse(106, -20, 7, 6,  0.2, 0, Math.PI * 2); ctx.fill();
+
+    // ── OCCHIO AVANTI
+    ctx.fillStyle = "#fff";
+    ctx.beginPath(); ctx.arc(84, -56, 5.5, 0, Math.PI * 2); ctx.fill();
+	ctx.strokeStyle = maneColor;
+	ctx.lineWidth = 3;
+	ctx.stroke();
+    ctx.fillStyle = "#111";
+    ctx.beginPath(); ctx.arc(86, -55, 2.8, 0, Math.PI * 2); ctx.fill();
+	
+    // orecchie — triangoli piatti sulla parte stretta in alto
+    ctx.fillStyle = bodyColor;
+    ctx.beginPath();
+    ctx.moveTo(68, -64); ctx.lineTo(64, -76); ctx.lineTo(76, -66);
+    ctx.closePath(); ctx.fill();
+	ctx.strokeStyle = maneColor;
+	ctx.lineWidth = 3;
+	ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(76, -62); ctx.lineTo(74, -76); ctx.lineTo(84, -64);
+    ctx.closePath(); ctx.fill();
+	ctx.strokeStyle = maneColor;
+	ctx.lineWidth = 3;
+	ctx.stroke();
+
+
+    // ════════════════════════════════════════════
+    //  CRINIERA — 7 archi esili come la coda, ondeggia col vento
+    // ════════════════════════════════════════════
+    var maneWind = Math.sin(t * 1.5 + 0.5) * 5 * Math.min(h.speed * 0.8, 1);
+    // ogni arco parte dal collo/testa e scende
+    // [startX, startY, lunghezza, direzione Y, fase vento]
+    var maneArcs = [
+        { sx: 80, sy: -66, len: 24, phase: 0.20 },
+        { sx: 74, sy: -64, len: 28, phase: 0.35 },
+        { sx: 68, sy: -60, len: 30, phase: 0.50 },
+        { sx: 62, sy: -56, len: 28, phase: 0.60 },
+        { sx: 56, sy: -52, len: 26, phase: 0.72 },
+        { sx: 50, sy: -46, len: 24, phase: 0.84 },
+        { sx: 44, sy: -40, len: 20, phase: 0.95 },
+    ];
+    ctx.lineCap = "round";
+    maneArcs.forEach(function(a) {
+        var sw = maneWind * a.phase;
+        // arco che piega in avanti/su col vento (criniera soffia all'indietro = verso sx = x-)
+		var ex = a.sx - a.len + sw * 1.2;
+		var ey = a.sy + sw * 0.5;
+        ctx.strokeStyle = maneColor; 
+		ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(a.sx, a.sy);
+        ctx.bezierCurveTo(
+			a.sx - a.len * 0.1 + sw * 0.4, a.sy - a.len * 0.4,
+			ex   + a.len * 0.1 + sw * 0.4, a.sy - a.len * 0.4,
+			ex, ey
+		);
+        ctx.stroke();
+    });
+
+
+    // ════════════════════════════════════════════
+    //  CODA — 4 archi esili, ognuno ondeggia col vento
+    // ════════════════════════════════════════════
+    var tailWind = Math.sin(t * 1.5) * 18 * Math.min(h.speed * 0.8, 1);
+    // tutti partono dallo stesso punto (-52, -6); la fase sfasa l'ondeggiamento
+    var tailArcs = [
+        { len: 52, endDY: -14, phase: 0.20 },
+        { len: 58, endDY:  -4, phase: 0.45 },
+        { len: 62, endDY:   8, phase: 0.68 },
+        { len: 54, endDY:  16, phase: 0.90 },
+    ];
+    ctx.lineCap = "round";
+    tailArcs.forEach(function(arc) {
+        var sw = tailWind * arc.phase;
+        var ox = -52, oy = -6;          // punto di partenza comune
+        var ex = ox - arc.len;
+        var ey = oy + arc.endDY + sw;
+		ctx.strokeStyle = maneColor; 
+		ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(ox, oy);
+        ctx.bezierCurveTo(
+			ox - arc.len * 0.15, oy + arc.endDY * 0.7 + sw * 0.4,
+			ex  + arc.len * 0.35, ey - 20 + sw * 0.5,
+			ex, ey
+		);
+        ctx.stroke();
+    });
+
+
+    // ════════════════════════════════════════════
+    //  ZAMPE VICINE
+    // ════════════════════════════════════════════
+    drawLegWestAndSoda(ctx, -34, 24, BR, bodyColor, true,  t);
+    drawLegWestAndSoda(ctx,  38, 22, FL, bodyColor, false, t);
+
+
+    // ════════════════════════════════════════════
+    //  SELLA + FANTINO
+    // ════════════════════════════════════════════
+    drawSaddleWestAndSoda(ctx, t, h);
+    drawReins(ctx, t);
+    var jockeyBounce = Math.sin(t * 2) * 2;
+    drawJockeyWestAndSoda(ctx, 20, -30 + jockeyBounce, h.jockeyColor);
+
+    ctx.restore();
+}
+
+
+// ────────────────────────────────────────────────────────────
+//  drawLegWaS
+//  Gambe stecco quasi verticali — zoccolo a SEMICERCHIO piatto
+// ────────────────────────────────────────────────────────────
+function drawLegWestAndSoda(ctx, sx, sy, phase, bodyCol, isBack, t) {
+    var thighLen = 16;
+    var shinLen  = 30;
+
+    var thighAngle, shinAngle;
+    if (!isBack) {
+        thighAngle = -phase * 0.30;
+        shinAngle  = thighAngle + Math.max(0, -phase) * 0.35;
+    } else {
+        thighAngle =  phase * 0.30;
+        shinAngle  = thighAngle - Math.max(0, -phase) * 0.35;
+    }
+
+    if (!mute && Math.abs(shinAngle) < 0.05) playHoofBeat(audioCtx);
+
+    var tx = sx + Math.sin(thighAngle) * thighLen;
+    var ty = sy + Math.cos(thighAngle) * thighLen;
+    var kx = tx + Math.sin(shinAngle)  * shinLen;
+    var ky = ty + Math.cos(shinAngle)  * shinLen;
+
+    // coscia
+    ctx.strokeStyle = bodyCol; ctx.lineWidth = 5; ctx.lineCap = "round";
+    ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(tx, ty); ctx.stroke();
+    
+    // stinco
+    ctx.strokeStyle = bodyCol; ctx.lineWidth = 4;
+    ctx.beginPath(); ctx.moveTo(tx, ty); ctx.lineTo(kx, ky); ctx.stroke();
+    
+    // ZOCCOLO: parte superiore del semicerchio, centro spostato 8px avanti
+    ctx.fillStyle = "#111";
+    ctx.beginPath();
+    ctx.arc(kx + 8, ky + 8, 15, Math.PI, 0); // arco superiore (da PI a 0 = parte alta)
+    ctx.closePath();
+    ctx.fill();
+}
+
+
+// ────────────────────────────────────────────────────────────
+//  drawSaddleWaS
+// ────────────────────────────────────────────────────────────
+function drawSaddleWestAndSoda(ctx, t, h) {
+    var bounce = Math.sin(t * 2) * 1.5;
+    var roll   = Math.sin(t * 2) * 0.04;
+
+    ctx.save();
+    ctx.translate(10, -26 + bounce);
+    ctx.rotate(roll);
+
+    ctx.fillStyle = "#5c2800";
+    ctx.beginPath();
+    ctx.moveTo(-14, -4);
+    ctx.bezierCurveTo(-18,12, -16,26, -10,30);
+    ctx.bezierCurveTo(-4,34, 8,34, 14,30);
+    ctx.bezierCurveTo(20,26, 20,12, 16,-4);
+    ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = "#111"; ctx.lineWidth = 3; ctx.stroke();
+
+    ctx.fillStyle = "#6b3010";
+    ctx.beginPath();
+    ctx.moveTo(-15,2); ctx.bezierCurveTo(-17,-1,-16,-7,-12,-8);
+    ctx.bezierCurveTo(-9,-9,-4,-8,-3,-4); ctx.bezierCurveTo(-2,-1,-4,2,-8,2);
+    ctx.closePath(); ctx.fill();
+    ctx.strokeStyle="#111"; ctx.lineWidth=2.5; ctx.stroke();
+
+    ctx.fillStyle = "#6b3010";
+    ctx.beginPath();
+    ctx.moveTo(14,4); ctx.bezierCurveTo(22,4,26,-6,20,-12);
+    ctx.bezierCurveTo(16,-16,10,-14,8,-8); ctx.bezierCurveTo(7,-3,10,3,14,4);
+    ctx.closePath(); ctx.fill();
+    ctx.strokeStyle="#111"; ctx.lineWidth=2.5; ctx.stroke();
+
+    var stirrupSwing = Math.sin(t * 2) * 4;
+    ctx.save();
+    ctx.translate(4, 25); ctx.rotate(stirrupSwing * 0.04);
+    ctx.strokeStyle = "#111"; ctx.lineWidth = 2.5; ctx.lineCap = "round";
+    ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(0,10); ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(-5,10); ctx.lineTo(-5,14); ctx.lineTo(5,14); ctx.lineTo(5,10);
+    ctx.stroke();
+    ctx.restore();
+
+    ctx.shadowBlur = 0;
+    ctx.font = "bold 12px Arial Black, Arial";
+    ctx.textAlign = "center";
+    ctx.strokeStyle = "#000"; 
+	ctx.lineWidth = 3;
+    ctx.strokeText(h.id, 3, 21);
+    ctx.fillStyle = selectedBetLane === h.lane ? '#fff' : '#aaa';
+    ctx.fillText(h.id, 3, 21);
+
+    ctx.restore();
+}
+
+function drawJockeyWestAndSoda(ctx, x, y, col) {
+
+    // ── coscia ──
+    ctx.fillStyle = "#444";
+    ctx.beginPath();
+    ctx.ellipse(x + 5, y + 5, 15, 6, 0.3, 0, Math.PI * 2);
+    ctx.fill();
+
+    // ── stivale ──
+    ctx.fillStyle = "#222";
+    ctx.beginPath();
+    ctx.ellipse(x + 5, y + 12, 15, 5, -0.2, 0, Math.PI * 2);
+    ctx.fill();
+
+    // ── mano dietro ──
+    ctx.fillStyle = "#f0c080";
+    ctx.beginPath();
+    ctx.arc(x + 10, y - 12, 3, 0, Math.PI * 2);
+    ctx.fill();
+
+    // ── corpo — stesso dell'originale ──
+	var colSabbia = col.split(',');
+	colSabbia[1]='20%';
+	colSabbia = colSabbia.join(',')
+	
+    ctx.fillStyle = colSabbia;//col;
+    ctx.beginPath();
+    ctx.moveTo(x - 6, y + 4);
+    ctx.bezierCurveTo(x - 8, y - 5,  x - 10, y - 18, x - 2, y - 22);
+    ctx.bezierCurveTo(x + 6, y - 26, x + 10, y - 20, x + 8, y - 10);
+    ctx.bezierCurveTo(x + 6, y - 4,  x + 4,  y,      x - 6, y + 4);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = "#111"; ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // ── VISO allungato (ellisse verticale) ──
+    ctx.fillStyle = "#f0e8c8";
+    ctx.beginPath();
+    ctx.ellipse(x + 2, y - 27, 5, 8, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "#c8a870"; ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // occhio — puntino nero
+    ctx.fillStyle = "#111";
+    ctx.beginPath();
+    ctx.arc(x + 5, y - 28, 1.2, 0, Math.PI * 2);
+    ctx.fill();
+
+    // bocca — linea sottile
+    ctx.strokeStyle = "#a07040"; ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(x + 2, y - 22);
+    ctx.lineTo(x + 6, y - 22);
+    ctx.stroke();
+
+    //CAPPELLO COWBOY
+    //tesa piatta — unico rettangolo arrotondato orizzontale
+    ctx.fillStyle = colSabbia;//col;
+    ctx.beginPath();
+    ctx.ellipse(x + 2, y - 34, 18, 4, 0, 0, Math.PI * 2);
+    ctx.fill();
+	//dune in testa
+	ctx.beginPath();
+	ctx.ellipse(x, y - 36, 3, 10, 0, Math.PI, Math.PI * 2);
+	ctx.fill();
+	ctx.beginPath();
+	ctx.ellipse(x + 5, y - 36, 3, 10, 0, Math.PI, Math.PI * 2);
+	ctx.fill();
+    // fascia
+    ctx.strokeStyle = "#8b6914"; 
+	ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(x - 3, y - 36);
+    ctx.lineTo(x + 9, y - 36);
+    ctx.stroke();
+
+    // ── frustino ──
+    ctx.strokeStyle = "#333"; 
+	ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(x + 8, y - 10);
+    ctx.lineTo(x + 25, y - 2);
+    ctx.stroke();
+
+    // ── mano avanti ──
+    ctx.fillStyle = "#f0c080";
+    ctx.beginPath();
+    ctx.arc(x + 10, y - 8, 3, 0, Math.PI * 2);
+    ctx.fill();
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 updateLaneGeometry();
 createRace();
