@@ -107,11 +107,12 @@ var colors = [
     "#332211",
 	"#662200",	
     "#222222",
-    "#dddddd",
+    "#eeeeee",
     "#eeddcc",
     "#ccaa44",	
 	"#ffffaa",
-	"#000000"
+	"#000000",
+	"#bbbbbb"
 ];
 /* mane/tail dark color per ogni colore corpo */
 var maneColors = [
@@ -125,7 +126,8 @@ var maneColors = [
 	"#bb9977",
 	"#886600",	
 	"#221100",
-	"#222222"
+	"#222222",
+	"#444444"
 ];
 
 var horseNames = [
@@ -292,10 +294,7 @@ function createRace() {
             lane: i,
             maxSpeed: rndHorse.maxSpeed + Math.random() * 0.3,
             speed: 0,
-            accel: 0.04 + Math.random() * 0.05,
             stamina: rndHorse.stamina + Math.random() * 20,
-            staminaDrain: 0.20 + Math.random() * 0.1,
-            recovery: 0.05,
             anim: Math.random() * Math.PI * 2,
             color: colors[colIdx],//colore principale
             maneColor: maneColors[colIdx],//criniera piu scura
@@ -834,14 +833,16 @@ function drawHorse(h) {
 	ctx.bezierCurveTo(-47,-39, 1,-10, 40,-29);
 	ctx.bezierCurveTo(60,-18, 62,-11, 60,0);
 	ctx.bezierCurveTo(62,8, 55,16, 45,18);
-	ctx.bezierCurveTo(16,15, -20,29, -55,16);
+	ctx.bezierCurveTo(16,15, -20,29, -52,16);
 	ctx.bezierCurveTo(-60,10, -62,2, -58,-8);
 	ctx.closePath(); 
 	ctx.fill();
 	//chiappa scura
-	ctx.beginPath(); ctx.ellipse(-43, 0, 18, 18, 0.3, 0, Math.PI * 2);
-	ctx.fillStyle = bodyColorShade15; 
-	ctx.fill();
+	ctx.beginPath(); 
+	//ctx.ellipse(-36, 0, 23, 20, 0.3, 0, Math.PI * 2);
+	//ctx.fillStyle = bodyColorShade15; 
+	//ctx.fill();
+	
 
 	/* COLLO */
 	ctx.fillStyle = bodyColor; ctx.beginPath();
@@ -1043,7 +1044,6 @@ function drawSaddle(ctx, t, h) {
 }
 
 
-
 function drawLeg(ctx, sx, sy, phase, bodyCol, hoofCol, isBack) {
     var thighLen = isBack ? 14 : 18;//parte alta della zampa
     var shinLen  = isBack ? 32 : 28;//parte bassa della zampa
@@ -1060,13 +1060,21 @@ function drawLeg(ctx, sx, sy, phase, bodyCol, hoofCol, isBack) {
         var kneeBend = Math.max(0, -phase) * 0.5;
         shinAngle = thighAngle + kneeBend;   // stinco piega in avanti quando in aria
     } else {
-        // POSTERIORE: si raccoglie sotto il corpo (piega), poi spinge indietro
+        /*
+		// POSTERIORE: si raccoglie sotto il corpo (piega), poi spinge indietro
         // push = phase positivo → gamba estesa indietro
         thighAngle = phase * 0.4;            // la coscia spinge indietro
         // il garretto si piega quando la gamba è in raccolta (phase < 0)
         var hockBend = Math.max(0, -phase) * 0.5;
         shinAngle = thighAngle - hockBend;   // il garretto piega indietro (verso il corpo)
-    }
+		*/
+		// coscia obliqua: parte alta e dietro, scende avanti-basso
+		// range: da -1.1 (raccolta sotto il ventre) a 0 (estensione dietro)
+		thighAngle = -0.7 + phase * 0.7;
+		// garretto sempre un po' angolato, molto piegato in raccolta
+		var hockBend = Math.max(0, -phase) * 0.7 + 0.25;
+		shinAngle = thighAngle + hockBend;
+	}
 	
 	if (!mute && Math.abs(shinAngle) < 0.05) playHoofBeat(audioCtx);
 
