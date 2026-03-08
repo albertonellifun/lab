@@ -47,7 +47,7 @@ button{
 </style>
 </head>
 <body>
-<h1>🏇🐎 FEBBRE DA CAVALLO 🏇🐎<span id="timer"></span></h1>
+<h1>🏇🐎 <span id="title">FEBBRE DA CAVALLO</span> 🏇🐎<span id="timer"></span></h1>
 <canvas id="game" width="1000" height="400"></canvas>
 <div id="controls">
 	<button onclick="changeCenter()">👁️</button>
@@ -85,6 +85,20 @@ var horses = [];
 var selectedBetLane = null;
 var lives = 5;
 var racing = false;
+
+var confetti = [];//array, quando cavallo vince spara confetti particellari
+var showConfetti = false;
+
+let stopRace = false;//blocca gara
+
+//per disegno tracciato puntiricchiato
+let trackOffset = 0;
+let dirtParticles = [];
+let grassParticles = [];
+//gradienti tracciato
+var cachedGradients = null;
+var cachedGradientsWestAndSoda = null;
+
 
 var colors = [
     "#663311",
@@ -179,8 +193,6 @@ function resizeCanvas() {
     canvas.style.width = maxW + 'px';
     canvas.style.height = "70vh";//(maxW*0.4) + 'px';
 }
-window.addEventListener('resize', resizeCanvas);
-resizeCanvas();
 
 function initDirtParticles() {
 	dirtParticles = [];//potrebbero essere state create precedentemente con coordinate sballate
@@ -206,6 +218,7 @@ function updateLaneGeometry() {
     LANE_HEIGHT = (canvas.height - (2 * GRASS_HEIGHT)) / lanes;
 	//console.log('GRASS='+GRASS_HEIGHT+' LANE='+LANE_HEIGHT+ ' CANVAS='+canvas.height);
 	initDirtParticles();
+	buildGradients();
 }
 
 function changeStats() {
@@ -219,6 +232,7 @@ function changeStats() {
 
 function changeWestAndSoda() {
 	westAndSoda=!westAndSoda
+	document.getElementById("title").innerText = westAndSoda ? "WEST AND SODA" : "FEBBRE DA CAVALLO";
 	if (!racing) {
 		drawTrack();
 		drawStats();
@@ -283,9 +297,12 @@ function createRace() {
             staminaDrain: 0.20 + Math.random() * 0.1,
             recovery: 0.05,
             anim: Math.random() * Math.PI * 2,
-            color: colors[colIdx],
-            maneColor: maneColors[colIdx],
-            jockeyColor: jColor//fantino
+            color: colors[colIdx],//colore principale
+            maneColor: maneColors[colIdx],//criniera piu scura
+			colorShade15 : shadeColor(colors[colIdx], -15),//colore principale scuro (zampe dietro, ombre, ...)
+			colorShade30 : shadeColor(colors[colIdx], -30),//colore principale ancora piu scuro
+            jockeyColor: jColor,//fantino
+			jockeyColorShade30: shadeColor(jColor, -30)//dettagli piu scuri
         });
     }
     drawTrack();
@@ -344,8 +361,11 @@ function startRace() {
     loop();
 }
 
-let stopRace = false;
+
+
 function loop() {
+	const t0 = performance.now();
+	
     if (!racing) return;
 	
 	const now = performance.now();
@@ -354,9 +374,18 @@ function loop() {
 	
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     drawTrack();
+	
+var tTrack = performance.now() - t0;
+
+
+	
+	
 	drawStats();
     updateHorses();
     drawHorses();
+	
+var tHorses = performance.now() - t0;	
+	
     updateAndDrawConfetti();
     if (!stopRace) {
         let winner = checkWinner();
@@ -368,14 +397,17 @@ function loop() {
             setTimeout(function() { finishRace(winner); }, 8000);
         }
     }
+	
+	
+	const ms = performance.now() - t0;
+	if (ms > 10) console.log('frame lento: ' + ms.toFixed(1) + 'ms  track=' + tTrack?.toFixed(1) + ' horses=' + tHorses?.toFixed(1));
+	
+	
     requestAnimationFrame(loop);
 }
 
 
-//CONFETTI == CORIANDOLI
-var confetti = [];
-var showConfetti = false;
-
+//CONFETTI == CORIANDOLI quando un cavallo taglia il traguardo per primo
 function spawnConfetti(x, y) {
     for (let i = 0; i < 200; i++) {
         confetti.push({
@@ -457,13 +489,6 @@ function updateHorses() {
 /* =====================================================
    TRACK
 ===================================================== */
-let trackOffset = 0;
-let dirtParticles = [];
-let grassParticles = [];
-
-
-
-
 function drawBozzettoBush(x, y, w, h, isTop) {
     // Fondo base siepe - verde scuro piatto, alla Bozzetto
     ctx.fillStyle = "#2a5c1a";
@@ -515,61 +540,76 @@ function drawBozzettoBush(x, y, w, h, isTop) {
 }
 
 
+
+function buildGradients() {
+    // westAndSoda
+	cachedGradientsWestAndSoda = {
+        grassTop:    ctx.createLinearGradient(0, 0, 0, GRASS_HEIGHT),
+        grassBottom: ctx.createLinearGradient(0, canvas.height - GRASS_HEIGHT, 0, canvas.height),
+        dirt:        ctx.createLinearGradient(0, GRASS_HEIGHT, 0, canvas.height - GRASS_HEIGHT)
+    };
+    cachedGradientsWestAndSoda.grassTop.addColorStop(0, "#9a7040");
+	cachedGradientsWestAndSoda.grassTop.addColorStop(0.3, "#aa8050");
+    cachedGradientsWestAndSoda.grassTop.addColorStop(1, "#aa8050");
+	
+	cachedGradientsWestAndSoda.grassBottom.addColorStop(0, "#aa8050");
+	cachedGradientsWestAndSoda.grassBottom.addColorStop(0.7, "#aa8050");
+    cachedGradientsWestAndSoda.grassBottom.addColorStop(1, "#9a7040");
+    
+	cachedGradientsWestAndSoda.dirt.addColorStop(0,   "#c8934a"); // terra ombra al bordo siepe
+	cachedGradientsWestAndSoda.dirt.addColorStop(0.15,"#dba455"); // ocra chiaro
+	cachedGradientsWestAndSoda.dirt.addColorStop(0.5, "#e8bc70"); // giallo sabbia caldo, piena luce
+	cachedGradientsWestAndSoda.dirt.addColorStop(0.85,"#dba455"); // ocra chiaro
+	cachedGradientsWestAndSoda.dirt.addColorStop(1,   "#c8934a"); // terra ombra al bordo siepe
+	
+	//default
+	cachedGradients = {
+		grassTop:    ctx.createLinearGradient(0, 0, 0, GRASS_HEIGHT),
+        grassBottom: ctx.createLinearGradient(0, canvas.height - GRASS_HEIGHT, 0, canvas.height),
+        dirt:        ctx.createLinearGradient(0, GRASS_HEIGHT, 0, canvas.height - GRASS_HEIGHT)
+	};
+	cachedGradients.grassTop.addColorStop(0, "#308030");
+	cachedGradients.grassTop.addColorStop(0.3, "#106010");
+    cachedGradients.grassTop.addColorStop(1, "#106010");
+	
+	cachedGradients.grassBottom.addColorStop(0, "#106010");
+	cachedGradients.grassBottom.addColorStop(0.7, "#106010");
+    cachedGradients.grassBottom.addColorStop(1, "#308030");
+    
+	cachedGradients.dirt.addColorStop(0,   "#9a7040"); // terra ombra al bordo siepe
+	cachedGradients.dirt.addColorStop(0.5, "#aa8050"); // giallo sabbia caldo, piena luce
+	cachedGradients.dirt.addColorStop(1,   "#9a7040"); // terra ombra al bordo siepe
+	
+}
+
 function drawTrack() {
 	if (westAndSoda) {
-		// === TERRA ARSA - stile prateria western ===
-		var grassGrad = ctx.createLinearGradient(0, 0, 0, GRASS_HEIGHT);
-		grassGrad.addColorStop(0, "#9a7040");
-		grassGrad.addColorStop(0.3, "#aa8050");
-		grassGrad.addColorStop(1, "#aa8050");
-		ctx.fillStyle = grassGrad;
+		ctx.fillStyle = cachedGradientsWestAndSoda.grassTop;
 		ctx.fillRect(0, 0, canvas.width, GRASS_HEIGHT);//erba/siepe sopra
 		
-		grassGrad = ctx.createLinearGradient(0, canvas.height - GRASS_HEIGHT, 0, canvas.height);
-		grassGrad.addColorStop(0, "#aa8050");
-		grassGrad.addColorStop(0.7, "#aa8050");	
-		grassGrad.addColorStop(1, "#9a7040");
-		ctx.fillStyle = grassGrad;
+		ctx.fillStyle = cachedGradientsWestAndSoda.grassBottom;
 		ctx.fillRect(0, canvas.height - GRASS_HEIGHT, canvas.width, GRASS_HEIGHT);//erba/siepe sotto
 		
 		// Bozzetto usa tinte piatte o quasi piatte, crema/ocra/terra bruciata
-		var dirtGrad = ctx.createLinearGradient(0, GRASS_HEIGHT, 0, canvas.height - GRASS_HEIGHT);
-		dirtGrad.addColorStop(0,   "#c8934a"); // terra ombra al bordo siepe
-		dirtGrad.addColorStop(0.15,"#dba455"); // ocra chiaro
-		dirtGrad.addColorStop(0.5, "#e8bc70"); // giallo sabbia caldo, piena luce
-		dirtGrad.addColorStop(0.85,"#dba455"); // ocra chiaro
-		dirtGrad.addColorStop(1,   "#c8934a"); // terra ombra al bordo siepe
-		ctx.fillStyle = dirtGrad;
+		ctx.fillStyle = cachedGradientsWestAndSoda.dirt;
 		ctx.fillRect(0, GRASS_HEIGHT, canvas.width, canvas.height - GRASS_HEIGHT * 2);//terra marrone
 	} else {
 		ctx.fillStyle = "#2e7d32";
-		var grassGrad = ctx.createLinearGradient(0, 0, 0, GRASS_HEIGHT);
-		grassGrad.addColorStop(0, "#308030");
-		grassGrad.addColorStop(0.3, "#106010");	
-		grassGrad.addColorStop(1, "#106010");	
-		ctx.fillStyle = grassGrad;
+		ctx.fillStyle = cachedGradients.grassTop;
 		ctx.fillRect(0, 0, canvas.width, GRASS_HEIGHT);//erba/siepe sopra
 		
-		grassGrad = ctx.createLinearGradient(0, canvas.height - GRASS_HEIGHT, 0, canvas.height);
-		grassGrad.addColorStop(0, "#106010");
-		grassGrad.addColorStop(0.7, "#106010");	
-		grassGrad.addColorStop(1, "#308030");
-		ctx.fillStyle = grassGrad;
+		ctx.fillStyle = cachedGradients.grassBottom;
 		ctx.fillRect(0, canvas.height - GRASS_HEIGHT, canvas.width, GRASS_HEIGHT);//erba/siepe sotto
 		
 		ctx.fillStyle = "#caa472";
-		var dirtGrad = ctx.createLinearGradient(0, GRASS_HEIGHT, 0, canvas.height - GRASS_HEIGHT);
-		dirtGrad.addColorStop(0, "#9a7040");
-		dirtGrad.addColorStop(0.5, "#aa8050");
-		dirtGrad.addColorStop(1, "#9a7040");
-		ctx.fillStyle = dirtGrad;
+		ctx.fillStyle = cachedGradients.dirt;
 		ctx.fillRect(0, GRASS_HEIGHT, canvas.width, canvas.height - GRASS_HEIGHT * 2);//terra marrone
 	}
 	
     var avgSpeed = 0;
     for (var i = 0; i < horses.length; i++) avgSpeed += horses[i].speed;
 	avgSpeed /= horses.length;
-	trackOffset +=  avgSpeed;
+	trackOffset +=  avgSpeed * 2;
 	
 	//crea nuove particles
     for (let i = 0; i < 8 && dirtParticles.length < 1000; i++) {
@@ -590,13 +630,13 @@ function drawTrack() {
 	//disegna particles
     for (let i = 0; i < dirtParticles.length; i++) {
         let p = dirtParticles[i];
-        p.x -= avgSpeed * 2;
+        p.x -= avgSpeed * 4;
         ctx.fillStyle = "#ba9060";
         ctx.fillRect(p.x, p.y, p.size, p.size);
     }
 	for (let i = 0; i < grassParticles.length; i++) {
         let p = grassParticles[i];
-        p.x -= avgSpeed * 2;
+        p.x -= avgSpeed * 4;
         ctx.fillStyle = westAndSoda ? "7a5020" : "#006600";
         ctx.fillRect(p.x, p.y, p.size, p.size);
 		ctx.fillRect(p.x, p.y+canvas.height-(GRASS_HEIGHT), p.size, p.size);
@@ -637,8 +677,11 @@ function drawStats() {
         ctx.textAlign = "right";
         let ry = GRASS_HEIGHT + LANE_HEIGHT * horses[i].lane + LANE_HEIGHT / 2;
         ctx.font = "9px Arial";
-		ctx.fillStyle = horses[i].injured ? '#f00' : horses[i].devilInside ? '#ff0' : '#000';
-		ctx.fillText(horses[i].name + (i === selectedBetLane ? ' 💰':''), rx, ry);
+		ctx.fillStyle = i === selectedBetLane ? '#fff' : 
+							  horses[i].injured ? '#f00' : 
+							  horses[i].devilInside ? '#ff0' : 
+							  '#000';
+		ctx.fillText((i === selectedBetLane ? '💰 ':'') + horses[i].name, rx, ry);
 		
 		if (stats == 1) {
 			ctx.font = "7px Arial";
@@ -716,8 +759,8 @@ function drawHorse(h) {
     var maneColor  = h.maneColor;
     var hoofColor  = "#1a1a1a";
     var skinColor  = h.color;
-	var bodyColorShade15 = shadeColor(bodyColor, -15);
-	var bodyColorShade30 = shadeColor(bodyColor, -30);
+	var bodyColorShade15 = h.colorShade15;
+	var bodyColorShade30 = h.colorShade30;
 	
 	
 	//DISEGNO
@@ -887,7 +930,7 @@ function drawHorse(h) {
     drawReins(ctx, t);//redini/briglie
     
 	var jockeyBounce = Math.sin(t * 2) * 2;
-    drawJockey(ctx, 20, -30 + jockeyBounce, h.jockeyColor);
+    drawJockey(ctx, 20, -30 + jockeyBounce, h.jockeyColor, h.jockeyColorShade30);
 
     ctx.restore();
 }
@@ -1091,7 +1134,7 @@ function drawReins(ctx, t) {
 }
 
 //fantino semplice
-function drawJockey(ctx, x, y, col) {
+function drawJockey(ctx, x, y, col, colShade30) {
     /* mano dietro */
     ctx.fillStyle = "#f0c080";
     ctx.beginPath();
@@ -1133,8 +1176,8 @@ function drawJockey(ctx, x, y, col) {
     ctx.arc(x + 2, y - 30, 8, Math.PI, 0);
     ctx.fill();
     /* visiera */
-    ctx.fillStyle = shadeColor(col, -30);
-    ctx.fillRect(x - 5, y - 31, 16, 3);
+    ctx.fillStyle = colShade30;
+    ctx.fillRect(x - 5, y - 31, 18, 3);
 	
 	/* frustino */
     ctx.strokeStyle = "#333";
@@ -1171,7 +1214,7 @@ function playHoofBeat(audioCtx) {
     var t = audioCtx.currentTime;
 
     // Rumore impatto (basso e sordo)
-    var bufferSize = audioCtx.sampleRate * 0.15;
+    var bufferSize = audioCtx.sampleRate * 0.10;
     var buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
     var data = buffer.getChannelData(0);
     for (var i = 0; i < bufferSize; i++) {
@@ -1226,8 +1269,8 @@ function drawHorseWestAndSoda(h) {
 
     var bodyColor = h.color;
     var maneColor = h.maneColor;
-	var bodyColorShade15 = shadeColor(h.color, -15);
-	var bodyColorShade30 = shadeColor(h.color, -30);
+	var bodyColorShade15 = h.colorShade15;
+	var bodyColorShade30 = h.colorShade30;
     
     ctx.save();
     ctx.translate(cx, cy + bounce);
@@ -1469,7 +1512,7 @@ function drawHorseWestAndSoda(h) {
     drawSaddleWestAndSoda(ctx, t, h);
     drawReins(ctx, t);
     var jockeyBounce = Math.sin(t * 2) * 2;
-    drawJockeyWestAndSoda(ctx, 20, -30 + jockeyBounce, h.jockeyColor);
+    drawJockeyWestAndSoda(ctx, 20, -30 + jockeyBounce, h.jockeyColor, h.jockeyColorShade30);
 
     ctx.restore();
 }
@@ -1572,7 +1615,7 @@ function drawSaddleWestAndSoda(ctx, t, h) {
     ctx.restore();
 }
 
-function drawJockeyWestAndSoda(ctx, x, y, col) {
+function drawJockeyWestAndSoda(ctx, x, y, col, colShade30) {
 
     // ── coscia ──
     ctx.fillStyle = "#444";
@@ -1669,18 +1712,8 @@ function drawJockeyWestAndSoda(ctx, x, y, col) {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
 
 updateLaneGeometry();
 createRace();
