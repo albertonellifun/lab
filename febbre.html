@@ -609,7 +609,7 @@ function drawTrack() {
     var avgSpeed = 0;
     for (var i = 0; i < horses.length; i++) avgSpeed += horses[i].speed;
 	avgSpeed /= horses.length;
-	trackOffset +=  avgSpeed * 2;
+	trackOffset -=  avgSpeed * 2;
 	
 	//crea nuove particles
     for (let i = 0; i < 8 && dirtParticles.length < 1000; i++) {
@@ -628,15 +628,16 @@ function drawTrack() {
 	}
 	
 	//disegna particles
+	let avgSpeedOffset = avgSpeed * 50 / lanes;
     for (let i = 0; i < dirtParticles.length; i++) {
         let p = dirtParticles[i];
-        p.x -= avgSpeed * 4;
+        p.x -= avgSpeedOffset;
         ctx.fillStyle = "#ba9060";
         ctx.fillRect(p.x, p.y, p.size, p.size);
     }
 	for (let i = 0; i < grassParticles.length; i++) {
         let p = grassParticles[i];
-        p.x -= avgSpeed * 4;
+        p.x -= avgSpeedOffset;
         ctx.fillStyle = westAndSoda ? "7a5020" : "#006600";
         ctx.fillRect(p.x, p.y, p.size, p.size);
 		ctx.fillRect(p.x, p.y+canvas.height-(GRASS_HEIGHT), p.size, p.size);
