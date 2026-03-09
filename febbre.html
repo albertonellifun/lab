@@ -52,7 +52,8 @@ button{
 <div id="controls">
 	<button onclick="changeCenter()">👁️</button>
 	<button onclick="mute=!mute">🔊</button>
-	<button onclick="changeStats()">🐴</button>
+	<button onclick="changeStats()">📝</button>
+	<button onclick="changeTrottatori()">🐴</button>
 	<button onclick="changeWestAndSoda()">🤠</button>
 	<span id="bets"></span>
 	<button id="startRace" onclick="startRace()" disabled>🍀 VAI! 🧲</button>
@@ -68,9 +69,10 @@ var ctx = canvas.getContext("2d");
 
 var lanes = 4;
 var center = false;//schiaccia i cavalli verso il centro
-var mute = true;
-var stats = 1;
+var mute = true;//mutismo e rassegnazione
+var stats = true;//statistiche cavallo + linee di corsia
 var westAndSoda = false;
+var trottatori = false;
 
 var finishX = 900;
 var GRASS_HEIGHT = 10 + 80 / lanes;
@@ -224,7 +226,16 @@ function updateLaneGeometry() {
 }
 
 function changeStats() {
-	stats = (stats + 1) % 2;
+	stats = !stats;
+	if (!racing) {
+		drawTrack();
+		drawStats();
+		drawHorses();
+	}
+}
+
+function changeTrottatori() {
+	trottatori = !trottatori;
 	if (!racing) {
 		drawTrack();
 		drawStats();
@@ -301,7 +312,7 @@ function createRace() {
 			colorShade15 : shadeColor(colors[colIdx], -15),//colore principale scuro (zampe dietro, ombre, ...)
 			colorShade30 : shadeColor(colors[colIdx], -30),//colore principale ancora piu scuro
             jockeyColor: jColor,//fantino
-			jockeyColorShade30: shadeColor(jColor, -30)//dettagli piu scuri
+			jockeyColorShade10: shadeColor(jColor, -10)//dettagli piu scuri
         });
     }
     drawTrack();
@@ -647,7 +658,7 @@ function drawTrack() {
 	grassParticles = grassParticles.filter(p => p.x > 0);
 	
     //corsie tratteggiate
-	if (!center) {
+	if (stats) {
 		ctx.strokeStyle = "rgba(255,255,255,0.3)";
 		ctx.lineDashOffset = -trackOffset;
 		ctx.setLineDash([8, 12]);
@@ -683,7 +694,7 @@ function drawStats() {
 							  '#000';
 		ctx.fillText((i === selectedBetLane ? '💰 ':'') + horses[i].name, rx, ry);
 		
-		if (stats == 1) {
+		if (stats) {
 			ctx.font = "7px Arial";
 			ctx.fillStyle = '#fff';
 			ctx.fillText('X='+horses[i].x.toFixed(0)+' SPD=' + horses[i].speed.toFixed(1), rx, ry + 10);
@@ -730,6 +741,51 @@ function drawHorses() {
     for (var i = 0; i < horses.length; i++) westAndSoda ? drawHorseWestAndSoda(horses[i]) : drawHorse(horses[i]);
 }
 
+
+
+// -------------------------------------------------------
+// RUOTA con raggi — rotazione dipende da h.x
+// -------------------------------------------------------
+function drawWheel(ctx, cx, cy, radius, rotation) {
+    var spokes = 4;
+
+    // cerchione esterno
+    ctx.strokeStyle = "#2a1a0a";
+    ctx.lineWidth   = 5;
+    ctx.beginPath(); ctx.arc(cx, cy, radius, 0, Math.PI * 2); ctx.stroke();
+
+    // fascia interna
+    ctx.strokeStyle = "#4a3020";
+    ctx.lineWidth   = 2;
+    ctx.beginPath(); ctx.arc(cx, cy, radius - 5, 0, Math.PI * 2); ctx.stroke();
+
+    // raggi
+    ctx.strokeStyle = "#6b4c2a";
+    ctx.lineWidth   = 2;
+    for (var i = 0; i < spokes; i++) {
+        var a = rotation + (i / spokes) * Math.PI * 2;
+        ctx.beginPath();
+        ctx.moveTo(cx + Math.cos(a) * 8, cy + Math.sin(a) * 8); // mozzo interno
+        ctx.lineTo(cx + Math.cos(a) * (radius - 5), cy + Math.sin(a) * (radius - 5));
+        ctx.stroke();
+    }
+
+    // mozzo centrale
+    ctx.fillStyle   = "#2a1a0a";
+    ctx.strokeStyle = "#1a0a00";
+    ctx.lineWidth   = 1.5;
+    ctx.beginPath(); ctx.arc(cx, cy, 8, 0, Math.PI * 2);
+    ctx.fill(); ctx.stroke();
+
+    // cerchietto mozzo chiaro
+    ctx.fillStyle = "#8b6540";
+    ctx.beginPath(); ctx.arc(cx, cy, 4, 0, Math.PI * 2); ctx.fill();
+}
+
+
+
+
+
 function drawHorse(h) {
     var t = h.anim;
 
@@ -743,13 +799,13 @@ function drawHorse(h) {
 	}
 
 	//per le zampe — fasi del vero galoppo
-    var FL = Math.sin(t);                    // ant vicina
-    var FR = Math.sin(t + Math.PI * 0.9);    // ant lontana (leggermente sfasata)
-    var BL = Math.sin(t + Math.PI * 0.5);    // post vicina
-    var BR = Math.sin(t + Math.PI * 1.4);    // post lontana
+    var FL = trottatori ? Math.sin(t) : Math.sin(t);                    // ant vicina
+    var FR = trottatori ? Math.sin(t + Math.PI) : Math.sin(t + Math.PI * 0.9);    // ant lontana (leggermente sfasata)
+    var BL = trottatori ? Math.sin(t + Math.PI) : Math.sin(t + Math.PI * 0.5);    // post vicina
+    var BR = trottatori ? Math.sin(t) : Math.sin(t + Math.PI * 1.4);    // post lontana
 	
 	//bounce verticale del galoppo
-	var bounce = Math.sin(t * 2) * (h.speed * 1.5);//dipende dalla velocita: 1==bounce 3 circa, 0==bounce 0 circa
+	var bounce = Math.sin(t * 2) * (h.speed * trottatori ? 0.5 : 1.5);//dipende dalla velocita: 1==bounce 3 circa, 0==bounce 0 circa
 	
 	//vento == movimento coda/ciuffi/etc
 	var windX = h.speed * 5;
@@ -771,20 +827,20 @@ function drawHorse(h) {
 	//croce rossa
 	if (h.injured) {
 		ctx.fillStyle = '#f00';
-		ctx.fillRect(-20, -90, 28, 28); // bordo rosso
+		ctx.fillRect(-20, -70, 28, 28); // bordo rosso
 		ctx.fillStyle = '#fff';
-		ctx.fillRect(-18, -88, 24, 24); // bianco: da (-18,-88) a (6,-64)
+		ctx.fillRect(-18, -68, 24, 24); // bianco: da (-18,-88) a (6,-64)
 		ctx.fillStyle = '#f00';
-		ctx.fillRect(-9, -86, 6, 20);  // barra verticale: centrata in X=-6, piena altezza
-		ctx.fillRect(-16, -79, 20, 6); // barra orizzontale: piena larghezza, centrata in Y=-76
+		ctx.fillRect(-9, -66, 6, 20);  // barra verticale: centrata in X=-6, piena altezza
+		ctx.fillRect(-16, -59, 20, 6); // barra orizzontale: piena larghezza, centrata in Y=-76
 	}
 	
 	//indemoniato!
 	if (h.devilInside) {
 		ctx.beginPath();
-		ctx.moveTo(-6, -86);   // vertice alto
-		ctx.lineTo(8, -67);    // vertice basso destra
-		ctx.lineTo(-20, -67);  // vertice basso sinistra
+		ctx.moveTo(-6, -66);   // vertice alto
+		ctx.lineTo(8, -47);    // vertice basso destra
+		ctx.lineTo(-20, -47);  // vertice basso sinistra
 		ctx.closePath();
 		ctx.fillStyle = '#ff0';
 		ctx.fill();
@@ -793,8 +849,8 @@ function drawHorse(h) {
 		ctx.stroke();
 		// punto esclamativo
 		ctx.fillStyle = '#000';
-		ctx.fillRect(-7, -82, 3, 7);   // barra
-		ctx.fillRect(-7, -73, 3, 3);   // punto
+		ctx.fillRect(-7, -62, 3, 7);   // barra
+		ctx.fillRect(-7, -53, 3, 3);   // punto
 	}
 	
 	
@@ -839,9 +895,6 @@ function drawHorse(h) {
 	ctx.fill();
 	//chiappa scura
 	ctx.beginPath(); 
-	//ctx.ellipse(-36, 0, 23, 20, 0.3, 0, Math.PI * 2);
-	//ctx.fillStyle = bodyColorShade15; 
-	//ctx.fill();
 	
 
 	/* COLLO */
@@ -925,17 +978,215 @@ function drawHorse(h) {
 	
     ctx.shadowBlur = 0;
 
-	//sella
-	drawSaddle(ctx, t, h);
-
-    //FANTINO
-    drawReins(ctx, t);//redini/briglie
-    
-	var jockeyBounce = Math.sin(t * 2) * 2;
-    drawJockey(ctx, 20, -30 + jockeyBounce, h.jockeyColor, h.jockeyColorShade30);
-
+	if (trottatori) {
+		// punto di aggancio stanghe: vicino alla groppa/pancia
+		var aggancioX = 30;
+		var aggancioY = -25;
+		var wheelRot = h.x / HORSE_SCALE;
+		drawCarrozzellaDriver(ctx, aggancioX, aggancioY, wheelRot, t, h);
+	} else {
+		//sella
+		drawSaddle(ctx, t, h);
+		//redini
+		drawReins(ctx, t);//redini/briglie
+    	//fantino
+		var jockeyBounce = Math.sin(t * 2) * 2;
+		drawJockey(ctx, 20, -30 + jockeyBounce, h.jockeyColor, h.jockeyColorShade10);
+	}
+	
     ctx.restore();
 }
+
+
+
+
+
+// -------------------------------------------------------
+// wheelRotation: calcolato da h.x per rotazione coerente
+// ox, oy: punto di aggancio alle stanghe (vicino alla groppa)
+// -------------------------------------------------------
+function drawCarrozzellaDriver(ctx, ox, oy, wheelRotation, t, h) {
+
+    var SPOKE_COUNT = 5;
+    var WHEEL_R     = 30;  // ruota grande come in foto
+	
+	var bounce = Math.sin(t * 2) * 0.5;
+
+    // ---- RUOTA ----
+    var wx = ox - 165;  // la ruota è ben dietro il punto di aggancio
+    var wy = oy + 60;   // a terra (sotto le stanghe)
+
+    // pneumatico (cerchio esterno nero) - lo disegno dopo il driver
+    //ctx.strokeStyle = "#111";
+    //ctx.lineWidth   = 6;
+    //ctx.beginPath(); ctx.arc(wx, wy, WHEEL_R, 0, Math.PI * 2); ctx.stroke();
+
+    // cerchio interno (cerchione argento)
+    ctx.strokeStyle = "#aaa";
+    ctx.lineWidth   = 2;
+    ctx.beginPath(); ctx.arc(wx, wy, WHEEL_R - 5, 0, Math.PI * 2); ctx.stroke();
+
+    // raggi sottili
+    ctx.strokeStyle = "#888";
+    ctx.lineWidth   = 2;
+    for (var i = 0; i < SPOKE_COUNT; i++) {
+        var a = wheelRotation + (i / SPOKE_COUNT) * Math.PI * 2;
+        ctx.beginPath();
+        ctx.moveTo(wx + Math.cos(a) * 7,  wy + Math.sin(a) * 7);
+        ctx.lineTo(wx + Math.cos(a) * (WHEEL_R - 5), wy + Math.sin(a) * (WHEEL_R - 5));
+        ctx.stroke();
+    }
+
+    // mozzo
+    ctx.fillStyle = "#555";
+    ctx.beginPath(); ctx.arc(wx, wy, 7, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#999";
+    ctx.beginPath(); ctx.arc(wx, wy, 3, 0, Math.PI * 2); ctx.fill();
+
+
+    // ---- STANGHE ----
+    // leggera salita verso il cavallo
+    ctx.strokeStyle = "#000";
+    ctx.lineWidth   = 4;
+    ctx.lineCap     = "round";
+
+	//doppia cinghia verticale
+	ctx.fillStyle = '#000';
+	ctx.fillRect(ox, oy - 2, 3, 45);
+	ctx.fillRect(ox - 6, oy - 2, 3, 45);
+	
+	//NUMERO sul fianco
+	ctx.fillStyle = '#400';
+	ctx.fillRect(ox - 10, oy + 6, 20, 18)
+    ctx.shadowBlur = 0;
+    ctx.font = "12px Arial";
+    ctx.textAlign = "center";
+    ctx.fillStyle = selectedBetLane === h.lane ? '#fff' : '#aaa';
+    ctx.strokeStyle = "#000";
+    ctx.lineWidth = 3;
+    ctx.strokeText(h.id, ox, oy + 18);
+    ctx.fillText(h.id, ox, oy + 18);
+	
+    //stanga alta
+    ctx.beginPath();
+    ctx.moveTo(ox,      oy + 2);
+    ctx.lineTo(wx + 10, wy - WHEEL_R + 4);
+    ctx.stroke();
+	//stanga bassa
+	ctx.beginPath();
+    ctx.moveTo(ox - 60,      oy + 16);
+    ctx.lineTo(wx, wy);
+    ctx.stroke();
+	//stanga asse ruota
+	ctx.beginPath();
+	ctx.moveTo(wx, wy);
+	ctx.lineTo(wx-20, wy - WHEEL_R + 2);
+	ctx.stroke();
+    
+	//redine verso il muso
+	ctx.lineWidth = 1.5;
+    ctx.lineCap = "round";
+	ctx.beginPath();
+	ctx.moveTo(ox, oy);//attacco
+	ctx.bezierCurveTo(ox + 24, oy + 2 + bounce * 2, ox + 54, oy + 4 + bounce * 2,  ox + 72, oy - 4);
+	ctx.stroke();
+	//redine verso il pilota
+	ctx.beginPath();
+	ctx.moveTo(ox, oy);//attacco
+	ctx.bezierCurveTo(ox - 104, oy + 24 + bounce * 2, ox - 130, oy + 30 + bounce * 2,  ox - 160, oy + 12);
+	ctx.stroke();
+	//morso
+	ctx.fillStyle = "#aaaaaa";
+    ctx.beginPath();
+    ctx.ellipse(ox + 72, oy - 5, 3, 2, 0.3, 0, Math.PI * 2);
+    ctx.fill();
+	
+	
+	// ---- GUIDATORE ----
+    var sx = wx;   //chiappe
+    var sy = wy - WHEEL_R + 2;
+	var dy = sy - 10 + bounce;
+	
+    // busto reclinato
+    ctx.fillStyle   = h.jockeyColor;
+    ctx.strokeStyle = h.jockeyColorShade10;
+    ctx.lineWidth   = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(sx - 24, dy + 4);
+    ctx.bezierCurveTo(sx - 22, dy - 16, sx + 2, dy - 20, sx + 6, dy - 4);
+    ctx.lineTo(sx + 16, dy);
+    ctx.closePath();
+    ctx.fill(); 
+	ctx.stroke();
+
+    // testa
+    ctx.fillStyle   = "#e8c89a";
+    ctx.strokeStyle = "#0003";
+    ctx.lineWidth   = 1;
+    ctx.beginPath(); ctx.ellipse(sx - 2, dy - 24, 7, 8, 0.3, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+
+    // casco
+    ctx.fillStyle   = h.jockeyColor;
+    ctx.strokeStyle = h.jockeyColorShade10;
+    ctx.lineWidth   = 1.5;
+    ctx.beginPath();
+    ctx.arc(sx - 2, dy - 28, 9, Math.PI * 0.9, 0.1); // calotta
+    ctx.closePath();
+    ctx.fill(); 
+	ctx.stroke();
+	ctx.fillStyle = h.jockeyColorShade10;
+    ctx.fillRect(sx - 12, dy - 29, 23, 3);
+	
+	//mano
+    ctx.fillStyle = "#e8c89a";
+    ctx.beginPath();
+    ctx.arc(sx + 10, dy - 8, 5, 0, Math.PI * 2);
+    ctx.fill();
+
+
+    //gambe fisse, parte alta, chiara
+    ctx.fillStyle   = "#e8e0d0";
+    ctx.strokeStyle = "#999";
+    ctx.lineWidth   = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(sx - 24, sy - 8);
+    ctx.lineTo(sx + 10, sy - 12);
+    ctx.lineTo(sx + 10, sy - 2);
+    ctx.lineTo(sx - 24, sy + 2);
+    ctx.closePath();
+    ctx.fill(); 
+	ctx.stroke();
+	//polpaccio cattivaccio
+	ctx.beginPath();
+	ctx.moveTo(sx + 10, sy - 12);
+	ctx.lineTo(sx + 42, sy + 6);
+	ctx.lineTo(sx + 38, sy + 12);
+	ctx.lineTo(sx + 6, sy - 2);
+	ctx.closePath();
+	ctx.fill();
+	ctx.stroke();
+	//piedoni
+	ctx.beginPath();
+	ctx.fillStyle = "#333";
+	ctx.ellipse(sx + 42, sy + 6, 5, 12, 0.3, 0, Math.PI * 2);
+	ctx.fill(); 
+	
+	
+	// pneumatico (cerchio esterno nero) - lo disegno dopo il driver
+    ctx.strokeStyle = "#111";
+    ctx.lineWidth   = 6;
+    ctx.beginPath(); ctx.arc(wx, wy, WHEEL_R, 0, Math.PI * 2); ctx.stroke();
+}
+
+
+
+
+
+
+
+
+
+
 
 function drawSaddle(ctx, t, h) {
     let bounce = Math.sin(t * 2) * 1.5;
@@ -1145,7 +1396,7 @@ function drawReins(ctx, t) {
 //fantino semplice
 function drawJockey(ctx, x, y, col, colShade30) {
     /* mano dietro */
-    ctx.fillStyle = "#f0c080";
+    ctx.fillStyle = "#e8c89a";
     ctx.beginPath();
     ctx.arc(x + 10, y - 12, 3, 0, Math.PI * 2);
     ctx.fill();
@@ -1196,7 +1447,7 @@ function drawJockey(ctx, x, y, col, colShade30) {
     ctx.lineTo(x + 25, y - 2);
     ctx.stroke();
 	/* mano avanti */
-    ctx.fillStyle = "#f0c080";
+    ctx.fillStyle = "#e8c89a";
     ctx.beginPath();
     ctx.arc(x + 10, y - 8, 3, 0, Math.PI * 2);
     ctx.fill();
@@ -1206,6 +1457,14 @@ function drawJockey(ctx, x, y, col, colShade30) {
 
 /* utility: schiarisce/scurisce un colore hex */
 function shadeColor(col, amt) {
+	if (col.startsWith('hsl')) {
+        const match = col.match(/hsl\(\s*([\d.]+)\s*,\s*([\d.]+)%\s*,\s*([\d.]+)%\s*\)/);
+        if (!match) return col;
+        const h = parseFloat(match[1]);
+        const s = parseFloat(match[2]);
+        const l = Math.min(100, Math.max(0, parseFloat(match[3]) + amt));
+        return `hsl(${h}, ${s}%, ${l}%)`;
+    }
     var usePound = false;
     if (col[0] === "#") { col = col.slice(1); usePound = true; }
     var num = parseInt(col, 16);
@@ -1307,7 +1566,7 @@ function drawHorseWestAndSoda(h) {
     }
 
     // ── ombra piatta a terra ──
-    var shadowY = 58 - bounce * 0.4;
+    var shadowY = 64 - bounce * 0.4;
     ctx.save();
     ctx.translate(0, shadowY);
     ctx.scale(1, 0.15);
@@ -1521,7 +1780,7 @@ function drawHorseWestAndSoda(h) {
     drawSaddleWestAndSoda(ctx, t, h);
     drawReins(ctx, t);
     var jockeyBounce = Math.sin(t * 2) * 2;
-    drawJockeyWestAndSoda(ctx, 20, -30 + jockeyBounce, h.jockeyColor, h.jockeyColorShade30);
+    drawJockeyWestAndSoda(ctx, 20, -30 + jockeyBounce, h.jockeyColor, h.jockeyColorShade10);
 
     ctx.restore();
 }
@@ -1639,7 +1898,7 @@ function drawJockeyWestAndSoda(ctx, x, y, col, colShade30) {
     ctx.fill();
 
     // ── mano dietro ──
-    ctx.fillStyle = "#f0c080";
+    ctx.fillStyle = "#e8c89a";
     ctx.beginPath();
     ctx.arc(x + 10, y - 12, 3, 0, Math.PI * 2);
     ctx.fill();
@@ -1711,7 +1970,7 @@ function drawJockeyWestAndSoda(ctx, x, y, col, colShade30) {
     ctx.stroke();
 
     // ── mano avanti ──
-    ctx.fillStyle = "#f0c080";
+    ctx.fillStyle = "#e8c89a";
     ctx.beginPath();
     ctx.arc(x + 10, y - 8, 3, 0, Math.PI * 2);
     ctx.fill();
