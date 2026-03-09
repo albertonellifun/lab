@@ -742,50 +742,6 @@ function drawHorses() {
 }
 
 
-
-// -------------------------------------------------------
-// RUOTA con raggi — rotazione dipende da h.x
-// -------------------------------------------------------
-function drawWheel(ctx, cx, cy, radius, rotation) {
-    var spokes = 4;
-
-    // cerchione esterno
-    ctx.strokeStyle = "#2a1a0a";
-    ctx.lineWidth   = 5;
-    ctx.beginPath(); ctx.arc(cx, cy, radius, 0, Math.PI * 2); ctx.stroke();
-
-    // fascia interna
-    ctx.strokeStyle = "#4a3020";
-    ctx.lineWidth   = 2;
-    ctx.beginPath(); ctx.arc(cx, cy, radius - 5, 0, Math.PI * 2); ctx.stroke();
-
-    // raggi
-    ctx.strokeStyle = "#6b4c2a";
-    ctx.lineWidth   = 2;
-    for (var i = 0; i < spokes; i++) {
-        var a = rotation + (i / spokes) * Math.PI * 2;
-        ctx.beginPath();
-        ctx.moveTo(cx + Math.cos(a) * 8, cy + Math.sin(a) * 8); // mozzo interno
-        ctx.lineTo(cx + Math.cos(a) * (radius - 5), cy + Math.sin(a) * (radius - 5));
-        ctx.stroke();
-    }
-
-    // mozzo centrale
-    ctx.fillStyle   = "#2a1a0a";
-    ctx.strokeStyle = "#1a0a00";
-    ctx.lineWidth   = 1.5;
-    ctx.beginPath(); ctx.arc(cx, cy, 8, 0, Math.PI * 2);
-    ctx.fill(); ctx.stroke();
-
-    // cerchietto mozzo chiaro
-    ctx.fillStyle = "#8b6540";
-    ctx.beginPath(); ctx.arc(cx, cy, 4, 0, Math.PI * 2); ctx.fill();
-}
-
-
-
-
-
 function drawHorse(h) {
     var t = h.anim;
 
@@ -985,12 +941,12 @@ function drawHorse(h) {
 		var wheelRot = h.x / HORSE_SCALE;
 		drawCarrozzellaDriver(ctx, aggancioX, aggancioY, wheelRot, t, h);
 	} else {
+		var jockeyBounce = Math.sin(t * 2) * 2;
 		//sella
 		drawSaddle(ctx, t, h);
 		//redini
 		drawReins(ctx, t);//redini/briglie
     	//fantino
-		var jockeyBounce = Math.sin(t * 2) * 2;
 		drawJockey(ctx, 20, -30 + jockeyBounce, h.jockeyColor, h.jockeyColorShade10);
 	}
 	
@@ -1366,7 +1322,7 @@ function drawReins(ctx, t) {
     var mouthX = 104;
     var mouthY = -30;
 
-    // posizione mani del fantino (approssimativamente)
+    // posizione delle mani del fantino (approssimativamente)
     var handX = 28;
     var handY = -38;
 
@@ -1777,11 +1733,19 @@ function drawHorseWestAndSoda(h) {
     // ════════════════════════════════════════════
     //  SELLA + FANTINO
     // ════════════════════════════════════════════
-    drawSaddleWestAndSoda(ctx, t, h);
-    drawReins(ctx, t);
-    var jockeyBounce = Math.sin(t * 2) * 2;
-    drawJockeyWestAndSoda(ctx, 20, -30 + jockeyBounce, h.jockeyColor, h.jockeyColorShade10);
-
+	if (trottatori) {
+		// punto di aggancio stanghe: vicino alla groppa/pancia
+		var aggancioX = 30;
+		var aggancioY = -25;
+		var wheelRot = h.x / HORSE_SCALE / 2;
+		drawCarrozzellaDriverWestAndSoda(ctx, aggancioX, aggancioY, wheelRot, t, h);
+	} else {
+		var jockeyBounce = Math.sin(t * 2) * 2;
+		drawSaddleWestAndSoda(ctx, t, h);
+		drawReins(ctx, t);
+		drawJockeyWestAndSoda(ctx, 20, -30 + jockeyBounce, h.jockeyColor, h.jockeyColorShade10);
+	}
+	
     ctx.restore();
 }
 
@@ -1977,6 +1941,276 @@ function drawJockeyWestAndSoda(ctx, x, y, col, colShade30) {
 }
 
 
+//carrozza western
+function drawCarrozzellaDriverWestAndSoda(ctx, ox, oy, wheelRotation, t, h) {
+    var bounce = Math.sin(t * 2) * 0.5;
+
+    // ── geometria base ──
+    var wx  = ox - 295;//centro ruote post
+    var wy  = oy + 65;
+    var wx2 = ox - 180;//centro ruote ant
+    var wy2 = wy;    
+
+    var WR_BIG   = 36;//raggio
+    var SPOKES_B = 5;//numero raggi
+    
+    var carX  = wx  - WR_BIG;// bordo sinistro cassone
+    var carX2 = wx2 + WR_BIG;// bordo destro cassone
+    var carY  = wy  - WR_BIG - 4;// fondo cassone
+    var carH  = 38;// altezza cassone in legno
+    var carW  = carX2 - carX;// larghezza cassone
+
+    // ══════════════════════════════════════════
+    //  CASSONE IN LEGNO
+    // ══════════════════════════════════════════
+    // tavole di fondo (assi orizzontali)
+    var plankColors = ["#c8782a","#b86820","#d08830","#c07020"];
+    var plankH = Math.ceil(carH / 4);
+    for (var p = 0; p < 4; p++) {
+        ctx.fillStyle = plankColors[p % plankColors.length];
+        ctx.fillRect(carX, carY + p * plankH, carW, plankH);
+    }
+    // giunzioni tavole (linee scure orizzontali)
+    ctx.strokeStyle = "#3a1a04"; ctx.lineWidth = 1.5;
+    for (var p = 1; p < 4; p++) {
+        ctx.beginPath();
+        ctx.moveTo(carX, carY + p * plankH);
+        ctx.lineTo(carX2, carY + p * plankH);
+        ctx.stroke();
+    }
+    // listelli verticali metallici (cerchi del cassone)
+    ctx.strokeStyle = "#2a0e02"; ctx.lineWidth = 3;
+    [0.15, 0.4, 0.65, 0.85].forEach(function(frac) {
+        var lx = carX + carW * frac;
+        ctx.beginPath(); ctx.moveTo(lx, carY); ctx.lineTo(lx, carY + carH); ctx.stroke();
+    });
+    // bordo superiore e inferiore cassone
+    ctx.strokeStyle = "#2a0e02"; ctx.lineWidth = 3;
+    ctx.strokeRect(carX, carY, carW, carH);
+
+    
+	//NUMERO sul fianco
+	ctx.fillStyle = '#400';
+	ctx.fillRect(carX + 80, carY + 10, 30, 20);
+    ctx.shadowBlur = 0;
+    ctx.font = "14px Arial";
+    ctx.textAlign = "center";
+    ctx.fillStyle = selectedBetLane === h.lane ? '#fff' : '#aaa';
+    ctx.strokeStyle = "#000";
+    ctx.lineWidth = 3;
+    ctx.strokeText(h.id, carX + 95, carY + 24);
+    ctx.fillText(h.id, carX + 95, carY + 24);
+	
+	//barra agganciata al CAVALLO
+	ctx.lineWidth = 4;
+	ctx.fillStyle = "#c8782a";
+	ctx.fillRect(carX2, carY, 180, 4);
+	ctx.fillStyle = "#3a1a04";
+	ctx.fillRect(carX2, carY + 4, 180, 2);
+	
+	
+	
+	// ══════════════════════════════════════════
+    //  TELONE ARCUATO (canvas cover)
+    // ══════════════════════════════════════════
+    var archH = carH * 2.6;
+
+    // ── ombra interna ──
+    ctx.fillStyle = "#c8b878";
+    ctx.beginPath();
+    ctx.moveTo(carX + 4, carY + 2);
+    ctx.bezierCurveTo(carX + 4, carY - archH * 0.82, carX2 - 4, carY - archH * 0.82, carX2 - 4, carY + 2);
+    ctx.closePath(); ctx.fill();
+
+    // ── profilo telone ondulato ──
+    // le costole sono i punti ALTI, il telo tra una costola e l'altra cade in U
+    var ribCount = 5;
+    var ribXs = [];
+    var ribYs = [];
+    for (var r = 0; r < ribCount; r++) {
+        ribYs[r] = carY - archH;
+		ribXs[r] = carX + (r === ribCount - 1 ? (carW * (r / (ribCount -1)) - 28)
+			: carW * (r / (ribCount - 1)));
+    }
+
+    // fill del telone — percorso: base sx → costole con U → base dx
+    ctx.fillStyle = "#e8d898";
+    ctx.beginPath();
+    ctx.moveTo(carX - 2, carY + 2); // base sinistra
+
+    // salita al primo arco
+    ctx.lineTo(ribXs[0], ribYs[0]);
+
+    // tra ogni coppia di costole: scende a U e risale
+    for (var r = 0; r < ribCount - 1; r++) {
+        var midX = (ribXs[r] + ribXs[r+1]) / 2;
+        var sagY = ribYs[r] + archH * 0.18; // quanto cade il telo tra le costole
+        ctx.bezierCurveTo(
+            ribXs[r]  + carW * 0.04, ribYs[r]  + archH * 0.10,
+            midX      - carW * 0.04, sagY,
+            midX,                    sagY
+        );
+        ctx.bezierCurveTo(
+            midX      + carW * 0.04, sagY,
+            ribXs[r+1]- carW * 0.04, ribYs[r+1] + archH * 0.10,
+            ribXs[r+1], ribYs[r+1]
+        );
+    }
+
+    // discesa base destra
+    ctx.lineTo(carX2 + 2 - 28, carY + 2);
+    ctx.closePath();
+    ctx.fill();
+
+    // ── bordo superiore ondulato (solo profilo, no base) ──
+    ctx.strokeStyle = "#b8a060"; ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(carX - 2, carY + 2);
+    ctx.lineTo(ribXs[0], ribYs[0]);
+    for (var r = 0; r < ribCount - 1; r++) {
+        var midX = (ribXs[r] + ribXs[r+1]) / 2;
+        var sagY = ribYs[r] + archH * 0.18;
+        ctx.bezierCurveTo(
+            ribXs[r]  + carW * 0.04, ribYs[r]  + archH * 0.10,
+            midX      - carW * 0.04, sagY,
+            midX,                    sagY
+        );
+        ctx.bezierCurveTo(
+            midX      + carW * 0.04, sagY,
+            ribXs[r+1]- carW * 0.04, ribYs[r+1] + archH * 0.10,
+            ribXs[r+1], ribYs[r+1]
+        );
+    }
+    ctx.lineTo(carX2 + 2, carY + 2);
+    ctx.stroke();
+
+    // ── costole (archi verticali sulle creste) ──
+    for (var r = 0; r < ribCount; r++) {
+        ctx.strokeStyle = r === 0 || r === ribCount-1 ? "#8a7030" : "rgba(140,110,40,0.6)";
+        ctx.lineWidth   = r === 0 || r === ribCount-1 ? 2.5 : 1.5;
+        ctx.beginPath();
+        ctx.moveTo(ribXs[r], carY + 2);
+        ctx.lineTo(ribXs[r], ribYs[r]);
+        ctx.stroke();
+    }
+
+	
+	
+
+    // ══════════════════════════════════════════
+    //  GUIDATORE sul cassone
+    // ══════════════════════════════════════════
+    var sx = carX2 - 18;
+    var sy = carY - bounce;
+
+    // gambe a penzoloni
+    ctx.fillStyle = "#e8e0d0"; ctx.strokeStyle = "#999"; ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(sx - 8, sy); ctx.lineTo(sx + 8, sy);
+    ctx.lineTo(sx + 10, sy + 20); ctx.lineTo(sx - 6, sy + 20);
+    ctx.closePath(); ctx.fill(); ctx.stroke();
+    // stivali
+    ctx.fillStyle = "#333";
+    ctx.beginPath(); ctx.ellipse(sx - 2, sy + 22, 5, 8, 0.2, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(sx + 8, sy + 22, 5, 8, -0.2, 0, Math.PI*2); ctx.fill();
+
+    // busto
+    ctx.fillStyle = h.jockeyColor; ctx.strokeStyle = h.jockeyColorShade10; ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(sx - 10, sy);
+    ctx.bezierCurveTo(sx - 12, sy - 16, sx - 6, sy - 22, sx + 2, sy - 22);
+    ctx.bezierCurveTo(sx + 10, sy - 22, sx + 12, sy - 14, sx + 10, sy);
+    ctx.closePath(); ctx.fill(); ctx.stroke();
+
+    // testa
+    ctx.fillStyle = "#f0e8c8"; ctx.strokeStyle = "#c8a870"; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.ellipse(sx + 1, sy - 28, 6, 7, 0, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+
+    // cappello cowboy
+    var colSabbia = h.jockeyColor.replace(/,\s*\d+%\s*,/, ",20%,");
+    ctx.fillStyle = colSabbia;
+    // tesa
+    ctx.beginPath(); ctx.ellipse(sx + 1, sy - 34, 16, 4, 0, 0, Math.PI*2); ctx.fill();
+    // calotta sinistra
+    ctx.beginPath(); ctx.ellipse(sx - 4, sy - 37, 4, 10, 0, Math.PI, Math.PI*2); ctx.fill();
+    // calotta destra
+    ctx.beginPath(); ctx.ellipse(sx + 6, sy - 37, 4, 10, 0, Math.PI, Math.PI*2); ctx.fill();
+    // fascia
+    ctx.strokeStyle = "#8b6914"; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(sx - 8, sy - 37); ctx.lineTo(sx + 10, sy - 37); ctx.stroke();
+
+    // redini (verso il muso del cavallo)
+    ctx.strokeStyle = "#1a0a00"; ctx.lineWidth = 1.5; ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.moveTo(sx + 8, sy - 10);
+    ctx.bezierCurveTo(sx + 40, sy, ox + 60, oy - 10, ox + 72, oy - 4);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(sx + 8, sy - 8);
+    ctx.bezierCurveTo(sx + 40, sy + 4, ox + 60, oy - 6, ox + 72, oy - 2);
+    ctx.stroke();
+    // morso
+    ctx.fillStyle = "#aaa";
+    ctx.beginPath(); ctx.ellipse(ox + 72, oy - 4, 3, 2, 0.3, 0, Math.PI*2); ctx.fill();
+
+	//ruote
+	drawWoodenWheel(ctx, wx, wy, WR_BIG, wheelRotation, SPOKES_B);
+    drawWoodenWheel(ctx, wx2, wy2, WR_BIG, wheelRotation, SPOKES_B);
+}
+
+function drawWoodenWheel(ctx, wx, wy, WHEEL_R, wheelRotation, SPOKE_COUNT) {
+    // cerchione esterno: ferro battuto ossidato
+    ctx.strokeStyle = "#110600";
+    ctx.lineWidth   = 6;
+    ctx.beginPath(); ctx.arc(wx, wy, WHEEL_R, 0, Math.PI * 2); ctx.stroke();
+
+    // bordo interno cerchione
+    ctx.strokeStyle = "#3a1a06";
+    ctx.lineWidth   = 2;
+    ctx.beginPath(); ctx.arc(wx, wy, WHEEL_R - 6, 0, Math.PI * 2); ctx.stroke();
+
+    // corona esterna in legno — segmenti alternati
+    for (var seg = 0; seg < 14; seg++) {
+        var a0 = (seg / 14) * Math.PI * 2 + wheelRotation * 0.3;
+        var a1 = ((seg + 0.85) / 14) * Math.PI * 2 + wheelRotation * 0.3;
+        ctx.strokeStyle = (seg % 2 === 0) ? "#8b4a18" : "#a05c20";
+        ctx.lineWidth = 5;
+        ctx.beginPath(); ctx.arc(wx, wy, WHEEL_R - 3, a0, a1); ctx.stroke();
+    }
+
+    // raggi spessi in legno di quercia
+    ctx.lineCap = "round";
+    for (var i = 0; i < SPOKE_COUNT; i++) {
+        var a  = wheelRotation + (i / SPOKE_COUNT) * Math.PI * 2;
+        var rx0 = wx + Math.cos(a) * 10,         ry0 = wy + Math.sin(a) * 10;
+        var rx1 = wx + Math.cos(a) * (WHEEL_R-7), ry1 = wy + Math.sin(a) * (WHEEL_R-7);
+        // ombra lato scuro
+        ctx.strokeStyle = "#3a1404"; ctx.lineWidth = 9;
+        ctx.beginPath(); ctx.moveTo(rx0, ry0); ctx.lineTo(rx1, ry1); ctx.stroke();
+        // corpo quercia medio
+        ctx.strokeStyle = "#b07030"; ctx.lineWidth = 6;
+        ctx.beginPath(); ctx.moveTo(rx0, ry0); ctx.lineTo(rx1, ry1); ctx.stroke();
+        // fascia luce
+        ctx.strokeStyle = "#d8983c"; ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.moveTo(rx0, ry0); ctx.lineTo(rx1, ry1); ctx.stroke();
+        // venatura centrale luminosa
+        ctx.strokeStyle = "#f0c060"; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(rx0, ry0); ctx.lineTo(rx1, ry1); ctx.stroke();
+    }
+
+    // mozzo tornito in legno scuro
+    ctx.fillStyle = "#110600"; ctx.beginPath(); ctx.arc(wx, wy, 13, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = "#5a2408"; ctx.beginPath(); ctx.arc(wx, wy, 11, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = "#9a5018"; ctx.beginPath(); ctx.arc(wx, wy,  8, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = "#c87828"; ctx.beginPath(); ctx.arc(wx, wy,  5, 0, Math.PI*2); ctx.fill();
+    // bullone metallico centrale
+    ctx.fillStyle = "#999";   ctx.beginPath(); ctx.arc(wx, wy,  3,   0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = "#ddd";   ctx.beginPath(); ctx.arc(wx, wy,  1.5, 0, Math.PI*2); ctx.fill();
+
+    // cerchione esterno sopra tutto (bordo netto)
+    ctx.strokeStyle = "#000"; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(wx, wy, WHEEL_R + 1, 0, Math.PI * 2); ctx.stroke();
+}
 
 
 
