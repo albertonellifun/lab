@@ -97,6 +97,7 @@ let stopRace = false;//blocca gara
 let trackOffset = 0;
 let dirtParticles = [];
 let grassParticles = [];
+let steccatoParticles = [];
 //gradienti tracciato
 var cachedGradients = null;
 var cachedGradientsWestAndSoda = null;
@@ -198,7 +199,7 @@ function resizeCanvas() {
     canvas.style.height = "70vh";//(maxW*0.4) + 'px';
 }
 
-function initDirtParticles() {
+function initParticles() {
 	dirtParticles = [];//potrebbero essere state create precedentemente con coordinate sballate
 	for (let i = 0; i < 1000; i++) {
         dirtParticles.push({
@@ -215,13 +216,18 @@ function initDirtParticles() {
             size: Math.random() * 2 + 1
         });
     }
+	steccatoParticles = [];
+	var FENCE_SPACING = 48;
+	for (let i = 0; i * FENCE_SPACING < canvas.width + FENCE_SPACING * 4; i++) {
+		steccatoParticles.push({ x: i * FENCE_SPACING });
+	}
 }
 
 function updateLaneGeometry() {
     GRASS_HEIGHT = 10 + 80 / lanes;
     LANE_HEIGHT = (canvas.height - (2 * GRASS_HEIGHT)) / lanes;
 	//console.log('GRASS='+GRASS_HEIGHT+' LANE='+LANE_HEIGHT+ ' CANVAS='+canvas.height);
-	initDirtParticles();
+	initParticles();
 	buildGradients();
 }
 
@@ -656,6 +662,73 @@ function drawTrack() {
 	//rimuove vecchie particles fuori schermo
     dirtParticles = dirtParticles.filter(p => p.x > 0);
 	grassParticles = grassParticles.filter(p => p.x > 0);
+	
+	
+	//lo steccato... azz!
+	var POST_W      = 4;//paletto largo 4px
+	var POST_H      = GRASS_HEIGHT * 0.72;//paletto alto 3/4 circa
+	var RAIL_H      = 6;//steccato alto 6px
+	
+	var RAIL_Y_TOP_TOP = GRASS_HEIGHT * 0.22;//steccato alto Y
+	var RAIL_Y_BOT_TOP = canvas.height - GRASS_HEIGHT;//steccato basso Y
+
+	//sposta paletti alla stessa velocita dei dirt
+	for (let i = 0; i < steccatoParticles.length; i++) {
+		steccatoParticles[i].x -= avgSpeedOffset;
+	}
+	
+	//ricicla: rimuovi quelli usciti a sinistra, aggiungi a destra se serve
+	if (steccatoParticles.length > 0) {
+		var maxFX = steccatoParticles[steccatoParticles.length - 1].x;
+		steccatoParticles = steccatoParticles.filter(p => p.x > -20);
+		while (maxFX < canvas.width + 48) {
+			maxFX += 48;
+			steccatoParticles.push({ x: maxFX });
+		}
+	}
+	
+	//barra orizzontale bassa (prima paletti)
+	ctx.fillStyle = '#ffffee';
+	ctx.fillRect(0, RAIL_Y_BOT_TOP, canvas.width, RAIL_H);
+	//ombra
+	ctx.fillStyle = '#aabb99';
+	ctx.fillRect(0, RAIL_Y_BOT_TOP + RAIL_H, canvas.width, 1);
+	
+	//paletti
+	let topY = GRASS_HEIGHT - POST_H;
+	let botY = canvas.height - GRASS_HEIGHT + 1;
+	
+	for (let i = 0; i < steccatoParticles.length; i++) {
+		var fpx = steccatoParticles[i].x;
+		//siepe sopra: paletto scende dalla cima fino al bordo pista, disegno prima ombra
+		ctx.fillStyle = '#aabb99';
+		ctx.fillRect(fpx + 1, topY, POST_W, Math.round(POST_H) + 1);
+		ctx.fillStyle = '#eeeedd';
+		ctx.fillRect(fpx, topY, POST_W - 1, Math.round(POST_H));
+		//siepe sotto: paletto sale dal bordo pista verso il basso, disegno prima ombra
+		ctx.fillStyle = '#aabb99';
+		ctx.fillRect(fpx + 1, botY, POST_W, GRASS_HEIGHT/4);//Math.round(POST_H) + 1);
+		ctx.fillStyle = '#eeeedd';
+		ctx.fillRect(fpx, botY, POST_W - 1, GRASS_HEIGHT/4);//Math.round(POST_H));
+	}
+	
+	//barra orizzontale alta (dopo paletti)
+	ctx.fillStyle = '#ffffee';
+	ctx.fillRect(0, RAIL_Y_TOP_TOP, canvas.width, RAIL_H);
+	//ombra
+	ctx.fillStyle = '#aabb99';
+	ctx.fillRect(0, RAIL_Y_TOP_TOP + RAIL_H, canvas.width, 1);
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	
     //corsie tratteggiate
 	if (stats) {
@@ -1988,25 +2061,32 @@ function drawCarrozzellaDriverWestAndSoda(ctx, ox, oy, wheelRotation, t, h) {
     ctx.strokeStyle = "#2a0e02"; ctx.lineWidth = 3;
     ctx.strokeRect(carX, carY, carW, carH);
 
-    
-	//NUMERO sul fianco
-	ctx.fillStyle = '#400';
-	ctx.fillRect(carX + 80, carY + 10, 30, 20);
-    ctx.shadowBlur = 0;
-    ctx.font = "14px Arial";
-    ctx.textAlign = "center";
-    ctx.fillStyle = selectedBetLane === h.lane ? '#fff' : '#aaa';
-    ctx.strokeStyle = "#000";
-    ctx.lineWidth = 3;
-    ctx.strokeText(h.id, carX + 95, carY + 24);
-    ctx.fillText(h.id, carX + 95, carY + 24);
-	
 	//barra agganciata al CAVALLO
 	ctx.lineWidth = 4;
 	ctx.fillStyle = "#c8782a";
 	ctx.fillRect(carX2, carY, 180, 4);
 	ctx.fillStyle = "#3a1a04";
 	ctx.fillRect(carX2, carY + 4, 180, 2);
+    
+	//NUMERO sul fianco cavallo
+	ctx.fillStyle = '#400';
+	ctx.fillRect(ox - 35, oy + 20, 30, 20);//ctx.fillRect(carX + 80, carY + 10, 30, 20);
+    ctx.shadowBlur = 0;
+    ctx.font = "14px Arial";
+    ctx.textAlign = "center";
+    ctx.fillStyle = selectedBetLane === h.lane ? '#fff' : '#aaa';
+    ctx.strokeStyle = "#000";
+    ctx.lineWidth = 3;
+	ctx.strokeText(h.id,  ox - 22, oy + 35);
+	ctx.fillText(h.id, ox - 22, oy + 35);
+    
+	//NUMERO anche su fianco carrozza
+	ctx.fillStyle = '#400';
+	ctx.fillRect(carX + 80, carY + 8, 30, 22);    
+	ctx.font = "18px Arial";
+	ctx.fillStyle = selectedBetLane === h.lane ? '#fff' : '#aaa';
+	ctx.strokeText(h.id, carX + 95, carY + 24);
+	ctx.fillText(h.id, carX + 95, carY + 24);
 	
 	
 	
@@ -2129,15 +2209,17 @@ function drawCarrozzellaDriverWestAndSoda(ctx, ox, oy, wheelRotation, t, h) {
     // cappello cowboy
     var colSabbia = h.jockeyColor.replace(/,\s*\d+%\s*,/, ",20%,");
     ctx.fillStyle = colSabbia;
+	
+	//CAPPELLO COWBOY
     // tesa
     ctx.beginPath(); ctx.ellipse(sx + 1, sy - 34, 16, 4, 0, 0, Math.PI*2); ctx.fill();
     // calotta sinistra
-    ctx.beginPath(); ctx.ellipse(sx - 4, sy - 37, 4, 10, 0, Math.PI, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(sx - 1, sy - 37, 3, 10, 0, Math.PI, Math.PI*2); ctx.fill();
     // calotta destra
-    ctx.beginPath(); ctx.ellipse(sx + 6, sy - 37, 4, 10, 0, Math.PI, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(sx + 4, sy - 37, 3, 10, 0, Math.PI, Math.PI*2); ctx.fill();
     // fascia
     ctx.strokeStyle = "#8b6914"; ctx.lineWidth = 3;
-    ctx.beginPath(); ctx.moveTo(sx - 8, sy - 37); ctx.lineTo(sx + 10, sy - 37); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(sx - 5, sy - 37); ctx.lineTo(sx + 9, sy - 37); ctx.stroke();
 
     // redini (verso il muso del cavallo)
     ctx.strokeStyle = "#1a0a00"; ctx.lineWidth = 1.5; ctx.lineCap = "round";
@@ -2194,21 +2276,19 @@ function drawWoodenWheel(ctx, wx, wy, WHEEL_R, wheelRotation, SPOKE_COUNT) {
         ctx.strokeStyle = "#d8983c"; ctx.lineWidth = 3;
         ctx.beginPath(); ctx.moveTo(rx0, ry0); ctx.lineTo(rx1, ry1); ctx.stroke();
         // venatura centrale luminosa
-        ctx.strokeStyle = "#f0c060"; ctx.lineWidth = 1;
+        ctx.strokeStyle = "#f0c060"; ctx.lineWidth = 0.5;
         ctx.beginPath(); ctx.moveTo(rx0, ry0); ctx.lineTo(rx1, ry1); ctx.stroke();
     }
 
     // mozzo tornito in legno scuro
-    ctx.fillStyle = "#110600"; ctx.beginPath(); ctx.arc(wx, wy, 13, 0, Math.PI*2); ctx.fill();
     ctx.fillStyle = "#5a2408"; ctx.beginPath(); ctx.arc(wx, wy, 11, 0, Math.PI*2); ctx.fill();
     ctx.fillStyle = "#9a5018"; ctx.beginPath(); ctx.arc(wx, wy,  8, 0, Math.PI*2); ctx.fill();
-    ctx.fillStyle = "#c87828"; ctx.beginPath(); ctx.arc(wx, wy,  5, 0, Math.PI*2); ctx.fill();
     // bullone metallico centrale
     ctx.fillStyle = "#999";   ctx.beginPath(); ctx.arc(wx, wy,  3,   0, Math.PI*2); ctx.fill();
     ctx.fillStyle = "#ddd";   ctx.beginPath(); ctx.arc(wx, wy,  1.5, 0, Math.PI*2); ctx.fill();
 
     // cerchione esterno sopra tutto (bordo netto)
-    ctx.strokeStyle = "#000"; ctx.lineWidth = 2;
+    ctx.strokeStyle = "#552200"; ctx.lineWidth = 1;
     ctx.beginPath(); ctx.arc(wx, wy, WHEEL_R + 1, 0, Math.PI * 2); ctx.stroke();
 }
 
