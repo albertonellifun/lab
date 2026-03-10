@@ -51,7 +51,8 @@ button{
 <canvas id="game" width="1000" height="400"></canvas>
 <div id="controls">
 	<button onclick="changeCenter()">👁️</button>
-	<button onclick="mute=!mute">🔊</button>
+	<button onclick="changeMute()">🔊</button>
+	<button onclick="changeMusic()">🎵</button>
 	<button onclick="changeStats()">📝</button>
 	<button onclick="changeTrottatori()">🐴</button>
 	<button onclick="changeWestAndSoda()">🤠</button>
@@ -70,6 +71,10 @@ var ctx = canvas.getContext("2d");
 var lanes = 4;
 var center = false;//schiaccia i cavalli verso il centro
 var mute = true;//mutismo e rassegnazione
+var music = false;//musica on/off
+const bgMusic = new Audio('febbre.mp3'); bgMusic.loop = true; bgMusic.volume = 0.4;
+const bgMusicWestAndSoda = new Audio('westandsoda.mp3'); bgMusicWestAndSoda.loop = true; bgMusicWestAndSoda.volume = 0.4;
+
 var stats = true;//statistiche cavallo + linee di corsia
 var westAndSoda = false;
 var trottatori = false;
@@ -231,6 +236,26 @@ function updateLaneGeometry() {
 	buildGradients();
 }
 
+function changeMusic() {
+	music = !music;
+	if (music) {
+		if (westAndSoda) {
+			bgMusic.pause();
+			bgMusicWestAndSoda.play();
+		} else {
+			bgMusicWestAndSoda.pause();
+			bgMusic.play();
+		}
+	} else {
+		bgMusic.pause();
+		bgMusicWestAndSoda.pause();
+	}
+}
+
+function changeMute() {
+	mute = !mute;
+}
+
 function changeStats() {
 	stats = !stats;
 	if (!racing) {
@@ -256,6 +281,19 @@ function changeWestAndSoda() {
 		drawTrack();
 		drawStats();
 		drawHorses();
+	}
+	
+	if (music) {
+		if (westAndSoda) {
+			bgMusic.pause();
+			bgMusicWestAndSoda.play();
+		} else {
+			bgMusicWestAndSoda.pause();
+			bgMusic.play();
+		}		
+	} else {
+		bgMusic.pause();
+		bgMusicWestAndSoda.pause();
 	}
 }
 
@@ -373,7 +411,22 @@ function startRace() {
         raceTime += 0.1;
         document.getElementById("timer").innerText = "⏱ " + raceTime.toFixed(1) + "s";
     }, 100);
-	
+		
+	//Nel click handler del bottone "Vai"
+	if (music) {
+		if (westAndSoda) {
+			bgMusic.pause();
+			bgMusicWestAndSoda.currentTime = 0;
+			bgMusicWestAndSoda.play();
+		} else {
+			bgMusicWestAndSoda.pause();
+			bgMusic.currentTime = 0;
+			bgMusic.play();		
+		}
+	} else {
+		bgMusic.pause();
+		bgMusicWestAndSoda.pause();
+	}
     loop();
 }
 
