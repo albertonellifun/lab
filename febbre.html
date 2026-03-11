@@ -300,9 +300,9 @@ function changeWestAndSoda() {
 function changeCenter() {
 	center=!center;
 	if (lanes > 3) {
-		HORSE_SCALE = center ? 4.5/lanes : 3/lanes;
+		HORSE_SCALE = center ? 4/lanes : 3/lanes;
 	} else {
-		HORSE_SCALE = center ? 3/lanes : 2.5/lanes;
+		HORSE_SCALE = center ? 2.8/lanes : 2.5/lanes;
 	}
 	if (!racing) {
 		drawTrack();
@@ -864,8 +864,101 @@ function updateUI() {
    pivot: centro corsia, il muso punta a destra
 ===================================================== */
 function drawHorses() {
-    for (var i = 0; i < horses.length; i++) westAndSoda ? drawHorseWestAndSoda(horses[i]) : drawHorse(horses[i]);
+    for (var i = 0; i < horses.length; i++) westAndSoda ? drawHorseWestAndSoda(horses[i]) : drawHorse(horses[i]);//
 }
+
+
+
+
+// seg — segmento arto tutto storto
+function drawSegmentoZampa(ctx, x1, y1, x2, y2, w1, w2, col, shade) {
+    var dx = x2 - x1, dy = y2 - y1;
+    var len = Math.sqrt(dx * dx + dy * dy) || 1;
+    var nx = -dy / len,ny = dx / len;//perpendicolare
+	var sx = dx / len,  sy = dy / len;// lungo il segmento
+
+    // Punti dei quattro angoli
+    var tx1 = x1 + nx * w1;// top-start 
+	var ty1 = y1 + ny * w1;// top-start
+    var tx2 = x2 + nx * w2;// top-end
+	var ty2 = y2 + ny * w2;// top-end
+    var bx2 = x2 - nx * w2;// bottom-end
+	var by2 = y2 - ny * w2;// bottom-end
+    var bx1 = x1 - nx * w1;// bottom-start 
+	var by1 = y1 - ny * w1;// bottom-start
+
+    // Punto medio del segmento (asse longitudinale)
+    var mx = (x1 + x2) * 0.5;
+	var my = (y1 + y2) * 0.5;
+    var bulgeDentro = -(w1 + w2) * 0.01;// Bombatura laterale in dentro
+	var cpTx = mx + nx * bulgeDentro, cpTy = my + ny * bulgeDentro;
+    var cpBx = mx - nx * bulgeDentro, cpBy = my - ny * bulgeDentro;
+	
+	// Midpoint dei caps (estremo inizio e fine)
+    var sMx = (tx1 + bx1) * 0.5, sMy = (ty1 + by1) * 0.5;  // cap start
+    var eMx = (tx2 + bx2) * 0.5, eMy = (ty2 + by2) * 0.5;  // cap end
+	var bulgeFuori = (w1 + w2) * 0.5;  // Bombatura in fuori
+
+
+    ctx.beginPath();
+    ctx.moveTo(tx1, ty1);
+	
+	ctx.lineTo(tx2, ty2);//dritto
+    //ctx.quadraticCurveTo(cpTx, cpTy, tx2, ty2);   //bombato dentro
+    
+	//ctx.lineTo(bx2, by2);
+	ctx.quadraticCurveTo(eMx + sx * bulgeFuori, eMy + sy * bulgeFuori, bx2, by2); //bombato fuori
+	
+    ctx.lineTo(bx1, by1);//dritto
+	//ctx.quadraticCurveTo(cpBx, cpBy, bx1, by1);   //bombato dentro
+	
+	ctx.quadraticCurveTo(sMx - sx * bulgeFuori, sMy - sy * bulgeFuori, tx1, ty1); //bombato fuori
+	
+    ctx.closePath();
+	
+    ctx.fillStyle = col;
+    ctx.fill();
+}
+
+// zampa — tre segmenti animati (anca/spalla, ginocchio/garretto, pastoia+zoccolo)
+function drawZampa(ctx, ox, oy, phase, col, hoofCol, isRear) {
+    var uLen = isRear ? 24 : 26;//lunghezza segmento superiore
+    var lLen = isRear ? 26 : 24;//lunghezza segmento inferiore
+    var uW   = isRear ? 10 : 8;//larghezza segmento superiore
+	var lW   = isRear ? 3 : 2;//larghezza segmento inferiore
+
+    // Oscillazione del segmento superiore attorno al punto di attacco
+    var alpha = phase * (isRear ? 0.42 : 0.48);
+
+    // Flessione ginocchio/garretto
+    // Anteriore: il ginocchio piega in avanti quando la zampa è sollevata
+    // Posteriore: il garretto piega verso l'esterno quando la zampa è abbassata
+    var beta;
+    if (isRear) {
+		beta = Math.max(0, -phase) * 0.7 + 0.18;
+    } else {
+		beta = Math.max(0,  phase) * 0.8 + 0.12;
+    }
+
+    // Calcola posizioni: attacco → ginocchio/garretto → estremo inferiore
+    var ax = ox, ay = oy;
+    var kx = ax + Math.sin(alpha) * uLen;
+    var ky = ay + Math.cos(alpha) * uLen;
+    var lAngle = isRear ? alpha + beta : alpha - beta;
+    var ex = kx + Math.sin(lAngle) * lLen;
+    var ey = ky + Math.cos(lAngle) * lLen;
+
+    // Disegna
+    drawSegmentoZampa(ctx, ax, ay, kx, ky, uW, uW * 0.65, col, hoofCol);
+    drawSegmentoZampa(ctx, kx, ky, ex, ey, uW * 0.60, lW, col, hoofCol);
+       
+	ctx.beginPath(); 
+	ctx.ellipse(ex, ey + 5, 6, 3.5, 0, 0, Math.PI * 2);
+	ctx.fillStyle = hoofCol; 
+	ctx.fill();
+}
+
+
 
 
 function drawHorse(h) {
@@ -959,9 +1052,11 @@ function drawHorse(h) {
     ctx.shadowBlur  = 4;
 
     /* gamba lontana posteriore */
-    drawLeg(ctx, -38, 15, BL, bodyColorShade30, hoofColor, true);
+    //drawLeg(ctx, -38, 15, BL, bodyColorShade30, hoofColor, true);
+	drawZampa(ctx, -38, 13, BL, bodyColorShade30, hoofColor, true);
     /* gamba lontana anteriore */
-    drawLeg(ctx,  38, 13, FR, bodyColorShade30, hoofColor, false);
+    //drawLeg(ctx,  38, 13, FR, bodyColorShade30, hoofColor, false);
+	drawZampa(ctx,  38, 11, FR, bodyColorShade30, hoofColor, false);
 	
 	
 	/* CORPO */
@@ -1051,11 +1146,12 @@ function drawHorse(h) {
     ctx.fill();
 	
 	
-	
     /* gamba vicina posteriore */
-    drawLeg(ctx, -40, 20, BR, bodyColor, hoofColor, true);
+    //drawLeg(ctx, -40, 20, BR, bodyColor, hoofColor, true);
+	drawZampa(ctx, -40, 18, BR, bodyColor, hoofColor, true);
     /* gamba vicina anteriore */
-    drawLeg(ctx,  46, 18, FL, bodyColor, hoofColor, false);
+    //drawLeg(ctx,  46, 18, FL, bodyColor, hoofColor, false);
+	drawZampa(ctx,  46, 16, FL, bodyColor, hoofColor, false);
 	
 	
     ctx.shadowBlur = 0;
@@ -1093,6 +1189,23 @@ function drawCarrozzellaDriver(ctx, ox, oy, wheelRotation, t, h) {
     var WHEEL_R     = 30;  // ruota grande come in foto
 	
 	var bounce = Math.sin(t * 2) * 0.5;
+
+
+	//// ombra ellittica a terra
+	var shadowY = 60 - bounce * 0.5; // rimane "a terra" mentre il cavallo balla
+	var shadowX = ox - 160;
+	ctx.save();
+	ctx.translate(shadowX, shadowY);
+	var shadowGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, 50);
+	shadowGrad.addColorStop(0, "rgba(0,0,0,0.3)");
+	shadowGrad.addColorStop(1, "rgba(0,0,0,0)");
+	ctx.fillStyle = shadowGrad;
+	ctx.scale(1, 0.2); // schiaccia per renderla ellittica
+	ctx.beginPath();
+	ctx.arc(0, 0, 50, 0, Math.PI * 2);
+	ctx.fill();
+	ctx.restore();	
+
 
     // ---- RUOTA ----
     var wx = ox - 165;  // la ruota è ben dietro il punto di aggancio
@@ -1881,8 +1994,8 @@ function drawHorseWestAndSoda(h) {
 //  Gambe stecco quasi verticali — zoccolo a SEMICERCHIO piatto
 // ────────────────────────────────────────────────────────────
 function drawLegWestAndSoda(ctx, sx, sy, phase, bodyCol, isBack, t) {
-    var thighLen = 16;
-    var shinLen  = 30;
+    var thighLen = 14;
+    var shinLen  = 28;
 
     var thighAngle, shinAngle;
     if (!isBack) {
@@ -2085,6 +2198,17 @@ function drawCarrozzellaDriverWestAndSoda(ctx, ox, oy, wheelRotation, t, h) {
     var carY  = wy  - WR_BIG - 4;// fondo cassone
     var carH  = 38;// altezza cassone in legno
     var carW  = carX2 - carX;// larghezza cassone
+
+	// ── ombra piatta a terra ──
+    var shadowY = carY + WR_BIG * 2 - 8;
+	var shadowX = carX + 100;
+    ctx.save();
+    ctx.translate(shadowX, shadowY);
+    ctx.scale(1, 0.18);
+    ctx.beginPath(); ctx.arc(0, 0, 100, 0, Math.PI * 2);
+    ctx.fillStyle = "rgba(0,0,0,0.18)"; ctx.fill();
+    ctx.restore();
+
 
     // ══════════════════════════════════════════
     //  CASSONE IN LEGNO
