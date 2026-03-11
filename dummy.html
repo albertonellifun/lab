@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<title>Crash Test Dummy</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #1a1a1a;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    font-family: 'Courier New', monospace;
+    color: #f0c040;
+  }
+  h1 {
+    font-size: 13px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    opacity: 0.7;
+  }
+  canvas {
+    border: 2px solid #f0c040;
+    cursor: crosshair;
+    display: block;
+    box-shadow: 0 0 40px rgba(240,192,64,0.15);
+    touch-action: none;
+  }
+</style>
+</head>
+<body>
+<h1>⚠ Crash Test Dummy ⚠</h1>
+<canvas id="c" width="600" height="600"></canvas>
+
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+const W = 600;
+const H = 600;
+
+// ── FISICA VERLET ──────────────────────────────────────────────
+class Point {
+  constructor(x, y, mass = 1) {
+    this.x = x; this.y = y;
+    this.ox = x; this.oy = y;
+    this.ax = 0; this.ay = 0;
+    this.mass = mass;
+    this.pinned = false;
+  }
+  update(dt) {
+    if (this.pinned) return;
+    const vx = (this.x - this.ox);
+    const vy = (this.y - this.oy);
+    const speed = Math.sqrt(vx*vx + vy*vy);
+    const drag = 1.0 - Math.min(0.045 + speed * 0.004, 0.18);
+    this.ox = this.x;
+    this.oy = this.y;
+    this.x += vx * drag + this.ax * dt * dt;
+    this.y += vy * drag + this.ay * dt * dt;
+    this.ax = 0; this.ay = 0;
+  }
+  constrain() {
+    const BOUNCE_FLOOR = 0.20;
+    const BOUNCE_WALL  = 0.30;
+    const BOUNCE_CEIL  = 0.15;
+    const FRICTION_FLOOR = 0.10;
+    const FRICTION_WALL  = 0.30;
+    const R = this.r || 4;
+    if (this.y > H - R) {
+      const vx = (this.x - this.ox) * FRICTION_FLOOR;
+      const vy = this.y - this.oy;
+      this.y = H - R;
+      this.ox = this.x - vx;
+      this.oy = this.y + vy * BOUNCE_FLOOR;
+    }
+    if (this.y < R) {
+      const vy = this.y - this.oy;
+      this.y = R;
+      this.oy = this.y + vy * BOUNCE_CEIL;
+    }
+    if (this.x < R) {
+      const vx = this.x - this.ox;
+      const vy = (this.y - this.oy) * FRICTION_WALL;
+      this.x = R;
+      this.ox = this.x + vx * BOUNCE_WALL;
+      this.oy = this.y - vy;
+    }
+    if (this.x > W - R) {
+      const vx = this.x - this.ox;
+      const vy = (this.y - this.oy) * FRICTION_WALL;
+      this.x = W - R;
+      this.ox = this.x + vx * BOUNCE_WALL;
+      this.oy = this.y - vy;
+    }
+  }
+}
+
+class Stick {
+  constructor(a, b, stiffness = 1) {
+    this.a = a; this.b = b;
+    this.len = Math.hypot(b.x - a.x, b.y - a.y);
+    this.stiffness = stiffness;
+  }
+  solve() {
+    const dx = this.b.x - this.a.x;
+    const dy = this.b.y - this.a.y;
+    const dist = Math.hypot(dx, dy) || 0.001;
+    const diff = (dist - this.len) / dist * 0.5 * this.stiffness;
+    const ox = dx * diff, oy = dy * diff;
+    if (!this.a.pinned) { this.a.x += ox; this.a.y += oy; }
+    if (!this.b.pinned) { this.b.x -= ox; this.b.y -= oy; }
+  }
+}
+
+// ── COSTRUZIONE RAGDOLL ───────────────────────────────────────
+const GRAVITY = 620;
+
+function makeDummy(cx, cy) {
+  const pts = {};
+
+  pts.head    = new Point(cx,      cy);          pts.head.r = 14;
+  pts.neck    = new Point(cx,      cy + 12);
+  pts.shlC    = new Point(cx,      cy + 26);
+  pts.shlL    = new Point(cx - 22, cy + 26);
+  pts.shlR    = new Point(cx + 22, cy + 26);
+  pts.chest   = new Point(cx,      cy + 48);
+  pts.waist   = new Point(cx,      cy + 70);
+  pts.hipC    = new Point(cx,      cy + 86);
+  pts.hipL    = new Point(cx - 14, cy + 86);
+  pts.hipR    = new Point(cx + 14, cy + 86);
+
+  pts.elbL    = new Point(cx - 44, cy + 48);
+  pts.elbR    = new Point(cx + 44, cy + 48);
+  pts.wristL  = new Point(cx - 58, cy + 70);
+  pts.wristR  = new Point(cx + 58, cy + 70);
+  pts.handL   = new Point(cx - 62, cy + 82);
+  pts.handR   = new Point(cx + 62, cy + 82);
+
+  pts.kneeL   = new Point(cx - 16, cy + 118);
+  pts.kneeR   = new Point(cx + 16, cy + 118);
+  pts.ankleL  = new Point(cx - 16, cy + 156);
+  pts.ankleR  = new Point(cx + 16, cy + 156);
+  pts.footL   = new Point(cx - 36, cy + 168);
+  pts.footR   = new Point(cx + 36, cy + 168);
+
+  Object.values(pts).forEach(p => { if (!p.r) p.r = 3; });
+
+  const sticks = [
+    new Stick(pts.head,  pts.neck),
+    new Stick(pts.neck,  pts.shlC),
+    new Stick(pts.shlC,  pts.chest),
+    new Stick(pts.chest, pts.waist),
+    new Stick(pts.waist, pts.hipC),
+
+    new Stick(pts.shlL,  pts.shlR),
+    new Stick(pts.hipL,  pts.hipR),
+    new Stick(pts.shlC,  pts.shlL),
+    new Stick(pts.shlC,  pts.shlR),
+    new Stick(pts.hipC,  pts.hipL),
+    new Stick(pts.hipC,  pts.hipR),
+
+    new Stick(pts.shlL,  pts.waist, 0.5),
+    new Stick(pts.shlR,  pts.waist, 0.5),
+    new Stick(pts.shlL,  pts.hipC,  0.3),
+    new Stick(pts.shlR,  pts.hipC,  0.3),
+
+    new Stick(pts.shlL,  pts.elbL),
+    new Stick(pts.elbL,  pts.wristL),
+    new Stick(pts.wristL,pts.handL),
+
+    new Stick(pts.shlR,  pts.elbR),
+    new Stick(pts.elbR,  pts.wristR),
+    new Stick(pts.wristR,pts.handR),
+
+    new Stick(pts.hipL,  pts.kneeL),
+    new Stick(pts.kneeL, pts.ankleL),
+    new Stick(pts.ankleL,pts.footL, 0.8),
+
+    new Stick(pts.hipR,  pts.kneeR),
+    new Stick(pts.kneeR, pts.ankleR),
+    new Stick(pts.ankleR,pts.footR, 0.8),
+  ];
+
+  return { pts, sticks, points: Object.values(pts) };
+}
+
+const dummy = makeDummy(300, 180);
+
+// ── INTERAZIONE MOUSE + TOUCH UNIFICATA ──────────────────────
+let dragging = null;
+let prevMX = 0, prevMY = 0;
+
+function getPos(e) {
+  const r = canvas.getBoundingClientRect();
+  const src = e.touches ? e.touches[0] : e;
+  return {
+    x: src.clientX - r.left,
+    y: src.clientY - r.top
+  };
+}
+
+function onStart(e) {
+  e.preventDefault();
+  const { x, y } = getPos(e);
+  let best = null, bestD = e.touches ? 40 : 30;
+  dummy.points.forEach(p => {
+    const d = Math.hypot(p.x - x, p.y - y);
+    if (d < bestD) { bestD = d; best = p; }
+  });
+  if (best) {
+    dragging = best;
+    prevMX = x; prevMY = y;
+  }
+}
+
+function onMove(e) {
+  e.preventDefault();
+  const { x, y } = getPos(e);
+  const dmx = x - prevMX;
+  const dmy = y - prevMY;
+  if (dragging) {
+    dragging.x = x;
+    dragging.y = y;
+    dragging.ox = x - dmx * 1.1;
+    dragging.oy = y - dmy * 1.1;
+  }
+  prevMX = x; prevMY = y;
+}
+
+function onEnd(e) {
+  dragging = null;
+}
+
+canvas.addEventListener('mousedown',  onStart);
+canvas.addEventListener('mousemove',  onMove);
+canvas.addEventListener('mouseup',    onEnd);
+canvas.addEventListener('touchstart', onStart, { passive: false });
+canvas.addEventListener('touchmove',  onMove,  { passive: false });
+canvas.addEventListener('touchend',   onEnd);
+
+// ── DISEGNO ───────────────────────────────────────────────────
+const DUMMY_YELLOW = '#f0c040';
+const DUMMY_DARK   = '#1a1200';
+const DUMMY_GREY   = '#c8b86a';
+
+function drawBody() {
+  const p = dummy.pts;
+
+  function limb(a, b, w, col) {
+    ctx.beginPath();
+    ctx.moveTo(a.x, a.y);
+    ctx.lineTo(b.x, b.y);
+    ctx.strokeStyle = col || DUMMY_YELLOW;
+    ctx.lineWidth = w;
+    ctx.lineCap = 'round';
+    ctx.stroke();
+  }
+
+  ctx.beginPath();
+  ctx.moveTo(p.shlL.x, p.shlL.y);
+  ctx.lineTo(p.shlR.x, p.shlR.y);
+  ctx.lineTo(p.hipR.x, p.hipR.y);
+  ctx.lineTo(p.hipL.x, p.hipL.y);
+  ctx.closePath();
+  ctx.fillStyle = DUMMY_YELLOW;
+  ctx.fill();
+  ctx.strokeStyle = DUMMY_DARK;
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  limb(p.waist, p.hipC, 18, DUMMY_GREY);
+  limb(p.neck, p.shlC, 8, DUMMY_YELLOW);
+
+  ctx.beginPath();
+  ctx.moveTo(p.neck.x, p.neck.y);
+  ctx.lineTo(p.waist.x, p.waist.y);
+  ctx.strokeStyle = DUMMY_DARK;
+  ctx.lineWidth = 2;
+  ctx.setLineDash([4, 4]);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  limb(p.shlL, p.elbL, 8, DUMMY_YELLOW);
+  limb(p.elbL, p.wristL, 7, DUMMY_YELLOW);
+  limb(p.shlR, p.elbR, 8, DUMMY_YELLOW);
+  limb(p.elbR, p.wristR, 7, DUMMY_YELLOW);
+
+  function hand(wrist, hand) {
+    ctx.beginPath();
+    ctx.moveTo(wrist.x, wrist.y);
+    ctx.lineTo(hand.x, hand.y);
+    ctx.strokeStyle = DUMMY_GREY;
+    ctx.lineWidth = 6;
+    ctx.lineCap = 'round';
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(hand.x, hand.y, 5, 0, Math.PI * 2);
+    ctx.fillStyle = DUMMY_GREY;
+    ctx.fill();
+  }
+  hand(p.wristL, p.handL);
+  hand(p.wristR, p.handR);
+
+  limb(p.hipL, p.kneeL, 10, DUMMY_YELLOW);
+  limb(p.kneeL, p.ankleL, 9, DUMMY_YELLOW);
+  limb(p.hipR, p.kneeR, 10, DUMMY_YELLOW);
+  limb(p.kneeR, p.ankleR, 9, DUMMY_YELLOW);
+
+  function drawFoot(ankle, toe) {
+    const ang = Math.atan2(toe.y - ankle.y, toe.x - ankle.x);
+    const len = Math.hypot(toe.x - ankle.x, toe.y - ankle.y);
+    ctx.save();
+    ctx.translate(ankle.x, ankle.y);
+    ctx.rotate(ang);
+    ctx.beginPath();
+    ctx.arc(0, 0, 5, Math.PI * 0.5, Math.PI * 1.5);
+    ctx.lineTo(len + 4, -5);
+    ctx.arc(len + 4, 0, 5, -Math.PI * 0.5, Math.PI * 0.5);
+    ctx.lineTo(0, 5);
+    ctx.closePath();
+    ctx.fillStyle = '#222';
+    ctx.fill();
+    ctx.strokeStyle = '#555';
+    ctx.lineWidth = 1.2;
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(0, 5);
+    ctx.lineTo(len + 4, 5);
+    ctx.strokeStyle = '#444';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.restore();
+  }
+  drawFoot(p.ankleL, p.footL);
+  drawFoot(p.ankleR, p.footR);
+
+  const joints = [p.elbL, p.elbR, p.kneeL, p.kneeR, p.wristL, p.wristR, p.ankleL, p.ankleR, p.hipL, p.hipR, p.shlL, p.shlR];
+  joints.forEach(j => {
+    ctx.beginPath();
+    ctx.arc(j.x, j.y, 4, 0, Math.PI * 2);
+    ctx.fillStyle = DUMMY_DARK;
+    ctx.fill();
+    ctx.strokeStyle = DUMMY_GREY;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  });
+
+  const hx = p.head.x, hy = p.head.y;
+  ctx.beginPath();
+  ctx.arc(hx, hy, 16, 0, Math.PI * 2);
+  ctx.fillStyle = DUMMY_YELLOW;
+  ctx.fill();
+  ctx.strokeStyle = DUMMY_DARK;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  const headAngle = Math.atan2(p.neck.y - p.head.y, p.neck.x - p.head.x);
+  ctx.save();
+  ctx.translate(hx, hy);
+  ctx.rotate(headAngle - Math.PI / 2);
+  ctx.fillStyle = DUMMY_DARK;
+  ctx.fillRect(-8, -4, 16, 7);
+  ctx.strokeStyle = '#555';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(-8, -4, 16, 7);
+  ctx.strokeStyle = 'rgba(0,0,0,0.25)';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(-16, -6); ctx.lineTo(16, -6); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(-14,  4); ctx.lineTo(14,  4); ctx.stroke();
+  ctx.restore();
+
+  limb(p.head, p.neck, 9, DUMMY_YELLOW);
+}
+
+function drawBackground() {
+  ctx.fillStyle = 'rgba(17, 17, 17, 0.72)';
+  ctx.fillRect(0, 0, W, H);
+
+  ctx.strokeStyle = 'rgba(240,192,64,0.06)';
+  ctx.lineWidth = 1;
+  for (let x = 0; x <= W; x += 50) {
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+  }
+  for (let y = 0; y <= H; y += 50) {
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+  }
+
+  ctx.fillStyle = '#222';
+  ctx.fillRect(0, H - 3, W, 3);
+
+  ctx.strokeStyle = 'rgba(240,192,64,0.3)';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(1, 1, W - 2, H - 2);
+
+  ctx.fillStyle = 'rgba(240,192,64,0.18)';
+  ctx.font = 'bold 11px Courier New';
+  ctx.letterSpacing = '3px';
+  ctx.fillText('DUMMIES TEST LAB · TYPE IV-B', 14, 22);
+}
+
+// ── LOOP ──────────────────────────────────────────────────────
+const ITER = 10;
+let last = performance.now();
+
+function loop(now) {
+  const dt = Math.min((now - last) / 1000, 0.033);
+  last = now;
+
+  dummy.points.forEach(p => {
+    if (p !== dragging) p.ay += GRAVITY;
+    p.update(dt);
+    p.constrain();
+  });
+
+  for (let i = 0; i < ITER; i++) {
+    dummy.sticks.forEach(s => s.solve());
+    dummy.points.forEach(p => p.constrain());
+  }
+
+  drawBackground();
+  drawBody();
+
+  if (dragging) {
+    ctx.beginPath();
+    ctx.arc(dragging.x, dragging.y, 8, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(255,80,80,0.8)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  }
+
+  requestAnimationFrame(loop);
+}
+
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
