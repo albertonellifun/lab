@@ -998,36 +998,9 @@ function drawHorse(h) {
     ctx.translate(cx, cy + bounce);
     ctx.scale(HORSE_SCALE, HORSE_SCALE);
 
-	//croce rossa
-	if (h.injured) {
-		ctx.fillStyle = '#f00';
-		ctx.fillRect(-20, -70, 28, 28); // bordo rosso
-		ctx.fillStyle = '#fff';
-		ctx.fillRect(-18, -68, 24, 24); // bianco: da (-18,-88) a (6,-64)
-		ctx.fillStyle = '#f00';
-		ctx.fillRect(-9, -66, 6, 20);  // barra verticale: centrata in X=-6, piena altezza
-		ctx.fillRect(-16, -59, 20, 6); // barra orizzontale: piena larghezza, centrata in Y=-76
-	}
-	
-	//indemoniato!
-	if (h.devilInside) {
-		ctx.beginPath();
-		ctx.moveTo(-6, -66);   // vertice alto
-		ctx.lineTo(8, -47);    // vertice basso destra
-		ctx.lineTo(-20, -47);  // vertice basso sinistra
-		ctx.closePath();
-		ctx.fillStyle = '#ff0';
-		ctx.fill();
-		ctx.strokeStyle = '#000';
-		ctx.lineWidth = 1;
-		ctx.stroke();
-		// punto esclamativo
-		ctx.fillStyle = '#000';
-		ctx.fillRect(-7, -62, 3, 7);   // barra
-		ctx.fillRect(-7, -53, 3, 3);   // punto
-	}
-	
-	
+	drawHorseStatusIcon(h, -5, 20);
+
+
 	//// ombra ellittica a terra
 	var shadowY = 60 - bounce * 0.5; // rimane "a terra" mentre il cavallo balla
 	ctx.save();
@@ -1378,9 +1351,6 @@ function drawCarrozzellaDriver(ctx, ox, oy, wheelRotation, t, h) {
 
 
 
-
-
-
 function drawSaddle(ctx, t, h) {
     let bounce = Math.sin(t * 2) * 1.5;
     let roll   = Math.sin(t * 2) * 0.04;
@@ -1703,7 +1673,32 @@ function playHoofBeat(audioCtx) {
 
 
 
-
+// ── icone stato ──
+function drawHorseStatusIcon(h, dx, dy) {
+	//croce rossa
+	if (h.injured) {
+        ctx.fillStyle = '#f00';
+        ctx.fillRect(-20 + dx, -90 + dy, 28, 28);// bordo rosso
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(-18 + dx, -88 + dy, 24, 24);// bianco: da (-18,-88) a (6,-64)
+        ctx.fillStyle = '#f00';
+        ctx.fillRect(-9 + dx, -86 + dy, 6, 20);// barra verticale: centrata in X=-6, piena altezza
+        ctx.fillRect(-16 + dx, -79 + dy, 20, 6);// barra orizzontale: piena larghezza, centrata in Y=-76
+    }
+	//indemoniato
+    if (h.devilInside) {
+        ctx.beginPath();
+        ctx.moveTo(-6 + dx, -86 + dy); // vertice alto
+		ctx.lineTo(8 + dx, -67 + dy); // vertice basso destra
+		ctx.lineTo(-20 + dx, -67 + dy); // vertice basso sinistra
+        ctx.closePath();
+        ctx.fillStyle = '#ff0'; ctx.fill();
+        ctx.strokeStyle = '#000'; ctx.lineWidth = 1; ctx.stroke();
+        ctx.fillStyle = '#000';
+        ctx.fillRect(-7 + dx, -82 + dy, 3, 7);// barra
+        ctx.fillRect(-7 + dx, -73 + dy, 3, 3);// punto
+    }
+}
 
 
 
@@ -1736,26 +1731,7 @@ function drawHorseWestAndSoda(h) {
     ctx.translate(cx, cy + bounce);
     ctx.scale(HORSE_SCALE, HORSE_SCALE);
 
-    // ── icone stato ──
-    if (h.injured) {
-        ctx.fillStyle = '#f00';
-        ctx.fillRect(-20, -90, 28, 28);
-        ctx.fillStyle = '#fff';
-        ctx.fillRect(-18, -88, 24, 24);
-        ctx.fillStyle = '#f00';
-        ctx.fillRect(-9, -86, 6, 20);
-        ctx.fillRect(-16, -79, 20, 6);
-    }
-    if (h.devilInside) {
-        ctx.beginPath();
-        ctx.moveTo(-6, -86); ctx.lineTo(8, -67); ctx.lineTo(-20, -67);
-        ctx.closePath();
-        ctx.fillStyle = '#ff0'; ctx.fill();
-        ctx.strokeStyle = '#000'; ctx.lineWidth = 1; ctx.stroke();
-        ctx.fillStyle = '#000';
-        ctx.fillRect(-7, -82, 3, 7);
-        ctx.fillRect(-7, -73, 3, 3);
-    }
+    drawHorseStatusIcon(h, -5, 20);
 
     // ── ombra piatta a terra ──
     var shadowY = 64 - bounce * 0.4;
