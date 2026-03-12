@@ -138,9 +138,9 @@ var maneColors = [
 	"#444444"
 ];
 
-var horseNames = [
+var horseDB = [
 	//MANDRAKE
-    {name:"Soldatino",            maxSpeed:0.75, stamina:70},
+    {name:"Soldatino",            maxSpeed:0.75, stamina:70, color:null, maneColor:null, jColor:null, id:null },
     {name:"King",                 maxSpeed:0.75, stamina:75},
     {name:"D'Artagnan",           maxSpeed:0.75, stamina:70},
     {name:"Bernadette",           maxSpeed:0.80, stamina:80},
@@ -240,11 +240,15 @@ function changeMusic() {
 	music = !music;
 	if (music) {
 		if (westAndSoda) {
-			bgMusic.pause();
-			bgMusicWestAndSoda.play();
+			if (racing) {
+				bgMusic.pause();
+				bgMusicWestAndSoda.play();
+			}
 		} else {
-			bgMusicWestAndSoda.pause();
-			bgMusic.play();
+			if (racing) {
+				bgMusicWestAndSoda.pause();
+				bgMusic.play();
+			}
 		}
 	} else {
 		bgMusic.pause();
@@ -256,8 +260,7 @@ function changeMute() {
 	mute = !mute;
 }
 
-function changeStats() {
-	stats = !stats;
+function redrawHorses() {
 	if (!racing) {
 		drawTrack();
 		drawStats();
@@ -265,23 +268,20 @@ function changeStats() {
 	}
 }
 
+function changeStats() {
+	stats = !stats;
+	redrawHorses();
+}
+
 function changeTrottatori() {
 	trottatori = !trottatori;
-	if (!racing) {
-		drawTrack();
-		drawStats();
-		drawHorses();
-	}
+	redrawHorses();
 }
 
 function changeWestAndSoda() {
 	westAndSoda=!westAndSoda
 	document.getElementById("title").innerText = westAndSoda ? "WEST AND SODA" : "FEBBRE DA CAVALLO";
-	if (!racing) {
-		drawTrack();
-		drawStats();
-		drawHorses();
-	}
+	redrawHorses();
 	
 	if (music) {
 		if (westAndSoda) {
@@ -304,18 +304,14 @@ function changeCenter() {
 	} else {
 		HORSE_SCALE = center ? 2.8/lanes : 2.5/lanes;
 	}
-	if (!racing) {
-		drawTrack();
-		drawStats();
-		drawHorses();
-	}
+	redrawHorses();
 }
 
 function changeLanes(delta) {
 	if (racing) return;//blocca durante gara
     lanes += delta;
     if (lanes < 2) lanes = 2;
-    if (lanes > horseNames.length) lanes = horseNames.length;
+    if (lanes > horseDB.length) lanes = horseDB.length;
     updateLaneGeometry();
     selectedBetLane = null;
     stopRace = false;
@@ -334,9 +330,9 @@ function changeLanes(delta) {
 function createRace() {
     horses = [];
     for (var i = 0; i < lanes; i++) {
-        var rndHorse = horseNames[Math.floor(Math.random() * horseNames.length)];
+        var rndHorse = horseDB[Math.floor(Math.random() * horseDB.length)];
         if (horses.some(h => h.name === rndHorse.name)) { i--; continue; }
-        var id = getHorseNumber(rndHorse.name);
+        var id = rndHorse.id ? rndHorse.id : getHorseNumber(rndHorse.name);
         var colIdx = getColorIndex(rndHorse.name);
 		var jColor = "hsl(" + Math.floor(Math.random()*360) + ","
 							+(Math.floor(80+Math.random()*20)) + "%,"
@@ -351,12 +347,12 @@ function createRace() {
             speed: 0,
             stamina: rndHorse.stamina + Math.random() * 20,
             anim: Math.random() * Math.PI * 2,
-            color: colors[colIdx],//colore principale
-            maneColor: maneColors[colIdx],//criniera piu scura
-			colorShade15 : shadeColor(colors[colIdx], -15),//colore principale scuro (zampe dietro, ombre, ...)
-			colorShade30 : shadeColor(colors[colIdx], -30),//colore principale ancora piu scuro
-            jockeyColor: jColor,//fantino
-			jockeyColorShade10: shadeColor(jColor, -10)//dettagli piu scuri
+            color: rndHorse.color ? rndHorse.color : colors[colIdx],//colore principale
+            maneColor: rndHorse.maneColor ? rndHorse.maneColor : maneColors[colIdx],//criniera piu scura
+			colorShade15 : rndHorse.color ? shadeColor(rndHorse.color, -15) : shadeColor(colors[colIdx], -15),//colore principale scuro (zampe dietro, ombre, ...)
+			colorShade30 : rndHorse.color ? shadeColor(rndHorse.color, -30) : shadeColor(colors[colIdx], -30),//colore principale ancora piu scuro
+            jockeyColor: rndHorse.jColor ? rndHorse.jColor : jColor,//fantino
+			jockeyColorShade10: rndHorse.jColor ? shadeColor(rndHorse.jColor, -10) : shadeColor(jColor, -10)//dettagli piu scuri
         });
     }
     drawTrack();
@@ -928,7 +924,8 @@ function drawZampa(ctx, ox, oy, phase, col, hoofCol, isRear) {
 	var lW   = isRear ? 2 : 2;//larghezza segmento inferiore
 
     // Oscillazione del segmento superiore attorno al punto di attacco
-    var alpha = phase * (isRear ? 0.42 : 0.48);
+    var alpha = isRear ? phase * (trottatori ? 0.6 : 0.5) : 
+				phase * (trottatori ? 0.6 : 0.4);
 
     // Flessione ginocchio/garretto
     // Anteriore: il ginocchio piega in avanti quando la zampa è sollevata
@@ -937,7 +934,7 @@ function drawZampa(ctx, ox, oy, phase, col, hoofCol, isRear) {
     if (isRear) {
 		beta = Math.max(0, -phase) * 0.7 + 0.18;
     } else {
-		beta = Math.max(0,  phase) * 0.8 + 0.12;
+		beta = Math.max(0,  phase) * (trottatori ? 0 : -0.5) + 0.12;//trottatori a zampe dritte
     }
 
 	if (!mute && Math.abs(alpha) < 0.06) playHoofBeat(audioCtx);
@@ -1786,7 +1783,7 @@ function drawHorseWestAndSoda(h) {
     ctx.bezierCurveTo(-54,-28, -20,-32,  20,-30);
     ctx.bezierCurveTo( 48,-28,  58,-18,  56, -4);
     ctx.bezierCurveTo( 58, 10,  48, 22,  20, 24);
-    ctx.bezierCurveTo(-10, 26, -46, 20, -54, 8);
+    ctx.bezierCurveTo(-10, 26, -46, 20, -54,  8);
     ctx.bezierCurveTo(-56,  2, -52, -4, -52, -4);
     ctx.closePath();
     ctx.fill();
@@ -1795,13 +1792,13 @@ function drawHorseWestAndSoda(h) {
 	ctx.stroke()
 
     //cinghie della sella
-    ctx.strokeStyle = bodyColorShade30;
+    ctx.strokeStyle = maneColor;
     ctx.lineWidth = 5;
     ctx.lineCap = "round";
     [-8, 8, 24].forEach(function(xOff) {
         ctx.beginPath();
         ctx.moveTo(xOff, -28);
-        ctx.bezierCurveTo(xOff - 2, 0, xOff - 2, 14, xOff, 22);
+        ctx.bezierCurveTo(xOff - 2, 0, xOff - 2, 14, xOff, 24);
         ctx.stroke();
     });
 
@@ -1905,13 +1902,13 @@ function drawHorseWestAndSoda(h) {
     // ogni arco parte dal collo/testa e scende
     // [startX, startY, lunghezza, direzione Y, fase vento]
     var maneArcs = [
-        { sx: 80, sy: -66, len: 24, phase: 0.20 },
-        { sx: 74, sy: -64, len: 28, phase: 0.35 },
-        { sx: 68, sy: -60, len: 30, phase: 0.50 },
-        { sx: 62, sy: -56, len: 28, phase: 0.60 },
-        { sx: 56, sy: -52, len: 26, phase: 0.72 },
-        { sx: 50, sy: -46, len: 24, phase: 0.84 },
-        { sx: 44, sy: -40, len: 20, phase: 0.95 },
+        { sx: 80, sy: -66, len: 14, phase: 0.20 },
+        { sx: 74, sy: -64, len: 18, phase: 0.35 },
+        { sx: 68, sy: -60, len: 20, phase: 0.50 },
+        { sx: 62, sy: -56, len: 18, phase: 0.60 },
+        { sx: 56, sy: -52, len: 16, phase: 0.72 },
+        { sx: 50, sy: -46, len: 14, phase: 0.84 },
+        { sx: 44, sy: -40, len: 10, phase: 0.95 },
     ];
     ctx.lineCap = "round";
     maneArcs.forEach(function(a) {
@@ -1938,16 +1935,16 @@ function drawHorseWestAndSoda(h) {
     var tailWind = Math.sin(t * 1.5) * 18 * Math.min(h.speed * 0.8, 1);
     // tutti partono dallo stesso punto (-52, -6); la fase sfasa l'ondeggiamento
     var tailArcs = [
-        { len: 52, endDY: -14, phase: 0.20 },
-        { len: 58, endDY:  -4, phase: 0.45 },
-        { len: 62, endDY:   8, phase: 0.68 },
-        { len: 54, endDY:  16, phase: 0.90 },
+        { len: 40, endDY: -12, phase: 0.20 },
+        { len: 48, endDY:  -2, phase: 0.30 },
+        { len: 52, endDY:   6, phase: 0.40 },
+        { len: 40, endDY:  12, phase: 0.35 },
     ];
     ctx.lineCap = "round";
     tailArcs.forEach(function(arc) {
         var sw = tailWind * arc.phase;
         var ox = -52, oy = -6;          // punto di partenza comune
-        var ex = ox - arc.len;
+        var ex = ox - arc.len - sw;
         var ey = oy + arc.endDY + sw;
 		ctx.strokeStyle = maneColor; 
 		ctx.lineWidth = 3;
@@ -1977,7 +1974,7 @@ function drawHorseWestAndSoda(h) {
 		var aggancioX = 30;
 		var aggancioY = -25;
 		var wheelRot = h.x / HORSE_SCALE / 2;
-		drawCarrozzellaDriverWestAndSoda(ctx, aggancioX, aggancioY, wheelRot, t, h);
+		drawCarrozzellaDriverWestAndSoda(ctx, aggancioX, aggancioY, wheelRot, t, h, bounce);
 	} else {
 		var jockeyBounce = Math.sin(t * 2) * 2;
 		drawSaddleWestAndSoda(ctx, t, h);
