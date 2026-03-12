@@ -6,7 +6,7 @@
 <title>FEBBRE DA CAVALLO</title>
 <style>
 body{
-    background:#1c1c1c;
+    background:#111;
     color:white;
     font-family:Arial;
     text-align:center;
@@ -44,10 +44,29 @@ button{
     align-items: baseline;
 	overflow: hidden;
 }
+#marquee {
+    font-size: 13px;
+    color: #eee;
+    font-style: italic;
+    white-space: nowrap;
+    overflow: hidden;
+    padding: 2px 0;
+    background: #111;
+}
+#marquee span {
+    display: inline-block;
+    animation: marquee-scroll 200s linear infinite;
+	white-space: pre;
+}
+@keyframes marquee-scroll {
+    from { transform: translateX(100vw); }
+    to   { transform: translateX(-100%); }
+}
 </style>
 </head>
 <body>
 <h1>🏇🐎 <span id="title">FEBBRE DA CAVALLO</span> 🏇🐎<span id="timer"></span></h1>
+<div id="marquee"><span id="marquee-text"></span></div>
 <canvas id="game" width="1000" height="400"></canvas>
 <div id="controls">
 	<button onclick="changeCenter()">👁️</button>
@@ -107,6 +126,32 @@ let steccatoParticles = [];
 var cachedGradients = null;
 var cachedGradientsWestAndSoda = null;
 
+var quoteDB = [
+	"Anche voi, non prendete fischi per fiaschi, solo questo è il fischio maschio senza raschio!",
+	"Piripicchio è figlio di Uragano e Apocalisse, e basta... O faccio sgombrare l'aula!",
+	"Questa è la più grossa stronzata mai sentita da quanno l'omo inventò er cavallo!",
+	"Caligola è nome da omo, Caligola, come Agrippina. A 'gnorante!",
+	"Conte De Simone, Largo Arenula 2.",
+	"A Pomata, quante volte te lo devo dì che nun me chiamo Manzotin, me chiamo Rinaldi Otello!",
+	"A Pomà, io non so che ditte... E anche se te lo dicessi... che t'oo dico a ffà?",
+	"A Pascucci, hai fatto i capelli bianchi e avessi vinto 'na vorta!",
+	"A Tor di Valle il miglior tempo sui 2000 metri, con handicap, l'ha fatto Marco Polo al Premio Campidoglio nel 1968.",
+	"Tempo: 1.14.4 - dico - 1.14.4. Incredibile! Cancelliere metta a verbale: 1.14.4",
+];
+
+var quoteDBWestAndSoda = [
+	"Capo, gli indiani sono passati, e si sono portati via Esmeralda - Bene. Hanno avuto quello che meritavano",
+	"La pazienza è durata troppo a lungo. La situazione sta per finire male e non si può permettere che le mani vengano rifiutate.",
+	"Guarda chi è tornato! Il nostro bel cowboy vestito da corvo - Cra Cra!",
+	"Ma la pepita? - Sciocchezze, l'avevo trovata in una scapola di detersivo",
+	"Il primo che parla lo freddo!",
+	"Esci a prendere una boccata d'aria... Salubre!",
+	"Desolato, non sapevo che fossero così cariche...",	
+	"Voglio dire che le donne sanno come far parlare gli uomini...",
+	"Dolore, afflizione, pena, cordoglio, amore per la casa, crepacuore, strazio. Imballaggio e trasporto a carico del contraente",
+	"Johnny, mi picchiano quelli... Johnny... mi picchiano",
+	"Uno che spara ai cani non è degno delle mie confidenze!"
+];
 
 var colors = [
     "#663311",
@@ -152,6 +197,42 @@ var horseDB = [
     {name:"Mon Amour",            maxSpeed:0.65, stamina:75},
     {name:"Antonello da Messina", maxSpeed:0.75, stamina:80},
     {name:"Marco Polo",           maxSpeed:0.85, stamina:85},
+	{name:"Can Can",              maxSpeed:0.65, stamina:75},
+	{name:"Robin Hood",           maxSpeed:0.75, stamina:90},
+	{name:"Caligola",             maxSpeed:0.75, stamina:80},
+	{name:"Paganini",             maxSpeed:0.75, stamina:80},
+	{name:"Charlotte",            maxSpeed:0.70, stamina:80},
+	{name:"Lucrezia Borgia",      maxSpeed:0.75, stamina:80},
+	{name:"Tornado",	          maxSpeed:0.70, stamina:80},
+	{name:"Serafino",             maxSpeed:0.70, stamina:70},
+	{name:"Caimano",              maxSpeed:0.70, stamina:75},
+	{name:"Rigoletto",            maxSpeed:0.70, stamina:65},
+	{name:"Mambo",                maxSpeed:0.75, stamina:80},
+	{name:"Royal Flush",          maxSpeed:0.75, stamina:85},
+	{name:"Camale",               maxSpeed:0.70, stamina:60},
+	{name:"Orvieto",              maxSpeed:0.70, stamina:65},
+	{name:"Topless",              maxSpeed:0.70, stamina:60},
+	{name:"Ezechiele",            maxSpeed:0.75, stamina:80},
+	{name:"Ruby Tuesday",         maxSpeed:0.75, stamina:65},
+	{name:"Ramal",                maxSpeed:0.70, stamina:60},
+	{name:"Ramona",               maxSpeed:0.70, stamina:65},
+	{name:"Valentina",            maxSpeed:0.70, stamina:75},
+	{name:"Aureliana",            maxSpeed:0.75, stamina:70},
+	{name:"Susanna I",            maxSpeed:0.70, stamina:70},
+	{name:"Apple Pie",            maxSpeed:0.75, stamina:75},
+	{name:"Butterfly",            maxSpeed:0.75, stamina:70},
+	{name:"Cerasella",            maxSpeed:0.70, stamina:75},
+	{name:"Golden Tiger",         maxSpeed:0.75, stamina:70},
+	{name:"Cleopatra",            maxSpeed:0.75, stamina:80},
+	{name:"Maometto",             maxSpeed:0.75, stamina:70},
+	{name:"Tripodio",             maxSpeed:0.70, stamina:80},
+	{name:"Terzus",               maxSpeed:0.70, stamina:70},
+	{name:"Zizì",                 maxSpeed:0.70, stamina:70},
+	{name:"Rock n Roll",          maxSpeed:0.80, stamina:60},
+	{name:"Farfallona",           maxSpeed:0.70, stamina:70},
+	{name:"O Sole Mio",           maxSpeed:0.60, stamina:90},
+	{name:"Jolly",                maxSpeed:0.75, stamina:80},
+	
 	//ASSO
 	{name:"Lumacone",             maxSpeed:0.65, stamina:90},
 	{name:"Tartaruga",            maxSpeed:0.65, stamina:90},
@@ -160,32 +241,26 @@ var horseDB = [
 	{name:"Corsaro",              maxSpeed:0.75, stamina:70},
 	{name:"Hannover",             maxSpeed:0.75, stamina:70},
 	{name:"Sinclair",             maxSpeed:0.70, stamina:70},
-	//ALTRI REALI
+	
+	//ALTRI REALI
 	{name:"Eclisse",	          maxSpeed:0.80, stamina:80},
 	{name:"Varenne",              maxSpeed:0.80, stamina:80},
-	{name:"Ribot",                maxSpeed:0.80, stamina:80},
+	{name:"Ribot",                maxSpeed:0.85, stamina:80},
 	{name:"Ronzinante",           maxSpeed:0.80, stamina:80},
-	{name:"Pegaso",               maxSpeed:0.80, stamina:80},
+	{name:"Pegaso",               maxSpeed:0.85, stamina:80},
 	{name:"Bucefalo",             maxSpeed:0.80, stamina:80},
+	
 	//ALTRI
-	{name:"Robin Hood",           maxSpeed:0.70, stamina:80},
     {name:"Maria Antonietta",     maxSpeed:0.70, stamina:80},
 	{name:"Luigi XIV",            maxSpeed:0.70, stamina:80},
 	{name:"Dinamite",             maxSpeed:0.70, stamina:80},
-    {name:"Royal Flash",          maxSpeed:0.70, stamina:80},
-    {name:"Tornado",	          maxSpeed:0.70, stamina:80},
-    {name:"O Sole Mio",           maxSpeed:0.70, stamina:80},
-	{name:"Jolly Blue",           maxSpeed:0.70, stamina:80},
-	{name:"Furfante",             maxSpeed:0.70, stamina:80},
-    {name:"Caligola",             maxSpeed:0.70, stamina:80},
+    {name:"Furfante",             maxSpeed:0.70, stamina:80},
     {name:"Brigantello",          maxSpeed:0.70, stamina:80},
-    {name:"Paganini",             maxSpeed:0.70, stamina:80},
 	{name:"Garibaldi",            maxSpeed:0.70, stamina:80},
     {name:"Pendolino",            maxSpeed:0.70, stamina:80},
     {name:"Arma Letale",          maxSpeed:0.70, stamina:80},
 	{name:"Kamikaze",             maxSpeed:0.70, stamina:80},
-    {name:"Cleopatra",            maxSpeed:0.70, stamina:80},
-	{name:"Marcantonio", 	      maxSpeed:0.70, stamina:80},
+    {name:"Marcantonio", 	      maxSpeed:0.70, stamina:80},
     {name:"Rombo di Tuono",       maxSpeed:0.70, stamina:80},
     {name:"Lucifero",             maxSpeed:0.70, stamina:80},
 	{name:"Pelandrone",           maxSpeed:0.70, stamina:80},
@@ -200,6 +275,8 @@ var horseDB = [
 	{name:"SuperPippo", 	      maxSpeed:0.70, stamina:80, color: '#ee4444', maneColor: '#440000', jColor: 'hsl(240, 80%, 50%)'},
 	{name:"Grande Puffo", 	      maxSpeed:0.70, stamina:80, color: '#4444ee', maneColor: '#000044', jColor: 'hsl(0, 0%, 90%)'},
 ];
+
+horseDB = horseDB.sort((a, b) => a.name.localeCompare(b.name));
 
 function resizeCanvas() {
     const canvas = document.getElementById('game');
@@ -272,6 +349,7 @@ function redrawHorses() {
 		drawTrack();
 		drawStats();
 		drawHorses();
+		updateMarquee();
 	}
 }
 
@@ -283,6 +361,12 @@ function changeStats() {
 function changeTrottatori() {
 	trottatori = !trottatori;
 	redrawHorses();
+}
+
+function updateMarquee() {
+    var db = westAndSoda ? quoteDBWestAndSoda : quoteDB;
+    var shuffled = db.slice().sort(() => Math.random() - 0.5);
+    document.getElementById("marquee-text").textContent = shuffled.join("   ★   ");
 }
 
 function changeWestAndSoda() {
@@ -371,7 +455,7 @@ function createRace() {
 function getHorseNumber(nome) {
     let hash = 0;
     for (let i = 0; i < nome.length; i++) hash += nome.charCodeAt(i) * (i + 1);
-    return hash % 100;
+    return hash % horseDB.length;
 }
 
 function getColorIndex(nome) {
@@ -2455,6 +2539,7 @@ resizeCanvas();
 updateLaneGeometry();
 createRace();
 updateUI();
+updateMarquee();
 </script>
 </body>
 </html>
