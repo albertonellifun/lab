@@ -890,27 +890,27 @@ function drawSegmentoZampa(ctx, x1, y1, x2, y2, w1, w2, col, shade) {
     // Punto medio del segmento (asse longitudinale)
     var mx = (x1 + x2) * 0.5;
 	var my = (y1 + y2) * 0.5;
-    var bulgeDentro = -(w1 + w2) * 0.01;// Bombatura laterale in dentro
+    var bulgeDentro = (w1 + w2) * 0.3;// Bombatura laterale in dentro
 	var cpTx = mx + nx * bulgeDentro, cpTy = my + ny * bulgeDentro;
     var cpBx = mx - nx * bulgeDentro, cpBy = my - ny * bulgeDentro;
 	
 	// Midpoint dei caps (estremo inizio e fine)
     var sMx = (tx1 + bx1) * 0.5, sMy = (ty1 + by1) * 0.5;  // cap start
     var eMx = (tx2 + bx2) * 0.5, eMy = (ty2 + by2) * 0.5;  // cap end
-	var bulgeFuori = (w1 + w2) * 0.5;  // Bombatura in fuori
+	var bulgeFuori = (w1 + w2) * 1.5;  // Bombatura in fuori
 
 
     ctx.beginPath();
     ctx.moveTo(tx1, ty1);
 	
-	ctx.lineTo(tx2, ty2);//dritto
-    //ctx.quadraticCurveTo(cpTx, cpTy, tx2, ty2);   //bombato dentro
+	//ctx.lineTo(tx2, ty2);//dritto
+    ctx.quadraticCurveTo(cpTx, cpTy, tx2, ty2);   //bombato dentro
     
-	//ctx.lineTo(bx2, by2);
-	ctx.quadraticCurveTo(eMx + sx * bulgeFuori, eMy + sy * bulgeFuori, bx2, by2); //bombato fuori
+	ctx.lineTo(bx2, by2);
+	//ctx.quadraticCurveTo(eMx + sx * bulgeFuori, eMy + sy * bulgeFuori, bx2, by2); //bombato fuori
 	
-    ctx.lineTo(bx1, by1);//dritto
-	//ctx.quadraticCurveTo(cpBx, cpBy, bx1, by1);   //bombato dentro
+    //ctx.lineTo(bx1, by1);//dritto
+	ctx.quadraticCurveTo(cpBx, cpBy, bx1, by1);   //bombato dentro
 	
 	ctx.quadraticCurveTo(sMx - sx * bulgeFuori, sMy - sy * bulgeFuori, tx1, ty1); //bombato fuori
 	
@@ -924,8 +924,8 @@ function drawSegmentoZampa(ctx, x1, y1, x2, y2, w1, w2, col, shade) {
 function drawZampa(ctx, ox, oy, phase, col, hoofCol, isRear) {
     var uLen = isRear ? 24 : 26;//lunghezza segmento superiore
     var lLen = isRear ? 26 : 24;//lunghezza segmento inferiore
-    var uW   = isRear ? 10 : 8;//larghezza segmento superiore
-	var lW   = isRear ? 3 : 2;//larghezza segmento inferiore
+    var uW   = isRear ? 10 : 7;//larghezza segmento superiore
+	var lW   = isRear ? 2 : 2;//larghezza segmento inferiore
 
     // Oscillazione del segmento superiore attorno al punto di attacco
     var alpha = phase * (isRear ? 0.42 : 0.48);
@@ -939,6 +939,8 @@ function drawZampa(ctx, ox, oy, phase, col, hoofCol, isRear) {
     } else {
 		beta = Math.max(0,  phase) * 0.8 + 0.12;
     }
+
+	if (!mute && Math.abs(alpha) < 0.06) playHoofBeat(audioCtx);
 
     // Calcola posizioni: attacco → ginocchio/garretto → estremo inferiore
     var ax = ox, ay = oy;
@@ -1049,7 +1051,7 @@ function drawHorse(h) {
        OMBRE / PROFONDITÀ
     ------------------------------------------------------- */
     ctx.shadowColor = "rgba(0,0,0,0.35)";
-    ctx.shadowBlur  = 4;
+    ctx.shadowBlur  = 2;
 
     /* gamba lontana posteriore */
     //drawLeg(ctx, -38, 15, BL, bodyColorShade30, hoofColor, true);
@@ -1253,7 +1255,6 @@ function drawCarrozzellaDriver(ctx, ox, oy, wheelRotation, t, h) {
 	//NUMERO sul fianco
 	ctx.fillStyle = '#400';
 	ctx.fillRect(ox - 10, oy + 6, 20, 18)
-    ctx.shadowBlur = 0;
     ctx.font = "12px Arial";
     ctx.textAlign = "center";
     ctx.fillStyle = selectedBetLane === h.lane ? '#fff' : '#aaa';
@@ -1477,7 +1478,6 @@ function drawSaddle(ctx, t, h) {
 	
 	
 	//NUMERO sul fianco
-    ctx.shadowBlur = 0;
     ctx.font = "12px Arial";
     ctx.textAlign = "center";
     ctx.fillStyle = selectedBetLane === h.lane ? '#fff' : '#aaa';
@@ -1723,10 +1723,10 @@ function drawHorseWestAndSoda(h) {
         cy = trackCenter + (normalCy - trackCenter) * 0.8;
     }
 
-    var FL = Math.sin(t);
-    var FR = Math.sin(t + Math.PI * 0.9);
-    var BL = Math.sin(t + Math.PI * 0.5);
-    var BR = Math.sin(t + Math.PI * 1.4);
+    var FL = trottatori ? Math.sin(t) : Math.sin(t);                    // ant vicina
+    var FR = trottatori ? Math.sin(t + Math.PI) : Math.sin(t + Math.PI * 0.9);    // ant lontana (leggermente sfasata)
+    var BL = trottatori ? Math.sin(t + Math.PI) : Math.sin(t + Math.PI * 0.5);    // post vicina
+    var BR = trottatori ? Math.sin(t) : Math.sin(t + Math.PI * 1.4);    // post lontana
 
     var bounce = Math.sin(t * 2) * (h.speed * 1.2);
 
@@ -2074,7 +2074,6 @@ function drawSaddleWestAndSoda(ctx, t, h) {
     ctx.stroke();
     ctx.restore();
 
-    ctx.shadowBlur = 0;
     ctx.font = "bold 12px Arial Black, Arial";
     ctx.textAlign = "center";
     ctx.strokeStyle = "#000"; 
@@ -2248,7 +2247,6 @@ function drawCarrozzellaDriverWestAndSoda(ctx, ox, oy, wheelRotation, t, h) {
 	//NUMERO sul fianco cavallo
 	ctx.fillStyle = '#400';
 	ctx.fillRect(ox - 35, oy + 20, 30, 20);//ctx.fillRect(carX + 80, carY + 10, 30, 20);
-    ctx.shadowBlur = 0;
     ctx.font = "14px Arial";
     ctx.textAlign = "center";
     ctx.fillStyle = selectedBetLane === h.lane ? '#fff' : '#aaa';
