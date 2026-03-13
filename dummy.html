@@ -33,10 +33,21 @@
     aspect-ratio: 1 / 1;
     touch-action: none;
   }
+  #controls {
+	display: flex;
+	gap: 20px;
+  }
+  button {
+	padding: 0 40px;
+  }
 </style>
 </head>
 <body>
 <h1>⚠ Crash Test Dummy ⚠</h1>
+<div id="controls">
+	<button onclick="GRAVITY = (GRAVITY ? 0 : 980)">GRAVITY</button>
+	<button onclick="location.reload();">RESET</button>
+</div>
 <canvas id="c" width="600" height="600"></canvas>
 
 <script>
@@ -125,7 +136,7 @@ class Stick {
 }
 
 // ── COSTRUZIONE RAGDOLL ───────────────────────────────────────
-const GRAVITY = 380;
+let GRAVITY = 0;
 
 function makeDummy(cx, cy) {
   const pts = {};
