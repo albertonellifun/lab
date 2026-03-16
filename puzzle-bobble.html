@@ -1,0 +1,1156 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Puzzle Bobble</title>
+<style>
+* {
+ margin: 0;
+ padding: 0;
+ box-sizing: border-box;
+}
+body {
+ background: #080820;
+ display: flex;
+ flex-direction: column;
+ align-items: center;
+ justify-content: center;
+ min-height: 100vh;
+ overflow: hidden;
+ touch-action: none;
+ user-select: none;
+ font-family: "Arial Rounded MT Bold", "Trebuchet MS", sans-serif;
+}
+#wrapper {
+ display: flex;
+ flex-direction: column;
+ align-items: center;
+ gap: 6px;
+}
+#header {
+ display: flex;
+ justify-content: space-between;
+ align-items: center;
+ width: 400px;
+ padding: 4px 6px;
+}
+.sbox {
+ background: linear-gradient(
+  135deg,
+  rgba(255, 255, 255, 0.1),
+  rgba(255, 255, 255, 0.04)
+ );
+ border: 1px solid rgba(255, 255, 255, 0.12);
+ border-radius: 14px;
+ padding: 6px 18px;
+ text-align: center;
+ min-width: 100px;
+}
+.slbl {
+ font-size: 9px;
+ letter-spacing: 3px;
+ text-transform: uppercase;
+ color: rgba(255, 255, 255, 0.4);
+ margin-bottom: 2px;
+}
+.sval {
+ font-size: 22px;
+ font-weight: 900;
+ color: #fff;
+ letter-spacing: -1px;
+}
+#nextBox {
+ display: flex;
+ flex-direction: column;
+ align-items: center;
+ gap: 3px;
+}
+.nlbl {
+ font-size: 9px;
+ letter-spacing: 3px;
+ color: rgba(255, 255, 255, 0.4);
+ text-transform: uppercase;
+}
+#gc {
+ display: block;
+ cursor: crosshair;
+}
+</style>
+</head>
+<body>
+	<div id="wrapper">
+		<div id="header">
+			<div class="sbox"><div class="slbl">POINTS</div><div class="sval" id="sd">0</div></div>
+			<div id="nextBox"><div class="nlbl">NEXT</div><canvas id="nc" width="52" height="52"></canvas></div>
+			<div class="sbox"><div class="slbl">RECORD</div><div class="sval" id="bd">0</div></div>
+		</div>
+		<canvas id="gc" width="400" height="560"></canvas>
+	</div>
+<script>
+// ─── Constants ────────────────────────────────────────────────────────────────
+const W = 400;
+const H = 560;
+const R = 19;
+const ROW_H = R * Math.sqrt(3);//~32.9
+const GRID_TOP = R + 2; //first row y
+const ROWS = 13;
+const SPEED = 11;
+const DANGER = 12;//game over row
+
+let gearRot = 0;
+const MX = W / 2;
+const MY = H - 44;
+const BARREL = 55;//lunghezza canna
+
+let lastMouseX = null;
+let mouseX = W / 2;
+let mouseY = H / 2;//per muovere gli occhi del drago
+
+const BUBBLE_COLORS = ['#e74c3c', '#3498db', '#2ecc71', '#f1c40f', '#9b59b6', '#e67e22'];
+
+// Dragon egg anchor
+const DX = W / 2;
+const DY = H - 38;
+
+// ─── State ────────────────────────────────────────────────────────────────────
+let grid, score = 0,
+	best = +(localStorage.getItem('pb3') || 0);
+let state = 'aiming'; // aiming | shooting | gameover | win
+let ang = -Math.PI / 2;
+let cur = 1,
+	nxt = 1;
+let ball = null; // {x,y,vx,vy,ci}
+let falling = []; // {x,y,vx,vy,ci,a}
+let pops = []; // {x,y,r,maxR,a,ci}
+let parts = []; // {x,y,vx,vy,r,a,ci}
+
+// ─── DOM ──────────────────────────────────────────────────────────────────────
+const cv = document.getElementById('gc'),
+	CX = cv.getContext('2d');
+const nc = document.getElementById('nc'),
+	NX = nc.getContext('2d');
+const sd = document.getElementById('sd'),
+	bd = document.getElementById('bd');
+bd.textContent = best;
+
+// ─── Grid helpers ─────────────────────────────────────────────────────────────
+function cols(r) {
+	return r % 2 === 0 ? 10 : 9;
+}
+
+function gx(r, c) {
+	return r % 2 === 0 ? R + 1 + c * R * 2 : R * 2 + 1 + c * R * 2;
+}
+
+function gy(r) {
+	return GRID_TOP + r * ROW_H;
+}
+
+function nbrs(row, col) {
+	const x = gx(row, col),
+		y = gy(row),
+		out = [];
+	for (let r = Math.max(0, row - 1); r <= Math.min(ROWS - 1, row + 1); r++)
+		for (let c = 0; c < cols(r); c++)
+			if (!(r === row && c === col) && Math.hypot(gx(r, c) - x, gy(r) - y) < R * 2.25)
+				out.push([r, c]);
+	return out;
+}
+
+// ─── Flood fill ───────────────────────────────────────────────────────────────
+function flood(r0, c0, ci) {
+	const vis = new Set(),
+		q = [
+			[r0, c0]
+		],
+		res = [];
+	while (q.length) {
+		const [r, c] = q.shift(), k = `${r},${c}`;
+		if (vis.has(k)) continue;
+		vis.add(k);
+		if (grid[r]?.[c] !== ci) continue;
+		res.push([r, c]);
+		nbrs(r, c).forEach(n => q.push(n));
+	}
+	return res;
+}
+
+// ─── Disconnected bubbles ─────────────────────────────────────────────────────
+function disconnected() {
+	const con = new Set(),
+		q = [];
+	for (let c = 0; c < cols(0); c++)
+		if (grid[0][c] > 0) {
+			q.push([0, c]);
+			con.add(`0,${c}`);
+		}
+	while (q.length) {
+		const [r, c] = q.shift();
+		nbrs(r, c).forEach(([nr, nc]) => {
+			const k = `${nr},${nc}`;
+			if (!con.has(k) && grid[nr]?.[nc] > 0) {
+				con.add(k);
+				q.push([nr, nc]);
+			}
+		});
+	}
+	const d = [];
+	for (let r = 0; r < ROWS; r++)
+		for (let c = 0; c < cols(r); c++)
+			if (grid[r][c] > 0 && !con.has(`${r},${c}`)) d.push([r, c]);
+	return d;
+}
+
+// ─── Nearest empty cell ───────────────────────────────────────────────────────
+function nearestEmpty(px, py) {
+	let best = null,
+		bd2 = Infinity;
+	for (let r = 0; r < ROWS; r++)
+		for (let c = 0; c < cols(r); c++) {
+			if (grid[r][c] > 0) continue;
+			const d = Math.hypot(gx(r, c) - px, gy(r) - py);
+			if (d < bd2) {
+				bd2 = d;
+				best = [r, c];
+			}
+		}
+	return best;
+}
+
+function isEmpty() {
+	for (let r = 0; r < ROWS; r++)
+		for (let c = 0; c < cols(r); c++)
+			if (grid[r][c] > 0) return false;
+	return true;
+}
+
+// ─── Pick color (only colors on board) ───────────────────────────────────────
+function pickColor() {
+	const p = [];
+	for (let r = 0; r < ROWS; r++)
+		for (let c = 0; c < cols(r); c++)
+			if (grid[r][c] > 0) p.push(grid[r][c]);
+	if (p.length < 3) return Math.ceil(Math.random() * 5);
+	return p[Math.floor(Math.random() * p.length)];
+}
+
+// ─── Place bubble ─────────────────────────────────────────────────────────────
+function place(px, py) {
+	const cell = nearestEmpty(px, py);
+	if (!cell) return;
+	const [r, c] = cell;
+	grid[r][c] = cur;
+
+	const m = flood(r, c, cur);
+	if (m.length >= 3) {
+		m.forEach(([mr, mc]) => {
+			const fx = gx(mr, mc),
+				fy = gy(mr);
+			pops.push({
+				x: fx,
+				y: fy,
+				r: R,
+				maxR: R * 3.5,
+				a: 1,
+				ci: cur
+			});
+			for (let i = 0; i < 8; i++) {
+				const a = i / 8 * Math.PI * 2,
+					s = 1.5 + Math.random() * 3;
+				parts.push({
+					x: fx,
+					y: fy,
+					vx: Math.cos(a) * s,
+					vy: Math.sin(a) * s,
+					r: 3 + Math.random() * 2,
+					a: 1,
+					ci: cur
+				});
+			}
+			grid[mr][mc] = 0;
+			score += 10;
+		});
+		disconnected().forEach(([dr, dc]) => {
+			falling.push({
+				x: gx(dr, dc),
+				y: gy(dr),
+				vx: (Math.random() - .5) * 3,
+				vy: -1 - Math.random() * 2,
+				ci: grid[dr][dc],
+				a: 1
+			});
+			grid[dr][dc] = 0;
+			score += 5;
+		});
+		sd.textContent = score;
+		if (score > best) {
+			best = score;
+			bd.textContent = best;
+			localStorage.setItem('pb3', best);
+		}
+	}
+
+	if (r >= DANGER) {
+		state = 'gameover';
+		return;
+	}
+	if (isEmpty()) {
+		state = 'win';
+		return;
+	}
+
+	cur = nxt;
+	nxt = pickColor();
+	drawNext();
+	state = 'aiming';
+}
+
+// ─── Init / Reset ─────────────────────────────────────────────────────────────
+function initGrid() {
+	grid = [];
+	for (let r = 0; r < ROWS; r++) grid[r] = new Array(cols(r)).fill(0);
+	for (let r = 0; r < 7; r++)
+		for (let c = 0; c < cols(r); c++) {
+			if (r > 4 && Math.random() < .28) continue;
+			grid[r][c] = Math.ceil(Math.random() * 5);
+		}
+	cur = pickColor();
+	nxt = pickColor();
+	drawNext();
+}
+
+function reset() {
+	score = 0;
+	sd.textContent = 0;
+	bd.textContent = best;
+	ball = null;
+	falling = [];
+	pops = [];
+	parts = [];
+	state = 'aiming';
+	ang = -Math.PI / 2;
+	initGrid();
+}
+
+// ─── Color utilities ──────────────────────────────────────────────────────────
+function sh(hex, a) {
+	let n = parseInt(hex.slice(1), 16);
+	return `rgb(${Math.max(0,Math.min(255,(n>>16)+a))},${Math.max(0,Math.min(255,((n>>8)&255)+a))},${Math.max(0,Math.min(255,(n&255)+a))})`;
+}
+
+function hr(hex) {
+	const n = parseInt(hex.slice(1), 16);
+	return `${n>>16},${(n>>8)&255},${n&255}`;
+}
+
+// ─── Draw Bubble ──────────────────────────────────────────────────────────────
+function drawBub(c, x, y, ci, rad, al) {
+	al = al ?? 1;
+	const col = BUBBLE_COLORS[ci - 1];
+	c.save();
+	c.globalAlpha = al;
+	c.shadowColor = col;
+	c.shadowBlur = rad * .66;
+	const g = c.createRadialGradient(x - rad * .3, y - rad * .3, rad * .05, x, y, rad);
+	g.addColorStop(0, sh(col, 110));
+	g.addColorStop(.55, col);
+	g.addColorStop(1, sh(col, -75));
+	c.beginPath();
+	c.arc(x, y, rad, 0, Math.PI * 2);
+	c.fillStyle = g;
+	c.fill();
+	c.shadowBlur = 0;
+	c.beginPath();
+	c.ellipse(x - rad * .28, y - rad * .32, rad * .21, rad * .12, -.5, 0, Math.PI * 2);
+	c.fillStyle = 'rgba(255,255,255,.52)';
+	c.fill();
+	c.beginPath();
+	c.arc(x, y, rad, 0, Math.PI * 2);
+	c.strokeStyle = 'rgba(255,255,255,.22)';
+	c.lineWidth = 1.2;
+	c.stroke();
+	c.restore();
+}
+
+// ─── Draw Dragon (Bub!) ───────────────────────────────────────────────────────
+function drawDragon(c, now) {
+	const tsw = Math.sin(now / 370) * 4;
+	const blink = (now % 3400) < 95;
+	c.save();
+	c.translate(-120, 10);
+	c.lineCap = 'round';
+	c.lineJoin = 'round';
+
+	// tail
+	c.strokeStyle = '#1a7a3a';
+	c.lineWidth = 9;
+	c.beginPath();
+	c.moveTo(DX - 16, DY + 8);
+	c.bezierCurveTo(DX - 42, DY + 22 + tsw, DX - 58, DY + 4 + tsw, DX - 48, DY - 18 + tsw);
+	c.stroke();
+	c.strokeStyle = '#27ae60';
+	c.lineWidth = 6;
+	c.beginPath();
+	c.moveTo(DX - 16, DY + 8);
+	c.bezierCurveTo(DX - 42, DY + 22 + tsw, DX - 58, DY + 4 + tsw, DX - 48, DY - 18 + tsw);
+	c.stroke();
+	c.fillStyle = '#e67e22';
+	c.beginPath();
+	c.moveTo(DX - 48, DY - 18 + tsw);
+	c.lineTo(DX - 60, DY - 26 + tsw);
+	c.lineTo(DX - 44, DY - 23 + tsw);
+	c.closePath();
+	c.fill();
+
+	// back spikes
+	[
+		[DX - 4, DY - 18],
+		[DX + 3, DY - 22],
+		[DX + 11, DY - 19]
+	].forEach(([sx, sy]) => {
+		c.fillStyle = '#e67e22';
+		c.beginPath();
+		c.moveTo(sx - 3, sy + 4);
+		c.lineTo(sx, sy - 9);
+		c.lineTo(sx + 3, sy + 4);
+		c.closePath();
+		c.fill();
+		c.fillStyle = '#f39c12';
+		c.beginPath();
+		c.moveTo(sx - 2, sy + 2);
+		c.lineTo(sx, sy - 6);
+		c.lineTo(sx + 2, sy + 2);
+		c.closePath();
+		c.fill();
+	});
+
+	// body
+	c.shadowColor = 'rgba(0,0,0,.4)';
+	c.shadowBlur = 14;
+	c.shadowOffsetY = 5;
+	const bg = c.createRadialGradient(DX - 9, DY - 9, 3, DX, DY, 27);
+	bg.addColorStop(0, '#74eaaa');
+	bg.addColorStop(.5, '#27ae60');
+	bg.addColorStop(1, '#0e5c28');
+	c.beginPath();
+	c.ellipse(DX, DY, 25, 21, 0, 0, Math.PI * 2);
+	c.fillStyle = bg;
+	c.fill();
+	c.shadowBlur = 0;
+	c.shadowOffsetY = 0;
+	// belly
+	const bel = c.createRadialGradient(DX, DY + 5, 1, DX, DY + 5, 15);
+	bel.addColorStop(0, '#d5f5e3');
+	bel.addColorStop(1, 'rgba(213,245,227,0)');
+	c.beginPath();
+	c.ellipse(DX, DY + 5, 12, 10, 0, 0, Math.PI * 2);
+	c.fillStyle = bel;
+	c.fill();
+
+	// wing
+	c.fillStyle = 'rgba(39,174,96,.6)';
+	c.strokeStyle = '#0e5c28';
+	c.lineWidth = 1;
+	c.beginPath();
+	c.moveTo(DX - 9, DY - 8);
+	c.bezierCurveTo(DX - 32, DY - 28, DX - 42, DY - 10, DX - 20, DY + 2);
+	c.bezierCurveTo(DX - 13, DY + 6, DX - 9, DY - 2, DX - 9, DY - 8);
+	c.fill();
+	c.stroke();
+
+	// legs
+	[
+		[DX - 17, DY + 19],
+		[DX + 17, DY + 19]
+	].forEach(([lx, ly]) => {
+		c.fillStyle = '#1e8449';
+		c.beginPath();
+		c.ellipse(lx, ly, 8, 6, 0, 0, Math.PI * 2);
+		c.fill();
+		c.fillStyle = '#f0e68c';
+		[-5, 0, 5].forEach(cl => {
+			c.beginPath();
+			c.moveTo(lx + cl, ly + 5);
+			c.lineTo(lx + cl - 1, ly + 11);
+			c.lineTo(lx + cl + 3, ly + 6);
+			c.closePath();
+			c.fill();
+		});
+	});
+
+	// left arm connected to left gear (rotates with it)
+	const leftGearRot = -gearRot * (30 / 16);
+	const lhx = DX + 68 + 20 * Math.cos(leftGearRot);
+	const lhy = DY + 4 + 20 * Math.sin(leftGearRot);
+	c.strokeStyle = '#1a6a32';
+	c.lineWidth = 9;
+	c.beginPath();
+	c.moveTo(DX - 17, DY - 4);
+	c.quadraticCurveTo(DX + 20, DY - 14, lhx, lhy);
+	c.stroke();
+	c.strokeStyle = '#27ae60';
+	c.lineWidth = 6;
+	c.beginPath();
+	c.moveTo(DX - 17, DY - 4);
+	c.quadraticCurveTo(DX + 20, DY - 14, lhx, lhy);
+	c.stroke();
+	c.fillStyle = '#1e8449';
+	c.beginPath();
+	c.arc(lhx, lhy, 7, 0, Math.PI * 2);
+	c.fill();
+	c.fillStyle = '#f0e68c';
+	[-4, 0, 4].forEach(cl => {
+		c.beginPath();
+		c.moveTo(lhx + cl, lhy + 4);
+		c.lineTo(lhx + cl + 5, lhy + 8);
+		c.lineTo(lhx + cl + 3, lhy + 3);
+		c.closePath();
+		c.fill();
+	});
+
+	// right arm reaching toward machine
+	const hx = DX + 44,
+		hy = DY - 4;
+	c.strokeStyle = '#1a6a32';
+	c.lineWidth = 9;
+	c.beginPath();
+	c.moveTo(DX + 17, DY - 4);
+	c.quadraticCurveTo(DX + 30, DY - 16, hx, hy);
+	c.stroke();
+	c.strokeStyle = '#27ae60';
+	c.lineWidth = 6;
+	c.beginPath();
+	c.moveTo(DX + 17, DY - 4);
+	c.quadraticCurveTo(DX + 30, DY - 16, hx, hy);
+	c.stroke();
+	c.fillStyle = '#1e8449';
+	c.beginPath();
+	c.arc(hx, hy, 7, 0, Math.PI * 2);
+	c.fill();
+	c.fillStyle = '#f0e68c';
+	[-4, 0, 4].forEach(cl => {
+		c.beginPath();
+		c.moveTo(hx + cl, hy + 4);
+		c.lineTo(hx + cl + 5, hy + 8);
+		c.lineTo(hx + cl + 3, hy + 3);
+		c.closePath();
+		c.fill();
+	});
+
+	// head
+	const HX = DX + 22,
+		HY = DY - 24;
+	c.strokeStyle = '#1a6a32';
+	c.lineWidth = 11;
+	c.beginPath();
+	c.moveTo(DX + 9, DY - 14);
+	c.quadraticCurveTo(DX + 17, DY - 26, HX, HY);
+	c.stroke();
+	c.strokeStyle = '#27ae60';
+	c.lineWidth = 7;
+	c.beginPath();
+	c.moveTo(DX + 9, DY - 14);
+	c.quadraticCurveTo(DX + 17, DY - 26, HX, HY);
+	c.stroke();
+	c.shadowColor = 'rgba(0,0,0,.3)';
+	c.shadowBlur = 8;
+	c.shadowOffsetY = 3;
+	const hg = c.createRadialGradient(HX - 5, HY - 5, 2, HX, HY, 15);
+	hg.addColorStop(0, '#74eaaa');
+	hg.addColorStop(.65, '#27ae60');
+	hg.addColorStop(1, '#0e5c28');
+	c.beginPath();
+	c.arc(HX, HY, 15, 0, Math.PI * 2);
+	c.fillStyle = hg;
+	c.fill();
+	c.shadowBlur = 0;
+	c.shadowOffsetY = 0;
+
+	// cheeks
+	c.fillStyle = 'rgba(255,170,170,.22)';
+	c.beginPath();
+	c.ellipse(HX - 9, HY + 3, 5, 3.5, -.3, 0, Math.PI * 2);
+	c.fill();
+	c.beginPath();
+	c.ellipse(HX + 9, HY + 3, 5, 3.5, .3, 0, Math.PI * 2);
+	c.fill();
+
+	// snout
+	const sg = c.createRadialGradient(HX, HY + 7, 1, HX, HY + 7, 9);
+	sg.addColorStop(0, '#74eaaa');
+	sg.addColorStop(1, '#27ae60');
+	c.beginPath();
+	c.ellipse(HX, HY + 8, 9, 7, 0, 0, Math.PI * 2);
+	c.fillStyle = sg;
+	c.fill();
+	c.fillStyle = 'rgba(0,0,0,.42)';
+	c.beginPath();
+	c.ellipse(HX - 3, HY + 7, 1.7, 1.2, -.2, 0, Math.PI * 2);
+	c.fill();
+	c.beginPath();
+	c.ellipse(HX + 3, HY + 7, 1.7, 1.2, .2, 0, Math.PI * 2);
+	c.fill();
+
+	// eyes — pupils follow mouse
+	const mxCtx = mouseX + 120; // mouse nel sistema di riferimento traslato del drago
+	const myCtx = mouseY - 10;
+	[
+		[HX - 6, HY - 3],
+		[HX + 6, HY - 3]
+	].forEach(([ex, ey]) => {
+		c.beginPath();
+		c.arc(ex, ey, 5, 0, Math.PI * 2);
+		c.fillStyle = 'white';
+		c.fill();
+		if (!blink) {
+			const eyeAng = Math.atan2(myCtx - ey, mxCtx - ex);
+			const px = ex + Math.cos(eyeAng) * 1.8;
+			const py = ey + Math.sin(eyeAng) * 1.8;
+			c.beginPath();
+			c.arc(px, py, 2.8, 0, Math.PI * 2);
+			c.fillStyle = '#1a5a8a';
+			c.fill();
+			c.beginPath();
+			c.arc(px, py, 1.5, 0, Math.PI * 2);
+			c.fillStyle = '#080a14';
+			c.fill();
+			c.beginPath();
+			c.arc(px + 1, py - .4, .9, 0, Math.PI * 2);
+			c.fillStyle = 'white';
+			c.fill();
+		} else {
+			c.strokeStyle = '#0e5c28';
+			c.lineWidth = 2;
+			c.beginPath();
+			c.moveTo(ex - 4, ey);
+			c.quadraticCurveTo(ex, ey + 3, ex + 4, ey);
+			c.stroke();
+		}
+	});
+
+	// eyebrows
+	//c.strokeStyle='#0a4a20';c.lineWidth=2;c.lineCap='round';
+	//c.beginPath();c.moveTo(HX-10,HY-7);c.quadraticCurveTo(HX-6,HY-11,HX-2,HY-7);c.stroke();
+	//c.beginPath();c.moveTo(HX+2,HY-7);c.quadraticCurveTo(HX+6,HY-11,HX+10,HY-7);c.stroke();
+	// horn
+	c.fillStyle = '#f39c12';
+	c.strokeStyle = '#b7770d';
+	c.lineWidth = .9;
+	c.beginPath();
+	c.moveTo(HX - 2, HY - 13);
+	c.quadraticCurveTo(HX + 5, HY - 15, HX + 4, HY - 25);
+	c.quadraticCurveTo(HX - 1, HY - 15, HX + 2, HY - 13);
+	c.closePath();
+	c.fill();
+	c.stroke();
+	// smile
+	c.strokeStyle = 'rgba(0,0,0,.32)';
+	c.lineWidth = 1.5;
+	c.lineCap = 'round';
+	c.beginPath();
+	c.moveTo(HX - 4, HY + 12);
+	c.quadraticCurveTo(HX, HY + 16, HX + 4, HY + 12);
+	c.stroke();
+	c.restore();
+}
+
+// ── Gear Launcher mechanism ────────────────────────────────────────────────────
+function drawGearLauncher(c, ang, gr) {
+	// Base platform
+	const bx = MX - 68,
+		by = MY + 20,
+		bw = 136,
+		bh = 42;
+	const baseG = c.createLinearGradient(MX, by, MX, by + bh);
+	baseG.addColorStop(0, '#37474f');
+	baseG.addColorStop(1, '#1a252e');
+	c.shadowColor = 'rgba(0,0,0,.7)';
+	c.shadowBlur = 20;
+	c.shadowOffsetY = 7;
+	c.beginPath();
+	c.roundRect(bx, by, bw, bh, 10);
+	c.fillStyle = baseG;
+	c.fill();
+	c.shadowBlur = 0;
+	c.shadowOffsetY = 0;
+	c.strokeStyle = '#b8860b';
+	c.lineWidth = 1.6;
+	c.stroke();
+	// platform top highlight
+	c.strokeStyle = 'rgba(255,255,255,.1)';
+	c.lineWidth = 1.1;
+	c.beginPath();
+	c.roundRect(bx + 2, by + 2, bw - 4, 5, 3);
+	c.stroke();
+
+
+	// small side gears (mesh with big: ratio 30/16)
+	drawGear(c, MX - 52, MY + 20, 25, 35, 10, -gr * (30 / 16), '#546e7a', '#37474f', '#b8860b', 3);
+	drawGear(c, MX + 52, MY + 8, 16, 22, 10, gr * (30 / 16) + Math.PI / 10, '#546e7a', '#37474f', '#b8860b', 3);
+
+
+	// ── Rotating barrel (rendered BEFORE big gear) ─────────────────────────────
+	c.save();
+	c.translate(MX, MY);
+	c.rotate(ang);
+	// barrel tube shadow
+	c.shadowColor = 'rgba(0,0,0,.65)';
+	c.shadowBlur = 10;
+	c.shadowOffsetY = 4;
+	c.strokeStyle = '#111c24';
+	c.lineWidth = 20;
+	c.lineCap = 'round';
+	c.beginPath();
+	c.moveTo(6, 0);
+	c.lineTo(BARREL + 4, 0);
+	c.stroke();
+	c.shadowBlur = 0;
+	c.shadowOffsetY = 0;
+	// barrel body
+	const barG = c.createLinearGradient(0, -9, 0, 9);
+	barG.addColorStop(0, '#607d8b');
+	barG.addColorStop(.3, '#78909c');
+	barG.addColorStop(.6, '#455a64');
+	barG.addColorStop(1, '#1e3040');
+	c.fillStyle = barG;
+	c.beginPath();
+	c.roundRect(6, -7, BARREL - 2, 14, 7);
+	c.fill();
+	// barrel highlight
+	c.fillStyle = 'rgba(255,255,255,.14)';
+	c.beginPath();
+	c.roundRect(9, -5.5, BARREL - 10, 5, 3);
+	c.fill();
+	// brass rings
+	[18, 32, 46].forEach(bp => {
+		const rg = c.createLinearGradient(0, -9, 0, 9);
+		rg.addColorStop(0, '#e8c040');
+		rg.addColorStop(.5, '#b8860b');
+		rg.addColorStop(1, '#7a5004');
+		c.fillStyle = rg;
+		c.fillRect(bp - 3, -8.5, 6, 17);
+		c.strokeStyle = 'rgba(0,0,0,.3)';
+		c.lineWidth = .8;
+		c.strokeRect(bp - 3, -8.5, 6, 17);
+	});
+	// muzzle
+	c.beginPath();
+	c.arc(BARREL + 4, 0, 9, 0, Math.PI * 2);
+	const mg = c.createRadialGradient(BARREL + 1, -2, 1, BARREL + 4, 0, 9);
+	mg.addColorStop(0, '#546e7a');
+	mg.addColorStop(.5, '#263238');
+	mg.addColorStop(1, '#0d1a22');
+	c.fillStyle = mg;
+	c.fill();
+	c.strokeStyle = '#b8860b';
+	c.lineWidth = 2;
+	c.stroke();
+	c.beginPath();
+	c.arc(BARREL + 4, 0, 5.5, 0, Math.PI * 2);
+	c.fillStyle = '#050e14';
+	c.fill();
+	c.restore();
+
+	// big main gear (over barrel pivot)
+	drawGear(c, MX, MY + 20, 40, 50, 14, gr, '#607d8b', '#37474f', '#b8860b', 5);
+	// center cap
+	c.beginPath();
+	c.arc(MX, MY + 20, 7.5, 0, Math.PI * 2);
+	const cg = c.createRadialGradient(MX - 2, MY - 2, 1, MX, MY, 7.5);
+	cg.addColorStop(0, '#ffe060');
+	cg.addColorStop(1, '#8B6014');
+	c.fillStyle = cg;
+	c.fill();
+	c.strokeStyle = '#37474f';
+	c.lineWidth = 1.2;
+	c.stroke();
+}
+
+function drawGear(c, cx, cy, rIn, rOut, n, rot, fillCol, rimCol, hubCol, ns) {
+	c.save();
+	c.translate(cx, cy);
+	c.rotate(rot);
+	const da = Math.PI * 2 / n,
+		tw = da * 0.38;
+	c.beginPath();
+	for (let i = 0; i < n; i++) {
+		const a = i * da;
+		c.arc(0, 0, rIn, a - da / 2 + tw * 0.12, a - tw, false);
+		c.lineTo(Math.cos(a - tw * .68) * rOut, Math.sin(a - tw * .68) * rOut);
+		c.arc(0, 0, rOut, a - tw * .68, a + tw * .68, false);
+		c.lineTo(Math.cos(a + tw) * rIn, Math.sin(a + tw) * rIn);
+	}
+	c.closePath();
+	const g = c.createRadialGradient(-rIn * .26, -rIn * .32, rIn * .06, 0, 0, rOut);
+	g.addColorStop(0, sh(fillCol, 60));
+	g.addColorStop(.5, fillCol);
+	g.addColorStop(1, sh(fillCol, -60));
+	c.shadowColor = 'rgba(0,0,0,.55)';
+	c.shadowBlur = rIn * .35;
+	c.fillStyle = g;
+	c.fill();
+	c.shadowBlur = 0;
+	c.strokeStyle = rimCol;
+	c.lineWidth = 1.6;
+	c.stroke();
+	// spokes
+	const spk = ns || 4;
+	c.strokeStyle = sh(fillCol, 40);
+	c.lineWidth = rIn * .13;
+	c.lineCap = 'round';
+	for (let i = 0; i < spk; i++) {
+		const sa = i / spk * Math.PI * 2;
+		c.beginPath();
+		c.moveTo(Math.cos(sa) * rIn * .26, Math.sin(sa) * rIn * .26);
+		c.lineTo(Math.cos(sa) * rIn * .8, Math.sin(sa) * rIn * .8);
+		c.stroke();
+	}
+	// inner ring
+	c.beginPath();
+	c.arc(0, 0, rIn * .58, 0, Math.PI * 2);
+	c.strokeStyle = rimCol;
+	c.lineWidth = 1.1;
+	c.stroke();
+	// hub
+	c.beginPath();
+	c.arc(0, 0, rIn * .27, 0, Math.PI * 2);
+	const hg = c.createRadialGradient(0, 0, 1, 0, 0, rIn * .27);
+	hg.addColorStop(0, sh(hubCol, 55));
+	hg.addColorStop(1, hubCol);
+	c.fillStyle = hg;
+	c.fill();
+	c.strokeStyle = rimCol;
+	c.lineWidth = 1.1;
+	c.stroke();
+	c.beginPath();
+	c.arc(0, 0, rIn * .09, 0, Math.PI * 2);
+	c.fillStyle = sh(rimCol, 45);
+	c.fill();
+	c.restore();
+}
+
+
+
+
+// ─── Trajectory preview ───────────────────────────────────────────────────────
+function drawTraj(c, a) {
+	const pivX = DX,
+		pivY = DY - 17;
+	let tx = pivX + Math.cos(a) * 48,
+		ty = pivY + Math.sin(a) * 48;
+	let vx = Math.cos(a),
+		vy = Math.sin(a);
+	c.save();
+	c.setLineDash([5, 9]);
+	c.strokeStyle = 'rgba(255,255,255,.32)';
+	c.lineWidth = 1.8;
+	c.beginPath();
+	c.moveTo(tx, ty);
+	for (let i = 0; i < 460; i++) {
+		tx += vx * 3;
+		ty += vy * 3;
+		if (tx - R < 0) {
+			tx = R;
+			vx = -vx;
+		}
+		if (tx + R > W) {
+			tx = W - R;
+			vx = -vx;
+		}
+		if (ty < 0) break;
+		c.lineTo(tx, ty);
+		let hit = false;
+		for (let r = 0; r < ROWS && !hit; r++)
+			for (let cc = 0; cc < cols(r) && !hit; cc++)
+				if (grid[r][cc] > 0 && Math.hypot(gx(r, cc) - tx, gy(r) - ty) < R * 2.1) hit = true;
+		if (hit) break;
+	}
+	c.stroke();
+	c.restore();
+}
+
+// ─── Next canvas ──────────────────────────────────────────────────────────────
+function drawNext() {
+	NX.clearRect(0, 0, 52, 52);
+	drawBub(NX, 26, 26, nxt, R, 1);
+}
+
+// ─── Stars ────────────────────────────────────────────────────────────────────
+const stars = Array.from({
+	length: 60
+}, () => ({
+	x: Math.random() * W,
+	y: Math.random() * (H * .72),
+	r: Math.random() < .7 ? 1 : 2,
+	ph: Math.random() * Math.PI * 2
+}));
+
+// ─── Main draw ────────────────────────────────────────────────────────────────
+function draw() {
+	const now = Date.now();
+
+	// BG gradient
+	const bg = CX.createLinearGradient(0, 0, 0, H);
+	bg.addColorStop(0, '#080820');
+	bg.addColorStop(1, '#101040');
+	CX.fillStyle = bg;
+	CX.fillRect(0, 0, W, H);
+
+	// Stars
+	stars.forEach(s => {
+		const t = .4 + .6 * Math.abs(Math.sin(now / 900 + s.ph));
+		CX.globalAlpha = t * .75;
+		CX.fillStyle = '#ffffff';
+		CX.fillRect(s.x, s.y, s.r, s.r);
+	});
+	CX.globalAlpha = 1;
+
+	// Grid bubbles
+	for (let r = 0; r < ROWS; r++)
+		for (let c = 0; c < cols(r); c++)
+			if (grid[r][c] > 0) drawBub(CX, gx(r, c), gy(r), grid[r][c], R, 1);
+
+	// Danger line
+	CX.strokeStyle = 'rgba(255,50,50,.38)';
+	CX.lineWidth = 1.5;
+	CX.setLineDash([6, 5]);
+	CX.beginPath();
+	CX.moveTo(0, gy(DANGER));
+	CX.lineTo(W, gy(DANGER));
+	CX.stroke();
+	CX.setLineDash([]);
+
+	// Pop rings
+	pops = pops.filter(e => e.a > .01);
+	pops.forEach(e => {
+		CX.beginPath();
+		CX.arc(e.x, e.y, e.r, 0, Math.PI * 2);
+		CX.strokeStyle = `rgba(${hr(BUBBLE_COLORS[e.ci-1])},${e.a})`;
+		CX.lineWidth = 3.5;
+		CX.stroke();
+		e.r += (e.maxR - e.r) * .2;
+		e.a *= .83;
+	});
+
+	// Particles
+	parts = parts.filter(p => p.a > .01);
+	parts.forEach(p => {
+		CX.beginPath();
+		CX.arc(p.x, p.y, p.r * p.a, 0, Math.PI * 2);
+		CX.fillStyle = `rgba(${hr(BUBBLE_COLORS[p.ci-1])},${p.a})`;
+		CX.fill();
+		p.x += p.vx;
+		p.y += p.vy;
+		p.vy += .15;
+		p.a *= .9;
+	});
+
+	// Falling bubbles
+	falling = falling.filter(b => b.a > .01 && b.y < H + 70);
+	falling.forEach(b => {
+		drawBub(CX, b.x, b.y, b.ci, R, b.a);
+		b.x += b.vx;
+		b.y += b.vy;
+		b.vy += .42;
+		if (b.y > H - 90) b.a *= .92;
+	});
+
+	// Trajectory + dragon + bubble
+	drawDragon(CX, now); // dragon
+	drawGearLauncher(CX, ang, gearRot); // mechanism
+	if (state === 'aiming') {
+		drawTraj(CX, ang);
+		const ex = MX + Math.cos(ang) * (BARREL + R / 2 - 2);
+		const ey = MY + Math.sin(ang) * (BARREL + R / 2 - 2);
+		drawBub(CX, ex, ey, cur, R / 2, 1);
+	} else if (state === 'shooting') {
+		if (ball) drawBub(CX, ball.x, ball.y, ball.ci, R, 1);
+	}
+
+	// ── Overlays ──────────────────────────────────────────────────────────────
+	if (state === 'gameover') {
+		CX.fillStyle = 'rgba(5,5,20,.82)';
+		CX.fillRect(0, 0, W, H);
+		CX.textAlign = 'center';
+		CX.shadowColor = '#e74c3c';
+		CX.shadowBlur = 32;
+		CX.font = 'bold 52px Impact,Arial Black,sans-serif';
+		CX.fillStyle = '#e74c3c';
+		CX.fillText('GAME OVER', W / 2, H / 2 - 52);
+		CX.shadowBlur = 0;
+		CX.font = 'bold 26px Trebuchet MS';
+		CX.fillStyle = '#fff';
+		CX.fillText(`Punteggio: ${score}`, W / 2, H / 2 + 2);
+		CX.font = '18px Trebuchet MS';
+		CX.fillStyle = 'rgba(255,255,255,.52)';
+		CX.fillText(`Record: ${best}`, W / 2, H / 2 + 36);
+		if (Math.sin(now / 500) > 0) {
+			CX.font = 'bold 16px Trebuchet MS';
+			CX.fillStyle = 'rgba(255,255,255,.8)';
+			CX.fillText('— Tocca per ricominciare —', W / 2, H / 2 + 82);
+		}
+	}
+	if (state === 'win') {
+		CX.fillStyle = 'rgba(5,18,5,.82)';
+		CX.fillRect(0, 0, W, H);
+		CX.textAlign = 'center';
+		CX.shadowColor = '#2ecc71';
+		CX.shadowBlur = 32;
+		CX.font = 'bold 46px Impact,Arial Black,sans-serif';
+		CX.fillStyle = '#2ecc71';
+		CX.fillText('HAI VINTO! 🎉', W / 2, H / 2 - 52);
+		CX.shadowBlur = 0;
+		CX.font = 'bold 26px Trebuchet MS';
+		CX.fillStyle = '#fff';
+		CX.fillText(`Punteggio: ${score}`, W / 2, H / 2 + 2);
+		if (Math.sin(now / 500) > 0) {
+			CX.font = 'bold 16px Trebuchet MS';
+			CX.fillStyle = 'rgba(255,255,255,.8)';
+			CX.fillText('— Tocca per ricominciare —', W / 2, H / 2 + 72);
+		}
+	}
+}
+
+// ─── Update ───────────────────────────────────────────────────────────────────
+function update() {
+	if (state === 'shooting' && ball) {
+		ball.x += ball.vx;
+		ball.y += ball.vy;
+		// wall bounces
+		if (ball.x - R < 0) {
+			ball.x = R;
+			ball.vx = -ball.vx;
+		}
+		if (ball.x + R > W) {
+			ball.x = W - R;
+			ball.vx = -ball.vx;
+		}
+		// ceiling
+		if (ball.y - R <= GRID_TOP) {
+			place(ball.x, GRID_TOP + R);
+			ball = null;
+			return;
+		}
+		// hit existing bubble
+		outer:
+			for (let r = 0; r < ROWS; r++)
+				for (let c = 0; c < cols(r); c++)
+					if (grid[r][c] > 0 && Math.hypot(gx(r, c) - ball.x, gy(r) - ball.y) < R * 1.96) {
+						place(ball.x, ball.y);
+						ball = null;
+						break outer;
+					}
+	}
+}
+
+// ─── Events ───────────────────────────────────────────────────────────────────
+function getAng(e) {
+	const rect = cv.getBoundingClientRect(),
+		sx = W / rect.width;
+	const ex = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+	const ey = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
+	const dx = ex * sx - DX,
+		dy = ey * sx - (DY - 17);
+	let a = Math.atan2(dy, dx);
+	if (dy >= 0) a = dx <= 0 ? -Math.PI + .05 : -.05;
+	return Math.max(-Math.PI + .05, Math.min(-.05, a));
+}
+
+function shoot() {
+	if (state !== 'aiming') return;
+	const pivX = DX,
+		pivY = DY - 17;
+	ball = {
+		x: pivX + Math.cos(ang) * 48,
+		y: pivY + Math.sin(ang) * 48,
+		vx: Math.cos(ang) * SPEED,
+		vy: Math.sin(ang) * SPEED,
+		ci: cur
+	};
+	state = 'shooting';
+}
+
+//listeners
+cv.addEventListener('mousemove', e => {
+	const rect = cv.getBoundingClientRect();
+	const sx = W / rect.width;
+	mouseX = (e.clientX - rect.left) * sx;
+	mouseY = (e.clientY - rect.top) * sx;
+
+	if (state !== 'aiming') return;
+
+	const mx = e.clientX - rect.left;
+
+	ang = getAng(e);
+
+	if (lastMouseX !== null) {
+		const dx = mx - lastMouseX;
+		gearRot += dx * 0.01; //rotazione proporzionale allo spostamento
+	}
+
+	lastMouseX = mx;
+});
+
+cv.addEventListener('mouseleave', () => {
+	lastMouseX = null;
+});
+cv.addEventListener('click', e => {
+	if (state === 'gameover' || state === 'win') {
+		reset();
+		return;
+	}
+	if (state === 'aiming') {
+		ang = getAng(e);
+		shoot();
+	}
+});
+cv.addEventListener('touchmove', e => {
+	e.preventDefault();
+	if (state === 'aiming') ang = getAng(e);
+}, {
+	passive: false
+});
+cv.addEventListener('touchend', e => {
+	e.preventDefault();
+	if (state === 'gameover' || state === 'win') {
+		reset();
+		return;
+	}
+	if (state === 'aiming') shoot();
+}, {
+	passive: false
+});
+
+window.addEventListener('keydown', e => {
+	if (e.key === ' ' || e.key === 'Enter') {
+		e.preventDefault();
+		if (state === 'gameover' || state === 'win') reset();
+		else shoot();
+	}
+	if (e.key === 'ArrowLeft') ang = Math.max(-Math.PI + .05, ang - .04);
+	if (e.key === 'ArrowRight') ang = Math.min(-.05, ang + .04);
+	if (e.key === 'r' || e.key === 'R') reset();
+});
+
+// ─── Responsive ───────────────────────────────────────────────────────────────
+function rescale() {
+	const mw = Math.min(window.innerWidth - 16, 400);
+	cv.style.width = `${mw}px`;
+	cv.style.height = `${H*(mw/400)}px`;
+	document.getElementById('header').style.width = `${mw}px`;
+}
+rescale();
+window.addEventListener('resize', rescale);
+
+// ─── Loop ─────────────────────────────────────────────────────────────────────
+function loop() {
+	update();
+	draw();
+	requestAnimationFrame(loop);
+}
+initGrid();
+loop();
+</script>
+</body>
+</html>
