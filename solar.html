@@ -236,6 +236,8 @@ class Body {
 		this.ax = 0;//accelerazione corrente (x)
 		this.ay = 0;//accelerazione corrente (y)
 		this.az = 0;//accelerazione corrente (z)
+		this.minDist = -1;
+		this.maxDist = -1;
     }
 
 	updatePath() {
@@ -255,7 +257,7 @@ class Body {
 		const dy = this.y - lastPos.y;
 		const dz = this.z - lastPos.z;
 		const dist = Math.sqrt(dx*dx + dy*dy + dz*dz);
-
+		
 		if(dist > thresholdDistance){
 			const newPoint = {x:this.x, y:this.y, z:this.z};
 
@@ -413,6 +415,12 @@ class Body {
 			
 			const minDist = other.realRadius + this.realRadius;
 			const distSq = Math.max(dx*dx + dy*dy + dz*dz, minDist*minDist);
+			
+			if (other === sun) {
+				let dist = Math.sqrt(dx*dx + dy*dy + dz*dz);
+				if (this.minDist === -1 || this.minDist > dist) this.minDist = dist;
+				if (this.maxDist < dist) this.maxDist = dist;
+			}
 			
 			const invDist = 1 / Math.sqrt(distSq); // softening
 			const invDist3 = invDist * invDist * invDist;
@@ -835,7 +843,9 @@ function drawStats() {
 			' z=' + (item.z.toExponential(2)) + 'm ' +
 			' vx=' + (item.vx.toExponential(2)) + 'm/s ' +
 			' vy=' + (item.vy.toExponential(2)) + 'm/s ' + 
-			' vz=' + (item.vz.toExponential(2)) + 'm/s '
+			' vz=' + (item.vz.toExponential(2)) + 'm/s ' +
+			' minDist=' + item.minDist.toExponential(2) + 'm ' +
+			' maxDist=' + item.maxDist.toExponential(2) + 'm ';
 		}
 	});
 	document.getElementById("OBJECTS").innerHTML = bodies.length;
@@ -951,67 +961,67 @@ function mergeBodies(b1, b2){
 }
 
 //frantumazione tra 2 corpi
-function fragmentBodies(b1, b2){
+function fragmentBodies(b1, b2) {
     const fragments = 100;
     const totalMass = b1.mass + b2.mass;
 
-    // Velocità e quantità di moto centro di massa
-    const px = b1.mass*b1.vx + b2.mass*b2.vx;
-    const py = b1.mass*b1.vy + b2.mass*b2.vy;
-	const pz = b1.mass*b1.vz + b2.mass*b2.vz;
-    const vcmX = px / totalMass;
-    const vcmY = py / totalMass;
-	const vcmZ = pz / totalMass;
+    // Centro di massa: posizione e velocità
+    const vcmX = (b1.mass*b1.vx + b2.mass*b2.vx) / totalMass;
+    const vcmY = (b1.mass*b1.vy + b2.mass*b2.vy) / totalMass;
+    const vcmZ = (b1.mass*b1.vz + b2.mass*b2.vz) / totalMass;
 
-    // Posizione centro di massa
     const centerX = (b1.mass*b1.x + b2.mass*b2.x) / totalMass;
     const centerY = (b1.mass*b1.y + b2.mass*b2.y) / totalMass;
-	const centerZ = (b1.mass*b1.z + b2.mass*b2.z) / totalMass;
+    const centerZ = (b1.mass*b1.z + b2.mass*b2.z) / totalMass;
 
-    // Energia cinetica totale dei due corpi
+    // Energia cinetica totale
     const kineticBefore = 0.5 * b1.mass * (b1.vx**2 + b1.vy**2 + b1.vz**2) +
                           0.5 * b2.mass * (b2.vx**2 + b2.vy**2 + b2.vz**2);
 
-    // Percentuale di energia da distribuire ai frammenti
-    const explosionEnergyFraction = 0.01; // 10% dell'energia totale viene ai frammenti
-    const energyForFragments = kineticBefore * explosionEnergyFraction;
+    
+    const explosionEnergyFraction = 0.01; // frazione di energia per frammenti
+    const energyPerFragment = (kineticBefore * explosionEnergyFraction) / fragments;
 
     const massPerFragment = totalMass / fragments;
+    let baseSpeed = Math.sqrt(2 * energyPerFragment / massPerFragment);
 
-    // Energia per frammento
-    const energyPerFragment = energyForFragments / fragments;
-	let speed = Math.sqrt(2 * energyPerFragment / massPerFragment);//energy per ogni fragment, non energy for fragments!
-	let maxSpeed = C / 10000;
-	if (speed > maxSpeed) {
-		speed = maxSpeed;
-	}
-	
+    const maxSpeed = C / 10000;//velocita luce / 10.000
+    const minSpeed = 1;//1 m/s
+
+    // Effettiva velocità massima relativa (tenendo conto della vcm)
+    const vcmMag = Math.sqrt(vcmX*vcmX + vcmY*vcmY + vcmZ*vcmZ);
+    const effectiveMax = Math.max(maxSpeed - vcmMag, minSpeed);
+
     for (let i = 0; i < fragments; i++) {
-        const angleXY = Math.random() * 2 * Math.PI;//xy
-		const angleZ = nasaApiErrors ? (Math.PI / 2) : Math.acos(2 * Math.random() - 1);//z
+        // Direzione casuale uniforme
+        const angleXY = Math.random() * 2 * Math.PI;
+        const cosTheta = 2 * Math.random() - 1;//uniforme tra -1 e 1
+        const sinTheta = Math.sqrt(1 - cosTheta*cosTheta);//senquadro = 1 - cosquadro
 
-        let vx = vcmX + speed * Math.sin(angleZ) * Math.cos(angleXY);
-        let vy = vcmY + speed * Math.sin(angleZ) * Math.sin(angleXY);
-        let vz = nasaApiErrors ? 0 : vcmZ + speed * Math.cos(angleZ);//cos(90) puo essere non esattamente zero
-		
-		//ocho: vcm + maxSpeed supera tranquillamente maxSpeed
-		const v = Math.sqrt(vx*vx + vy*vy + vz*vz);
-		if (v > maxSpeed) {
-			const scale = maxSpeed / v;
-			vx *= scale;
-			vy *= scale;
-			vz *= scale;
-		}
-				
+        // Velocità relativa al centro di massa
+        let vx_rel = baseSpeed * sinTheta * Math.cos(angleXY);
+        let vy_rel = baseSpeed * sinTheta * Math.sin(angleXY);
+        let vz_rel = nasaApiErrors ? 0 : baseSpeed * cosTheta;
+
+        // Scala velocità se supera effectiveMax
+        const v_rel = Math.sqrt(vx_rel**2 + vy_rel**2 + vz_rel**2);
+        if (v_rel > effectiveMax) {
+            const scale = effectiveMax / v_rel;
+            vx_rel *= scale;
+            vy_rel *= scale;
+            vz_rel *= scale;
+        }
+
+        // Velocità assoluta = vcm + componente esplosiva
         const frag = new Body(
             "FRAG",
             massPerFragment,
             centerX,
             centerY,
-			centerZ,
-            vx,
-            vy,
-			vz,
+            centerZ,
+            vx_rel + vcmX,
+            vy_rel + vcmY,
+            vz_rel + vcmZ,
             2,
             "#ffaa00",
             1e6
@@ -1021,8 +1031,8 @@ function fragmentBodies(b1, b2){
     }
 
     // Rimuovi corpi originali
-    bodies.splice(bodies.indexOf(b1),1);
-    bodies.splice(bodies.indexOf(b2),1);
+    bodies.splice(bodies.indexOf(b1), 1);
+    bodies.splice(bodies.indexOf(b2), 1);
 }
 
 //crea cintura di asteroidi (Z=0 se nasa ko)
