@@ -139,17 +139,19 @@ const DANGER_Y = 100;
 const DROP_COOLDOWN = 550;
 
 const TIERS = [
-  { r: 15,  color: '#dd4444', name: 'Cherry',       pts: 1   , weight: 40, drawFn: drawCherry},
+  /*{ r: 15,  color: '#dd4444', name: 'Cherry',       pts: 1   , weight: 40, drawFn: drawCherry},
   { r: 20,  color: '#ee4444', name: 'Strawberry',   pts: 3   , weight: 30, drawFn: drawStrawberry},
   { r: 30,  color: '#884499', name: 'Plum',         pts: 5   , weight: 20, drawFn: drawPlum},
   { r: 35,  color: '#ffdd44', name: 'Lemon',        pts: 8   , weight: 6,  drawFn: drawLemon},
+  */
   { r: 40,  color: '#774400', name: 'Kiwi',         pts: 12  , weight: 1,  drawFn: drawKiwi},
   { r: 45,  color: '#ffbb80', name: 'Peach',        pts: 18  , weight: 1,  drawFn: drawPeach},
   { r: 55,  color: '#ff8822', name: 'Orange',       pts: 25  , weight: 1,  drawFn: drawOrange},
   { r: 65,  color: '#bb4433', name: 'Apple',        pts: 35  , weight: 1,  drawFn: drawApple},
-  { r: 75,  color: '#99bb33', name: 'Pear',         pts: 50  , weight: 0,  drawFn: drawPear},
-  { r: 85,  color: '#ee9922', name: 'Pineapple',    pts: 70  , weight: 0,  drawFn: drawPineapple},
-  { r: 95,  color: '#bb9944', name: 'Melon',        pts: 95  , weight: 0,  drawFn: drawMelon},
+  { r: 75,  color: '#664433', name: 'Coconut',      pts: 45  , weight: 0,  drawFn: drawCoconut},
+  { r: 85,  color: '#99bb33', name: 'Pear',         pts: 55  , weight: 0,  drawFn: drawPear},
+  { r: 95,  color: '#ee9922', name: 'Pineapple',    pts: 75  , weight: 0,  drawFn: drawPineapple},
+  { r: 100, color: '#bb9944', name: 'Melon',        pts: 95  , weight: 0,  drawFn: drawMelon},
   { r: 110, color: '#226611', name: 'Watermelon',   pts: 120 , weight: 0,  drawFn: drawWatermelon},
 ];
 
@@ -362,8 +364,8 @@ function resetGame() {
 // ─── Fruit Drawing
 function hilight(c, r) {
   c.beginPath();
-  c.ellipse(-r*0.26, -r*0.34, r*0.18, r*0.10, -0.5, 0, Math.PI*2);
-  c.fillStyle = 'rgba(255,255,255,0.38)';
+  c.ellipse(-r*0.3, -r*0.4, r*0.2, r*0.1, -0.5, 0, Math.PI*2);
+  c.fillStyle = 'rgba(255,255,255,0.15)';
   c.fill();
 }
 
@@ -457,12 +459,19 @@ function drawLemon(c, r) {
   c.strokeStyle='rgba(0,0,0,0.1)'; 
   c.lineWidth=1; 
   c.stroke();
+  // Tip bump
+  c.beginPath();
+  c.arc(r*0.8, 0, r*0.2, Math.PI*1.5, Math.PI*2.5);
+  c.fillStyle = g;
+  c.fill();
+  //bordo
+  c.beginPath(); c.arc(0,0,r*0.92,0,Math.PI*2); c.strokeStyle='rgba(0,0,0,0.1)'; c.lineWidth=1; c.stroke();
   c.restore();
-
-  c.beginPath(); c.ellipse(-r*0.26,-r*0.3,r*0.2,r*0.1,-0.5,0,Math.PI*2);
-  c.fillStyle='rgba(255,255,255,0.42)'; c.fill();
-  c.beginPath(); c.moveTo(0,-r*0.88); c.quadraticCurveTo(r*0.38,-r*1.24,r*0.12,-r*0.7);
-  c.fillStyle='#448844'; c.fill();
+  hilight(c,r*0.88);
+  
+  c.strokeStyle='#5C3317'; c.lineWidth=r*0.07; c.lineCap='round';
+  c.beginPath(); c.moveTo(-r*0.9,0); c.lineTo(-r*1.1,0); c.stroke();
+  c.beginPath(); c.moveTo(-r*1.0,0); c.quadraticCurveTo(-r*1.2,r*0.42,-r*0.76,r*0.32); c.fillStyle='#2d8a4e'; c.fill();
 }
 
 function drawOrange(c, r) {
@@ -504,6 +513,40 @@ function drawApple(c, r) {
   c.beginPath(); c.moveTo(0,-r*0.72); c.quadraticCurveTo(r*0.1,-r*1.08,r*0.05,-r*1.14); c.stroke();
   c.beginPath(); c.moveTo(r*0.04,-r*1.04); c.quadraticCurveTo(r*0.52,-r*1.24,r*0.4,-r*0.86);
   c.quadraticCurveTo(r*0.2,-r*0.88,r*0.04,-r*1.04); c.fillStyle='#3a8a44'; c.fill();
+}
+
+function drawCoconut(c, r) {
+	// Dark fibrous sphere
+    const cg = c.createRadialGradient(-r*0.3, -r*0.3, 1, 0, 0, r);
+    cg.addColorStop(0, '#887766');
+    cg.addColorStop(0.1, '#664433');
+    cg.addColorStop(1, '#221100');
+    c.beginPath(); 
+	c.arc(0, 0, r, 0, Math.PI*2);
+    c.fillStyle = cg; 
+	c.fill();
+    // Fiber lines
+    c.strokeStyle = 'rgba(0,0,0,0.25)';
+    c.lineWidth = 1.2;
+	let numb = 20;
+	let cx = 0.15 * r;
+	let cy = 0.15 * r;
+    for (let i = 0; i < numb; i++) {
+      const fa = (i/numb)*Math.PI*2;
+      c.beginPath();
+      c.moveTo(cx, cy);
+      c.lineTo(Math.cos(fa)*r, Math.sin(fa)*r);
+      c.stroke();
+    }
+    // Three "eyes"
+    c.fillStyle = '#110000';
+    const eyePos = [[-r*0.1, -r*0.1], [r*0.15, r*0.15], [r*0.15, -r*0.2]];
+    eyePos.forEach(([ex,ey]) => {
+      c.beginPath(); c.arc(ex, ey, r*0.1, 0, Math.PI*2); c.fill();
+    });
+	//bordo
+	c.beginPath(); c.arc(0,0,r,0,Math.PI*2); c.strokeStyle='rgba(0,0,0,0.1)'; c.lineWidth=1; c.stroke();
+	hilight(c,r*0.88);
 }
 
 function drawPear(c, r) {
@@ -734,9 +777,13 @@ function drawKiwi(c,r) {
   c.save();
   
   // buccia esterna marrone
+  const g = c.createRadialGradient(-r*0.35, -r*0.35, r*0.05, 0, 0, r);
+  g.addColorStop(0, '#aa7755');   // luce
+  g.addColorStop(0.4, '#774400'); // base
+  g.addColorStop(1, '#331a0d');   // ombra
   c.beginPath();
   c.ellipse(0, 0, r, r * 0.9, 0, 0, Math.PI * 2);
-  c.fillStyle = '#774400';
+  c.fillStyle = g;
   c.fill();
 
   // distribuzione uniforme con angolo aureo (phyllotaxis)
