@@ -276,7 +276,7 @@ function processMerges() {
   mergeQueue.splice(0).forEach(([a, b]) => {
     const mx = (a.position.x + b.position.x) / 2;
     const my = (a.position.y + b.position.y) / 2;
-    const tier = (a.gameTier + 1)%TIERS.length;//TODO: FIX!!!
+    const tier = (a.gameTier + 1)%TIERS.length;
     World.remove(world, a);
     World.remove(world, b);
     balls = balls.filter(x => x !== a && x !== b);
@@ -289,12 +289,12 @@ function processMerges() {
     Body.setVelocity(nb, { x: (Math.random()-0.5)*2, y: -5 });
 
     // Ring effect
-    mergeEffects.push({ x: mx, y: my, r: TIERS[tier].r * 1.1, maxR: TIERS[tier].r * 3.5, alpha: 1, color: TIERS[tier].color });
+    mergeEffects.push({ x: mx, y: my, r: TIERS[tier].r * 1.1, maxR: TIERS[tier].r * 3.5, alpha: 1, rgb: TIERS[tier].rgb });
     // Pop particles
     for (let i = 0; i < 12; i++) {
       const ang = (i / 12) * Math.PI * 2;
       const spd = 2 + Math.random() * 4;
-      popParticles.push({ x: mx, y: my, vx: Math.cos(ang)*spd, vy: Math.sin(ang)*spd, r: 3 + Math.random()*3, alpha: 1, color: TIERS[tier].color });
+      popParticles.push({ x: mx, y: my, vx: Math.cos(ang)*spd, vy: Math.sin(ang)*spd, r: 3 + Math.random()*3, alpha: 1, rgb: TIERS[tier].rgb });
     }
     // Screen shake
     shakePow = Math.min(6 + tier * 0.8, 14);
@@ -321,6 +321,9 @@ function evX(e) {
   const sx = W / rect.width;
   return ((e.touches ? e.touches[0].clientX : e.clientX) - rect.left) * sx;
 }
+
+//cheat!!!
+document.addEventListener('keydown', e => { const i = parseInt(e.key); if (i >= 0 && i < TIERS.length) curTier = i; });
 
 canvas.addEventListener('mousemove', e => { cursorX = evX(e); });
 canvas.addEventListener('click', e => { if (gameOver) { resetGame(); return; } cursorX = evX(e); drop(); });
@@ -524,8 +527,9 @@ function drawCoconut(c, r) {
 	c.arc(0, 0, r, 0, Math.PI*2);
     c.fillStyle = cg; 
 	c.fill();
+	
     // Fiber lines
-    c.strokeStyle = 'rgba(0,0,0,0.25)';
+    c.strokeStyle = 'rgba(0,0,0,0.1)';
     c.lineWidth = 1.2;
 	let numb = 20;
 	let cx = 0.15 * r;
@@ -537,6 +541,16 @@ function drawCoconut(c, r) {
       c.lineTo(Math.cos(fa)*r, Math.sin(fa)*r);
       c.stroke();
     }
+	//puntiricchiato
+	c.fillStyle = 'rgba(0,0,0,0.08)';
+	for (let i = 0; i < 80; i++) {
+	  const a = Math.random() * Math.PI * 2;
+	  const d = Math.random() * r;
+	  c.beginPath();
+	  c.arc(Math.cos(a)*d, Math.sin(a)*d, r*0.015, 0, Math.PI*2);
+	  c.fill();
+	}
+	
     // Three "eyes"
     c.fillStyle = '#110000';
     const eyePos = [[-r*0.1, -r*0.1], [r*0.15, r*0.15], [r*0.15, -r*0.2]];
@@ -644,31 +658,31 @@ function drawPineapple(c, r) {
   c.restore();
   hilight(c,rr*0.65);
   c.restore();
-  
-//ciuffo sbarazzino!
-c.save();
-c.translate(0, -r*0.75);
-const leaves = 5;
-for (let i = 0; i < leaves; i++) {
-  const t = i / (leaves - 1);
-  const angle = (t - 0.5) * Math.PI * 0.66; // apertura a ventaglio
-  const len = r * 0.6;
-  const width = r * 0.15;
+    
+  //ciuffo sbarazzino!
   c.save();
-  c.rotate(angle);
-  // gradiente foglia
-  const grad = c.createLinearGradient(0, 0, 0, -len);
-  grad.addColorStop(0, '#1f6f3d');
-  grad.addColorStop(1, '#49b061');
-  c.beginPath();
-  c.moveTo(0, 0);
-  c.quadraticCurveTo(-width, -len * 0.5, 0, -len);
-  c.quadraticCurveTo(width, -len * 0.5, 0, 0);
-  c.fillStyle = grad;
-  c.fill();
+  c.translate(0, -r*0.75);
+  const leaves = 5;
+  for (let i = 0; i < leaves; i++) {
+    const t = i / (leaves - 1);
+    const angle = (t - 0.5) * Math.PI * 0.66; // apertura a ventaglio
+    const len = r * 0.6;
+    const width = r * 0.15;
+    c.save();
+    c.rotate(angle);
+    // gradiente foglia
+    const grad = c.createLinearGradient(0, 0, 0, -len);
+    grad.addColorStop(0, '#1f6f3d');
+    grad.addColorStop(1, '#49b061');
+    c.beginPath();
+    c.moveTo(0, 0);
+    c.quadraticCurveTo(-width, -len * 0.5, 0, -len);
+    c.quadraticCurveTo(width, -len * 0.5, 0, 0);
+    c.fillStyle = grad;
+    c.fill();
+    c.restore();
+  }
   c.restore();
-}
-c.restore();
 }
 
 function drawMelon(c, r) {
@@ -799,10 +813,45 @@ function drawKiwi(c,r) {
   
   c.restore();
 }
+//ogni frutto viene pre-renderizzato UNA VOLTA su offscreen canvas
+//nel loop si usa solo drawImage: zero shadow runtime, zero path/gradient per frame
+const SPRITE_PAD = 0.35; // padding extra attorno al raggio per stemma/foglie/shadow
+
+function buildSprites() {
+  TIERS.forEach(t => {
+    // Dimensione sprite: raggio * 2 + padding per foglie/piccioli + margine per glow
+    const pad   = Math.ceil(t.r * SPRITE_PAD) + 14; // 14px extra per shadowBlur
+    const size  = Math.ceil((t.r + pad) * 2);
+    const oc    = document.createElement('canvas');
+    oc.width    = size;
+    oc.height   = size;
+    const oc2   = oc.getContext('2d');
+    const cx    = size / 2;
+    const cy    = size / 2;
+
+    // Bake shadow/glow dentro lo sprite — mai più chiamato nel loop!
+    oc2.shadowColor = t.color;
+    oc2.shadowBlur  = Math.min(t.r * 0.5, 10);
+
+    oc2.save();
+    oc2.translate(cx, cy);
+    t.drawFn(oc2, t.r);
+    oc2.restore();
+
+    t.sprite     = oc;
+    t.spriteHalf = cx; // offset per centrare con drawImage
+  });
+}
 
 
 
-function drawFruit(c, x, y, tier, alpha, angle) {
+
+
+
+
+
+
+function drawFruitOLD(c, x, y, tier, alpha, angle) {
   alpha = (alpha === undefined) ? 1 : alpha;
   angle = angle || 0;
   const r = TIERS[tier].r;
@@ -815,6 +864,20 @@ function drawFruit(c, x, y, tier, alpha, angle) {
   TIERS[tier].drawFn(c,r);
   c.restore();
 }
+
+//ora uso sprite cache
+function drawFruit(c, x, y, tier, alpha, angle) {
+  const t = TIERS[tier];
+  c.save();
+  if (alpha !== undefined && alpha !== 1) c.globalAlpha = alpha;
+  c.translate(x, y);
+  if (angle) c.rotate(angle);
+  const half = t.spriteHalf;
+  c.drawImage(t.sprite, -half, -half);						  
+  c.restore();
+}
+
+
 
 function drawNext() {
   nctx.clearRect(0, 0, 50, 50);
@@ -935,16 +998,18 @@ function draw() {
     ctx.setLineDash([12, 12]);
     ctx.beginPath(); ctx.moveTo(cx, DROP_Y + TIERS[curTier].r + 4); ctx.lineTo(cx, H); ctx.stroke();
     ctx.setLineDash([]);
-    drawFruit(ctx, cx, DROP_Y, curTier, 0.88, dropAngle);
+    drawFruit(ctx, cx, DROP_Y, curTier, 0.9, dropAngle);
   }
 
   // Merge ring effects
   mergeEffects = mergeEffects.filter(e => e.alpha > 0.01);
   mergeEffects.forEach(e => {
-    const { r: er, g: eg, b: eb } = hexRgb(e.color);
+    //const { r: er, g: eg, b: eb } = hexRgb(e.color);
+	const { r, g, b } = e.rgb;//precalcolato
     ctx.beginPath();
     ctx.arc(e.x, e.y, e.r, 0, Math.PI*2);
-    ctx.strokeStyle = `rgba(${er},${eg},${eb},${e.alpha})`;
+    //ctx.strokeStyle = `rgba(${er},${eg},${eb},${e.alpha})`;
+	ctx.strokeStyle = `rgba(${r},${g},${b},${e.alpha})`;//precalcolato
     ctx.lineWidth = 4;
     ctx.stroke();
     e.r = e.r + (e.maxR - e.r) * 0.18;
@@ -956,8 +1021,10 @@ function draw() {
   popParticles.forEach(p => {
     ctx.beginPath();
     ctx.arc(p.x, p.y, p.r * p.alpha, 0, Math.PI*2);
-    const { r: pr, g: pg, b: pb } = hexRgb(p.color);
-    ctx.fillStyle = `rgba(${pr},${pg},${pb},${p.alpha})`;
+    //const { r: pr, g: pg, b: pb } = hexRgb(p.color);
+    //ctx.fillStyle = `rgba(${pr},${pg},${pb},${p.alpha})`;
+	const { r, g, b } = p.rgb;//precalcolato
+    ctx.fillStyle = `rgba(${r},${g},${b},${p.alpha})`;//precalcolato
     ctx.fill();
     p.x += p.vx; p.y += p.vy;
     p.vy += 0.18;
@@ -1065,6 +1132,11 @@ function loop(t) {
 }
 
 // ─── Start
+
+
+TIERS.forEach(t => { t.rgb = hexRgb(t.color); });
+
+buildSprites();
 drawNext();
 requestAnimationFrame(loop);
 </script>
