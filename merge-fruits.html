@@ -116,7 +116,7 @@
       <div class="score-value" id="scoreDisplay">0</div>
     </div>
     <div id="nextBox">
-      <canvas id="nextCanvas" width="50" height="50"></canvas>
+      <canvas id="nextCanvas" width="50" height="50" style="width:50px;height:50px"></canvas>
 	  <div id="next-label">NEXT</div>
     </div>
     <div class="score-box">
@@ -210,6 +210,25 @@ const nctx   = ncanv.getContext('2d');
 const scoreEl = document.getElementById('scoreDisplay');
 const bestEl  = document.getElementById('bestDisplay');
 bestEl.textContent = best;
+
+
+//fix render sgranato
+const DPR = window.devicePixelRatio || 1;
+
+// Scala gameCanvas
+canvas.width  = W * DPR;
+canvas.height = H * DPR;
+canvas.style.width  = W + 'px';
+canvas.style.height = H + 'px';
+ctx.scale(DPR, DPR);
+
+// Scala nextCanvas
+ncanv.width  = 50 * DPR;
+ncanv.height = 50 * DPR;
+nctx.scale(DPR, DPR);
+
+
+
 
 // Legenda
 const legendEl = document.getElementById('legend');
@@ -823,8 +842,8 @@ function buildSprites() {
     const pad   = Math.ceil(t.r * SPRITE_PAD) + 14; // 14px extra per shadowBlur
     const size  = Math.ceil((t.r + pad) * 2);
     const oc    = document.createElement('canvas');
-    oc.width    = size;
-    oc.height   = size;
+    oc.width    = size * DPR;
+    oc.height   = size * DPR;
     const oc2   = oc.getContext('2d');
     const cx    = size / 2;
     const cy    = size / 2;
@@ -1135,8 +1154,8 @@ function loop(t) {
 
 
 TIERS.forEach(t => { t.rgb = hexRgb(t.color); });
-
 buildSprites();
+
 drawNext();
 requestAnimationFrame(loop);
 </script>
