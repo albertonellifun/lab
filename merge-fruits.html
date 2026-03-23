@@ -154,7 +154,9 @@
   </div>
   
   <audio id="bgMusic" loop preload="auto"><source src="./merge-fruits-music.mp3" type="audio/mpeg"></audio>
-
+  <audio id="bgSound" preload="auto"><source src="./merge-fruits-sound.mp3" type="audio/mpeg"></audio>
+  <audio id="bgDrop" preload="auto"><source src="./merge-fruits-drop.mp3" type="audio/mpeg"></audio>
+  
 <script>
 const { Engine, Bodies, Body, World, Events } = Matter;
 
@@ -217,8 +219,6 @@ function playSound(id) {
 	audio.currentTime = 0;
     audio.play();
 }
-
-
 
 
 // ─── Physics 
@@ -379,6 +379,7 @@ function processMerges() {
     
 	// Pop particles
 	spawnPopParticles(mx, my, TIERS[tier].rgb);
+	playSound('bgSound');
 	
 	// Screen shake
     shakePow = Math.min(6 + tier * 0.8, 14);
@@ -438,6 +439,7 @@ function drop() {
   canDrop = false;
   cooldownTimer = DROP_COOLDOWN;
   dropAngle = Math.random() * 2 - 1;
+  playSound('bgDrop');
 }
 
 // ─── Events
