@@ -33,7 +33,7 @@
 	border-radius: 14px;
     padding: 6px 18px;
     text-align: center;
-    min-width: 120px;
+    min-width: 140px;
 	display: flex;
     flex-direction: row;
     align-items: center;
@@ -130,7 +130,7 @@
 
   <div id="header">
     <div class="score-box">
-      <div class="score-label">PTS</div>
+      <div class="score-label">POINTS</div>
       <div class="score-value" id="scoreDisplay">0</div>
     </div>
     <div id="nextBox">
@@ -269,6 +269,14 @@ let shakeY = 0;
 let shakePow = 0;
 let dropAngle = Math.random() * 2 - 1;//lancio frutta appena angolata (casuale)
 
+
+//bombetta
+let bombs = [];
+function rndIsBomb() { return Math.random() < 0.05; }
+let curIsBomb = false;
+let nxtIsBomb = rndIsBomb();
+
+
 // ─── DOM
 const canvas = document.getElementById('gameCanvas');
 const ctx    = canvas.getContext('2d');
@@ -349,6 +357,10 @@ function spawnBall(x, y, tier) {
 Events.on(engine, 'collisionStart', ev => {
   if (gameOver) return;
   ev.pairs.forEach(({ bodyA: a, bodyB: b }) => {
+	//gestione bombette
+	if (a.isBomb) explodeBomb(a);
+    if (b.isBomb) explodeBomb(b);
+  
     if (a.label !== 'ball' || b.label !== 'ball') return;
     if (a.gameTier !== b.gameTier || a.gameTier >= TIERS.length) return;
     if (a.merging || b.merging) return;
@@ -430,11 +442,24 @@ function spawnPopParticles(x, y, rgb) {
 // ─── Drop
 function drop() {
   if (!canDrop || gameOver) return;
-  const x = clampX(curTier);
-  const b = spawnBall(x, DROP_Y, curTier);
-  Body.setVelocity(b, { x: 0, y: 4 });
-  curTier = nxtTier;
-  nxtTier = rndTier();
+  if (curIsBomb) {
+    const x = Math.max(20, Math.min(W - 20, cursorX));
+    const b = Bodies.circle(x, DROP_Y, 18, {
+      restitution: 0.4, friction: 0.6,
+      density: 0.003, label: 'bomb', angle: dropAngle, isBomb: true
+    });
+    Body.setVelocity(b, { x: 0, y: 4 });
+    World.add(world, b);
+    bombs.push(b);
+  } else {
+    const x = clampX(curTier);
+    const b = spawnBall(x, DROP_Y, curTier);
+    Body.setVelocity(b, { x: 0, y: 4 });
+  }
+  curTier    = nxtTier;
+  curIsBomb  = nxtIsBomb;
+  nxtTier    = rndTier();
+  nxtIsBomb  = rndIsBomb();
   drawNext();
   canDrop = false;
   cooldownTimer = DROP_COOLDOWN;
@@ -450,7 +475,11 @@ function evX(e) {
 }
 
 //cheat!!!
-document.addEventListener('keydown', e => { const i = parseInt(e.key); if (i >= 0 && i < TIERS.length) curTier = i; });
+document.addEventListener('keydown', e => { 
+	const i = parseInt(e.key);
+	if (i >= 0 && i < TIERS.length) { curTier = i; curIsBomb = false; } 
+	if (e.key === 'b' || e.key === 'B') curIsBomb = true;
+});
 
 canvas.addEventListener('mousemove', e => { cursorX = evX(e); });
 canvas.addEventListener('click', e => { if (gameOver) { resetGame(); return; } cursorX = evX(e); drop(); if(!musicStarted) startMusic();});
@@ -485,6 +514,8 @@ function resetGame() {
   cooldownTimer = 0; 
   dangerTimer = 0;
   shakePow = 0;
+  curIsBomb = false;
+  nxtIsBomb = rndIsBomb();
   curTier = rndTier();
   nxtTier = rndTier();
   drawNext();
@@ -1007,19 +1038,22 @@ function drawFruit(c, x, y, tier, alpha, angle) {
 }
 
 
-
 function drawNext() {
   nctx.clearRect(0, 0, 50, 50);
-  const t = TIERS[nxtTier];
-  const sc = Math.min(20 / t.r, 1);
-  nctx.save();
-  nctx.translate(25, 25);
-  nctx.scale(sc, sc);
-  drawFruit(nctx, 0, 0, nxtTier, 1, 0);
-  nctx.restore();
-  document.getElementById('next-label').innerHTML=t.name;
+  if (nxtIsBomb) {
+    drawBomb(nctx, 25, 25, 14, 0);
+    document.getElementById('next-label').innerHTML = 'BOMB';
+  } else {
+	const t = TIERS[nxtTier];
+	const sc = Math.min(20 / t.r, 1);
+	nctx.save();
+	nctx.translate(25, 25);
+	nctx.scale(sc, sc);
+	drawFruit(nctx, 0, 0, nxtTier, 1, 0);
+	nctx.restore();
+	document.getElementById('next-label').innerHTML = t.name;
+  }
 }
-
 
 
 
@@ -1084,17 +1118,6 @@ function pickSkyColor() {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
 // ─── Main Draw
 function draw() {
   const now = Date.now();
@@ -1133,14 +1156,26 @@ function draw() {
 
   // Drop guide
   if (!gameOver && canDrop) {
-    const cx = clampX(curTier);
-    ctx.strokeStyle = TIERS[curTier].color + '55';//'rgba(255,255,255,0.25)';
-    ctx.lineWidth = 6;
-    ctx.setLineDash([12, 12]);
-    ctx.beginPath(); ctx.moveTo(cx, DROP_Y + TIERS[curTier].r + 4); ctx.lineTo(cx, H); ctx.stroke();
-    ctx.setLineDash([]);
-    drawFruit(ctx, cx, DROP_Y, curTier, 0.9, dropAngle);
-  }
+	if (curIsBomb) {
+		//bombetta
+		const cx = Math.max(20, Math.min(W - 20, cursorX));
+		ctx.strokeStyle = '#00000055';
+		ctx.lineWidth = 6;
+		ctx.setLineDash([12, 12]);
+		ctx.beginPath(); ctx.moveTo(cx, DROP_Y + 22); ctx.lineTo(cx, H); ctx.stroke();
+		ctx.setLineDash([]);
+		drawBomb(ctx, cx, DROP_Y, 18, dropAngle);
+	} else {
+		//frutto
+		const cx = clampX(curTier);
+		ctx.strokeStyle = TIERS[curTier].color + '55';
+		ctx.lineWidth = 6;
+		ctx.setLineDash([12, 12]);
+		ctx.beginPath(); ctx.moveTo(cx, DROP_Y + TIERS[curTier].r + 4); ctx.lineTo(cx, H); ctx.stroke();
+		ctx.setLineDash([]);
+		drawFruit(ctx, cx, DROP_Y, curTier, 0.9, dropAngle);
+	}
+  }  
 
   // Merge ring effects
   mergeEffects = mergeEffects.filter(e => e.alpha > 0.01);
@@ -1201,12 +1236,15 @@ function draw() {
   });
   
   
-  
-  
 
   // Balls
   balls.forEach(b => {
     if (!b.merging) drawFruit(ctx, b.position.x, b.position.y, b.gameTier, 1, b.angle);
+  });
+  
+  //bombette
+  bombs.forEach(b => {
+	drawBomb(ctx, b.position.x, b.position.y, 18, b.angle);
   });
 
   // Walls
@@ -1257,7 +1295,6 @@ function drawEndGame(testo, colore, now) {
 
 
 
-
 // ─── Responsive
 function rescale() {
 	const wiw = window.innerWidth;
@@ -1304,6 +1341,65 @@ function loop(t) {
   draw();
   requestAnimationFrame(loop);
 }
+
+//esplodi la bombetta
+function explodeBomb(bomb) {
+  const radius = 120;
+  World.remove(world, bomb);// rimuovi bomb
+  bombs = bombs.filter(x => x !== bomb);
+  // distruggi frutti vicini
+  balls.forEach(ball => {
+    const dx = ball.position.x - bomb.position.x;
+    const dy = ball.position.y - bomb.position.y;
+    const dist = Math.sqrt(dx*dx + dy*dy);
+    if (dist < radius) {
+		spawnPopParticles(ball.position.x, ball.position.y, {r:255,g:0,b:0});	
+		World.remove(world, ball);
+	}
+  });
+  balls = balls.filter(ball => {
+    const dx = ball.position.x - bomb.position.x;
+    const dy = ball.position.y - bomb.position.y;
+    return Math.sqrt(dx*dx + dy*dy) >= radius;
+  });
+  //effetto visivo bomba esplosa
+  spawnPopParticles(bomb.position.x, bomb.position.y, {r:255,g:0,b:0});
+  playSound('bgSound');
+  shakePow = 24;
+}
+
+//disegna la bombetta
+function drawBomb(c, x, y, r, angle) {
+  c.save();
+  c.translate(x, y);
+  c.rotate(angle);
+  
+  // corpo
+  const g = c.createRadialGradient(-r*0.3, -r*0.3, r*0.05, 0, 0, r);
+  g.addColorStop(0, '#666'); g.addColorStop(1, '#111');
+  c.beginPath(); c.arc(0, 0, r, 0, Math.PI*2);
+  c.fillStyle = g; c.fill();
+  c.strokeStyle = 'rgba(0,0,0,0.4)'; c.lineWidth = 1; c.stroke();
+  
+  // riflesso
+  //c.beginPath(); c.ellipse(-r*0.28, -r*0.28, r*0.18, r*0.10, -0.5, 0, Math.PI*2);
+  c.beginPath(); c.ellipse(-r*0.5, -r*0.2, r*0.25, r*0.12, -0.8, 0, Math.PI*2);
+  c.fillStyle = 'rgba(255,255,255,0.22)'; c.fill();
+  
+  // miccia curva
+  c.strokeStyle = '#885500'; c.lineWidth = r*0.13; c.lineCap = 'round';
+  //c.beginPath(); c.moveTo(r*0.5, -r*0.7); c.quadraticCurveTo(r*0.9, -r*1.1, r*0.5, -r*1.5);
+  c.beginPath(); c.moveTo(r*0.3, -r*0.6); c.quadraticCurveTo(r*1.2, -r*1.4, r*0.4, -r*1.8);
+  c.stroke();
+  
+  // scintilla
+  c.fillStyle = '#ffaa00';
+  c.shadowColor = '#ff8800'; c.shadowBlur = 6;
+  c.beginPath(); c.arc(r*0.5, -r*1.5, r*0.18, 0, Math.PI*2); c.fill();
+  c.shadowBlur = 0;
+  c.restore();
+}
+
 
 // ─── Start
 
