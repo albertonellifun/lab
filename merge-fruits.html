@@ -628,18 +628,20 @@ function drawCoconut(c, r) {
       c.stroke();
     }
 	//puntiricchiato
-	c.fillStyle = 'rgba(0,0,0,0.08)';
-	for (let i = 0; i < 80; i++) {
-	  const a = Math.random() * Math.PI * 2;
-	  const d = Math.random() * r;
-	  c.beginPath();
-	  c.arc(Math.cos(a)*d, Math.sin(a)*d, r*0.015, 0, Math.PI*2);
-	  c.fill();
+	// distribuzione uniforme con angolo aureo (phyllotaxis)
+	const goldenAngle = Math.PI * (3 - Math.sqrt(5)); // ≈ 2.3999 rad
+	c.fillStyle='rgba(0,0,0,0.1)';
+	for (let i = 0; i < 50; i++) {
+		const a  = i * goldenAngle;
+		const dr = r * 0.95 * Math.sqrt(i / 50); // raggio proporzionale a sqrt(i/N)
+		c.beginPath();
+		c.arc(Math.cos(a) * dr, Math.sin(a) * dr * 0.9, r * 0.02, 0, Math.PI * 2);
+		c.fill();
 	}
 	
     // Three "eyes"
     c.fillStyle = '#110000';
-    const eyePos = [[-r*0.1, -r*0.1], [r*0.15, r*0.15], [r*0.15, -r*0.2]];
+    const eyePos = [[-r*0.1, -r*0.1], [r*0.15, r*0.15], [r*0.2, -r*0.2]];
     eyePos.forEach(([ex,ey]) => {
       c.beginPath(); c.arc(ex, ey, r*0.1, 0, Math.PI*2); c.fill();
     });
@@ -1078,11 +1080,14 @@ function draw() {
   }
 
   // Danger line
-  const blink = dangerTimer > 0 ? 0.3 + 0.5 * Math.abs(Math.sin(now / 180)) : 0.25;
+  const blink = dangerTimer > 0 ? 0.3 + 0.5 * Math.abs(Math.sin(now / 180)) : 0.5;
   ctx.strokeStyle = `rgba(255,255,255,${blink})`;
   ctx.lineWidth = 3;
   ctx.setLineDash([15, 15]);
   ctx.beginPath(); ctx.moveTo(0, DANGER_Y); ctx.lineTo(W, DANGER_Y); ctx.stroke();
+  //barattolo
+  //ctx.setLineDash([8, 4]);
+  //ctx.beginPath(); ctx.ellipse(W / 2, DANGER_Y, W / 2 + 4, 8, 0, 0, Math.PI * 2); ctx.stroke();
   ctx.setLineDash([]);
 
   // Drop guide
