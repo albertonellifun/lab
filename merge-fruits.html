@@ -19,7 +19,7 @@
     user-select: none;
     font-family: 'Trebuchet MS', 'Arial Rounded MT Bold', sans-serif;
   }
-  #header {
+  #header, #footer {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -33,7 +33,7 @@
 	border-radius: 14px;
     padding: 6px 18px;
     text-align: center;
-    min-width: 150px;
+    min-width: 120px;
 	display: flex;
     flex-direction: row;
     align-items: center;
@@ -90,6 +90,7 @@
     flex-wrap: wrap;
 	border: 4px solid rgba(255, 255, 255, 0.12);
 	border-radius: 14px;
+	flex: 1;/* occupa quasi tutto */
   }
   .legend-item {
     display: flex;
@@ -106,13 +107,30 @@
     height: 12px;
     border-radius: 50%;
   }
+  
+  #controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+	border: 4px solid rgba(255, 255, 255, 0.12);
+	border-radius: 14px;
+	height: auto;/* importante */
+    align-self: stretch;/* ← forza stessa altezza della legend */
+  }
+  button {
+	background: none;
+	border: 0;
+	font-size: 22px;
+	text-shadow: 1px 1px 4px rgba(0,0,0,0.6);
+  }
 </style>
 </head>
 <body>
 
   <div id="header">
     <div class="score-box">
-      <div class="score-label">POINTS</div>
+      <div class="score-label">PTS</div>
       <div class="score-value" id="scoreDisplay">0</div>
     </div>
     <div id="nextBox">
@@ -124,8 +142,18 @@
       <div class="score-value" id="bestDisplay">0</div>
     </div>
   </div>
+  
   <canvas id="gameCanvas" width="400" height="580"></canvas>
-  <div id="legend"></div>
+  
+  <div id="footer">
+    <div id="legend"></div>
+	<div id="controls">
+		<button onclick="changeMute()">🎵</button>
+		<button onclick="pickSkyColor()">🌈</button>
+	</div>
+  </div>
+  
+  <audio id="bgMusic" loop preload="auto"><source src="./merge-fruits-music.mp3" type="audio/mpeg"></audio>
 
 <script>
 const { Engine, Bodies, Body, World, Events } = Matter;
@@ -147,12 +175,51 @@ const TIERS = [
   { r: 45,  color: '#ffbb80', name: 'Peach',        pts: 18  , weight: 1,  drawFn: drawPeach},
   { r: 55,  color: '#ff8822', name: 'Orange',       pts: 25  , weight: 1,  drawFn: drawOrange},
   { r: 65,  color: '#bb4433', name: 'Apple',        pts: 35  , weight: 1,  drawFn: drawApple},
-  { r: 75,  color: '#664433', name: 'Coconut',      pts: 45  , weight: 0,  drawFn: drawCoconut},
+  { r: 70,  color: '#664433', name: 'Coconut',      pts: 45  , weight: 0,  drawFn: drawCoconut},
   { r: 85,  color: '#99bb33', name: 'Pear',         pts: 55  , weight: 0,  drawFn: drawPear},
   { r: 95,  color: '#ee9922', name: 'Pineapple',    pts: 75  , weight: 0,  drawFn: drawPineapple},
   { r: 100, color: '#bb9944', name: 'Melon',        pts: 95  , weight: 0,  drawFn: drawMelon},
   { r: 110, color: '#226611', name: 'Watermelon',   pts: 120 , weight: 0,  drawFn: drawWatermelon},
 ];
+
+//music
+let audioMode = 1;
+let musicStarted = false;
+
+function changeMute() {
+	audioMode = (audioMode + 1) % 2;
+	stopMusic();
+	if (audioMode !== 0) startMusic();
+}
+
+function stopMusic() {
+	const music = document.getElementById("bgMusic");
+	if (music) music.pause();
+	musicStarted = false;
+}
+
+function startMusic(fromBeginning = true) {
+	if (audioMode === 0) return;
+	stopMusic();
+	const music = document.getElementById("bgMusic");
+	if (music) {
+		music.volume = 0.5;
+		if (fromBeginning) music.currentTime = 0;
+		music.play();
+		musicStarted = true;
+	}
+}
+
+function playSound(id) {
+	if (audioMode === 0) return;
+	const audio = document.getElementById(id);
+	if (!audio) return;//id non valido
+	audio.currentTime = 0;
+    audio.play();
+}
+
+
+
 
 // ─── Physics 
 const engine = Engine.create({ gravity: { y: 2 }, positionIterations: 10, velocityIterations: 8 });
@@ -345,7 +412,7 @@ function evX(e) {
 document.addEventListener('keydown', e => { const i = parseInt(e.key); if (i >= 0 && i < TIERS.length) curTier = i; });
 
 canvas.addEventListener('mousemove', e => { cursorX = evX(e); });
-canvas.addEventListener('click', e => { if (gameOver) { resetGame(); return; } cursorX = evX(e); drop(); });
+canvas.addEventListener('click', e => { if (gameOver) { resetGame(); return; } cursorX = evX(e); drop(); if(!musicStarted) startMusic();});
 canvas.addEventListener('touchmove', e => { e.preventDefault(); cursorX = evX(e); }, { passive: false });
 canvas.addEventListener('touchend', e => { e.preventDefault(); if (gameOver) { resetGame(); return; } drop(); }, { passive: false });
 
@@ -961,6 +1028,15 @@ document.body.style.backgroundImage = `linear-gradient(180deg, ${sky.skyDark}, $
 	
 checkerPattern = createCheckerPattern(ctx, sky); //
 
+function pickSkyColor() {
+	currentSkyColor = new Date().getSeconds() % SKY_COLORS.length;
+	//cambia anche il bg del body
+	const sky = SKY_COLORS[currentSkyColor];
+	document.body.style.backgroundImage = `linear-gradient(180deg, ${sky.skyDark}, ${sky.skyLight})`;
+	
+	checkerPattern = createCheckerPattern(ctx, sky); //
+}
+
 
 
 
@@ -1128,7 +1204,8 @@ function rescale() {
 	canvas.style.height = `${newH}px`;
 
 	document.getElementById('header').style.width = `${newW}px`;
-	document.getElementById('legend').style.width = `${newW}px`;
+	document.getElementById('footer').style.width = `${newW}px`;
+	//document.getElementById('legend').style.width = `${newW}px`;
 }
 rescale();
 window.addEventListener('resize', rescale);
