@@ -150,6 +150,7 @@
 	<div id="controls">
 		<button onclick="changeMute()">🎵</button>
 		<button onclick="pickSkyColor()">🌈</button>
+		<button onclick="doEarthquake()">🌋</button>
 	</div>
   </div>
   
@@ -266,7 +267,7 @@ let curTier = rndTier();
 let nxtTier = rndTier();
 let shakeX = 0; 
 let shakeY = 0; 
-let shakePow = 0;
+let shakePow = 0;//shake visivo (no fisica)
 let dropAngle = Math.random() * 2 - 1;//lancio frutta appena angolata (casuale)
 
 
@@ -1063,8 +1064,8 @@ function drawNext() {
 let SKY_COLORS = [
 	{skyDark: '#0022aa', skyLight:'#99bbff'},//blue
 	{skyDark: '#aa0000', skyLight:'#000000',},//red
-	{skyDark: '#cc2255', skyLight:'#ffeeff'},//pink
-	{skyDark: '#117700', skyLight:'#ffffdd'},//green
+	{skyDark: '#cc2255', skyLight:'#550033', skyLightx:'#ffeeff'},//pink
+	{skyDark: '#117700', skyLight:'#aaaa44', skyLightx:'#ffffdd'},//green
 	];
 let currentSkyColor = Math.floor(Math.random() * SKY_COLORS.length);
 	
@@ -1400,6 +1401,24 @@ function drawBomb(c, x, y, r, angle) {
   c.restore();
 }
 
+
+function doEarthquake() {
+  let shakes = 3;
+
+  const interval = setInterval(() => {
+    shakePow = 20;//solo visivo
+	//
+    balls.forEach(b => {
+      const m = b.mass; //massa del corpo
+      Body.applyForce(b, b.position, {
+        x: (Math.random() - 0.5) * 0.02 * m,
+        y: (-0.02 - Math.random() * 0.03) * m
+      });
+    });
+
+    if (--shakes <= 0) clearInterval(interval);
+  }, 1000);
+}
 
 // ─── Start
 
