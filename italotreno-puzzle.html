@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<title>Italotreno Puzzle</title>
+<style>
+   body { 
+	display:flex; 
+	justify-content:center; 
+	align-items:center; 
+	height:100vh; 
+	flex-direction:column; 
+  }
+  #puzzle { 
+	display:grid; 
+	grid-template-columns:repeat(3,150px);
+	grid-template-rows:repeat(3,150px);
+	gap:4px; 
+	border: 2px solid rgba(0,0,0,0.16);
+	box-shadow: 2px 2px 8px 0px rgba(0,0,0,0.16);
+	border-radius: 8px;
+	padding: 8px;
+  }
+  .tile { 
+	background:url('https://blog.italotreno.com/wp-content/uploads/2017/01/pendolino2-2-1-1140x660.jpg') 0/450px 450px;
+	display:flex;
+	justify-content:center;
+	align-items:center;
+	color:#fff;
+	cursor:pointer;
+	transition:all .2s; 
+	font-family: Roboto, sans-serif;
+  }
+  .empty { 
+	background: transparent;
+	cursor:default;
+  }
+</style>
+</head>
+<body>
+
+<div id="puzzle"></div>
+
+<script>
+const puzzle = document.getElementById('puzzle');
+const size = 3;
+const cellSize = 150;
+let tiles = [];
+
+//crea tiles
+for (let i = 0; i < size*size; i++) {
+  const tile = document.createElement('div');
+
+  if (i === size*size - 1) {
+	tile.classList.add('tile', 'empty');
+	tile.textContent = '';
+  } else { 
+	tile.classList.add('tile');
+	tile.textContent = i+1;
+    const row = Math.floor(i/size);
+    const col = i % size;
+    tile.style.backgroundPosition = `-${col*cellSize}px -${row*cellSize}px`;
+  }
+  tile.dataset.index = i;
+  puzzle.appendChild(tile);
+  tiles.push(tile);
+}
+
+//trova cella vuota
+function getEmptyIndex() {
+  return tiles.findIndex(t => t.classList.contains('empty'));
+}
+
+//scambia con destructuring (mlacchio docet / anelli implementa)
+const swap = (a, b) => {
+  [tiles[a].className, tiles[b].className] = [tiles[b].className, tiles[a].className];
+  [tiles[a].textContent, tiles[b].textContent] = [tiles[b].textContent, tiles[a].textContent];
+  [tiles[a].style.backgroundPosition, tiles[b].style.backgroundPosition] = [tiles[b].style.backgroundPosition, tiles[a].style.backgroundPosition];
+};
+
+//click muove tessera
+tiles.forEach((tile, idx) => {
+  tile.addEventListener('click', () => {
+    const empty = getEmptyIndex();
+    const row = Math.floor(idx/size);
+    const col = idx % size;
+    const emptyRow = Math.floor(empty/size);
+    const emptyCol = empty % size;
+    if ((row === emptyRow && Math.abs(col-emptyCol) === 1) || (col === emptyCol && Math.abs(row-emptyRow) === 1)) swap(idx, empty);
+  });
+});
+
+//200 mosse casuali all'inizio basteranno?
+function shuffle() {
+  let lastSwapped = -1;
+  for (let i = 0; i < 200; i++) {
+    const empty = getEmptyIndex();
+    const row = Math.floor(empty / size);
+    const col = empty % size;
+    const possibles = [];
+    if (row > 0) possibles.push(empty - size);
+    if (row < size - 1) possibles.push(empty + size);
+    if (col > 0) possibles.push(empty - 1);
+    if (col < size - 1) possibles.push(empty + 1);
+    //escludi la tessera appena mossa (a -> b -> a == spreco di tempo)
+    const filtered = possibles.filter(p => p !== lastSwapped);
+    const rand = filtered[Math.floor(Math.random() * filtered.length)];
+    lastSwapped = empty; //la cella vuota diventera' "rand", quindi la ex-vuota va esclusa dopo
+    swap(empty, rand);
+  }
+}
+
+shuffle();
+</script>
+</body>
+</html>
