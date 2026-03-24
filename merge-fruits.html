@@ -151,6 +151,8 @@
 		<button onclick="changeMute()">🎵</button>
 		<button onclick="pickSkyColor()">🌈</button>
 		<button onclick="doEarthquake()">🌋</button>
+		<button onclick="doBomb()">💣</button>
+		<button onclick="doRandomize()">♻️</button>
 	</div>
   </div>
   
@@ -179,8 +181,8 @@ const TIERS = [
   { r: 55,  color: '#ff8822', name: 'Orange',       pts: 25  , weight: 1,  drawFn: drawOrange},
   { r: 65,  color: '#bb4433', name: 'Apple',        pts: 35  , weight: 1,  drawFn: drawApple},
   { r: 70,  color: '#664433', name: 'Coconut',      pts: 45  , weight: 0,  drawFn: drawCoconut},
-  { r: 85,  color: '#99bb33', name: 'Pear',         pts: 55  , weight: 0,  drawFn: drawPear},
-  { r: 95,  color: '#ee9922', name: 'Pineapple',    pts: 75  , weight: 0,  drawFn: drawPineapple},
+  { r: 80,  color: '#99bb33', name: 'Pear',         pts: 55  , weight: 0,  drawFn: drawPear},
+  { r: 90,  color: '#ee9922', name: 'Pineapple',    pts: 75  , weight: 0,  drawFn: drawPineapple},
   { r: 100, color: '#bb9944', name: 'Melon',        pts: 95  , weight: 0,  drawFn: drawMelon},
   { r: 110, color: '#226611', name: 'Watermelon',   pts: 120 , weight: 0,  drawFn: drawWatermelon},
 ];
@@ -468,6 +470,23 @@ function drop() {
   playSound('bgDrop');
 }
 
+//randomizza -> mi serve per debug
+function doRandomize() {
+	for(let i = 0; i < 5; i++) {
+		const ct = (Math.random() * 8)|0;
+		const x = clampX(ct);
+		cursorX = 50 + Math.random() * (W - 50);
+		const b = spawnBall(x, DROP_Y, ct);
+		Body.setVelocity(b, { x: 0, y: 4 });
+	}
+}
+
+//crea bombetta
+function doBomb() {
+	curIsBomb = true;
+}
+
+
 // ─── Events
 function evX(e) {
   const rect = canvas.getBoundingClientRect();
@@ -479,7 +498,8 @@ function evX(e) {
 document.addEventListener('keydown', e => { 
 	const i = parseInt(e.key);
 	if (i >= 0 && i < TIERS.length) { curTier = i; curIsBomb = false; } 
-	if (e.key === 'b' || e.key === 'B') curIsBomb = true;
+	if (e.key === 'b' || e.key === 'B') doBomb();
+	if (e.key === 'r' || e.key === 'R') doRandomize();
 });
 
 canvas.addEventListener('mousemove', e => { cursorX = evX(e); });
@@ -496,7 +516,7 @@ function checkGameOver(dt) {
   });
   if (danger) {
     dangerTimer += dt;
-    if (dangerTimer >= 2200) { gameOver = true; if (score > best) { best = score; localStorage.setItem('mf_best', best); } }
+    if (dangerTimer >= 5000) { gameOver = true; if (score > best) { best = score; localStorage.setItem('mf_best', best); } }
   } else { dangerTimer = 0; }
 }
 
@@ -976,12 +996,13 @@ function drawKiwi(c,r) {
 }
 //ogni frutto viene pre-renderizzato UNA VOLTA su offscreen canvas
 //nel loop si usa solo drawImage: zero shadow runtime, zero path/gradient per frame
-const SPRITE_PAD = 0.35; // padding extra attorno al raggio per stemma/foglie/shadow
-
 function buildSprites() {
+  const SPRITE_PAD = 0.35; //padding extra attorno al raggio per stemma/foglie/shadow
+  const EXTRA_PAD = 14;    //14px extra per shadowBlur
+  
   TIERS.forEach(t => {
     // Dimensione sprite: raggio * 2 + padding per foglie/piccioli + margine per glow
-    const pad   = Math.ceil(t.r * SPRITE_PAD) + 14; // 14px extra per shadowBlur
+    const pad   = Math.ceil(t.r * SPRITE_PAD) + EXTRA_PAD;
     const size  = Math.ceil((t.r + pad) * 2);
     const oc    = document.createElement('canvas');
     oc.width    = size * DPR;
@@ -1005,28 +1026,7 @@ function buildSprites() {
 }
 
 
-
-
-
-
-
-
-
-function drawFruitOLD(c, x, y, tier, alpha, angle) {
-  alpha = (alpha === undefined) ? 1 : alpha;
-  angle = angle || 0;
-  const r = TIERS[tier].r;
-  c.save();
-  c.globalAlpha = alpha;
-  c.translate(x, y);
-  c.rotate(angle);
-  c.shadowColor = TIERS[tier].color;
-  c.shadowBlur = Math.min(r * 0.5, 10);
-  TIERS[tier].drawFn(c,r);
-  c.restore();
-}
-
-//ora uso sprite cache
+//uso sprite cache
 function drawFruit(c, x, y, tier, alpha, angle) {
   const t = TIERS[tier];
   c.save();
@@ -1055,8 +1055,6 @@ function drawNext() {
 	document.getElementById('next-label').innerHTML = t.name;
   }
 }
-
-
 
 
 
@@ -1256,8 +1254,8 @@ function draw() {
   const rg = ctx.createLinearGradient(W, 0, W-10, 0);
   rg.addColorStop(0, 'rgba(255,255,255,0.8)'); rg.addColorStop(1, 'rgba(255,255,255,0)');
   ctx.fillStyle = rg; ctx.fillRect(W-8, DANGER_Y, 8, H - DANGER_Y);
-  // Floor
   
+  // Floor
   const fg = ctx.createLinearGradient(0, H-8, 0, H);
   fg.addColorStop(0, 'rgba(255,255,255,0)'); fg.addColorStop(1, 'rgba(255,255,255,0.8)');
   ctx.fillStyle = fg; ctx.fillRect(0, H-8, W, 8);
@@ -1401,13 +1399,12 @@ function drawBomb(c, x, y, r, angle) {
   c.restore();
 }
 
-
+//trucco terremoto
 function doEarthquake() {
   let shakes = 3;
 
   const interval = setInterval(() => {
     shakePow = 20;//solo visivo
-	//
     balls.forEach(b => {
       const m = b.mass; //massa del corpo
       Body.applyForce(b, b.position, {
@@ -1421,11 +1418,8 @@ function doEarthquake() {
 }
 
 // ─── Start
-
-
 TIERS.forEach(t => { t.rgb = hexRgb(t.color); });
 buildSprites();
-
 drawNext();
 requestAnimationFrame(loop);
 </script>
