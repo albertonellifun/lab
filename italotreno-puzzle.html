@@ -87,8 +87,26 @@ tiles.forEach((tile, idx) => {
     const emptyRow = Math.floor(empty/size);
     const emptyCol = empty % size;
     if ((row === emptyRow && Math.abs(col-emptyCol) === 1) || (col === emptyCol && Math.abs(row-emptyRow) === 1)) swap(idx, empty);
+	if (isSolved()) {
+		let i = tiles.length - 1;
+		tiles[i].textContent = i+1;
+		const r = Math.floor(i/size);
+		const c = i % size;
+		tiles[i].style.backgroundPosition = `-${c*cellSize}px -${r*cellSize}px`;
+		tiles[i].classList.remove('empty');
+	}
   });
 });
+
+function isSolved() {
+  for (let i = 0; i < tiles.length; i++) {
+    // ultima deve essere vuota
+    if (i === tiles.length - 1) {
+      if (!tiles[i].classList.contains('empty')) return false;
+	} else if (tiles[i].textContent != i + 1) return false;//1..8
+  }
+  return true;
+}
 
 //200 mosse casuali all'inizio basteranno?
 function shuffle() {
