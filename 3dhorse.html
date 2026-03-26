@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3D HORSE</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0d1117; overflow: hidden; font-family: monospace; }
+  canvas { display: block; }
+  #ui {
+    position: absolute; top: 20px; left: 50%;
+    transform: translateX(-50%);
+    color: #e8c87a;
+    font-size: 13px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    background: rgba(0,0,0,0.45);
+    padding: 8px 20px; border-radius: 20px;
+    border: 1px solid rgba(232,200,122,0.2);
+    pointer-events: none;
+  }
+  #controls {
+    position: absolute; bottom: 24px; left: 50%;
+    transform: translateX(-50%);
+    display: flex; gap: 12px;
+  }
+  button {
+    background: rgba(232,200,122,0.12);
+    color: #e8c87a;
+    border: 1px solid rgba(232,200,122,0.35);
+    padding: 8px 18px;
+    border-radius: 20px;
+    font-family: monospace;
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: background 0.2s;
+  }
+  button:hover { background: rgba(232,200,122,0.25); }
+  button.active { background: rgba(232,200,122,0.35); border-color: #e8c87a; }
+</style>
+</head>
+<body>
+<div id="ui">🐴 3D HORSE · trascina per ruotare · scroll per zoom</div>
+<div id="controls">
+  <button id="btnWalk" class="active" onclick="setGait('walk')">Passo</button>
+  <button id="btnTrot" onclick="setGait('trot')">Trotto</button>
+  <button id="btnGallop" onclick="setGait('gallop')">Galoppo</button>
+  <button id="btnRest" onclick="setGait('rest')">Fermo</button>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// ─── SCENE ───────────────────────────────────────────────────────────────────
+const scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2(0x0d1117, 0.045);
+
+const camera = new THREE.PerspectiveCamera(42, innerWidth/innerHeight, 0.1, 200);
+camera.position.set(0, 4, 11);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(devicePixelRatio);
+renderer.setSize(innerWidth, innerHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.1;
+document.body.appendChild(renderer.domElement);
+
+// ─── LIGHTS ──────────────────────────────────────────────────────────────────
+scene.add(new THREE.AmbientLight(0x334466, 1.2));
+
+const sun = new THREE.DirectionalLight(0xfff0cc, 2.5);
+sun.position.set(6, 12, 8);
+sun.castShadow = true;
+sun.shadow.mapSize.width = sun.shadow.mapSize.height = 2048;
+sun.shadow.camera.near = 0.5; sun.shadow.camera.far = 60;
+sun.shadow.camera.left = sun.shadow.camera.bottom = -10;
+sun.shadow.camera.right = sun.shadow.camera.top = 10;
+sun.shadow.bias = -0.001;
+scene.add(sun);
+
+const rim = new THREE.DirectionalLight(0x4466aa, 0.8);
+rim.position.set(-8, 4, -6);
+scene.add(rim);
+
+// ─── BACKGROUND SKY ──────────────────────────────────────────────────────────
+const skyGeo = new THREE.SphereGeometry(90, 16, 8);
+skyGeo.scale(-1, 1, 1);
+const skyMat = new THREE.ShaderMaterial({
+  uniforms: {
+    topColor: { value: new THREE.Color(0x0a0f20) },
+    bottomColor: { value: new THREE.Color(0x1a2a1a) }
+  },
+  vertexShader: `varying vec3 vPos; void main(){ vPos=position; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }`,
+  fragmentShader: `uniform vec3 topColor,bottomColor; varying vec3 vPos;
+    void main(){ float t=clamp((vPos.y+20.0)/100.0,0.0,1.0); gl_FragColor=vec4(mix(bottomColor,topColor,t),1.0); }`,
+  side: THREE.BackSide
+});
+scene.add(new THREE.Mesh(skyGeo, skyMat));
+
+// ─── GROUND ──────────────────────────────────────────────────────────────────
+const ground = new THREE.Mesh(
+  new THREE.PlaneGeometry(60, 60, 20, 20),
+  new THREE.MeshLambertMaterial({ color: 0x2a4020 })
+);
+ground.rotation.x = -Math.PI/2;
+ground.receiveShadow = true;
+scene.add(ground);
+
+// dirt track
+const track = new THREE.Mesh(
+  new THREE.PlaneGeometry(60, 4),
+  new THREE.MeshLambertMaterial({ color: 0x6b4a2a })
+);
+track.rotation.x = -Math.PI/2;
+track.position.y = 0.01;
+track.receiveShadow = true;
+scene.add(track);
+
+// ─── MATERIALS ───────────────────────────────────────────────────────────────
+const coat = new THREE.MeshLambertMaterial({ color: 0x8b4513 });   // manto
+const coatDark = new THREE.MeshLambertMaterial({ color: 0x5c2e0a }); // ventre/muscoli
+const mane  = new THREE.MeshLambertMaterial({ color: 0x1a0a02 });   // criniera
+const hoof  = new THREE.MeshLambertMaterial({ color: 0x1a1209 });   // zoccoli
+const eye   = new THREE.MeshLambertMaterial({ color: 0x0a0a0a });   // occhi
+const white = new THREE.MeshLambertMaterial({ color: 0xf0ece0 });   // sclera
+const nose  = new THREE.MeshLambertMaterial({ color: 0x6b3020 });   // narice
+
+function M(mat){ return mat; }
+
+// ─── GEOMETRY HELPERS ────────────────────────────────────────────────────────
+function box(w,h,d, mat, px=0,py=0,pz=0, rx=0,ry=0,rz=0) {
+  const m = new THREE.Mesh(new THREE.BoxGeometry(w,h,d), mat);
+  m.position.set(px,py,pz); m.rotation.set(rx,ry,rz);
+  m.castShadow = m.receiveShadow = true;
+  return m;
+}
+function cyl(rt,rb,h, mat, px=0,py=0,pz=0, rx=0,ry=0,rz=0, segs=6) {
+  const m = new THREE.Mesh(new THREE.CylinderGeometry(rt,rb,h,segs), mat);
+  m.position.set(px,py,pz); m.rotation.set(rx,ry,rz);
+  m.castShadow = true;
+  return m;
+}
+function sphere(r, mat, px=0,py=0,pz=0) {
+  const m = new THREE.Mesh(new THREE.SphereGeometry(r,10,8), mat);
+  m.position.set(px,py,pz); m.castShadow = true;
+  return m;
+}
+function group(...children) {
+  const g = new THREE.Group();
+  children.forEach(c => g.add(c));
+  return g;
+}
+
+// ─── HORSE ───────────────────────────────────────────────────────────────────
+/*
+horse (Group)
+ ├── bodyGroup
+ ├── neckGroup
+ │    └── criniera (6 tuft)
+ ├── headGroup (testa, muso, occhi, orecchie)
+ ├── legGroups[4]
+ │    ├── upper (coscia)
+ │    └── lower (cannone + zoccolo) ← pivot al ginocchio
+ └── tailGroup (coda + ciuffo)
+*/
+/*
+function box(w, h, d, mat, px=0, py=0, pz=0, rx=0, ry=0, rz=0)
+w	larghezza (asse X)
+h	altezza (asse Y)
+d	profondità (asse Z)
+mat	materiale (THREE.Material)
+px	posizione X
+py	posizione Y
+pz	posizione Z
+rx	rotazione X (radianti)
+ry	rotazione Y (radianti)
+rz	rotazione Z (radianti)
+
+
+orientamento assi:
+x == lunghezza del cavallo da testa a coda
+y == altezza da terra a orecchie
+z == larghezza del cavallo
+*/
+
+const horse = new THREE.Group();
+scene.add(horse);
+
+// CORPO
+const bodyGroup = new THREE.Group();
+horse.add(bodyGroup);
+const bodyMain = box(2.5,1.1,1.1, coat, 0,2.1,0);
+bodyGroup.add(bodyMain);
+// ventre leggermente più scuro e piu largo
+const belly = box(1.8,0.6,1.15, coatDark, 0,1.8,0);
+bodyGroup.add(belly);
+// garrese (spalla rialzata)
+bodyGroup.add(box(0.5,0.35,0.9, coatDark, 0.9,2.7,0, 0,0,0.12));
+
+// COLLO
+const neckGroup = new THREE.Group();
+neckGroup.position.set(1.1, 2.25, 0);
+horse.add(neckGroup);
+const neckMesh = box(0.58,1.15,0.52, coat, 0,0.55,0,  0, 0, 0);//, -0.38,0,0);
+neckGroup.add(neckMesh);
+
+
+// TESTA
+const headGroup = new THREE.Group();
+headGroup.position.set(1.7, 3.1, 0);
+headGroup.rotation.set(-0.18, 0, 0);
+horse.add(headGroup);
+
+headGroup.add(box(0.9, 0.68, 0.58, coat));
+headGroup.add(box(0.72,0.44,0.46, coat, 0.75,-0.05,0));        // muso
+headGroup.add(box(0.18,0.12,0.1, nose, 1.0,-0.13, 0.14));      // narice sx
+headGroup.add(box(0.18,0.12,0.1, nose, 1.0,-0.13,-0.14));      // narice dx
+// occhi
+headGroup.add(sphere(0.07, white, 0.22,0.12, 0.3));
+headGroup.add(sphere(0.05, eye,   0.28,0.12, 0.31));
+headGroup.add(sphere(0.07, white, 0.22,0.12,-0.3));
+headGroup.add(sphere(0.05, eye,   0.28,0.12,-0.31));
+// orecchie
+headGroup.add(box(0.11,0.32,0.11, coat, -0.22,0.46, 0.2, 0.15,0, 0.18));
+headGroup.add(box(0.11,0.32,0.11, coat, -0.22,0.46,-0.2, 0.15,0,-0.18));
+// ciuffo
+headGroup.add(box(0.25,0.32,0.08, mane, -0.15,0.5,0.08, 0.3,0,0.1));
+
+// CRINIERA
+for(let i = 0; i < 6; i++) {
+  const t = i / 5; // 0 → 1 lungo il collo
+
+  const px = 0.5 - t * 0.9;     // lungo il collo
+  const py = 1.55 - t * 0.85;   // sopra il collo
+  const height = 0.35 - t * 0.12;
+
+  neckGroup.add(box(
+    0.22,       //larghezza (X)
+    height,     //altezza (Y)
+    0.12,       //profondità (Z)
+    mane,		//materiale
+    px,			//pos
+    py,
+    0,          //centrato in z
+	
+    0, 
+	0,
+    0.6,// inclinato indietro (tipo ciuffo)
+  ));
+}
+
+// ZAMPE
+const legDefs = [
+  { x: 0.95, z:  0.45, phase: 0,        name:'FL' },
+  { x: 0.95, z: -0.45, phase: Math.PI,  name:'FR' },
+  { x:-0.82, z:  0.45, phase: Math.PI,  name:'BL' },
+  { x:-0.82, z: -0.45, phase: 0,        name:'BR' },
+];
+const gallopPhases = {
+  FL: 1.5 * Math.PI,
+  FR: Math.PI,
+  BL: 0.5 * Math.PI,
+  BR: 0,
+};
+const legGroups = [];
+
+legDefs.forEach(d => {
+  const lg = new THREE.Group();
+  lg.position.set(d.x, 2.1, d.z);
+  horse.add(lg);
+
+  // coscia
+  const upper = new THREE.Group();
+  upper.add(box(0.3,0.72,0.3, coat, 0,-0.36,0));
+  lg.add(upper);
+
+  // ginocchio/cannone
+  const lower = new THREE.Group();
+  lower.position.set(0,-0.72,0);
+  lower.add(box(0.24,0.62,0.24, coatDark, 0,-0.31,0));
+  // pastoia
+  lower.add(box(0.22,0.22,0.26, coat, 0,-0.65,0));
+  // zoccolo
+  lower.add(box(0.27,0.2,0.32, hoof, 0,-0.82,0));
+  lg.add(lower);
+
+  lg.userData.upper = upper;
+  lg.userData.lower = lower;
+  lg.userData.phase = d.phase;
+  lg.userData.name  = d.name;
+  legGroups.push(lg);
+});
+
+// CODA
+const tailGroup = new THREE.Group();
+tailGroup.position.set(-1.4, 2.2, 0);
+horse.add(tailGroup);
+// ossa coda
+tailGroup.add(box(0.14,0.38,0.1, coat, 0,-0.15,0, -0.2,0,0));
+// ciuffo coda - più fasce di criniera
+for(let i=0;i<8;i++){
+  const a = (i/7 - 0.5) * 0.8; // simmetrico attorno a 0
+  const w = 0.08 + (i%3)*0.02;
+  const h = 0.6 + Math.sin(i)*0.1;
+
+  tailGroup.add(box(w,h,0.06, mane,
+    a * 0.25,            // distribuzione laterale più pulita
+    -0.4 - i*0.05,       // scende progressivamente
+    0,                   // niente offset strano in Z
+    0.1,                 // inclinazione uniforme
+    0,
+    a * 0.3              // apertura controllata
+  ));
+}
+
+horse.position.y = 0.2;
+
+// ─── ORBIT CONTROLS ──────────────────────────────────────────────────────────
+const orbit = { theta: 0.3, phi: 1.1, r: 11 };
+let drag = false, last = {};
+
+renderer.domElement.addEventListener('mousedown',  e => { drag=true; last={x:e.clientX,y:e.clientY}; });
+renderer.domElement.addEventListener('mouseup',    () => drag=false);
+renderer.domElement.addEventListener('mousemove',  e => {
+  if(!drag) return;
+  orbit.theta -= (e.clientX-last.x)*0.012;
+  orbit.phi    = Math.max(0.25, Math.min(1.45, orbit.phi+(e.clientY-last.y)*0.012));
+  last = {x:e.clientX,y:e.clientY};
+});
+renderer.domElement.addEventListener('wheel', e => {
+  orbit.r = Math.max(4, Math.min(22, orbit.r+e.deltaY*0.015));
+}, {passive:true});
+renderer.domElement.addEventListener('touchstart', e => { drag=true; last={x:e.touches[0].clientX,y:e.touches[0].clientY}; });
+renderer.domElement.addEventListener('touchend',   () => drag=false);
+renderer.domElement.addEventListener('touchmove',  e => {
+  if(!drag) return;
+  orbit.theta -= (e.touches[0].clientX-last.x)*0.012;
+  orbit.phi    = Math.max(0.25, Math.min(1.45, orbit.phi+(e.touches[0].clientY-last.y)*0.012));
+  last = {x:e.touches[0].clientX,y:e.touches[0].clientY};
+});
+
+// ─── GAITS ───────────────────────────────────────────────────────────────────
+const gaits = {
+  rest:   { speed:0.00, stride:0.00, bounce:0.00, headBob:0.00 },
+  walk:   { speed:0.03, stride:0.30, bounce:0.03, headBob:0.04 },
+  trot:   { speed:0.06, stride:0.45, bounce:0.06, headBob:0.06 },
+  gallop: { speed:0.06, stride:0.45, bounce:0.06, headBob:0.06 },
+};
+let gait = gaits.walk;
+
+function setGait(name) {
+  gait = gaits[name];
+  document.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+  document.getElementById('btn'+name.charAt(0).toUpperCase()+name.slice(1)).classList.add('active');
+}
+
+// ─── ANIMATION ───────────────────────────────────────────────────────────────
+let t = 0;
+
+function animate() {
+  requestAnimationFrame(animate);
+  t += gait.speed || 0.003;
+
+  // ── zampe
+  legGroups.forEach(lg => {
+	let phase = lg.userData.phase;
+	if(gait === gaits.gallop) phase = gallopPhases[lg.userData.name];
+  
+    const p = t * (gait === gaits.gallop ? 2 : 1) + phase;
+    const swing = Math.sin(p) * gait.stride;
+    const bend  = Math.max(0, Math.sin(p - 0.4)) * gait.stride * 0.9;
+    lg.rotation.z = swing;
+    lg.userData.lower.rotation.z = bend;
+    // lieve oscillazione laterale
+    lg.rotation.x = Math.cos(p) * 0.04;
+  });
+
+  // ── bounce corpo
+  const bounce = Math.abs(Math.sin(t * 2)) * gait.bounce;
+  horse.position.y = 0.2 + bounce;
+
+  // ── ondeggiamento corpo
+  bodyGroup.rotation.z = Math.sin(t) * 0.018;
+
+  // ── testa
+  headGroup.rotation.z = -0.18 + Math.sin(t) * gait.headBob;
+  headGroup.rotation.x = Math.sin(t*0.8) * 0.025;
+  neckGroup.rotation.z = -0.06 + Math.sin(t*0.9) * gait.headBob * 0.6;
+
+  // ── coda
+  tailGroup.rotation.z = Math.sin(t*0.7+1) * 0.22;
+  tailGroup.rotation.y = Math.cos(t*0.5) * 0.12;
+
+  // ── camera
+  const cx = orbit.r * Math.sin(orbit.phi) * Math.sin(orbit.theta);
+  const cy = orbit.r * Math.cos(orbit.phi) + 1.5;
+  const cz = orbit.r * Math.sin(orbit.phi) * Math.cos(orbit.theta);
+  camera.position.set(cx, cy, cz);
+  camera.lookAt(0, 2.2, 0);
+
+  renderer.render(scene, camera);
+}
+
+window.addEventListener('resize', () => {
+  camera.aspect = innerWidth/innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+
+animate();
+</script>
+</body>
+</html>
