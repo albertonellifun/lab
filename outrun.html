@@ -21,13 +21,13 @@
             align-items: center;
             width: 100vw;
             height: 100vh;
+			height: 100dvh; /* fix redmi? */
             position: relative;
         }
         canvas {
             display: block;
             image-rendering: pixelated;
             border: 4px solid #222;
-            /* dimensioni gestite da JS */
         }
         #hud {
             position: absolute;
@@ -109,6 +109,7 @@
         <p>SPEED: <span id="spd">0</span></p>
         <p>GEAR: <span id="gear">0</span></p>
         <p>DIST: <span id="dist">0</span></p>
+		<p>RPM: <span id="rpm">0</span></p>
     </div>
     <canvas id="g"></canvas>
 
@@ -176,8 +177,9 @@ const CHECKERED_IDX = 15;//dove e' visivamente la striscia a terra
 //AUDIO BRUM BRUM!
 let gear = 1;
 let rpm = 0.5;
+let rpmTarget = 0.5;
 let lastGear = 1;
-const gearRatios = [0, 30, 60, 100, 150, 220, 290];// velocità a cui scatta il cambio
+const gearRatios = [0, 1, 60, 120, 180, 240, 280, 350];// velocità a cui scatta il cambio
 
 //motore auto realistico??? :-)
 const audioCtx = new(window.AudioContext || window.webkitAudioContext)();
@@ -391,9 +393,20 @@ function update() {
             playerX = 0;
         }
     } else {
-        if (keys.up) speed += accel * (1 - speed / maxSpeed);
-        else if (keys.down) speed -= accel * 2;
-        else speed *= friction;
+		let offRoad = Math.abs(playerX) > 1;
+	
+        if (keys.up) {
+			if (offRoad) speed += accel * (1 - speed / maxSpeed) * 0.25;
+			else speed += accel * (1 - speed / maxSpeed);
+		}
+        else if (keys.down) {
+			if (offRoad) speed -= accel * 0.2;
+			else speed -= accel * 2;
+		}
+        else {
+			if (offRoad) speed *= 0.995;
+			else speed *= friction;
+		}
 
         if (keys.left) playerX -= 0.05 * (speed / maxSpeed);
         if (keys.right) playerX += 0.05 * (speed / maxSpeed);
@@ -404,7 +417,7 @@ function update() {
 
         //AUDIO!
         // --- GEAR DETECTION ---
-        let targetGear = 1;
+        let targetGear = speed === 0 ? 0 : 1;
         for (let g = 1; g < gearRatios.length; g++) {
             if (speed > gearRatios[g]) targetGear = g;
         }
@@ -423,7 +436,7 @@ function update() {
         // RPM target basato su posizione nella marcia attuale
         let gearBottom = gearRatios[gear] || 0;
         let gearTop = gearRatios[Math.min(gear + 1, gearRatios.length - 1)] || maxSpeed;
-        let rpmTarget = Math.max(0.15, Math.min(1.0, (speed - gearBottom) / Math.max(1, gearTop - gearBottom)));
+        rpmTarget = Math.max(0.15, Math.min(1.0, (speed - gearBottom) / Math.max(1, gearTop - gearBottom)));
 
         // RPM segue il target con inerzia — il drop/spike rimane udibile per ~0.3s
         rpm += (rpmTarget - rpm) * 0.08;
@@ -453,6 +466,7 @@ function update() {
     document.getElementById('spd').innerText = speed | 0;
     document.getElementById('gear').innerText = gear;
     document.getElementById('dist').innerText = playerZ | 0;
+	document.getElementById('rpm').innerText = rpmTarget.toFixed(2);
 }
 
 //ai bordi -> alberi o cartelloni
@@ -673,7 +687,7 @@ function drawCar() {
     ctx.save();
     let cx = width / 2;
     let cy = height - 70;
-    let w = 110; //TESTAROSSA E' LARGA!!!
+    let w = 120; //TESTAROSSA E' LARGA!!!
 
     //ombra
     ctx.fillStyle = 'rgba(0,0,0,0.5)';
@@ -689,6 +703,185 @@ function drawCar() {
 
     ctx.restore();
 }
+
+//cambiooo
+let gearStickX = 0;
+let gearStickY = 0;
+function drawGearStick() {
+    const x = 10;
+    const y = height - 60;
+
+    const w = 80;
+    const h = 50;
+
+    // --- BASE METALLICA ---
+    let grad = ctx.createLinearGradient(x, y, x + w, y + h);
+    grad.addColorStop(0, '#aaa');
+    grad.addColorStop(0.5, '#eee');
+    grad.addColorStop(1, '#888');
+
+    ctx.fillStyle = grad;
+    ctx.fillRect(x, y, w, h);
+
+    ctx.strokeStyle = '#333';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(x, y, w, h);
+
+    // --- SCANALATURE (H pattern) ---
+    ctx.strokeStyle = '#222';
+    ctx.lineWidth = 8;
+
+    function line(x1,y1,x2,y2){
+        ctx.beginPath();
+        ctx.moveTo(x1,y1);
+        ctx.lineTo(x2,y2);
+        ctx.stroke();
+    }
+
+    // colonne
+	let col1 = x + w * 0.15;
+    let col2 = x + w * 0.50;
+	let col3 = x + w * 0.85;
+
+    // righe
+    let r1 = y + h * 0.15;
+    let r2 = y + h * 0.5;
+    let r3 = y + h * 0.85;
+
+    // verticale sinistra/destra
+    line(col1, r1, col1, r3);
+    line(col2, r1, col2, r3);
+	line(col3, r1, col3, r3);
+	
+    // orizzontali
+    line(col1, r2, col3, r2);//include R
+	
+    
+    // --- POSIZIONE MARCE ---
+    const gearPos = {
+		0: [col2, r2],
+        1: [col1, r1],
+        2: [col1, r3],
+        3: [col2, r1],
+        4: [col2, r3],
+        5: [col3, r1],
+        6: [col3, r3]
+    };
+
+    let pos = gearPos[gear] || gearPos[0];
+	/*let baseX = pos[0];
+    let baseY = pos[1];*/
+	let targetX = pos[0];
+	let targetY = pos[1];
+	
+	let ydist = Math.abs(gearStickY - targetY);
+	let xdist = Math.abs(targetX - gearStickX);
+	
+	// prima vai in verticale per meta distanza
+	if (ydist > h * 0.5) {
+		gearStickY += (targetY - gearStickY) * 0.5;
+	} else {
+		// poi vai in orizzontale
+		gearStickX += (targetX - gearStickX) * 0.5;
+		
+		if (xdist < 2) {
+			gearStickY += (targetY - gearStickY) * 0.5;
+		}
+	}
+	let baseX = gearStickX;
+	let baseY = gearStickY;
+	
+	
+    // pomello (palla)
+    ctx.beginPath();
+    ctx.arc(baseX, baseY, 10, 0, Math.PI * 2);
+
+    let knobGrad = ctx.createRadialGradient(
+        baseX - 3, baseY - 3, 2,
+        baseX, baseY, 10
+    );
+    knobGrad.addColorStop(0, '#fff');
+    knobGrad.addColorStop(1, '#888');
+
+    ctx.fillStyle = knobGrad;
+    ctx.fill();
+	
+	ctx.lineWidth = 1;
+}
+
+//tachimetro sgargiullo!
+function drawSpeedometer() {
+    const cx = width - 70;
+    const cy = height - 10;
+    const radius = 60;
+
+    // fondo
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius, 3.14, 6.28);
+    ctx.fillStyle = 'rgba(0,0,0,0.5)';
+    ctx.fill();
+    
+	// bordo	
+	ctx.lineWidth = 3;
+    ctx.strokeStyle = '#fff';
+    ctx.stroke();
+
+	// zona rossa e' il contagiri
+	ctx.lineWidth = 6;
+	let colGB = 255 - 255 * rpmTarget;
+	ctx.strokeStyle = 'rgba(255,'+colGB+','+colGB+','+rpmTarget+')';//rosso non trasparente!
+	ctx.beginPath();
+    ctx.arc(cx, cy, radius - 5, 3.14 + (3.14*(rpmTarget-0.15)), 6.28);
+	ctx.stroke();	
+	
+    // tacche
+	ctx.strokeStyle = '#fff';
+	ctx.lineWidth = 3;
+    for (let i = 0; i <= 6; i++) {
+        let t = i / 6;
+        let angle = Math.PI + t * Math.PI;
+
+        let x1 = cx + Math.cos(angle) * (radius - 10);
+        let y1 = cy + Math.sin(angle) * (radius - 10);
+
+        let x2 = cx + Math.cos(angle) * radius;
+        let y2 = cy + Math.sin(angle) * radius;
+
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.stroke();
+    }
+
+    // LANCETTA VELOCITA
+    let t = speed / maxSpeed + 20;
+    let angle = Math.PI + t * Math.PI;
+
+    let nx = cx + Math.cos(angle) * (radius - 15);
+    let ny = cy + Math.sin(angle) * (radius - 15);
+
+	ctx.lineWidth = 5;
+	ctx.strokeStyle = '#f00';
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(nx, ny);
+    ctx.stroke();
+	
+    // centro
+    ctx.beginPath();
+    ctx.arc(cx, cy, 5, 0, Math.PI * 2);
+    ctx.fillStyle = '#fff';
+    ctx.fill();
+
+    // testo velocità
+    ctx.fillStyle = '#fff';
+    ctx.font = '12px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText((speed | 0) + ' km/h', cx, cy - 10);
+	
+	ctx.lineWidth = 1;
+}
+
 
 function render() {
     update();
@@ -750,6 +943,8 @@ function render() {
 
     // Player Car
     drawCar();
+	drawSpeedometer();
+	drawGearStick();
 
     requestAnimationFrame(render);
 }
