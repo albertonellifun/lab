@@ -1,28 +1,154 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>OutRun JS - Remastered</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>OutRun Clone</title>
     <style>
-        body { margin: 0; background: #000; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; }
-        canvas { display: block; image-rendering: pixelated; border: 4px solid #222; }
-        #hud { position: absolute; top: 20px; left: 20px; color: #fff; font-family: 'Courier New', monospace; font-size: 24px; text-shadow: 2px 2px #000; pointer-events: none; }
+        * { box-sizing: border-box; }
+        html, body {
+            margin: 0; padding: 0;
+            background: #000;
+            overflow: hidden;
+            width: 100%; height: 100%;
+            touch-action: none; /* blocca scroll/zoom con dita */
+        }
+        #wrapper {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+        canvas {
+            display: block;
+            image-rendering: pixelated;
+            border: 4px solid #222;
+            /* dimensioni gestite da JS */
+        }
+        #hud {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: #fff;
+            font-family: 'Courier New', monospace;
+            font-size: 18px;
+            text-shadow: 2px 2px #000;
+            pointer-events: none;
+            z-index: 10;
+        }
+        #hud p { margin: 2px 0; }
+
+        /* ====== CONTROLLI TOUCH ====== */
+        #controls {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 140px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            padding: 12px 16px;
+            pointer-events: none;
+            z-index: 20;
+        }
+        .ctrl-group {
+            display: flex;
+            gap: 8px;
+            pointer-events: all;
+        }
+        .btn {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            border: 3px solid rgba(255,255,255,0.5);
+            background: rgba(255,255,255,0.15);
+            color: #fff;
+            font-size: 28px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            user-select: none;
+            -webkit-user-select: none;
+            cursor: pointer;
+            transition: background 0.1s;
+            /* touch highlight disabilitato */
+            -webkit-tap-highlight-color: transparent;
+        }
+        .btn:active, .btn.pressed {
+            background: rgba(255,255,255,0.4);
+        }
+        #btn-gas {
+            width: 80px;
+            height: 80px;
+            background: rgba(255,60,60,0.25);
+            border-color: rgba(255,60,60,0.7);
+        }
+        #btn-brake {
+            width: 64px;
+            height: 64px;
+            background: rgba(255,200,0,0.2);
+            border-color: rgba(255,200,0,0.6);
+        }
+
+        /* Su schermi grandi i controlli si spostano ai lati */
+        @media (min-width: 600px) {
+            #hud { font-size: 22px; }
+            .btn { width: 72px; height: 72px; font-size: 32px; }
+            #btn-gas { width: 88px; height: 88px; }
+        }
     </style>
 </head>
 <body>
+<div id="wrapper">
     <div id="hud">
-		<p>SPEED: <span id="spd">0</span></p>
-		<p>GEAR: <span id="gear">0</span></p>
-		<p>DIST: <span id="dist">0</span></p>
-	</div>
+        <p>SPEED: <span id="spd">0</span></p>
+        <p>GEAR: <span id="gear">0</span></p>
+        <p>DIST: <span id="dist">0</span></p>
+    </div>
     <canvas id="g"></canvas>
+
+    <!-- Controlli touch on-screen -->
+    <div id="controls">
+        <div class="ctrl-group">
+            <div class="btn" id="btn-left">◀</div>
+            <div class="btn" id="btn-right">▶</div>
+        </div>
+        <div class="ctrl-group">
+            <div class="btn" id="btn-brake">⬇</div>
+            <div class="btn" id="btn-gas">🔴</div>
+        </div>
+    </div>
+</div>
 
 <script>
 const canvas = document.getElementById('g');
 const ctx = canvas.getContext('2d');
-const width = 800;
-const height = 600;
-canvas.width = width;
-canvas.height = height;
+
+// --- CANVAS RESPONSIVE ---
+// Mantieni proporzioni 4:3 e riempi lo schermo (lasciando spazio ai controlli)
+const BASE_W = 800;
+const BASE_H = 600;
+
+function resizeCanvas() {
+    const controlsH = 140; // altezza area controlli
+    const availW = window.innerWidth;
+    const availH = window.innerHeight - controlsH;
+    const scale = Math.min(availW / BASE_W, availH / BASE_H);
+    canvas.style.width  = Math.floor(BASE_W * scale) + 'px';
+    canvas.style.height = Math.floor(BASE_H * scale) + 'px';
+}
+canvas.width  = BASE_W;
+canvas.height = BASE_H;
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
+const width  = BASE_W;
+const height = BASE_H;
 
 // --- SETTINGS ---
 const roadW = 2000;
@@ -41,7 +167,7 @@ let crashTimer = 0;
 
 const maxSpeed = 340;
 const accel = 1;
-const friction = 0.997; //attrito, se non accelero la macchina rallenta
+const friction = 0.997; //attrito, se non accelero la macchina
 const keys = { left: 0, right: 0, up: 0, down: 0 };
 
 const START_IDX = 16;//dove e' visivamente il traguardo "alto"
@@ -51,16 +177,15 @@ const CHECKERED_IDX = 15;//dove e' visivamente la striscia a terra
 let gear = 1;
 let rpm = 0.5;
 let lastGear = 1;
-
-const gearRatios = [0, 30, 60, 100, 150, 220, 290]; // velocità a cui scatta il cambio
+const gearRatios = [0, 30, 60, 100, 150, 220, 290];// velocità a cui scatta il cambio
 
 //motore auto realistico??? :-)
 const audioCtx = new(window.AudioContext || window.webkitAudioContext)();
 
 // 3 oscillatori: fondamentale + 2 armoniche
 const osc1 = audioCtx.createOscillator(); osc1.type = 'sawtooth'; // fondamentale — corpo del rombo
-const osc2 = audioCtx.createOscillator(); osc2.type = 'square'; // 2a armonica — aggressività
-const osc3 = audioCtx.createOscillator(); osc3.type = 'triangle'; // 3a armonica — coda metallica
+const osc2 = audioCtx.createOscillator(); osc2.type = 'square';// 2a armonica — aggressività
+const osc3 = audioCtx.createOscillator(); osc3.type = 'triangle';// 3a armonica — coda metallica
 
 const g1 = audioCtx.createGain(); g1.gain.value = 1.0;
 const g2 = audioCtx.createGain(); g2.gain.value = 0.4;
@@ -96,28 +221,33 @@ noiseSource.connect(noiseGain);
 noiseGain.connect(masterGain);
 masterGain.connect(audioCtx.destination);
 
-osc1.start();
-osc2.start();
-osc3.start();
+osc1.start(); 
+osc2.start(); 
+osc3.start(); 
 noiseSource.start();
+
+function resumeAudio() {
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+}
+
 
 // --- TRACK GENERATION ---
 let segments = [];
-let SEGMENTS = 1257; //ocho ai dati in console -> ci piace quando s[0].y == s[last].y
+const SEGMENTS = 1257;//ocho ai dati in console -> ci piace quando s[0].y == s[last].y
 const trackL = SEGMENTS * segL;
 
 function addSegment(idx, curve, y) {
     let n = segments.length;
     let sprite = null;
-    if (idx === START_IDX ||
-        idx === CHECKERED_IDX ||
+    if (idx === START_IDX || 
+	    idx === CHECKERED_IDX ||
         Math.random() > 0.95 ||
         (idx > 200 && idx < 400 && idx % 2 === 0) ||
         (idx > 700 && idx < 900 && idx % 8 === 0)) {
         //crea oggetto a bordo strada
-        let type = '';
+		let type = '';
         let position = 0;
-
+		
         if (idx === START_IDX) type = 'start';
         else if (idx === CHECKERED_IDX) type = 'checkered';
         else if (idx > 200 && idx < 400) type = 'tree';
@@ -145,15 +275,8 @@ function addSegment(idx, curve, y) {
         };
     }
 
-    let color = Math.floor(n / 2) % 2 ? {
-        road: '#444',
-        grass: '#181',
-        rumble: '#fff'
-    } : {
-        road: '#555',
-        grass: '#171',
-        rumble: '#f00'
-    };
+    let color = Math.floor(n / 2) % 2 ? { road: '#444', grass: '#181', rumble: '#fff' } 
+	: { road: '#555', grass: '#171', rumble: '#f00' };
 
     segments.push({
         p1: {
@@ -173,9 +296,9 @@ function addSegment(idx, curve, y) {
 function initSegments() {
     for (let i = 0; i < SEGMENTS; i++) {
         addSegment(i, Math.sin(i / 90) * 4, Math.cos(i / 50) * 1000);
-        console.log('i=' + i + '\ty=' + Math.cos(i / 50) * 1000);
+		console.log('i=' + i + '\ty=' + Math.cos(i / 50) * 1000);
     }
-    console.log('delta=' + (segments[0].p1.world.y - segments[SEGMENTS - 1].p1.world.y));
+	console.log('delta=' + (segments[0].p1.world.y - segments[SEGMENTS - 1].p1.world.y));
 }
 
 
@@ -187,9 +310,9 @@ function project(p, camX, camY, camZ) {
     p.screen.w = p.screen.scale * roadW * width / 2;
 }
 
-// --- RENDERING BACKGROUND (Improved Mountains) ---
+// --- BACKGROUND ---
 function drawSky(offset) {
-    // Cielo
+    //cielo
     let g = ctx.createLinearGradient(0, 0, 0, height / 2);
     g.addColorStop(0, '#0055ff');
     g.addColorStop(1, '#88ccff');
@@ -198,7 +321,7 @@ function drawSky(offset) {
     ctx.fillStyle = '#181';
     ctx.fillRect(0, height / 2, width, height);
 
-    // Montagne Lontane (Silhouette)
+    //montagne lontane
     ctx.fillStyle = '#141';
     for (let i = -1; i < 3; i++) {
         let x = (i * width * 1.5) - (offset * 0.15 % (width * 1.5));
@@ -210,7 +333,8 @@ function drawSky(offset) {
         ctx.lineTo(x + 800, height / 2);
         ctx.fill();
     }
-    // Colline Vicine
+	
+	//colline vicine
     ctx.fillStyle = '#151';
     for (let i = -1; i < 3; i++) {
         let x = (i * width * 1.2) - (offset * 0.25 % (width * 1.2));
@@ -270,6 +394,7 @@ function update() {
         if (keys.up) speed += accel * (1 - speed / maxSpeed);
         else if (keys.down) speed -= accel * 2;
         else speed *= friction;
+
         if (keys.left) playerX -= 0.05 * (speed / maxSpeed);
         if (keys.right) playerX += 0.05 * (speed / maxSpeed);
 
@@ -629,22 +754,90 @@ function render() {
     requestAnimationFrame(render);
 }
 
-//listeners tastiera
-window.onkeydown = (e) => {
-    if (audioCtx.state === 'suspended') audioCtx.resume();
+// ====== INPUT: TASTIERA ======
+window.addEventListener('keydown', (e) => {
+    resumeAudio();
     if (e.keyCode == 37) keys.left = 1;
     if (e.keyCode == 39) keys.right = 1;
     if (e.keyCode == 38) keys.up = 1;
-    if (e.keyCode == 40) keys.down = 1
-};
-
-window.onkeyup = (e) => {
+    if (e.keyCode == 40) keys.down = 1;
+});
+window.addEventListener('keyup', (e) => {
     if (e.keyCode == 37) keys.left = 0;
     if (e.keyCode == 39) keys.right = 0;
     if (e.keyCode == 38) keys.up = 0;
-    if (e.keyCode == 40) keys.down = 0
+    if (e.keyCode == 40) keys.down = 0;
+});
+
+// ====== INPUT: TOUCH (multi-touch) ======
+// Mappa: quale tasto preme ogni bottone on-screen
+const btnMap = {
+    'btn-left':  'left',
+    'btn-right': 'right',
+    'btn-gas':   'up',
+    'btn-brake': 'down'
 };
 
+function getBtnKey(el) {
+    // Risali l'albero DOM finché trovi un btn con id mappato
+    while (el && el !== document.body) {
+        if (el.id && btnMap[el.id]) return btnMap[el.id];
+        el = el.parentElement;
+    }
+    return null;
+}
+
+// Tiene traccia dei touch attivi per ogni key
+const touchKeys = {};
+
+document.getElementById('controls').addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    resumeAudio();
+    for (let t of e.changedTouches) {
+        let el = document.elementFromPoint(t.clientX, t.clientY);
+        let key = getBtnKey(el);
+        if (key) {
+            touchKeys[t.identifier] = key;
+            keys[key] = 1;
+            // feedback visivo
+            let btnEl = document.getElementById(Object.keys(btnMap).find(k => btnMap[k] === key));
+            if (btnEl) btnEl.classList.add('pressed');
+        }
+    }
+}, { passive: false });
+
+document.getElementById('controls').addEventListener('touchend', (e) => {
+    e.preventDefault();
+    for (let t of e.changedTouches) {
+        let key = touchKeys[t.identifier];
+        if (key) {
+            // rilascia solo se nessun altro dito preme lo stesso tasto
+            let stillPressed = false;
+            for (let id in touchKeys) {
+                if (id != t.identifier && touchKeys[id] === key) { stillPressed = true; break; }
+            }
+            if (!stillPressed) {
+                keys[key] = 0;
+                let btnEl = document.getElementById(Object.keys(btnMap).find(k => btnMap[k] === key));
+                if (btnEl) btnEl.classList.remove('pressed');
+            }
+            delete touchKeys[t.identifier];
+        }
+    }
+}, { passive: false });
+
+document.getElementById('controls').addEventListener('touchcancel', (e) => {
+    e.preventDefault();
+    for (let t of e.changedTouches) {
+        let key = touchKeys[t.identifier];
+        if (key) { keys[key] = 0; delete touchKeys[t.identifier]; }
+    }
+}, { passive: false });
+
+// Blocca context menu su long press (mobile)
+document.addEventListener('contextmenu', e => e.preventDefault());
+
+// ====== AVVIO ======
 initSegments();
 render();
 </script>
