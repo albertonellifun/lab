@@ -58,17 +58,17 @@
         }
         .ctrl-group {
             display: flex;
-            gap: 8px;
+            gap: 16px;
             pointer-events: all;
         }
         .btn {
-            width: 64px;
-            height: 64px;
+            width: 100px;
+            height: 100px;
             border-radius: 50%;
             border: 3px solid rgba(255,255,255,0.5);
             background: rgba(255,255,255,0.15);
             color: #fff;
-            font-size: 28px;
+            font-size: 32px;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -83,23 +83,12 @@
             background: rgba(255,255,255,0.4);
         }
         #btn-gas {
-            width: 80px;
-            height: 80px;
-            background: rgba(255,60,60,0.25);
-            border-color: rgba(255,60,60,0.7);
+            background: rgba(60,255,60,0.25);
+            border-color: rgba(60,255,60,0.75);
         }
         #btn-brake {
-            width: 64px;
-            height: 64px;
-            background: rgba(255,200,0,0.2);
-            border-color: rgba(255,200,0,0.6);
-        }
-
-        /* Su schermi grandi i controlli si spostano ai lati */
-        @media (min-width: 600px) {
-            #hud { font-size: 22px; }
-            .btn { width: 72px; height: 72px; font-size: 32px; }
-            #btn-gas { width: 88px; height: 88px; }
+			background: rgba(255,60,60,0.25);
+            border-color: rgba(255,60,60,0.75);
         }
     </style>
 </head>
@@ -120,8 +109,8 @@
             <div class="btn" id="btn-right">▶</div>
         </div>
         <div class="ctrl-group">
-            <div class="btn" id="btn-brake">⬇</div>
-            <div class="btn" id="btn-gas">🔴</div>
+            <div class="btn" id="btn-brake">🔴</div>
+            <div class="btn" id="btn-gas">🟢</div>
         </div>
     </div>
 </div>
@@ -172,7 +161,6 @@ const friction = 0.997; //attrito, se non accelero la macchina
 const keys = { left: 0, right: 0, up: 0, down: 0 };
 
 const START_IDX = 16;//dove e' visivamente il traguardo "alto"
-const CHECKERED_IDX = 15;//dove e' visivamente la striscia a terra
 
 //AUDIO BRUM BRUM!
 let gear = 1;
@@ -234,39 +222,52 @@ function resumeAudio() {
 
 
 // --- TRACK GENERATION ---
+let gamePalette = {};
 let segments = [];
-const SEGMENTS = 1257;//ocho ai dati in console -> ci piace quando s[0].y == s[last].y
+const SEGMENTS = 1257 * 2;//ocho ai dati in console -> ci piace quando s[0].y == s[last].y
 const trackL = SEGMENTS * segL;
 
-function addSegment(idx, curve, y) {
-    let n = segments.length;
+function addSegment(idx, curve, y, isDesert) {
+	let n = segments.length;
     let sprite = null;
     if (idx === START_IDX || 
-	    idx === CHECKERED_IDX ||
-        Math.random() > 0.95 ||
-        (idx > 200 && idx < 400 && idx % 2 === 0) ||
-        (idx > 700 && idx < 900 && idx % 8 === 0)) {
+	    Math.random() > 0.95 ||
+        (idx > 200 && idx < 400 && idx % 2 === 0) || //alberi
+        (idx > 600 && idx < 800 && idx % 8 === 0) || //cartelli
+		(idx > 900 && idx < 1000 && idx % 2 === 0) || //coni
+		(idx > 1200 && idx < 1500 && idx % 2 === 0) || //bush
+		(idx > 2000 && idx < 2100 && idx % 2 === 0) //semafori
+		) {
         //crea oggetto a bordo strada
 		let type = '';
         let position = 0;
 		
         if (idx === START_IDX) type = 'start';
-        else if (idx === CHECKERED_IDX) type = 'checkered';
         else if (idx > 200 && idx < 400) type = 'tree';
-        else if (idx > 700 && idx < 900) type = 'billboard';
-        else type = (Math.random() > 0.15 ? 'tree' : 'billboard');
+        else if (idx > 600 && idx < 800) type = 'billboard';
+		else if (idx > 900 && idx < 1000) type = 'cone';
+		else if (idx > 1200 && idx < 1500) type = 'bush';
+		else if (idx > 2000 && idx < 2100) type = 'trafficlight';
+        else {
+			type = Math.random() > 0.66 ? 'tree' : 
+			Math.random() > 0.66 ? 'billboard' : 
+			Math.random() > 0.66 ? 'cone' : 
+			Math.random() > 0.5 ? 'bush' : 'trafficlight';
+		}
 
         if (type === 'billboard') {
             //cartelloni piu vicini al bordo, esterni alle curve
             if (curve > 0) position = -1.3;
             else position = 1.3;
         } else if (type === 'start') {
-            //start piu lontano
-            position = -1.6;
-        } else if (type === 'checkered') {
-            //scacchiera sul bordo
-            position = -1;
-        } else {
+            position = -1.6;//start piu lontano
+        } else if (type === 'cone') {
+		    position = idx % 4 === 0 ? -1.1 : 1.1; //lato alternato
+		} else if (type === 'trafficlight') {
+			position = idx % 4 === 0 ? -1.2 : 1.2; //lato alternato
+		} else if (type === 'bush') {
+			position = idx % 4 === 0 ? -1.4 : 1.4; //lato alternato
+		} else {
             //albero random
             position = idx % 4 === 0 ? -1.6 : 1.6; //lato alternato
         }
@@ -276,9 +277,6 @@ function addSegment(idx, curve, y) {
             type: type
         };
     }
-
-    let color = Math.floor(n / 2) % 2 ? { road: '#444', grass: '#181', rumble: '#fff' } 
-	: { road: '#555', grass: '#171', rumble: '#f00' };
 
     segments.push({
         p1: {
@@ -290,13 +288,45 @@ function addSegment(idx, curve, y) {
             screen: { x: 0, y: 0, w: 0 }
         },
         curve: curve,
-        sprite: sprite,
-        color: color
+        sprite: sprite
     });
 }
 
+function initPalette() {
+	if (Math.random() > 0.5) {
+		gamePalette = {
+			skyLight:'#8ae',	
+			skyDark:'#68e', 
+			mountainsLight:'#db7', 
+			mountainsDark:'#b95', 
+			terrain:'#db7',
+			road0: '#b9a', 
+			road1: '#cab', 
+			grass0: '#db9', 
+			grass1: '#eca', 
+			rumble0: '#fff',
+			rumble1: '#f00'
+			};
+	}
+	else { 
+		gamePalette = { 
+			skyLight:'#8cf',	
+			skyDark:'#05f',
+			mountainsLight:'#151',	
+			mountainsDark:'#141',
+			terrain:'#181',
+			road0: '#444', 
+			road1: '#555', 
+			grass0: '#181', 
+			grass1: '#171', 
+			rumble0: '#fff',
+			rumble1: '#f00'
+			};
+	}
+}
+
 function initSegments() {
-    for (let i = 0; i < SEGMENTS; i++) {
+	for (let i = 0; i < SEGMENTS; i++) {
         addSegment(i, Math.sin(i / 90) * 4, Math.cos(i / 50) * 1000);
 		console.log('i=' + i + '\ty=' + Math.cos(i / 50) * 1000);
     }
@@ -316,28 +346,28 @@ function project(p, camX, camY, camZ) {
 function drawSky(offset) {
     //cielo
     let g = ctx.createLinearGradient(0, 0, 0, height / 2);
-    g.addColorStop(0, '#0055ff');
-    g.addColorStop(1, '#88ccff');
+    g.addColorStop(0, gamePalette.skyDark);
+    g.addColorStop(1, gamePalette.skyLight);
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, width, height / 2);
-    ctx.fillStyle = '#181';
+    ctx.fillStyle = gamePalette.terrain;
     ctx.fillRect(0, height / 2, width, height);
 
     //montagne lontane
-    ctx.fillStyle = '#141';
+    ctx.fillStyle = gamePalette.mountainsDark;
     for (let i = -1; i < 3; i++) {
         let x = (i * width * 1.5) - (offset * 0.15 % (width * 1.5));
         ctx.beginPath();
         ctx.moveTo(x, height / 2);
         ctx.lineTo(x + 200, height / 3);
         ctx.lineTo(x + 400, height / 2.2);
-        ctx.lineTo(x + 600, height / 4);
+        ctx.lineTo(x + 600, height / 3.5);
         ctx.lineTo(x + 800, height / 2);
         ctx.fill();
     }
 	
 	//colline vicine
-    ctx.fillStyle = '#151';
+    ctx.fillStyle = gamePalette.mountainsLight;
     for (let i = -1; i < 3; i++) {
         let x = (i * width * 1.2) - (offset * 0.25 % (width * 1.2));
         ctx.beginPath();
@@ -347,21 +377,23 @@ function drawSky(offset) {
     }
 }
 
-function drawSegment(x1, y1, w1, x2, y2, w2, color, idx) {
+function drawSegment(x1, y1, w1, x2, y2, w2, idx) {
 
     // Erba
-    ctx.fillStyle = color.grass; //erba
+    ctx.fillStyle = idx%2 ? gamePalette.grass1 : gamePalette.grass0; //erba
     ctx.fillRect(0, y2, width, y1 - y2);
+	
     // Cordoli
-    ctx.fillStyle = color.rumble; //cordolo
+    ctx.fillStyle = idx%2 ? gamePalette.rumble1 : gamePalette.rumble0; //cordolo
     ctx.beginPath();
     ctx.moveTo(x1 - w1 * 1.1, y1);
     ctx.lineTo(x2 - w2 * 1.1, y2);
     ctx.lineTo(x2 + w2 * 1.1, y2);
     ctx.lineTo(x1 + w1 * 1.1, y1);
     ctx.fill();
+	
     // Strada
-    ctx.fillStyle = color.road; //asfalto
+    ctx.fillStyle = idx%2 ? gamePalette.road1 : gamePalette.road0; //asfalto
     ctx.beginPath();
     ctx.moveTo(x1 - w1, y1 + 1);
     ctx.lineTo(x2 - w2, y2 - 1);
@@ -387,6 +419,9 @@ function update() {
     if (gameState === 'CRASHED') {
         speed *= 0.95;
         crashTimer++;
+		
+        masterGain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.3);// Spegni il motore gradualmente
+		
         if (speed < 1) {
             gameState = 'ALIVE';
             crashTimer = 0;
@@ -457,8 +492,9 @@ function update() {
 	
     speed = Math.max(0, Math.min(speed, maxSpeed)); //inibisce la retro!
     playerZ += speed;
-    if (playerZ >= trackL) playerZ -= trackL;
-    else if (playerZ < 0) playerZ = trackL;
+    //if (playerZ >= trackL) playerZ -= trackL;
+    //else if (playerZ < 0) playerZ = trackL;
+	playerZ = (playerZ + trackL) % trackL;
 
     let cur = segments[Math.floor(playerZ / segL) % segments.length];
     skyOffset += cur.curve * (speed / maxSpeed) * 10;
@@ -479,20 +515,7 @@ function drawSprite(sprite, p) {
 
     let radius = Math.max(0, w * 0.5); //OCHO: il raggio non puo essere negativo
 
-    if (sprite.type === 'checkered') {
-        ctx.fillStyle = '#ffffff55';
-        ctx.fillRect(x - w / 2, y - h * 0.2, w * 11, h * 0.2);
-        ctx.fillStyle = '#00000055';
-        for (let i = 0; i < 11; i++) {
-            ctx.fillRect(x + 2 * i * (w / 2), y - h * 0.2, (w / 2), h * 0.2);
-        }
-        ctx.fillStyle = '#ffffff55';
-        ctx.fillRect(x - w / 2, y, w * 11, h * 0.2);
-        ctx.fillStyle = '#00000055';
-        for (let i = 0; i < 11; i++) {
-            ctx.fillRect(x + (2 * i - 1) * (w / 2), y, (w / 2), h * 0.2);
-        }
-    } else if (sprite.type === 'start') {
+    if (sprite.type === 'start') {
         let poleWidth = w / 4;
         let barWidth = w * 16;
         //ombra
@@ -541,7 +564,116 @@ function drawSprite(sprite, p) {
         ctx.beginPath();
         ctx.arc(x, y - h * 2, radius * 1.5, 0, Math.PI * 2);
         ctx.fill();
-    } else {
+	} else if (sprite.type === 'bush') {
+		//ombra
+        ctx.fillStyle = '#040';
+        ctx.beginPath();
+        ctx.ellipse(x, y, radius * 2, radius * 0.15, 0, 0, Math.PI * 2);
+        ctx.fill();
+		//chioma w/2
+        ctx.fillStyle = '#161';
+        ctx.beginPath();
+        ctx.arc(x, y, radius * 2, Math.PI, Math.PI * 2);
+		ctx.closePath();
+        ctx.fill();
+    } else if (sprite.type === 'cone') {
+		//ombra
+		ctx.fillStyle = 'rgba(0,0,0,0.25)';
+		ctx.beginPath();
+		ctx.ellipse(x, y, radius * 0.8, radius * 0.2, 0, 0, Math.PI * 2);
+		ctx.fill();
+
+		//triangolo
+		ctx.fillStyle = '#f60'; // arancione
+		ctx.beginPath();
+		ctx.moveTo(x, y - h * 0.75);                // punta
+		ctx.lineTo(x - w * 0.25, y);         // base sx
+		ctx.lineTo(x + w * 0.25, y);         // base dx
+		ctx.closePath();
+		ctx.fill();
+
+		//strisce bianche
+		ctx.fillStyle = '#fff';
+
+		//striscia alta
+		ctx.beginPath();
+		ctx.moveTo(x - w * 0.08, y - h * 0.5);
+		ctx.lineTo(x + w * 0.08, y - h * 0.5);
+		ctx.lineTo(x + w * 0.12, y - h * 0.4);
+		ctx.lineTo(x - w * 0.12, y - h * 0.4);
+		ctx.closePath();
+		ctx.fill();
+
+		//striscia centrale
+		ctx.beginPath();
+		ctx.moveTo(x - w * 0.16, y - h * 0.25);
+		ctx.lineTo(x + w * 0.16, y - h * 0.25);
+		ctx.lineTo(x + w * 0.2, y - h * 0.15);
+		ctx.lineTo(x - w * 0.2, y - h * 0.15);
+		ctx.closePath();
+		ctx.fill();
+	} else if (sprite.type === 'trafficlight') {
+		//ombra
+		ctx.fillStyle = 'rgba(0,0,0,0.25)';
+		ctx.beginPath();
+		ctx.ellipse(x, y, radius * 0.7, radius * 0.2, 0, 0, Math.PI * 2);
+		ctx.fill();
+
+		//palo
+		ctx.fillStyle = '#444';
+		ctx.fillRect(x - w * 0.05, y - h * 1.5, w * 0.1, h * 1.5);
+
+		//corpo giallo
+		let boxW = w * 0.4;
+		let boxH = h * 0.9;
+		ctx.fillStyle = '#fc3'; // giallo acceso
+		ctx.fillRect(x - boxW / 2, y - h * 1.5 - boxH, boxW, boxH);
+		ctx.strokeStyle = '#da1';
+		ctx.lineWidth = 2;
+		ctx.strokeRect(x - boxW / 2, y - h * 1.5 - boxH, boxW, boxH);
+
+		//3 luci
+		let lightRadius = boxW * 0.25;
+		let cx = x;
+		let top = y - h * 1.5 - boxH;
+
+		//rosso
+		ctx.beginPath();
+		ctx.arc(cx, top + boxH * 0.2, lightRadius * 1.5, Math.PI, Math.PI * 2);
+		ctx.strokeStyle = '#da1';
+		ctx.lineWidth = 4;
+		ctx.stroke();
+		ctx.lineWidth = 1;
+		
+		ctx.beginPath();
+		ctx.arc(cx, top + boxH * 0.2, lightRadius * 1.4, 0, Math.PI * 2);
+		ctx.fillStyle = '#500';
+		ctx.fill();
+		ctx.beginPath();
+		ctx.arc(cx+2, top + boxH * 0.2, lightRadius * 1.4, 0, Math.PI * 2);
+		ctx.fillStyle = '#700';
+		ctx.fill();
+
+		//giallo
+		ctx.beginPath();
+		ctx.arc(cx, top + boxH * 0.5, lightRadius, 0, Math.PI * 2);
+		ctx.fillStyle = '#550';
+		ctx.fill();
+		ctx.beginPath();
+		ctx.arc(cx+1, top + boxH * 0.5, lightRadius * 0.8, 0, Math.PI * 2);
+		ctx.fillStyle = '#770';
+		ctx.fill();
+
+		//verde
+		ctx.beginPath();
+		ctx.arc(cx, top + boxH * 0.8, lightRadius, 0, Math.PI * 2);
+		ctx.fillStyle = '#070';
+		ctx.fill();
+		ctx.beginPath();
+		ctx.arc(cx+1, top + boxH * 0.8, lightRadius * 0.8, 0, Math.PI * 2);
+		ctx.fillStyle = '#0e0';
+		ctx.fill();
+	} else {
         //ombra
         ctx.fillStyle = '#040';
         ctx.beginPath();
@@ -794,14 +926,14 @@ function drawGearStick() {
 	
     // pomello (palla)
     ctx.beginPath();
-    ctx.arc(baseX, baseY, 10, 0, Math.PI * 2);
+    ctx.arc(baseX, baseY, 12, 0, Math.PI * 2);
 
     let knobGrad = ctx.createRadialGradient(
         baseX - 3, baseY - 3, 2,
-        baseX, baseY, 10
+        baseX, baseY, 12
     );
-    knobGrad.addColorStop(0, '#fff');
-    knobGrad.addColorStop(1, '#888');
+    knobGrad.addColorStop(0, '#666');
+    knobGrad.addColorStop(1, '#000');
 
     ctx.fillStyle = knobGrad;
     ctx.fill();
@@ -827,8 +959,8 @@ function drawSpeedometer() {
     ctx.stroke();
 
 	// zona rossa e' il contagiri
-	ctx.lineWidth = 6;
-	let colGB = 255 - 255 * rpmTarget;
+	ctx.lineWidth = 1 + rpmTarget * 6;
+	let colGB = 255 - (255 * rpmTarget);
 	ctx.strokeStyle = 'rgba(255,'+colGB+','+colGB+','+rpmTarget+')';//rosso non trasparente!
 	ctx.beginPath();
     ctx.arc(cx, cy, radius - 5, 3.14 + (3.14*(rpmTarget-0.15)), 6.28);
@@ -854,7 +986,7 @@ function drawSpeedometer() {
     }
 
     // LANCETTA VELOCITA
-    let t = speed / maxSpeed + 20;
+    let t = speed / (maxSpeed + 60);
     let angle = Math.PI + t * Math.PI;
 
     let nx = cx + Math.cos(angle) * (radius - 15);
@@ -883,12 +1015,16 @@ function drawSpeedometer() {
 }
 
 
+//RENDER!
 function render() {
     update();
     drawSky(skyOffset);
-
-    let startPos = Math.floor(playerZ / segL);
-    let camHeight = segments[startPos % segments.length].p1.world.y + camH;
+	
+	
+	
+	let startPos = Math.floor(playerZ / segL);
+	let camHeight = segments[startPos % segments.length].p1.world.y + camH;
+	
     let x = 0;
     let dx = 0;
 
@@ -901,16 +1037,19 @@ function render() {
         project(s.p2, playerX * roadW - x - s.curve, camHeight, playerZ - loop);
 
         x += dx;
-        dx += s.curve;
+		dx += s.curve;
 
         // "Gap Fix": Usiamo y del segmento precedente per tappare i buchi
         if (n > startPos) {
             let prev = segments[(n - 1) % segments.length];
             drawSegment(prev.p2.screen.x, prev.p2.screen.y, prev.p2.screen.w,
                 s.p2.screen.x, s.p2.screen.y, s.p2.screen.w,
-                s.color, n);
+                n);
         }
     }
+	
+	
+	
 
     // Sprites & Collision (simplified logic for performance)
     for (let n = startPos + drawDistance; n > startPos; n--) {
@@ -1034,6 +1173,7 @@ document.addEventListener('contextmenu', e => e.preventDefault());
 
 // ====== AVVIO ======
 initSegments();
+initPalette();
 render();
 </script>
 </body>
