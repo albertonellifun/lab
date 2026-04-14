@@ -141,23 +141,29 @@ const width  = BASE_W;
 const height = BASE_H;
 
 // --- SETTINGS ---
-const roadW = 2000;
+let roadW = 2000;
 const segL = 200;
 const camH = 1500;
 const drawDistance = 200;
 const fieldOfView = 100;
 const camD = 1 / Math.tan((fieldOfView / 2) * Math.PI / 180);
 
-let playerX = 0;
-let playerZ = 0;
-let speed = 0;
-let skyOffset = 0;
-let gameState = 'ALIVE';
-let crashTimer = 0;
+//PLAYER OGGETTO NEL MONDO
+const player = {
+    state: 'ALIVE',	//stato
+	x: 0,			//posizione x
+    z: 1,			//segmento
+    speed: 0,		//velocita
+	maxSpeed: 340,	//velocita max
+	accel: 1,		//accelerazione max
+	brake: 1.8,		//max forza frenante
+	tilt: 0,		//inclinazione (in curva, figata!)
+};
 
-const maxSpeed = 340;
-const accel = 1;
-const friction = 0.997; //attrito, se non accelero la macchina
+let skyOffset = 0;
+let crashTimer = 0;
+let CAR_WIDTH = 120;//ferrari larga in px
+
 const keys = { left: 0, right: 0, up: 0, down: 0 };
 
 const START_IDX = 16;//dove e' visivamente il traguardo "alto"
@@ -226,8 +232,17 @@ let gamePalette = {};
 let segments = [];
 const SEGMENTS = 1257 * 2;//ocho ai dati in console -> ci piace quando s[0].y == s[last].y
 const trackL = SEGMENTS * segL;
+const SPRITE_CONFIG = {
+    tree:         { width: 0.20 },//
+    billboard:    { width: 0.25 },//
+    cone:         { width: 0.15 },//
+    bush:         { width: 0.40 },//
+    trafficlight: { width: 0.15 },//
+    oil:          { width: 0.40 },//
+    start:        { width: 0   }
+};
 
-function addSegment(idx, curve, y, isDesert) {
+function addSegment(idx, curve, y) {
 	let n = segments.length;
     let sprite = null;
     if (idx === START_IDX || 
@@ -249,10 +264,13 @@ function addSegment(idx, curve, y, isDesert) {
 		else if (idx > 1200 && idx < 1500) type = 'bush';
 		else if (idx > 2000 && idx < 2100) type = 'trafficlight';
         else {
-			type = Math.random() > 0.66 ? 'tree' : 
-			Math.random() > 0.66 ? 'billboard' : 
-			Math.random() > 0.66 ? 'cone' : 
-			Math.random() > 0.5 ? 'bush' : 'trafficlight';
+			const r = Math.random();
+			if (r < 0.15) type = 'tree';
+			else if (r < 0.30) type = 'billboard';
+			else if (r < 0.45) type = 'cone';
+			else if (r < 0.60) type = 'bush';
+			else if (r < 0.75) type = 'trafficlight';
+			else type = 'oil';
 		}
 
         if (type === 'billboard') {
@@ -267,6 +285,8 @@ function addSegment(idx, curve, y, isDesert) {
 			position = idx % 4 === 0 ? -1.2 : 1.2; //lato alternato
 		} else if (type === 'bush') {
 			position = idx % 4 === 0 ? -1.4 : 1.4; //lato alternato
+		} else if (type === 'oil') {
+			position = idx % 2 === 0 ? -0.5 : 0.5;
 		} else {
             //albero random
             position = idx % 4 === 0 ? -1.6 : 1.6; //lato alternato
@@ -274,7 +294,8 @@ function addSegment(idx, curve, y, isDesert) {
 
         sprite = {
             x: position,
-            type: type
+            type: type,
+			width: SPRITE_CONFIG[type].width
         };
     }
 
@@ -328,9 +349,9 @@ function initPalette() {
 function initSegments() {
 	for (let i = 0; i < SEGMENTS; i++) {
         addSegment(i, Math.sin(i / 90) * 4, Math.cos(i / 50) * 1000);
-		console.log('i=' + i + '\ty=' + Math.cos(i / 50) * 1000);
+		//console.log('i=' + i + '\ty=' + Math.cos(i / 50) * 1000);
     }
-	console.log('delta=' + (segments[0].p1.world.y - segments[SEGMENTS - 1].p1.world.y));
+	//console.log('delta=' + (segments[0].p1.world.y - segments[SEGMENTS - 1].p1.world.y));
 }
 
 
@@ -416,45 +437,56 @@ function drawSegment(x1, y1, w1, x2, y2, w2, idx) {
 }
 
 function update() {
-    if (gameState === 'CRASHED') {
-        speed *= 0.95;
+	//
+	let offRoad = Math.abs(player.x) > 1;
+	let normalizedSpeed = player.speed / player.maxSpeed;
+	
+    if (player.state === 'CRASHED') {
+        player.speed *= 0.95;
         crashTimer++;
 		
         masterGain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.3);// Spegni il motore gradualmente
 		
-        if (speed < 1) {
-            gameState = 'ALIVE';
+        if (player.speed < 1) {
+            player.state = 'ALIVE';
             crashTimer = 0;
-            playerX = 0;
+            player.x = 0;
         }
     } else {
-		let offRoad = Math.abs(playerX) > 1;
-	
-        if (keys.up) {
-			if (offRoad) speed += accel * (1 - speed / maxSpeed) * 0.25;
-			else speed += accel * (1 - speed / maxSpeed);
+		if (keys.up) {
+			player.speed += player.accel * (1 - normalizedSpeed ) * (offRoad ? 0.2 : 1);
 		}
         else if (keys.down) {
-			if (offRoad) speed -= accel * 0.2;
-			else speed -= accel * 2;
+			player.speed -= player.brake * (offRoad ? 0.2 : 1);
 		}
         else {
-			if (offRoad) speed *= 0.995;
-			else speed *= friction;
+			//rallenta pian piano (friction)
+			player.speed *= 0.997;
 		}
 
-        if (keys.left) playerX -= 0.05 * (speed / maxSpeed);
-        if (keys.right) playerX += 0.05 * (speed / maxSpeed);
+        if (keys.left) { 
+			player.x -= 0.05 * normalizedSpeed; 
+			
+			player.tilt += 0.01 * normalizedSpeed;
+			if (player.tilt < -0.03) player.tilt = -0.03; else if (player.tilt > 0.03) player.tilt = 0.03;
+		} else if (keys.right) { 
+			player.x += 0.05 * normalizedSpeed; 
+			
+			player.tilt -= 0.01 * normalizedSpeed;
+			if (player.tilt < -0.03) player.tilt = -0.03; else if (player.tilt > 0.03) player.tilt = 0.03;
+		} else {
+			player.tilt *= 0.98;//riaddrizza pian piano
+		}
 
         // CURVA: la macchina scivola verso l'esterno proporzionalmente alla velocità
-        let cur = segments[Math.floor(playerZ / segL) % segments.length];
-        playerX -= cur.curve * (speed / maxSpeed) * 0.005;
+        let cur = segments[Math.floor(player.z / segL) % segments.length];
+        player.x -= cur.curve * normalizedSpeed * 0.005;
 
         //AUDIO!
         // --- GEAR DETECTION ---
-        let targetGear = speed === 0 ? 0 : 1;
+        let targetGear = player.speed === 0 ? 0 : 1;
         for (let g = 1; g < gearRatios.length; g++) {
-            if (speed > gearRatios[g]) targetGear = g;
+            if (player.speed > gearRatios[g]) targetGear = g;
         }
 
         // CAMBIO MARCIA: imposta rpm target con drop/spike udibile
@@ -470,8 +502,8 @@ function update() {
 
         // RPM target basato su posizione nella marcia attuale
         let gearBottom = gearRatios[gear] || 0;
-        let gearTop = gearRatios[Math.min(gear + 1, gearRatios.length - 1)] || maxSpeed;
-        rpmTarget = Math.max(0.15, Math.min(1.0, (speed - gearBottom) / Math.max(1, gearTop - gearBottom)));
+        let gearTop = gearRatios[Math.min(gear + 1, gearRatios.length - 1)] || player.maxSpeed;
+        rpmTarget = Math.max(0.15, Math.min(1.0, (player.speed - gearBottom) / Math.max(1, gearTop - gearBottom)));
 
         // RPM segue il target con inerzia — il drop/spike rimane udibile per ~0.3s
         rpm += (rpmTarget - rpm) * 0.08;
@@ -487,21 +519,20 @@ function update() {
 
         engineFilter.frequency.setTargetAtTime(80 + gas * 600 + rpm * 400, audioCtx.currentTime, 0.06);
         noiseGain.gain.setTargetAtTime(0.015 + gas * 0.05, audioCtx.currentTime, 0.05);
-        masterGain.gain.setTargetAtTime(speed > 3 ? (0.08 + gas * 0.05) : 0.03, audioCtx.currentTime, 0.1);
+        masterGain.gain.setTargetAtTime(player.speed > 3 ? (0.08 + gas * 0.05) : 0.03, audioCtx.currentTime, 0.1);
     }
 	
-    speed = Math.max(0, Math.min(speed, maxSpeed)); //inibisce la retro!
-    playerZ += speed;
-    //if (playerZ >= trackL) playerZ -= trackL;
-    //else if (playerZ < 0) playerZ = trackL;
-	playerZ = (playerZ + trackL) % trackL;
+    player.speed = Math.max(0, Math.min(player.speed, player.maxSpeed)); //inibisce la retro!
+    player.z += player.speed;
+	
+    player.z = (player.z + trackL) % trackL;
+	
+    let cur = segments[Math.floor(player.z / segL) % segments.length];
+    skyOffset += cur.curve * normalizedSpeed * 10;
 
-    let cur = segments[Math.floor(playerZ / segL) % segments.length];
-    skyOffset += cur.curve * (speed / maxSpeed) * 10;
-
-    document.getElementById('spd').innerText = speed | 0;
+    document.getElementById('spd').innerText = player.speed | 0;
     document.getElementById('gear').innerText = gear;
-    document.getElementById('dist').innerText = playerZ | 0;
+    document.getElementById('dist').innerText = player.z | 0;
 	document.getElementById('rpm').innerText = rpmTarget.toFixed(2);
 }
 
@@ -517,11 +548,14 @@ function drawSprite(sprite, p) {
 
     if (sprite.type === 'start') {
         let poleWidth = w / 4;
-        let barWidth = w * 16;
+        let barWidth = w * 16;//non mi piace!
+		barWidth = roadW * scale * width * Math.abs(sprite.x);//1.6
+		let quadratino = w / 2;//non mi piace!
+		quadratino = barWidth / 32;
         //ombra
-        ctx.fillStyle = 'rgba(0,0,0,0.25)';
+        ctx.fillStyle = 'rgba(0,0,0,0.5)';
         ctx.beginPath();
-        ctx.fillRect(x - poleWidth * 2, y, barWidth + poleWidth * 4, h * 0.25);
+        ctx.fillRect(x - poleWidth * 2, y - 4, barWidth + poleWidth * 4, h * 0.25);
 
         ctx.fill();
         ctx.fillStyle = '#fff';
@@ -539,18 +573,18 @@ function drawSprite(sprite, p) {
         //scacchiera
         ctx.fillStyle = '#222';
         for (let i = 0; i < 16; i++) {
-            ctx.fillRect(x + 2 * i * (w / 2), y - h * 10, (w / 2), h * 0.5);
-            ctx.fillRect(x + 2 * i * (w / 2), y - h * 9, (w / 2), h * 0.5);
+            ctx.fillRect(x + 2 * i * quadratino, y - h * 10, quadratino, h * 0.5);
+            ctx.fillRect(x + 2 * i * quadratino, y - h * 9,  quadratino, h * 0.5);
         }
         ctx.fillStyle = '#222';
         for (let i = 0; i < 16; i++) {
-            ctx.fillRect(x + (2 * i + 1) * (w / 2), y - h * 9.5, (w / 2), h * 0.5);
-            ctx.fillRect(x + (2 * i + 1) * (w / 2), y - h * 8.5, (w / 2), h * 0.5);
+            ctx.fillRect(x + (2 * i + 1) * quadratino, y - h * 9.5, quadratino, h * 0.5);
+            ctx.fillRect(x + (2 * i + 1) * quadratino, y - h * 8.5, quadratino, h * 0.5);
         }
 
     } else if (sprite.type === 'tree') {
         //ombra
-        ctx.fillStyle = '#040';
+        ctx.fillStyle = 'rgba(0,0,0,0.5)';
         ctx.beginPath();
         ctx.ellipse(x, y, radius * 1.5, radius * 0.15, 0, 0, Math.PI * 2);
         ctx.fill();
@@ -566,7 +600,7 @@ function drawSprite(sprite, p) {
         ctx.fill();
 	} else if (sprite.type === 'bush') {
 		//ombra
-        ctx.fillStyle = '#040';
+        ctx.fillStyle = 'rgba(0,0,0,0.5)';
         ctx.beginPath();
         ctx.ellipse(x, y, radius * 2, radius * 0.15, 0, 0, Math.PI * 2);
         ctx.fill();
@@ -576,9 +610,15 @@ function drawSprite(sprite, p) {
         ctx.arc(x, y, radius * 2, Math.PI, Math.PI * 2);
 		ctx.closePath();
         ctx.fill();
-    } else if (sprite.type === 'cone') {
+	} else if (sprite.type === 'oil') {
+		//ombra==chiazza d'olio
+        ctx.fillStyle = '#000';
+        ctx.beginPath();
+        ctx.ellipse(x, y, radius * 2, radius * 0.2, 0, 0, Math.PI * 2);
+        ctx.fill();
+	}else if (sprite.type === 'cone') {
 		//ombra
-		ctx.fillStyle = 'rgba(0,0,0,0.25)';
+		ctx.fillStyle = 'rgba(0,0,0,0.5)';
 		ctx.beginPath();
 		ctx.ellipse(x, y, radius * 0.8, radius * 0.2, 0, 0, Math.PI * 2);
 		ctx.fill();
@@ -614,7 +654,7 @@ function drawSprite(sprite, p) {
 		ctx.fill();
 	} else if (sprite.type === 'trafficlight') {
 		//ombra
-		ctx.fillStyle = 'rgba(0,0,0,0.25)';
+		ctx.fillStyle = 'rgba(0,0,0,0.5)';
 		ctx.beginPath();
 		ctx.ellipse(x, y, radius * 0.7, radius * 0.2, 0, 0, Math.PI * 2);
 		ctx.fill();
@@ -675,7 +715,7 @@ function drawSprite(sprite, p) {
 		ctx.fill();
 	} else {
         //ombra
-        ctx.fillStyle = '#040';
+        ctx.fillStyle = 'rgba(0,0,0,0.5)';
         ctx.beginPath();
         ctx.ellipse(x, y, radius * 1.5, radius * 0.15, 0, 0, Math.PI * 2);
         ctx.fill();
@@ -716,7 +756,12 @@ function drawSprite(sprite, p) {
 
 //un rettangolo rosso -> testarossa di alb spettacolare anche senza biondona al seguito
 function drawFerrari(cx, cy, w) {
-    let bounce = (Math.random() * 2) * (speed / maxSpeed);
+    let bounce = (Math.random() * 2) * (player.speed / player.maxSpeed);
+
+	//gomme
+    ctx.fillStyle = '#111';
+    ctx.fillRect(cx - CAR_WIDTH * 0.5, cy + 34 + bounce + player.tilt * 50, 30, 10);
+    ctx.fillRect(cx + CAR_WIDTH * 0.5, cy + 34 + bounce - player.tilt * 50, -30, 10);
 
     //corpo principale rosso ferrari scuro+chiaro
     ctx.fillStyle = '#b00'; // Rosso scuro per i lati
@@ -808,28 +853,32 @@ function drawFerrari(cx, cy, w) {
     ctx.strokeStyle = '#ccc';
     ctx.strokeRect(cx - 35, cy + 32 + bounce, 15, 6);
     ctx.strokeRect(cx + 35, cy + 32 + bounce, -15, 6);
-
-    //gomme
-    ctx.fillStyle = '#111';
-    ctx.fillRect(cx - 50, cy + 38 + bounce, 30, 4);
-    ctx.fillRect(cx + 50, cy + 38 + bounce, -30, 4);
 }
 
 function drawCar() {
     ctx.save();
     let cx = width / 2;
     let cy = height - 70;
-    let w = 120; //TESTAROSSA E' LARGA!!!
+    let w = CAR_WIDTH; //TESTAROSSA E' LARGA!!!
 
-    //ombra
+	//ombra
     ctx.fillStyle = 'rgba(0,0,0,0.5)';
-    ctx.fillRect(cx - w / 2 - 4, cy + 10, w + 8, 36);
+	//ctx.fillRect(cx - w / 2 - 4, cy + 10, w + 8, 36);//rettangolone non ci piace
+	ctx.beginPath();
+	ctx.moveTo(cx - w / 2 + 6, cy + 2);
+	ctx.lineTo(cx - w / 2 - 4, cy + 48);
+	ctx.lineTo(cx + w / 2 + 4, cy + 48);
+	ctx.lineTo(cx + w / 2 - 6, cy + 2);
+	ctx.closePath();
+	ctx.fill();	
 
     ctx.translate(cx, cy);
 
-    if (gameState === 'CRASHED') {
-        ctx.rotate(playerX > 0 ? crashTimer * 0.25 : -crashTimer * 0.25);
-    }
+    if (player.state === 'CRASHED') {
+        ctx.rotate(player.x > 0 ? crashTimer * 0.5 : -crashTimer * 0.5);
+    } else {
+		ctx.rotate(player.tilt);
+	}        
 
     drawFerrari(0, 0, w);
 
@@ -908,21 +957,20 @@ function drawGearStick() {
 	
 	let ydist = Math.abs(gearStickY - targetY);
 	let xdist = Math.abs(targetX - gearStickX);
-	
-	// prima vai in verticale per meta distanza
-	if (ydist > h * 0.5) {
+	//console.log('xd='+xdist.toFixed(2)+' yd='+ydist.toFixed(2)+' gear='+gear);
+	// prima vai in verticale per meta distanza (da 1 a folle c'e' un problema: fixed!)
+	if (ydist > h * 0.5 || (gear === 0 && ydist > 1)) {
 		gearStickY += (targetY - gearStickY) * 0.5;
 	} else {
 		// poi vai in orizzontale
 		gearStickX += (targetX - gearStickX) * 0.5;
 		
-		if (xdist < 2) {
+		if (xdist < 1) {
 			gearStickY += (targetY - gearStickY) * 0.5;
 		}
 	}
 	let baseX = gearStickX;
-	let baseY = gearStickY;
-	
+	let baseY = gearStickY;	
 	
     // pomello (palla)
     ctx.beginPath();
@@ -932,7 +980,7 @@ function drawGearStick() {
         baseX - 3, baseY - 3, 2,
         baseX, baseY, 12
     );
-    knobGrad.addColorStop(0, '#666');
+    knobGrad.addColorStop(0, '#999');
     knobGrad.addColorStop(1, '#000');
 
     ctx.fillStyle = knobGrad;
@@ -961,7 +1009,7 @@ function drawSpeedometer() {
 	// zona rossa e' il contagiri
 	ctx.lineWidth = 1 + rpmTarget * 6;
 	let colGB = 255 - (255 * rpmTarget);
-	ctx.strokeStyle = 'rgba(255,'+colGB+','+colGB+','+rpmTarget+')';//rosso non trasparente!
+	ctx.strokeStyle = 'rgba(255,'+colGB+','+colGB+','+(rpmTarget*rpmTarget)+')';//rosso non trasparente!
 	ctx.beginPath();
     ctx.arc(cx, cy, radius - 5, 3.14 + (3.14*(rpmTarget-0.15)), 6.28);
 	ctx.stroke();	
@@ -986,7 +1034,7 @@ function drawSpeedometer() {
     }
 
     // LANCETTA VELOCITA
-    let t = speed / (maxSpeed + 60);
+    let t = player.speed / (player.maxSpeed + 60);
     let angle = Math.PI + t * Math.PI;
 
     let nx = cx + Math.cos(angle) * (radius - 15);
@@ -1009,7 +1057,7 @@ function drawSpeedometer() {
     ctx.fillStyle = '#fff';
     ctx.font = '12px monospace';
     ctx.textAlign = 'center';
-    ctx.fillText((speed | 0) + ' km/h', cx, cy - 10);
+    ctx.fillText((player.speed | 0) + ' km/h', cx, cy - 10);
 	
 	ctx.lineWidth = 1;
 }
@@ -1021,20 +1069,19 @@ function render() {
     drawSky(skyOffset);
 	
 	
-	
-	let startPos = Math.floor(playerZ / segL);
+	let startPos = Math.floor(player.z / segL);
 	let camHeight = segments[startPos % segments.length].p1.world.y + camH;
 	
     let x = 0;
     let dx = 0;
-
+	
     // Road Loop
     for (let n = startPos; n < startPos + drawDistance; n++) {
         let s = segments[n % segments.length];
         let loop = (n >= segments.length) ? trackL : 0;
 
-        project(s.p1, playerX * roadW - x, camHeight, playerZ - loop);
-        project(s.p2, playerX * roadW - x - s.curve, camHeight, playerZ - loop);
+        project(s.p1, player.x * roadW - x, camHeight, player.z - loop);
+        project(s.p2, player.x * roadW - x - s.curve, camHeight, player.z - loop);
 
         x += dx;
 		dx += s.curve;
@@ -1049,32 +1096,46 @@ function render() {
     }
 	
 	
-	
-
     // Sprites & Collision (simplified logic for performance)
     for (let n = startPos + drawDistance; n > startPos; n--) {
         let s = segments[n % segments.length];
         if (s.sprite && s.p1.screen.scale > 0) {
             drawSprite(s.sprite, s.p1);
 
-            /*if(n === startPos+8 && Math.abs(playerX - s.sprite.x) < 0.5 && gameState === 'ALIVE') {
-                gameState = 'CRASHED';
-				speed = 150;
-            }*/
             // Collisione: segmento vicino + sovrapposizione X
             let segDist = n - startPos;
-            if (segDist > 2 && segDist < 15 && gameState === 'ALIVE') {
+            if (segDist > 5 && segDist < 20 && player.state === 'ALIVE' && s.sprite.type !== 'oil') {
+				
+				/*
+                console.log(`segDist=${segDist}  seg=${n}  playerX=${player.x.toFixed(2)}  spriteX=${s.sprite.x}  dist=${Math.abs(player.x - s.sprite.x).toFixed(2)}`);
 
-                console.log(`seg ${n}: playerX=${playerX.toFixed(2)}, spriteX=${s.sprite.x}, dist=${Math.abs(playerX - s.sprite.x).toFixed(2)}`);
-
-                // hitbox sprite: largo ~0.4 unità, centrato su sprite.x
-                let spriteHalfW = 0.4;
-                // hitbox macchina: larga ~0.3 unità, centrata su playerX
-                let carHalfW = 0.3;
-                let overlap = Math.abs(playerX - s.sprite.x) < 0.15; //(spriteHalfW + carHalfW);
-                if (overlap) {
-                    gameState = 'CRASHED';
-                    speed = 150;
+				// DEBUG HITBOX SPRITE
+				ctx.strokeStyle = '#0f0';
+				ctx.strokeRect(
+					s.p1.screen.x + (s.sprite.x * s.p1.screen.w) - (s.sprite.width * 0.5 * s.p1.screen.w),
+					s.p1.screen.y - 10,
+					(s.sprite.width) * s.p1.screen.w,
+					10
+				);
+				
+				//DEBUG HITBOX FERRARI
+				ctx.strokeStyle = '#ff0';
+				ctx.strokeRect(
+					s.p1.screen.x + (player.x * s.p1.screen.w) - (0.25 * 0.5 * s.p1.screen.w),
+					s.p1.screen.y - 10,
+					(0.25) * s.p1.screen.w,
+					10
+				);
+				*/
+				
+                let spriteHalfW = s.sprite.width * 0.5 * s.p1.screen.scale;
+				let carHalfW = 0.25;//larga ~0.3 unità, centrata su playerX
+				let overlap = Math.abs(player.x - s.sprite.x) < (spriteHalfW + carHalfW);
+				
+				if (overlap && segDist < 10) {
+					console.log(overlap);
+                    player.state = 'CRASHED';
+                    //player.speed = 150;
                 }
             }
         }
@@ -1082,6 +1143,7 @@ function render() {
 
     // Player Car
     drawCar();
+	
 	drawSpeedometer();
 	drawGearStick();
 
