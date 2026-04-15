@@ -237,6 +237,7 @@ const trackL = SEGMENTS * segL;
 //per la hitbox
 const SPRITE_CONFIG = {
     tree:         { width: 0.10 },//
+	palm:         { width: 0.10 },//
     billboard:    { width: 0.75 },//
 	signlow:      { width: 0.25 },//
 	signhigh:     { width: 0.25 },//
@@ -253,10 +254,12 @@ function addSegment(idx, curve, y) {
     if (idx === START_IDX || 
 	    Math.random() > 0.95 ||
         (idx > 200 && idx < 400 && idx % 2 === 0) || //alberi
-        (idx > 600 && idx < 800 && idx % 8 === 0) || //cartelli
+        (idx > 600 && idx < 800 && idx % 8 === 0) || //frecce
 		(idx > 900 && idx < 1000 && idx % 2 === 0) || //coni
 		(idx > 1200 && idx < 1500 && idx % 2 === 0) || //bush
-		(idx > 2000 && idx < 2100 && idx % 2 === 0) //semafori
+		(idx > 2000 && idx < 2200 && idx % 2 === 0) || //freccione
+		(idx > 2500 && idx < 2700 && idx % 2 === 0) || //palme
+		(idx > 2800 && idx < 2900 && idx % 2 === 0) //semafori
 		) {
         //crea oggetto a bordo strada
 		let type = '';
@@ -268,7 +271,8 @@ function addSegment(idx, curve, y) {
 		else if (idx > 900 && idx < 1000) type = 'cone';
 		else if (idx > 1200 && idx < 1500) type = 'bush';
 		else if (idx > 2000 && idx < 2200) type = 'signhigh';
-		else if (idx > 2500 && idx < 2600) type = 'trafficlight';
+		else if (idx > 2500 && idx < 2700) type = 'palm';
+		else if (idx > 2800 && idx < 2900) type = 'trafficlight';
         else {
 			const r = Math.random();
 			if (r < 0.10) type = 'tree';
@@ -299,7 +303,7 @@ function addSegment(idx, curve, y) {
 			position = idx % 4 === 0 ? -1.4 : 1.4; //lato alternato
 		} else if (type === 'oil') {
 			position = idx % 2 === 0 ? -0.5 : 0.5;
-		} else {
+		} else if (type === 'palm' || type === 'tree') {
             //albero random
             position = idx % 4 === 0 ? -1.6 : 1.6; //lato alternato
         }
@@ -842,6 +846,74 @@ function drawSprite(sprite, p) {
         ctx.closePath();
         ctx.fill();
         ctx.stroke();
+	} else if (sprite.type === 'palm') {
+		//il fusto si inclina sempre verso il centro della strada
+		let lean = (sprite.x <= 0) ? 1 : -1;
+
+		// Tip del fusto: offset orizzontale e altezza scalati con w/h
+		let tipX = x + lean * w * 1.4;
+		let tipY = y - h * 4;
+
+		// Punti di controllo della curva di Bézier cubica
+		let cp1x = x + lean * w * 0.2;
+		let cp1y = y - h * 1.5;
+		let cp2x = x + lean * w * 0.8;
+		let cp2y = y - h * 2.8;
+
+		//ombra
+		ctx.fillStyle = 'rgba(0,0,0,0.5)';
+        ctx.beginPath();
+        ctx.ellipse(x, y, radius * 1.5, radius * 0.15, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+		// Fusto - fill marrone con valore chiaro
+		ctx.strokeStyle = '#853';
+		ctx.lineWidth = w * 0.22;
+		ctx.beginPath();
+		ctx.moveTo(x, y);
+		ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, tipX, tipY);
+		ctx.stroke();
+
+		// Venatura del fusto (nodi, tratteggio scuro)
+		ctx.strokeStyle = '#742';
+		ctx.lineWidth = w * 0.1;
+		ctx.setLineDash([w * 0.15, w * 0.25]);
+		ctx.beginPath();
+		ctx.moveTo(x - lean * 2, y);
+		ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, tipX - lean * 2, tipY);
+		ctx.stroke();
+		ctx.setLineDash([]);
+		
+		// Rami: array di [angolo_rad, lunghezza_relativa]
+		let branches = [
+			[Math.PI * 1.5,          0.55],  // su
+			[Math.PI * 1.5 + 0.6,    0.6],  // su-lato
+			[Math.PI * 1.5 + 1.1,    0.8], // laterale
+			[Math.PI * 1.5 - 0.6,    0.7],  // su-lato opposto
+			[Math.PI * 1.5 - 1.1,    0.8], // laterale opposto
+			[Math.PI * 1.5 + 0.6,    -0.9],  // giu-lato
+			[Math.PI * 1.5 + 1.1,    -0.85], // giu laterale
+			[Math.PI * 1.5 - 0.6,    -0.9],  // giu-lato opposto
+			[Math.PI * 1.5 - 1.1,    -0.85], // giu laterale opposto
+		];
+
+		let branchLen = h * 1.5;
+		ctx.lineWidth = w * 0.1;
+		
+		for (let [angle, lenFactor] of branches) {
+			let bx = tipX + Math.cos(angle) * branchLen * lenFactor;
+			let by = tipY + Math.sin(angle) * branchLen * lenFactor;
+			ctx.strokeStyle = '#2a7a1a';
+			ctx.beginPath();
+			// curva leggera per ogni ramo
+			ctx.moveTo(tipX, tipY);
+			let midX = tipX + Math.cos(angle) * branchLen * lenFactor * 0.5;
+			let midY = tipY + Math.sin(angle) * branchLen * lenFactor * 0.05 + h * 0.15;
+			ctx.quadraticCurveTo(midX, midY, bx, by);
+			ctx.stroke();
+		}
+
+		ctx.lineWidth = 1; // reset
 	} else {
 		//billboard
 		//ombra
