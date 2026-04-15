@@ -58,17 +58,17 @@
         }
         .ctrl-group {
             display: flex;
-            gap: 16px;
+            gap: 24px;
             pointer-events: all;
         }
         .btn {
-            width: 100px;
-            height: 100px;
+            width: 120px;
+            height: 120px;
             border-radius: 50%;
             border: 3px solid rgba(255,255,255,0.5);
             background: rgba(255,255,255,0.15);
             color: #fff;
-            font-size: 32px;
+            font-size: 48px;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -166,7 +166,7 @@ let CAR_WIDTH = 120;//ferrari larga in px
 
 const keys = { left: 0, right: 0, up: 0, down: 0 };
 
-const START_IDX = 16;//dove e' visivamente il traguardo "alto"
+const START_IDX = 15;//dove e' visivamente il traguardo "alto"
 
 //AUDIO BRUM BRUM!
 let gear = 1;
@@ -230,7 +230,9 @@ function resumeAudio() {
 // --- TRACK GENERATION ---
 let gamePalette = {};
 let segments = [];
-const SEGMENTS = 1257 * 2;//ocho ai dati in console -> ci piace quando s[0].y == s[last].y
+//nota: 1257 ha inizio e fine coincidenti sin/cos + aggiunti 500 tutti dritti
+//ocho ai dati in console -> ci piace quando s[0].y == s[last].y
+const SEGMENTS = 1257 * 2 + 486;//2514 + 486dx4 = 3000, numero intero
 const trackL = SEGMENTS * segL;
 const SPRITE_CONFIG = {
     tree:         { width: 0.20 },//
@@ -347,11 +349,17 @@ function initPalette() {
 }
 
 function initSegments() {
-	for (let i = 0; i < SEGMENTS; i++) {
+	for (let i = 0; i < SEGMENTS - 486; i++) {
         addSegment(i, Math.sin(i / 90) * 4, Math.cos(i / 50) * 1000);
 		//console.log('i=' + i + '\ty=' + Math.cos(i / 50) * 1000);
     }
-	//console.log('delta=' + (segments[0].p1.world.y - segments[SEGMENTS - 1].p1.world.y));
+	let last = SEGMENTS - 486;
+	let lastSin = Math.sin(last / 90);
+	let lastCos = Math.cos(last / 50) * 1000;
+	for (let i = last; i < SEGMENTS; i++) {
+		addSegment(i, lastSin, lastCos);
+	}
+	console.log('delta= ' + (segments[0].p1.world.x - segments[SEGMENTS - 1].p1.world.x) + ' ' + (segments[0].p1.world.y - segments[SEGMENTS - 1].p1.world.y) );
 }
 
 
@@ -373,17 +381,45 @@ function drawSky(offset) {
     ctx.fillRect(0, 0, width, height / 2);
     ctx.fillStyle = gamePalette.terrain;
     ctx.fillRect(0, height / 2, width, height);
+	
+	//sole
+	// si muove lentamente con lo skyOffset, ma rimane sempre in cielo
+	let sunX = (width * 0.35 - offset * 0.01) % width;
+	if (sunX < 0) sunX += width;
+	let sunY = height * 0.25;
+	let sunR = 32;
 
-    //montagne lontane
+	// alone esterno (glow giallo pallido)
+	let glow = ctx.createRadialGradient(sunX, sunY, sunR * 0.6, sunX, sunY, sunR * 2.5);
+	glow.addColorStop(0, 'rgba(255, 255, 120, 0.5)');
+	glow.addColorStop(1, 'rgba(255, 255, 120, 0)');
+	ctx.fillStyle = glow;
+	ctx.beginPath();
+	ctx.arc(sunX, sunY, sunR * 2.5, 0, Math.PI * 2);
+	ctx.fill();
+
+	// disco solare
+	let sunGrad = ctx.createRadialGradient(sunX - sunR * 0.3, sunY - sunR * 0.3, 2, sunX, sunY, sunR);
+	sunGrad.addColorStop(0, '#ff9');
+	sunGrad.addColorStop(1, '#ee0');
+	ctx.fillStyle = sunGrad;
+	ctx.beginPath();
+	ctx.arc(sunX, sunY, sunR, 0, Math.PI * 2);
+	ctx.fill();
+
+
+    //montagne lontane -> cittareale pro loco docet!
     ctx.fillStyle = gamePalette.mountainsDark;
     for (let i = -1; i < 3; i++) {
         let x = (i * width * 1.5) - (offset * 0.15 % (width * 1.5));
         ctx.beginPath();
         ctx.moveTo(x, height / 2);
-        ctx.lineTo(x + 200, height / 3);
-        ctx.lineTo(x + 400, height / 2.2);
-        ctx.lineTo(x + 600, height / 3.5);
-        ctx.lineTo(x + 800, height / 2);
+        ctx.lineTo(x + 150, height / 2.8);
+        ctx.lineTo(x + 300, height / 2.2);
+        ctx.lineTo(x + 450, height / 3.5);
+        ctx.lineTo(x + 600, height / 2);
+		ctx.lineTo(x + 750, height / 2.5);
+		ctx.lineTo(x + 900, height / 2);
         ctx.fill();
     }
 	
@@ -393,7 +429,7 @@ function drawSky(offset) {
         let x = (i * width * 1.2) - (offset * 0.25 % (width * 1.2));
         ctx.beginPath();
         ctx.moveTo(x, height / 2);
-        ctx.quadraticCurveTo(x + 300, height / 3.5, x + 600, height / 2);
+        ctx.quadraticCurveTo(x + 300, height / 2.5, x + 600, height / 2);
         ctx.fill();
     }
 }
@@ -552,34 +588,36 @@ function drawSprite(sprite, p) {
 		barWidth = roadW * scale * width * Math.abs(sprite.x);//1.6
 		let quadratino = w / 2;//non mi piace!
 		quadratino = barWidth / 32;
+		let startHeight = h * 8;
+		let startBarHeight = h * 2;
         //ombra
         ctx.fillStyle = 'rgba(0,0,0,0.5)';
         ctx.beginPath();
-        ctx.fillRect(x - poleWidth * 2, y - 4, barWidth + poleWidth * 4, h * 0.25);
+        ctx.fillRect(x - poleWidth * 1.5, y - 4, barWidth + poleWidth * 3, h * 0.25);
 
         ctx.fill();
         ctx.fillStyle = '#fff';
         ctx.strokeStyle = '#000';
         //palo
-        ctx.fillRect(x - poleWidth / 2, y - h * 10, poleWidth, h * 10);
-        ctx.strokeRect(x - poleWidth / 2, y - h * 10, poleWidth, h * 10);
+        ctx.fillRect(x - poleWidth / 2, y - startHeight, poleWidth, startHeight);
+        ctx.strokeRect(x - poleWidth / 2, y - startHeight, poleWidth, startHeight);
         //altro palo 
-        ctx.fillRect(x - poleWidth / 2 + barWidth, y - h * 10, poleWidth, h * 10);
-        ctx.strokeRect(x - poleWidth / 2 + barWidth, y - h * 10, poleWidth, h * 10);
+        ctx.fillRect(x - poleWidth / 2 + barWidth, y - startHeight, poleWidth, startHeight);
+        ctx.strokeRect(x - poleWidth / 2 + barWidth, y - startHeight, poleWidth, startHeight);
 
         //barra orizzontale larga
-        ctx.fillRect(x, y - h * 10, barWidth, h * 2);
-        ctx.strokeRect(x, y - h * 10, barWidth, h * 2);
+        ctx.fillRect(x, y - startHeight, barWidth, h * 2);
+        ctx.strokeRect(x, y - startHeight, barWidth, h * 2);
         //scacchiera
         ctx.fillStyle = '#222';
         for (let i = 0; i < 16; i++) {
-            ctx.fillRect(x + 2 * i * quadratino, y - h * 10, quadratino, h * 0.5);
-            ctx.fillRect(x + 2 * i * quadratino, y - h * 9,  quadratino, h * 0.5);
+            ctx.fillRect(x + 2 * i * quadratino, y - startHeight, quadratino, h * 0.5);
+            ctx.fillRect(x + 2 * i * quadratino, y - startHeight + startBarHeight/2,  quadratino, h * 0.5);
         }
         ctx.fillStyle = '#222';
         for (let i = 0; i < 16; i++) {
-            ctx.fillRect(x + (2 * i + 1) * quadratino, y - h * 9.5, quadratino, h * 0.5);
-            ctx.fillRect(x + (2 * i + 1) * quadratino, y - h * 8.5, quadratino, h * 0.5);
+            ctx.fillRect(x + (2 * i + 1) * quadratino, y - startHeight + startBarHeight/4, quadratino, h * 0.5);
+            ctx.fillRect(x + (2 * i + 1) * quadratino, y - startHeight + 3*startBarHeight/4, quadratino, h * 0.5);
         }
 
     } else if (sprite.type === 'tree') {
