@@ -238,7 +238,19 @@ const SEGMENTS = 1257 * 2 + 486;//2514 + 486dx4 = 3000, numero intero
 const trackL = SEGMENTS * segL;
 
 //JOHNNY, IL PROBLEMA DELLA SICILIA E' IL... TRAFFICO!!!
-const CAR_COLORS = ['#0f0', '#00f', '#ff0', '#0ff', '#f0f', '#fff', '#999', '#000'];
+const CAR_COLORS = [
+	{light:'#0f0',dark:'#0b0'},
+	{light:'#00f',dark:'#00b'},
+	{light:'#ff0',dark:'#bb0'},
+	{light:'#0ff',dark:'#0bb'},
+	{light:'#f0f',dark:'#b0b'},
+	{light:'#fff',dark:'#bbb'},
+	{light:'#999',dark:'#555'},
+	{light:'#444',dark:'#222'},
+	{light:'#f80',dark:'#b40'},
+	{light:'#0f4',dark:'#0b0'},
+	{light:'#04f',dark:'#00b'}
+	];
 
 const trafficCars = Array.from({ length: 15 }, (_, i) => ({
     x: (i % 3 === 0) ? -0.35 : (i % 3 === 1) ? 0 : 0.35,
@@ -266,16 +278,17 @@ const SPRITE_CONFIG = {
 function addSegment(idx, curve, y) {
 	let n = segments.length;
     let sprite = null;
-    if (idx === START_IDX || 
-	    Math.random() > 0.95 ||
-        (idx > 200 && idx < 400 && idx % 2 === 0) || //alberi
-        (idx > 600 && idx < 800 && idx % 8 === 0) || //frecce
-		(idx > 900 && idx < 1000 && idx % 2 === 0) || //coni
-		(idx > 1200 && idx < 1500 && idx % 2 === 0) || //bush
-		(idx > 2000 && idx < 2200 && idx % 2 === 0) || //freccione
-		(idx > 2500 && idx < 2700 && idx % 2 === 0) || //palme
-		(idx > 2800 && idx < 2900 && idx % 2 === 0) //semafori
-		) {
+    if ( idx === START_IDX || 
+		(idx % 4 === 0 && (
+			(idx > 200 && idx < 400) || //alberi ogni 4 seg
+			(idx > 600 && idx < 800) || //frecce ogni 8 seg
+			(idx > 900 && idx < 1000) || //coni ogni 2 seg
+			(idx > 1200 && idx < 1500) || //bush ogni 4 seg
+			(idx > 2000 && idx < 2200) || //freccione ogni 8 seg
+			(idx > 2500 && idx < 2700) || //palme ogni 4 seg
+			(idx > 2800 && idx < 2900) //semafori ogni 4 seg
+			|| Math.random() > 0.75
+		) ){
         //crea oggetto a bordo strada
 		let type = '';
         let position = 0;
@@ -287,7 +300,7 @@ function addSegment(idx, curve, y) {
 		else if (idx > 1200 && idx < 1500) type = 'bush';
 		else if (idx > 2000 && idx < 2200) type = 'signhigh';
 		else if (idx > 2500 && idx < 2700) type = 'palm';
-		else if (idx > 2800 && idx < 2900) type = 'trafficlight';
+		else if (idx > 2800 && idx < 2850) type = 'trafficlight';
         else {
 			const r = Math.random();
 			if (r < 0.10) type = 'tree';
@@ -301,7 +314,7 @@ function addSegment(idx, curve, y) {
 		}
 
         if (type === 'billboard') {
-            //cartelloni piu vicini lontani dal bordo, esterni alle curve
+            //cartelloni lontani dal bordo
             if (curve > 0) position = -1.6;
             else position = 1.6;
         } else if (type === 'signlow' || type === 'signhigh') {
@@ -311,16 +324,15 @@ function addSegment(idx, curve, y) {
 		} else if (type === 'start') {
             position = -1.6;//start piu lontano
         } else if (type === 'cone') {
-		    position = idx % 4 === 0 ? -0.9 : 0.9; //lato alternato
+		    position = idx % 8 === 0 ? -0.9 : 0.9; //cono alternato
 		} else if (type === 'trafficlight') {
-			position = idx % 4 === 0 ? -1.2 : 1.2; //lato alternato
+			position = idx % 8 === 0 ? -1.2 : 1.2; //semaforo alternato
 		} else if (type === 'bush') {
-			position = idx % 4 === 0 ? -1.4 : 1.4; //lato alternato
+			position = idx % 8 === 0 ? -1.4 : 1.4; //cespuglio alternato
 		} else if (type === 'oil') {
-			position = idx % 2 === 0 ? -0.5 : 0.5;
+			position = idx % 2 === 0 ? -0.5 : 0.5;//olio alternato
 		} else if (type === 'palm' || type === 'tree') {
-            //albero random
-            position = idx % 4 === 0 ? -1.6 : 1.6; //lato alternato
+            position = idx % 8 === 0 ? -1.6 : 1.6; //albero/palma lato alternato
         }
 
         sprite = {
@@ -353,12 +365,14 @@ function initPalette() {
 			mountainsLight:'#db7', 
 			mountainsDark:'#b95', 
 			terrain:'#db7',
-			road0: '#b9a', 
-			road1: '#cab', 
-			grass0: '#db9', 
-			grass1: '#eca', 
-			rumble0: '#fff',
-			rumble1: '#f00'
+			roadDark: '#b9a', 
+			roadLight: '#cab', 
+			grassDark: '#db9', 
+			grassLight: '#eca', 
+			rumbleDark: '#ffe',//cordolo marroncino
+			rumbleLight: '#963',//cordolo marroncino
+			bushDark: '#a84',//anche erba marroncina
+			bushLight: '#ca6',//palme marroncine
 			};
 	}
 	else { 
@@ -368,12 +382,14 @@ function initPalette() {
 			mountainsLight:'#151',	
 			mountainsDark:'#141',
 			terrain:'#181',
-			road0: '#444', 
-			road1: '#555', 
-			grass0: '#181', 
-			grass1: '#171', 
-			rumble0: '#fff',
-			rumble1: '#f00'
+			roadDark: '#444', 
+			roadLight: '#555', 
+			grassDark: '#171', 
+			grassLight: '#181', 
+			rumbleDark: '#fff',//cordolo bianco/rosso
+			rumbleLight: '#f00',//cordolo bianco/rosso
+			bushDark: '#161',
+			bushLight: '#272',
 			};
 	}
 }
@@ -467,11 +483,11 @@ function drawSky(offset) {
 function drawSegment(x1, y1, w1, x2, y2, w2, idx) {
 
     // Erba
-    ctx.fillStyle = idx%2 ? gamePalette.grass1 : gamePalette.grass0; //erba
+    ctx.fillStyle = idx%2 ? gamePalette.grassDark : gamePalette.grassLight; //erba
     ctx.fillRect(0, y2, width, y1 - y2);
 	
     // Cordoli
-    ctx.fillStyle = idx%2 ? gamePalette.rumble1 : gamePalette.rumble0; //cordolo
+    ctx.fillStyle = idx%2 ? gamePalette.rumbleDark : gamePalette.rumbleLight; //cordolo
     ctx.beginPath();
     ctx.moveTo(x1 - w1 * 1.1, y1);
     ctx.lineTo(x2 - w2 * 1.1, y2);
@@ -480,7 +496,7 @@ function drawSegment(x1, y1, w1, x2, y2, w2, idx) {
     ctx.fill();
 	
     // Strada
-    ctx.fillStyle = idx%2 ? gamePalette.road1 : gamePalette.road0; //asfalto
+    ctx.fillStyle = idx%2 ? gamePalette.roadDark : gamePalette.roadLight; //asfalto
     ctx.beginPath();
     ctx.moveTo(x1 - w1, y1 + 1);
     ctx.lineTo(x2 - w2, y2 - 1);
@@ -668,7 +684,7 @@ function drawSprite(sprite, p) {
         ctx.fillRect(x - w * 0.1, y - h * 2, w * 0.2, h * 2);
 
         //chioma w/2
-        ctx.fillStyle = '#161';
+        ctx.fillStyle = gamePalette.bushDark;//'#161';
         ctx.beginPath();
         ctx.arc(x, y - h * 2, radius * 1.5, 0, Math.PI * 2);
         ctx.fill();
@@ -679,7 +695,7 @@ function drawSprite(sprite, p) {
         ctx.ellipse(x, y, radius * 2, radius * 0.15, 0, 0, Math.PI * 2);
         ctx.fill();
 		//chioma w/2
-        ctx.fillStyle = '#161';
+        ctx.fillStyle = gamePalette.bushDark;//'#161';
         ctx.beginPath();
         ctx.arc(x, y, radius * 2, Math.PI, Math.PI * 2);
 		ctx.closePath();
@@ -924,7 +940,7 @@ function drawSprite(sprite, p) {
 		for (let [angle, lenFactor] of branches) {
 			let bx = tipX + Math.cos(angle) * branchLen * lenFactor;
 			let by = tipY + Math.sin(angle) * branchLen * lenFactor;
-			ctx.strokeStyle = '#2a7a1a';
+			ctx.strokeStyle = gamePalette.bushLight;
 			ctx.beginPath();
 			// curva leggera per ogni ramo
 			ctx.moveTo(tipX, tipY);
@@ -1096,7 +1112,7 @@ function drawCar() {
 		ctx.rotate(player.tilt);
 	}        
 
-    drawFerrari(0, 0, w, '#b00', '#f00');
+    drawFerrari(0, 0, w * 1, '#b00', '#f00');
 
     ctx.restore();
 }
@@ -1372,7 +1388,7 @@ function render() {
 
 		let baseIndex = (startPos + segIndex) % segments.length;
 
-		let lookAhead = 4;
+		let lookAhead = 2;
 
 		let s0 = segments[baseIndex];
 		let s1 = segments[(baseIndex + lookAhead) % segments.length];
@@ -1400,8 +1416,8 @@ function render() {
 		let carW = scale * roadW * width * 0.1;
 		let carH = carW * 0.5;
 
-		drawFerrariShadow(screenX, screenY, carW * 1.33);
-		drawFerrari(screenX, screenY, carW * 1.33, '#bbb', car.color);//disegnate appena piu grandi
+		drawFerrariShadow(screenX, screenY, carW * 1.4);
+		drawFerrari(screenX, screenY, carW * 1.4, car.color.dark, car.color.light);//disegnate appena piu grandi
 				
 		if (player.state === 'ALIVE') {
 			let playerX = width / 2;
