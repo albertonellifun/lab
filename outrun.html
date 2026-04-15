@@ -102,6 +102,7 @@
 <script>
 const canvas = document.getElementById('g');
 const ctx = canvas.getContext('2d');
+ctx.imageSmoothingEnabled = false;//velocizza?
 
 const BASE_W = 800;
 const BASE_H = 600;
@@ -109,6 +110,7 @@ const BASE_H = 600;
 let width = BASE_W;
 let height = BASE_H;
 
+/*
 function resizeCanvas() {
     const dpr = window.devicePixelRatio || 1;
     const scale = Math.min(
@@ -122,6 +124,33 @@ function resizeCanvas() {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     width = BASE_W;
     height = BASE_H;
+	//fix redmi?
+	const h = window.innerHeight;
+	if (h < 700) {
+        document.getElementById('controls').style.paddingBottom = '40px';
+    }
+}*/
+function resizeCanvas() {
+    // Rimuoviamo il DPR (devicePixelRatio) per non sovraccaricare la GPU
+    const scale = Math.min(
+        window.innerWidth / BASE_W,
+        window.innerHeight / BASE_H
+    );
+    canvas.width = BASE_W;  // Risoluzione fissa 800
+    canvas.height = BASE_H; // Risoluzione fissa 600
+    canvas.style.width = (BASE_W * scale) + "px";
+    canvas.style.height = (BASE_H * scale) + "px";
+    
+    // Niente ctx.setTransform(dpr...), usiamo il piano 1:1
+    ctx.setTransform(1, 0, 0, 1, 0, 0); 
+    
+    width = BASE_W;
+    height = BASE_H;
+
+    const h = window.innerHeight;
+    if (h < 700) {
+        document.getElementById('controls').style.paddingBottom = '40px';
+    }
 }
 resizeCanvas();
 window.addEventListener('resize', resizeCanvas);
@@ -1296,8 +1325,7 @@ function drawSpeedometer() {
 //RENDER!
 function render() {
     update();
-    drawSky(skyOffset);
-	
+	drawSky(skyOffset);
 	
 	let startPos = Math.floor(player.z / segL);
 	let camHeight = segments[startPos % segments.length].p1.world.y + camH;
