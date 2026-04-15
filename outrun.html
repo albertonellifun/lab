@@ -234,12 +234,15 @@ let segments = [];
 //ocho ai dati in console -> ci piace quando s[0].y == s[last].y
 const SEGMENTS = 1257 * 2 + 486;//2514 + 486dx4 = 3000, numero intero
 const trackL = SEGMENTS * segL;
+//per la hitbox
 const SPRITE_CONFIG = {
-    tree:         { width: 0.20 },//
-    billboard:    { width: 0.25 },//
+    tree:         { width: 0.10 },//
+    billboard:    { width: 0.75 },//
+	signlow:      { width: 0.25 },//
+	signhigh:     { width: 0.25 },//
     cone:         { width: 0.15 },//
     bush:         { width: 0.40 },//
-    trafficlight: { width: 0.15 },//
+    trafficlight: { width: 0.10 },//
     oil:          { width: 0.40 },//
     start:        { width: 0   }
 };
@@ -261,28 +264,35 @@ function addSegment(idx, curve, y) {
 		
         if (idx === START_IDX) type = 'start';
         else if (idx > 200 && idx < 400) type = 'tree';
-        else if (idx > 600 && idx < 800) type = 'billboard';
+        else if (idx > 600 && idx < 800) type = 'signlow';
 		else if (idx > 900 && idx < 1000) type = 'cone';
 		else if (idx > 1200 && idx < 1500) type = 'bush';
-		else if (idx > 2000 && idx < 2100) type = 'trafficlight';
+		else if (idx > 2000 && idx < 2200) type = 'signhigh';
+		else if (idx > 2500 && idx < 2600) type = 'trafficlight';
         else {
 			const r = Math.random();
-			if (r < 0.15) type = 'tree';
-			else if (r < 0.30) type = 'billboard';
-			else if (r < 0.45) type = 'cone';
-			else if (r < 0.60) type = 'bush';
-			else if (r < 0.75) type = 'trafficlight';
-			else type = 'oil';
+			if (r < 0.10) type = 'tree';
+			else if (r < 0.50) type = 'bush';
+			else if (r < 0.75) type = 'billboard';
+			else if (r < 0.92) type = 'oil';
+			else if (r < 0.94) type = 'signlow';
+			else if (r < 0.96) type = 'cone';
+			else if (r < 0.98) type = 'trafficlight';
+			else type = 'signhigh';
 		}
 
         if (type === 'billboard') {
-            //cartelloni piu vicini al bordo, esterni alle curve
+            //cartelloni piu vicini lontani dal bordo, esterni alle curve
+            if (curve > 0) position = -1.6;
+            else position = 1.6;
+        } else if (type === 'signlow' || type === 'signhigh') {
+			//cartelloni stradali piu vicini al bordo, esterni alle curve
             if (curve > 0) position = -1.3;
             else position = 1.3;
-        } else if (type === 'start') {
+		} else if (type === 'start') {
             position = -1.6;//start piu lontano
         } else if (type === 'cone') {
-		    position = idx % 4 === 0 ? -1.1 : 1.1; //lato alternato
+		    position = idx % 4 === 0 ? -0.9 : 0.9; //lato alternato
 		} else if (type === 'trafficlight') {
 			position = idx % 4 === 0 ? -1.2 : 1.2; //lato alternato
 		} else if (type === 'bush') {
@@ -316,7 +326,8 @@ function addSegment(idx, curve, y) {
 }
 
 function initPalette() {
-	if (Math.random() > 0.5) {
+	//ogni secondo switcha
+	if (((Date.now()/1000)|0) % 2) {
 		gamePalette = {
 			skyLight:'#8ae',	
 			skyDark:'#68e', 
@@ -751,7 +762,7 @@ function drawSprite(sprite, p) {
 		ctx.arc(cx+1, top + boxH * 0.8, lightRadius * 0.8, 0, Math.PI * 2);
 		ctx.fillStyle = '#0e0';
 		ctx.fill();
-	} else {
+	} else if (sprite.type === 'signlow') {
         //ombra
         ctx.fillStyle = 'rgba(0,0,0,0.5)';
         ctx.beginPath();
@@ -789,7 +800,74 @@ function drawSprite(sprite, p) {
         ctx.closePath();
         ctx.fill();
         ctx.stroke();
-    }
+    } else if (sprite.type === 'signhigh') {
+	    //ombra
+        ctx.fillStyle = 'rgba(0,0,0,0.5)';
+        ctx.beginPath();
+        ctx.ellipse(x, y, radius * 1.5, radius * 0.15, 0, 0, Math.PI * 2);
+        ctx.fill();
+		
+		//palo
+		ctx.fillStyle = '#444';
+		ctx.fillRect(x - w * 0.05, y - h * 2.1, w * 0.1, h * 2.1);
+
+        //cartellone
+        ctx.fillStyle = '#000';
+        ctx.fillRect(x - w * 0.5, y - h*2, w, h);
+        ctx.strokeStyle = '#000';
+        ctx.strokeRect(x - w * 0.5, y - h*2, w, h);
+
+        //freccione rosso
+        if (sprite.x <= 0) {
+            ctx.fillStyle = '#ff0';
+            ctx.strokeStyle = '#bb0';
+            ctx.beginPath();
+            ctx.moveTo(x - w * 0.5 + 2, y - h*2 + 2); //alto sx
+            ctx.lineTo(x - w * 0, y - h*2 + 2); //alto dx
+            ctx.lineTo(x + w * 0.5 - 2, y - h*1.5); //mezzo dx
+            ctx.lineTo(x - w * 0, y - h - 2); //basso dx
+            ctx.lineTo(x - w * 0.5 + 2, y - h - 2); //basso sx
+            ctx.lineTo(x - w * 0 - 2, y - h*1.5); //mezzo sx
+        } else {
+            ctx.fillStyle = '#ff0';
+            ctx.strokeStyle = '#bb0';
+            ctx.beginPath();
+            ctx.moveTo(x + w * 0.5 - 2, y - h*2 + 2); //alto dx
+            ctx.lineTo(x + w * 0, y - h*2 + 2); //alto sx
+            ctx.lineTo(x - w * 0.5 + 2, y - h*1.5); //mezzo sx
+            ctx.lineTo(x + w * 0, y - h - 2); //basso sx
+            ctx.lineTo(x + w * 0.5 - 2, y - h - 2); //basso dx
+            ctx.lineTo(x + w * 0 + 2, y - h*1.5); //mezzo sx
+        }
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+	} else {
+		//billboard
+		//ombra
+        ctx.fillStyle = 'rgba(0,0,0,0.5)';
+        ctx.beginPath();
+        ctx.ellipse(x, y, radius * 4, radius * 0.15, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        //cartellone
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(x - w*2, y - h, w * 4, h);
+        ctx.strokeStyle = '#000';
+        ctx.strokeRect(x - w*2, y - h, w * 4, h);
+        
+		ctx.fillStyle = '#f00';
+        ctx.strokeStyle = '#b00';
+        ctx.beginPath();
+        ctx.moveTo(x + w * 2 - 2, y - h + 2); //alto dx
+        ctx.lineTo(x + w * 1, y - h + 2); //alto sx
+        ctx.lineTo(x - w * 2 + 2, y - 2); //basso sx
+        ctx.lineTo(x - w * 1, y - 2); //basso dx
+        ctx.lineTo(x + w * 2 - 2, y - h + 2); //alto dx
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+	}
 }
 
 //un rettangolo rosso -> testarossa di alb spettacolare anche senza biondona al seguito
@@ -1144,10 +1222,7 @@ function render() {
             let segDist = n - startPos;
             if (segDist > 5 && segDist < 20 && player.state === 'ALIVE' && s.sprite.type !== 'oil') {
 				
-				/*
-                console.log(`segDist=${segDist}  seg=${n}  playerX=${player.x.toFixed(2)}  spriteX=${s.sprite.x}  dist=${Math.abs(player.x - s.sprite.x).toFixed(2)}`);
-
-				// DEBUG HITBOX SPRITE
+				/*// DEBUG HITBOX SPRITE
 				ctx.strokeStyle = '#0f0';
 				ctx.strokeRect(
 					s.p1.screen.x + (s.sprite.x * s.p1.screen.w) - (s.sprite.width * 0.5 * s.p1.screen.w),
@@ -1159,21 +1234,19 @@ function render() {
 				//DEBUG HITBOX FERRARI
 				ctx.strokeStyle = '#ff0';
 				ctx.strokeRect(
-					s.p1.screen.x + (player.x * s.p1.screen.w) - (0.25 * 0.5 * s.p1.screen.w),
+					s.p1.screen.x + (player.x * s.p1.screen.w) - (0.2 * 0.5 * s.p1.screen.w),
 					s.p1.screen.y - 10,
-					(0.25) * s.p1.screen.w,
+					(0.2) * s.p1.screen.w,
 					10
-				);
-				*/
+				);*/
 				
-                let spriteHalfW = s.sprite.width * 0.5 * s.p1.screen.scale;
-				let carHalfW = 0.25;//larga ~0.3 unità, centrata su playerX
+                let spriteHalfW = s.sprite.width * 0.5;// * s.p1.screen.scale;
+				let carHalfW = 0.1;//larga ~0.3 unità, centrata su playerX
 				let overlap = Math.abs(player.x - s.sprite.x) < (spriteHalfW + carHalfW);
 				
-				if (overlap && segDist < 10) {
-					console.log(overlap);
+				if (overlap && segDist === 8) {
+					console.log(`overlap=${overlap}  segDist=${segDist}  seg=${n}  playerX=${player.x.toFixed(2)}|${carHalfW}  spriteX=${s.sprite.x}|${spriteHalfW}  dist=${Math.abs(player.x - s.sprite.x).toFixed(2)}`);
                     player.state = 'CRASHED';
-                    //player.speed = 150;
                 }
             }
         }
