@@ -168,6 +168,8 @@ const keys = { left: 0, right: 0, up: 0, down: 0 };
 
 const START_IDX = 15;//dove e' visivamente il traguardo "alto"
 
+
+
 //AUDIO BRUM BRUM!
 let gear = 1;
 let rpm = 0.5;
@@ -234,6 +236,19 @@ let segments = [];
 //ocho ai dati in console -> ci piace quando s[0].y == s[last].y
 const SEGMENTS = 1257 * 2 + 486;//2514 + 486dx4 = 3000, numero intero
 const trackL = SEGMENTS * segL;
+
+//JOHNNY, IL PROBLEMA DELLA SICILIA E' IL... TRAFFICO!!!
+const CAR_COLORS = ['#0f0', '#00f', '#ff0', '#0ff', '#f0f', '#fff', '#999', '#000'];
+
+const trafficCars = Array.from({ length: 15 }, (_, i) => ({
+    x: (i % 3 === 0) ? -0.35 : (i % 3 === 1) ? 0 : 0.35,
+    z: (i + 1) * (trackL / 15),     // distribuite lungo la pista
+    speed: 30 + Math.random() * 40, // 30-70, molto più lente della Ferrari
+    color: CAR_COLORS[i%CAR_COLORS.length]
+}));
+
+
+
 //per la hitbox
 const SPRITE_CONFIG = {
     tree:         { width: 0.10 },//
@@ -585,6 +600,12 @@ function update() {
     document.getElementById('gear').innerText = gear;
     document.getElementById('dist').innerText = player.z | 0;
 	document.getElementById('rpm').innerText = rpmTarget.toFixed(2);
+	
+	
+	//aggiorno anche il traffico!
+	for (let car of trafficCars) {
+		car.z = (car.z + car.speed + trackL) % trackL;
+	}
 }
 
 //ai bordi -> alberi o cartelloni
@@ -942,105 +963,121 @@ function drawSprite(sprite, p) {
 	}
 }
 
-//un rettangolo rosso -> testarossa di alb spettacolare anche senza biondona al seguito
-function drawFerrari(cx, cy, w) {
-    let bounce = (Math.random() * 2) * (player.speed / player.maxSpeed);
+//anche l'ombra ha una sua dignita'
+function drawFerrariShadow(cx, cy, w) {
+	let s = w / 120;//scalato a 120px
+	//ombra
+    ctx.fillStyle = 'rgba(0,0,0,0.5)';
+	//ctx.fillRect(cx - w / 2 - 4, cy + 10, w + 8, 36);//rettangolone non ci piace
+	ctx.beginPath();
+	ctx.moveTo(cx - 60 * s + 6 * s, cy +  2 * s);
+	ctx.lineTo(cx - 60 * s - 4 * s, cy + 48 * s);
+	ctx.lineTo(cx + 60 * s + 4 * s, cy + 48 * s);
+	ctx.lineTo(cx + 60 * s - 6 * s, cy +  2 * s);
+	ctx.closePath();
+	ctx.fill();	
 
+}
+//un rettangolo rosso -> testarossa di alb spettacolare anche senza biondona al seguito
+function drawFerrari(cx, cy, w, colDark, colLight) {
+    let s = w / 120;//scalato a 120px
+	let bounce = (Math.random() * 2) * (player.speed / player.maxSpeed) * s;
+	
 	//gomme
     ctx.fillStyle = '#111';
-    ctx.fillRect(cx - CAR_WIDTH * 0.5, cy + 34 + bounce + player.tilt * 50, 30, 10);
-    ctx.fillRect(cx + CAR_WIDTH * 0.5, cy + 34 + bounce - player.tilt * 50, -30, 10);
+    ctx.fillRect(cx - 60 * s, cy + 34 * s + bounce + player.tilt * 50 * s, 30 * s, 10 * s);
+    ctx.fillRect(cx + 60 * s, cy + 34 * s + bounce - player.tilt * 50 * s, -30 * s, 10 * s);
 
     //corpo principale rosso ferrari scuro+chiaro
-    ctx.fillStyle = '#b00'; // Rosso scuro per i lati
-    ctx.fillRect(cx - w / 2, cy + bounce, w, 36);
-    ctx.fillStyle = '#f00'; // Rosso acceso sopra
-    ctx.fillRect(cx - w / 2 + 2, cy + bounce + 1, w - 4, 30);
+    ctx.fillStyle = colDark; // Rosso scuro per i lati
+    ctx.fillRect(cx - 60 * s, cy + bounce, 120 * s, 36 * s);
+    ctx.fillStyle = colLight; // Rosso acceso sopra
+    ctx.fillRect(cx - 60 * s + 2 * s, cy + bounce + 1 * s, 120 * s - 4 * s, 30 * s);
 
     //tetto rosso acceso
-    ctx.fillStyle = '#f00';
+    ctx.fillStyle = colLight;
     ctx.beginPath();
-    ctx.moveTo(cx - 40, cy + bounce);
-    ctx.lineTo(cx - 25, cy - 20 + bounce);
-    ctx.lineTo(cx + 25, cy - 20 + bounce);
-    ctx.lineTo(cx + 40, cy + bounce);
+    ctx.moveTo(cx - 40 * s, cy + bounce);//40
+    ctx.lineTo(cx - 25 * s, cy - 20 * s + bounce);//25,20
+    ctx.lineTo(cx + 25 * s, cy - 20 * s + bounce);
+    ctx.lineTo(cx + 40 * s, cy + bounce);
     ctx.fill();
     //lunotto nero
     ctx.fillStyle = '#111';
     ctx.beginPath();
-    ctx.moveTo(cx - 30, cy + bounce + 4);
-    ctx.lineTo(cx - 25, cy - 20 + bounce + 4);
-    ctx.lineTo(cx + 25, cy - 20 + bounce + 4);
-    ctx.lineTo(cx + 30, cy + bounce + 4);
+    ctx.moveTo(cx - 40 * s, cy + bounce + 4 * s);//40
+    ctx.lineTo(cx - 25 * s, cy - w/6 + bounce + 4 * s);//25,20
+    ctx.lineTo(cx + 25 * s, cy - w/6 + bounce + 4 * s);
+    ctx.lineTo(cx + 40 * s, cy + bounce + 4 * s);
     ctx.fill();
 
     //quadrozzo rosso sopra il motore
-    ctx.fillStyle = '#f00';
+    ctx.fillStyle = colLight;
     ctx.beginPath();
-    ctx.moveTo(cx - 15, cy + bounce - 2);
-    ctx.lineTo(cx - 20, cy + bounce + 3);
-    ctx.lineTo(cx + 20, cy + bounce + 3);
-    ctx.lineTo(cx + 15, cy + bounce - 2);
+    ctx.moveTo(cx - 15 * s, cy + bounce - 2 * s);//15
+    ctx.lineTo(cx - 20 * s, cy + bounce + 3 * s);
+    ctx.lineTo(cx + 20 * s, cy + bounce + 3 * s);
+    ctx.lineTo(cx + 15 * s, cy + bounce - 2 * s);
     ctx.fill();
 
     //specchietti
-    ctx.fillStyle = '#f00';
+    ctx.fillStyle = colLight;
     ctx.beginPath();
-    ctx.ellipse(cx - 42, cy + bounce - 8, 5, 3, 0, 0, 6.28);
+    ctx.ellipse(cx - 40 * s - 2 * s, cy + bounce - 8 * s, 5 * s, 3 * s, 0, 0, 6.28);
     ctx.fill();
     ctx.beginPath();
-    ctx.ellipse(cx + 42, cy + bounce - 8, 5, 3, 0, 0, 6.28);
+    ctx.ellipse(cx + 40 * s + 2 * s, cy + bounce - 8 * s, 5 * s, 3 * s, 0, 0, 6.28);
     ctx.fill();
     ctx.fillStyle = '#ddd';
     ctx.beginPath();
-    ctx.ellipse(cx - 41, cy + bounce - 8, 4, 2.5, 0, 0, 6.28);
+    ctx.ellipse(cx - 40 * s - 1 * s, cy + bounce - 8 * s, 4 * s, 2.5 * s, 0, 0, 6.28);
     ctx.fill();
     ctx.beginPath();
-    ctx.ellipse(cx + 41, cy + bounce - 8, 4, 2.5, 0, 0, 6.28);
+    ctx.ellipse(cx + 40 * s + 1 * s, cy + bounce - 8 * s, 4 * s, 2.5 * s, 0, 0, 6.28);
     ctx.fill();
 
     //base griglia nera
     ctx.fillStyle = '#000';
-    ctx.fillRect(cx - w / 2 + 5, cy + 10 + bounce, w - 10, 16);
+    ctx.fillRect(cx - 60 * s + 5 * s, cy + 10 * s + bounce, 120 * s - 10 * s, 16 * s);
 
     //fari posteriori
     ctx.fillStyle = '#500'; //rosso sotto
-    ctx.fillRect(cx - w / 2 + 10, cy + 16 + bounce, 20, 6);
-    ctx.fillRect(cx + w / 2 - 30, cy + 16 + bounce, 20, 6);
+    ctx.fillRect(cx - 60 * s + 10 * s, cy + 16 * s + bounce, 20 * s, 6 * s);
+    ctx.fillRect(cx + 60 * s - 30 * s, cy + 16 * s + bounce, 20 * s, 6 * s);
     ctx.fillStyle = '#f80'; //freccia gialla
-    ctx.fillRect(cx - w / 2 + 10, cy + 12 + bounce, 20, 4);
-    ctx.fillRect(cx + w / 2 - 30, cy + 12 + bounce, 20, 4);
+    ctx.fillRect(cx - 60 * s + 10 * s, cy + 12 * s + bounce, 20 * s, 4 * s);
+    ctx.fillRect(cx + 60 * s - 30 * s, cy + 12 * s + bounce, 20 * s, 4 * s);
     ctx.fillStyle = '#eee'; //bianco retro
-    ctx.fillRect(cx - w / 2 + 30, cy + 12 + bounce, 5, 10);
-    ctx.fillRect(cx + w / 2 - 35, cy + 12 + bounce, 5, 10);
+    ctx.fillRect(cx - 60 * s + 30 * s, cy + 12 * s + bounce, 5 * s, 10 * s);
+    ctx.fillRect(cx + 60 * s - 35 * s, cy + 12 * s + bounce, 5 * s, 10 * s);
 
     //linee orizzontali sopra i fari
     ctx.strokeStyle = '#111';
     ctx.lineWidth = 1;
     for (let i = 0; i < 5; i++) {
         ctx.beginPath();
-        ctx.moveTo(cx - w / 2 + 5, cy + 12 + (i * 3) + bounce);
-        ctx.lineTo(cx + w / 2 - 5, cy + 12 + (i * 3) + bounce);
+        ctx.moveTo(cx - 60 * s + 5 * s, cy + 12 * s + (i * 3) * s + bounce);
+        ctx.lineTo(cx + 60 * s - 5 * s, cy + 12 * s + (i * 3) * s + bounce);
         ctx.stroke();
     }
 
     //targa
     ctx.fillStyle = '#fff';
-    ctx.fillRect(cx - 15, cy + 28 + bounce, 30, 6);
+    ctx.fillRect(cx - 15 * s, cy + 28 * s + bounce, 30 * s, 6 * s);
 
     //stemma
     ctx.fillStyle = '#ccc';
-    ctx.fillRect(cx - 3, cy + 15 + bounce, 6, 6);
+    ctx.fillRect(cx - 3 * s, cy + 15 * s + bounce, 6 * s, 6 * s);
     ctx.fillStyle = '#fff';
-    ctx.fillRect(cx - 2, cy + 16 + bounce, 4, 4);
+    ctx.fillRect(cx - 2 * s, cy + 16 * s + bounce, 4 * s, 4 * s);
 
     //cannoni
     ctx.fillStyle = '#000';
-    ctx.fillRect(cx - 35, cy + 32 + bounce, 15, 6);
-    ctx.fillRect(cx + 35, cy + 32 + bounce, -15, 6);
+    ctx.fillRect(cx - 30 * s - 5 * s, cy + 32 * s + bounce,  15 * s, 6 * s);
+    ctx.fillRect(cx + 30 * s + 5 * s, cy + 32 * s + bounce, -15 * s, 6 * s);
     ctx.strokeStyle = '#ccc';
-    ctx.strokeRect(cx - 35, cy + 32 + bounce, 15, 6);
-    ctx.strokeRect(cx + 35, cy + 32 + bounce, -15, 6);
+    ctx.strokeRect(cx - 30 * s - 5 * s, cy + 32 * s + bounce,  15 * s, 6 * s);
+    ctx.strokeRect(cx + 30 * s + 5 * s, cy + 32 * s + bounce, -15 * s, 6 * s);
 }
 
 function drawCar() {
@@ -1049,17 +1086,8 @@ function drawCar() {
     let cy = height - 70;
     let w = CAR_WIDTH; //TESTAROSSA E' LARGA!!!
 
-	//ombra
-    ctx.fillStyle = 'rgba(0,0,0,0.5)';
-	//ctx.fillRect(cx - w / 2 - 4, cy + 10, w + 8, 36);//rettangolone non ci piace
-	ctx.beginPath();
-	ctx.moveTo(cx - w / 2 + 6, cy + 2);
-	ctx.lineTo(cx - w / 2 - 4, cy + 48);
-	ctx.lineTo(cx + w / 2 + 4, cy + 48);
-	ctx.lineTo(cx + w / 2 - 6, cy + 2);
-	ctx.closePath();
-	ctx.fill();	
-
+	drawFerrariShadow(cx, cy, w);
+	
     ctx.translate(cx, cy);
 
     if (player.state === 'CRASHED') {
@@ -1068,7 +1096,7 @@ function drawCar() {
 		ctx.rotate(player.tilt);
 	}        
 
-    drawFerrari(0, 0, w);
+    drawFerrari(0, 0, w, '#b00', '#f00');
 
     ctx.restore();
 }
@@ -1251,6 +1279,7 @@ function drawSpeedometer() {
 }
 
 
+
 //RENDER!
 function render() {
     update();
@@ -1323,6 +1352,74 @@ function render() {
             }
         }
     }
+	
+	//traffico!
+	const visibleCars = trafficCars
+    .map(car => {
+        let rz = car.z - player.z;
+        if (rz < 0) rz += trackL;
+        return { car, rz };
+    })
+    .filter(({ rz }) => rz < segL * drawDistance)
+    .sort((a, b) => b.rz - a.rz);
+	
+	for (let { car, rz } of visibleCars) {
+
+		let z = rz;
+
+		let segIndex = Math.floor(z / segL);
+		let frac = (z % segL) / segL;
+
+		let baseIndex = (startPos + segIndex) % segments.length;
+
+		let lookAhead = 4;
+
+		let s0 = segments[baseIndex];
+		let s1 = segments[(baseIndex + lookAhead) % segments.length];
+
+		// interp attuale
+		let baseX0 = s0.p1.screen.x + (s0.p2.screen.x - s0.p1.screen.x) * frac;
+		let baseW0 = s0.p1.screen.w + (s0.p2.screen.w - s0.p1.screen.w) * frac;
+		let baseY0 = s0.p1.screen.y + (s0.p2.screen.y - s0.p1.screen.y) * frac;
+
+		// interp futura (smooth)
+		let baseX1 = s1.p1.screen.x + (s1.p2.screen.x - s1.p1.screen.x) * frac;
+		let baseW1 = s1.p1.screen.w + (s1.p2.screen.w - s1.p1.screen.w) * frac;
+		let baseY1 = s1.p1.screen.y + (s1.p2.screen.y - s1.p1.screen.y) * frac;
+
+		let t = 0.25;
+
+		let baseX = baseX0 * (1 - t) + baseX1 * t;
+		let baseW = baseW0 * (1 - t) + baseW1 * t;
+		let screenY = baseY0 * (1 - t) + baseY1 * t;
+
+		let screenX = baseX + car.x * baseW;
+
+		let scale = s0.p1.screen.scale + (s0.p2.screen.scale - s0.p1.screen.scale) * frac;
+
+		let carW = scale * roadW * width * 0.1;
+		let carH = carW * 0.5;
+
+		drawFerrariShadow(screenX, screenY, carW * 1.33);
+		drawFerrari(screenX, screenY, carW * 1.33, '#bbb', car.color);//disegnate appena piu grandi
+				
+		if (player.state === 'ALIVE') {
+			let playerX = width / 2;
+			let playerY = height - 70;
+			let playerW = CAR_WIDTH;
+			let playerH = 40;
+
+			let overlapX = Math.abs(screenX - playerX) < (carW * 0.4 + playerW * 0.4);
+			let overlapY = Math.abs(screenY - playerY) < (carH * 0.4 + playerH * 0.4);
+
+			// opzionale: solo quando è vicino visivamente
+			if (screenY > height - 120 && overlapX && overlapY) {
+				player.state = 'CRASHED';
+			}
+		}
+	}
+
+	
 
     // Player Car
     drawCar();
