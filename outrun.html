@@ -15,56 +15,45 @@
             touch-action: none; /* blocca scroll/zoom con dita */
         }
         #wrapper {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            width: 100vw;
-            height: 100vh;
-			height: 100dvh; /* fix redmi? */
-            position: relative;
-        }
-        canvas {
-            display: block;
-            image-rendering: pixelated;
-            border: 4px solid #222;
-        }
-        #hud {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            color: #fff;
-            font-family: 'Courier New', monospace;
-            font-size: 18px;
-            text-shadow: 2px 2px #000;
-            pointer-events: none;
-            z-index: 10;
-        }
-        #hud p { margin: 2px 0; }
+			position: fixed;
+			inset: 0;
+			width: 100vw;
+			height: 100vh;
+			overflow: hidden;
+		}
+		canvas {
+			position: absolute;
+			left: 50%;
+			top: 50%;
+			transform: translate(-50%, -50%);
+			border: none;
+		}
 
         /* ====== CONTROLLI TOUCH ====== */
         #controls {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 140px;
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-end;
-            padding: 12px 16px;
-            pointer-events: none;
-            z-index: 20;
-        }
+			position: absolute;
+			inset: 0;
+			width: 100%;
+			height: 100%;
+			display: flex;
+			justify-content: space-between;
+			align-items: flex-end;
+			padding: 12px;
+			pointer-events: none;
+			z-index: 40;
+		}
         .ctrl-group {
-            display: flex;
-            gap: 24px;
-            pointer-events: all;
-        }
+			display: flex;
+			gap: 20px;
+			pointer-events: all;
+			margin-bottom: 10px;
+		}
         .btn {
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
+            width: 20vw;
+			height: 20vw;
+			max-width: 120px;
+            max-height: 120px;
+			border-radius: 50%;
             border: 3px solid rgba(255,255,255,0.5);
             background: rgba(255,255,255,0.15);
             color: #fff;
@@ -78,6 +67,7 @@
             transition: background 0.1s;
             /* touch highlight disabilitato */
             -webkit-tap-highlight-color: transparent;
+			filter: opacity(0.25);
         }
         .btn:active, .btn.pressed {
             background: rgba(255,255,255,0.4);
@@ -94,12 +84,6 @@
 </head>
 <body>
 <div id="wrapper">
-    <div id="hud">
-        <p>SPEED: <span id="spd">0</span></p>
-        <p>GEAR: <span id="gear">0</span></p>
-        <p>DIST: <span id="dist">0</span></p>
-		<p>RPM: <span id="rpm">0</span></p>
-    </div>
     <canvas id="g"></canvas>
 
     <!-- Controlli touch on-screen -->
@@ -119,26 +103,29 @@
 const canvas = document.getElementById('g');
 const ctx = canvas.getContext('2d');
 
-// --- CANVAS RESPONSIVE ---
-// Mantieni proporzioni 4:3 e riempi lo schermo (lasciando spazio ai controlli)
 const BASE_W = 800;
 const BASE_H = 600;
 
+let width = BASE_W;
+let height = BASE_H;
+
 function resizeCanvas() {
-    const controlsH = 140; // altezza area controlli
-    const availW = window.innerWidth;
-    const availH = window.innerHeight - controlsH;
-    const scale = Math.min(availW / BASE_W, availH / BASE_H);
-    canvas.style.width  = Math.floor(BASE_W * scale) + 'px';
-    canvas.style.height = Math.floor(BASE_H * scale) + 'px';
+    const dpr = window.devicePixelRatio || 1;
+    const scale = Math.min(
+        window.innerWidth / BASE_W,
+        window.innerHeight / BASE_H
+    );
+    canvas.width = BASE_W * dpr;
+    canvas.height = BASE_H * dpr;
+    canvas.style.width = (BASE_W * scale) + "px";
+    canvas.style.height = (BASE_H * scale) + "px";
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    width = BASE_W;
+    height = BASE_H;
 }
-canvas.width  = BASE_W;
-canvas.height = BASE_H;
 resizeCanvas();
 window.addEventListener('resize', resizeCanvas);
 
-const width  = BASE_W;
-const height = BASE_H;
 
 // --- SETTINGS ---
 let roadW = 2000;
@@ -288,7 +275,7 @@ function addSegment(idx, curve, y) {
 			(idx > 2500 && idx < 2700) || //palme ogni 4 seg
 			(idx > 2800 && idx < 2900) //semafori ogni 4 seg
 			|| Math.random() > 0.75
-		) ){
+		) ) ){
         //crea oggetto a bordo strada
 		let type = '';
         let position = 0;
@@ -330,7 +317,7 @@ function addSegment(idx, curve, y) {
 		} else if (type === 'bush') {
 			position = idx % 8 === 0 ? -1.4 : 1.4; //cespuglio alternato
 		} else if (type === 'oil') {
-			position = idx % 2 === 0 ? -0.5 : 0.5;//olio alternato
+			position = idx % 8 === 0 ? -0.5 : 0.5;//olio alternato
 		} else if (type === 'palm' || type === 'tree') {
             position = idx % 8 === 0 ? -1.6 : 1.6; //albero/palma lato alternato
         }
@@ -358,7 +345,8 @@ function addSegment(idx, curve, y) {
 
 function initPalette() {
 	//ogni secondo switcha
-	if (((Date.now()/1000)|0) % 2) {
+	let currentPalette = ((Date.now()/1000)|0) % 3;
+	if (currentPalette === 2) {
 		gamePalette = {
 			skyLight:'#8ae',	
 			skyDark:'#68e', 
@@ -373,9 +361,24 @@ function initPalette() {
 			rumbleLight: '#963',//cordolo marroncino
 			bushDark: '#a84',//anche erba marroncina
 			bushLight: '#ca6',//palme marroncine
-			};
-	}
-	else { 
+		};
+	} else if (currentPalette === 1) {
+		gamePalette = {
+			skyLight: '#d7f0ff',   // cielo chiaro ghiacciato
+			skyDark:  '#6aaed6',   // blu freddo
+			mountainsLight: '#e6eef5', // neve lontana
+			mountainsDark:  '#9fb3c8', // montagne fredde
+			terrain: '#e8f2fb', // neve generale
+			roadDark: '#3a3f46', // asfalto freddo
+			roadLight:'#4a5058',
+			grassDark: '#dfe9f2', // neve sporca
+			grassLight:'#f5fbff',
+			rumbleDark: '#ffffff', // bordo neve
+			rumbleLight:'#cfd8e3', // ghiaccio/grigio
+			bushDark: '#cfdbe6', // cespugli ghiacciati
+			bushLight:'#e9f3fb', // palme glacier
+		};
+	} else {
 		gamePalette = { 
 			skyLight:'#8cf',	
 			skyDark:'#05f',
@@ -390,7 +393,7 @@ function initPalette() {
 			rumbleLight: '#f00',//cordolo bianco/rosso
 			bushDark: '#161',
 			bushLight: '#272',
-			};
+		};
 	}
 }
 
@@ -612,12 +615,6 @@ function update() {
     let cur = segments[Math.floor(player.z / segL) % segments.length];
     skyOffset += cur.curve * normalizedSpeed * 10;
 
-    document.getElementById('spd').innerText = player.speed | 0;
-    document.getElementById('gear').innerText = gear;
-    document.getElementById('dist').innerText = player.z | 0;
-	document.getElementById('rpm').innerText = rpmTarget.toFixed(2);
-	
-	
 	//aggiorno anche il traffico!
 	for (let car of trafficCars) {
 		car.z = (car.z + car.speed + trackL) % trackL;
