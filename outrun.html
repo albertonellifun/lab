@@ -132,21 +132,6 @@ const BASE_H = 600;
 let width = BASE_W;
 let height = BASE_H;
 
-/*
-function resizeCanvas() {
-    const dpr = window.devicePixelRatio || 1;
-    const scale = Math.min(
-        window.innerWidth / BASE_W,
-        window.innerHeight / BASE_H
-    );
-    canvas.width = BASE_W * dpr;
-    canvas.height = BASE_H * dpr;
-    canvas.style.width = (BASE_W * scale) + "px";
-    canvas.style.height = (BASE_H * scale) + "px";
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    width = BASE_W;
-    height = BASE_H;
-}*/
 function resizeCanvas() {
     // Rimuoviamo il DPR (devicePixelRatio) per non sovraccaricare la GPU
     const scale = Math.min(
@@ -297,6 +282,9 @@ const SPRITE_CONFIG = {
     bush:         { width: 0.40 },//
     trafficlight: { width: 0.10 },//
     oil:          { width: 0.40 },//
+	rock:         { width: 0.10 },//
+	rock2:        { width: 0.10 },//
+	water:        { width: 0.30 },
     start:        { width: 0   }
 };
 
@@ -328,10 +316,13 @@ function addSegment(idx, curve, y) {
 		else if (idx > 2800 && idx < 2850) type = 'trafficlight';
         else {
 			const r = Math.random();
-			if (r < 0.10) type = 'tree';
-			else if (r < 0.50) type = 'bush';
-			else if (r < 0.75) type = 'billboard';
-			else if (r < 0.92) type = 'oil';
+			if (r < 0.15) type = 'tree';
+			else if (r < 0.30) type = 'bush';
+			else if (r < 0.45) type = 'rock';
+			else if (r < 0.60) type = 'rock2';
+			else if (r < 0.75) type = 'water';
+			else if (r < 0.90) type = 'oil';
+			else if (r < 0.92) type = 'billboard';
 			else if (r < 0.94) type = 'signlow';
 			else if (r < 0.96) type = 'cone';
 			else if (r < 0.98) type = 'trafficlight';
@@ -354,11 +345,13 @@ function addSegment(idx, curve, y) {
 			position = idx % 8 === 0 ? -1.2 : 1.2; //semaforo alternato
 		} else if (type === 'bush') {
 			position = idx % 8 === 0 ? -1.4 : 1.4; //cespuglio alternato
-		} else if (type === 'oil') {
+		} else if (type === 'oil' || type === 'water') {
 			position = idx % 8 === 0 ? -0.5 : 0.5;//olio alternato
 		} else if (type === 'palm' || type === 'tree') {
             position = idx % 8 === 0 ? -1.6 : 1.6; //albero/palma lato alternato
-        }
+        } else if (type === 'rock' || type === 'rock2') {
+			position = Math.random() > 0.5 ? 2.2 - Math.random() : -2.2 + Math.random();//roccia esterna (-2..-1 o 1..2)
+		}
 
         sprite = {
             x: position,
@@ -986,7 +979,62 @@ function drawSprite(sprite, p) {
 		}
 
 		ctx.lineWidth = 1; // reset
-	} else {
+	} else if (sprite.type === 'rock') {
+		// ombra
+		ctx.fillStyle = 'rgba(0,0,0,0.5)';
+		ctx.beginPath();
+		ctx.ellipse(x, y, radius * 1.2, radius * 0.2, 0, 0, Math.PI * 2);
+		ctx.fill();
+
+		// corpo roccia: un poligono irregolare
+		ctx.fillStyle = '#876';
+		ctx.beginPath();
+		ctx.moveTo(x - w * 0.5,  y);
+		ctx.lineTo(x - w * 0.4,  y - h * 0.3);
+		ctx.lineTo(x - w * 0.1,  y - h * 0.4);
+		ctx.lineTo(x + w * 0.2,  y - h * 0.4);
+		ctx.lineTo(x + w * 0.5,  y - h * 0.3);
+		ctx.lineTo(x + w * 0.45, y - h * 0.2);
+		ctx.lineTo(x + w * 0.5,  y);
+		ctx.closePath();
+		ctx.fill();
+
+		// lato in ombra (scuro)
+		ctx.fillStyle = '#543';
+		ctx.beginPath();
+		ctx.moveTo(x - w * 0.4,  y - h * 0.3);
+		ctx.lineTo(x + w * 0.1,  y - h * 0.2);
+		ctx.lineTo(x + w * 0.45, y - h * 0.1);
+		ctx.lineTo(x + w * 0.5,  y - h * 0.3);
+		ctx.lineTo(x + w * 0.2,  y - h * 0.5);
+		ctx.lineTo(x - w * 0.1,  y - h * 0.4);
+		ctx.closePath();
+		ctx.fill();
+
+		// luce (faccia in alto a sinistra)
+		ctx.fillStyle = '#a98';
+		ctx.beginPath();
+		ctx.moveTo(x - w * 0.1,  y - h * 0.4);
+		ctx.lineTo(x + w * 0.2,  y - h * 0.5);
+		ctx.lineTo(x + w * 0.1,  y - h * 0.3);
+		ctx.lineTo(x - w * 0.15, y - h * 0.4);
+		ctx.closePath();
+		ctx.fill();
+
+		// spigolo scuro
+		ctx.strokeStyle = '#321';
+		ctx.lineWidth = 1;
+		ctx.beginPath();
+		ctx.moveTo(x - w * 0.5,  y);
+		ctx.lineTo(x - w * 0.4,  y - h * 0.3);
+		ctx.lineTo(x - w * 0.1,  y - h * 0.4);
+		ctx.lineTo(x + w * 0.2,  y - h * 0.5);
+		ctx.lineTo(x + w * 0.5,  y - h * 0.3);
+		ctx.lineTo(x + w * 0.45, y - h * 0.2);
+		ctx.lineTo(x + w * 0.5,  y);
+		ctx.stroke();
+		ctx.lineWidth = 1;
+	} else if (sprite.type === 'billboard') {
 		//billboard
 		//ombra
         ctx.fillStyle = 'rgba(0,0,0,0.5)';
@@ -1011,7 +1059,72 @@ function drawSprite(sprite, p) {
         ctx.closePath();
         ctx.fill();
         ctx.stroke();
-	}
+	} else if (sprite.type === 'rock2') {
+		// ombra
+		ctx.fillStyle = 'rgba(0,0,0,0.5)';
+		ctx.beginPath();
+		ctx.ellipse(x, y, radius * 1.4, radius * 0.22, 0, 0, Math.PI * 2);
+		ctx.fill();
+
+		// corpo principale (più frastagliato e basso)
+		ctx.fillStyle = '#766';
+		ctx.beginPath();
+		ctx.moveTo(x - w * 0.6,  y);
+		ctx.lineTo(x - w * 0.5,  y - h * 0.2);
+		ctx.lineTo(x - w * 0.3,  y - h * 0.45);
+		ctx.lineTo(x - w * 0.05, y - h * 0.5);
+		ctx.lineTo(x + w * 0.2,  y - h * 0.4);
+		ctx.lineTo(x + w * 0.45, y - h * 0.25);
+		ctx.lineTo(x + w * 0.6,  y);
+		ctx.closePath();
+		ctx.fill();
+
+		// faccia in ombra (destra)
+		ctx.fillStyle = '#544';
+		ctx.beginPath();
+		ctx.moveTo(x - w * 0.05, y - h * 0.5);
+		ctx.lineTo(x + w * 0.2,  y - h * 0.4);
+		ctx.lineTo(x + w * 0.45, y - h * 0.25);
+		ctx.lineTo(x + w * 0.6,  y);
+		ctx.lineTo(x + w * 0.1,  y - h * 0.1);
+		ctx.closePath();
+		ctx.fill();
+
+		// faccia illuminata (sinistra)
+		ctx.fillStyle = '#a98';
+		ctx.beginPath();
+		ctx.moveTo(x - w * 0.3,  y - h * 0.45);
+		ctx.lineTo(x - w * 0.05, y - h * 0.5);
+		ctx.lineTo(x - w * 0.15, y - h * 0.3);
+		ctx.lineTo(x - w * 0.4,  y - h * 0.25);
+		ctx.closePath();
+		ctx.fill();
+
+		// contorno spigoloso
+		ctx.strokeStyle = '#321';
+		ctx.lineWidth = 1;
+		ctx.beginPath();
+		ctx.moveTo(x - w * 0.6,  y);
+		ctx.lineTo(x - w * 0.5,  y - h * 0.2);
+		ctx.lineTo(x - w * 0.3,  y - h * 0.45);
+		ctx.lineTo(x - w * 0.05, y - h * 0.5);
+		ctx.lineTo(x + w * 0.2,  y - h * 0.4);
+		ctx.lineTo(x + w * 0.45, y - h * 0.25);
+		ctx.lineTo(x + w * 0.6,  y);
+		ctx.stroke();
+	} else if (sprite.type === 'water') {
+		// base acqua
+		ctx.fillStyle = '#3aa';
+		ctx.beginPath();
+		ctx.ellipse(x, y, radius * 2, radius * 0.22, 0, 0, Math.PI * 2);
+		ctx.fill();
+
+		// riflesso (highlight)
+		ctx.fillStyle = 'rgba(255,255,255,0.25)';
+		ctx.beginPath();
+		ctx.ellipse(x - radius * 0.5, y, radius, radius * 0.12, 0, 0, Math.PI * 2);
+		ctx.fill();
+	}	
 }
 
 //anche l'ombra ha una sua dignita'
@@ -1370,7 +1483,7 @@ function render() {
 
             // Collisione: segmento vicino + sovrapposizione X
             let segDist = n - startPos;
-            if (segDist > 5 && segDist < 20 && player.state === 'ALIVE' && s.sprite.type !== 'oil') {
+            if (segDist > 5 && segDist < 20 && player.state === 'ALIVE' && s.sprite.type !== 'oil' && s.sprite.type !== 'water') {
 				
 				/*// DEBUG HITBOX SPRITE
 				ctx.strokeStyle = '#0f0';
