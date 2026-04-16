@@ -93,11 +93,19 @@
 			z-index: 50;
 			pointer-events: none;
 		}
+		#btn-mute {
+		    background: rgba(60,255,60,0.25);
+            border-color: rgba(60,255,60,0.75);
+			position: absolute;
+			top: 20px;
+			left: 20px;
+        }
     </style>
 </head>
 <body>
 <div id="buildtime">__BUILD_TIME__</div>
 <div id="wrapper">
+	<button class="btn" id="btn-mute" onclick="isMute=!isMute">🔊</button>
     <canvas id="g"></canvas>
 
     <!-- Controlli touch on-screen -->
@@ -178,9 +186,12 @@ const keys = { left: 0, right: 0, up: 0, down: 0 };
 
 const START_IDX = 15;//dove e' visivamente il traguardo "alto"
 
+//amo le particelle -> la cpu mi odiera' per questo!
+const particles = [];
 
 
 //AUDIO BRUM BRUM!
+let isMute = false;
 let gear = 1;
 let rpm = 0.5;
 let rpmTarget = 0.5;
@@ -318,9 +329,9 @@ function addSegment(idx, curve, y) {
 			const r = Math.random();
 			if (r < 0.15) type = 'tree';
 			else if (r < 0.30) type = 'bush';
-			else if (r < 0.45) type = 'rock';
-			else if (r < 0.60) type = 'rock2';
-			else if (r < 0.75) type = 'water';
+			else if (r < 0.50) type = 'rock';
+			else if (r < 0.70) type = 'rock2';
+			else if (r < 0.80) type = 'water';
 			else if (r < 0.90) type = 'oil';
 			else if (r < 0.92) type = 'billboard';
 			else if (r < 0.94) type = 'signlow';
@@ -340,15 +351,15 @@ function addSegment(idx, curve, y) {
 		} else if (type === 'start') {
             position = -1.6;//start piu lontano
         } else if (type === 'cone') {
-		    position = idx % 8 === 0 ? -0.9 : 0.9; //cono alternato
+		    position = idx % 8 === 0 ? -0.9 : 0.9;//cono alternato
 		} else if (type === 'trafficlight') {
-			position = idx % 8 === 0 ? -1.2 : 1.2; //semaforo alternato
+			position = idx % 8 === 0 ? -1.2 : 1.2;//semaforo alternato
 		} else if (type === 'bush') {
-			position = idx % 8 === 0 ? -1.4 : 1.4; //cespuglio alternato
+			position = idx % 8 === 0 ? -1.4 : 1.4;//cespuglio alternato
 		} else if (type === 'oil' || type === 'water') {
-			position = idx % 8 === 0 ? -0.5 : 0.5;//olio alternato
+			position = 0.85 - Math.random() * 1.7;//olio random (-1..1)
 		} else if (type === 'palm' || type === 'tree') {
-            position = idx % 8 === 0 ? -1.6 : 1.6; //albero/palma lato alternato
+            position = idx % 8 === 0 ? -1.6 : 1.6;//albero/palma lato alternato
         } else if (type === 'rock' || type === 'rock2') {
 			position = Math.random() > 0.5 ? 2.2 - Math.random() : -2.2 + Math.random();//roccia esterna (-2..-1 o 1..2)
 		}
@@ -395,19 +406,19 @@ function initPalette() {
 		};
 	} else if (currentPalette === 1) {
 		gamePalette = {
-			skyLight: '#d7f0ff',   // cielo chiaro ghiacciato
-			skyDark:  '#6aaed6',   // blu freddo
-			mountainsLight: '#e6eef5', // neve lontana
-			mountainsDark:  '#9fb3c8', // montagne fredde
-			terrain: '#e8f2fb', // neve generale
-			roadDark: '#3a3f46', // asfalto freddo
-			roadLight:'#4a5058',
-			grassDark: '#dfe9f2', // neve sporca
-			grassLight:'#f5fbff',
-			rumbleDark: '#ffffff', // bordo neve
-			rumbleLight:'#cfd8e3', // ghiaccio/grigio
-			bushDark: '#cfdbe6', // cespugli ghiacciati
-			bushLight:'#e9f3fb', // palme glacier
+			skyLight: '#def',//cielo chiaro ghiacciato
+			skyDark:  '#6ad',//blu freddo
+			mountainsLight: '#eef',//montagne piccole
+			mountainsDark:  '#ccd',//montagne grosse
+			terrain: '#eef',//apparizione terreno
+			roadDark: '#666',//asfalto
+			roadLight:'#777',//asfalto
+			grassDark: '#eee',//neve
+			grassLight:'#fff',//neve
+			rumbleDark: '#fff',//cordolo
+			rumbleLight:'#ccc',//cordolo
+			bushDark: '#cde',//cespugli ghiacciati
+			bushLight:'#def',//palme glacier
 		};
 	} else {
 		gamePalette = { 
@@ -561,7 +572,11 @@ function update() {
         player.speed *= 0.95;
         crashTimer++;
 		
-        masterGain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.3);// Spegni il motore gradualmente
+		if (!isMute) {
+			masterGain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.3);// Spegni il motore gradualmente
+		} else {
+			masterGain.gain.setTargetAtTime(0, audioCtx.currentTime, 0);// Spegni il motore subito
+		}
 		
         if (player.speed < 1) {
             player.state = 'ALIVE';
@@ -581,12 +596,12 @@ function update() {
 		}
 
         if (keys.left) { 
-			player.x -= 0.05 * normalizedSpeed; 
+			player.x -= (particles.length  ? 0.03 : 0.05) * normalizedSpeed; 
 			
 			player.tilt += 0.01 * normalizedSpeed;
 			if (player.tilt < -0.03) player.tilt = -0.03; else if (player.tilt > 0.03) player.tilt = 0.03;
 		} else if (keys.right) { 
-			player.x += 0.05 * normalizedSpeed; 
+			player.x += (particles.length  ? 0.03 : 0.05) * normalizedSpeed; 
 			
 			player.tilt -= 0.01 * normalizedSpeed;
 			if (player.tilt < -0.03) player.tilt = -0.03; else if (player.tilt > 0.03) player.tilt = 0.03;
@@ -624,19 +639,24 @@ function update() {
         // RPM segue il target con inerzia — il drop/spike rimane udibile per ~0.3s
         rpm += (rpmTarget - rpm) * 0.08;
 
-        // Frequenza fondamentale
-        let gas = keys.up ? 1 : 0;
-        let baseFreq = (800 + rpm * 3200) / 60 * 4;
-        baseFreq *= (0.85 + gas * 0.15);
+		if (!isMute) {
+			// Frequenza fondamentale
+			let gas = keys.up ? 1 : 0;
+			let baseFreq = (800 + rpm * 3200) / 60 * 4;
+			baseFreq *= (0.85 + gas * 0.15);
 
-        osc1.frequency.setTargetAtTime(baseFreq, audioCtx.currentTime, 0.04);
-        osc2.frequency.setTargetAtTime(baseFreq * 2, audioCtx.currentTime, 0.04);
-        osc3.frequency.setTargetAtTime(baseFreq * 3, audioCtx.currentTime, 0.04);
+			osc1.frequency.setTargetAtTime(baseFreq, audioCtx.currentTime, 0.04);
+			osc2.frequency.setTargetAtTime(baseFreq * 2, audioCtx.currentTime, 0.04);
+			osc3.frequency.setTargetAtTime(baseFreq * 3, audioCtx.currentTime, 0.04);
 
-        engineFilter.frequency.setTargetAtTime(80 + gas * 600 + rpm * 400, audioCtx.currentTime, 0.06);
-        noiseGain.gain.setTargetAtTime(0.015 + gas * 0.05, audioCtx.currentTime, 0.05);
-        masterGain.gain.setTargetAtTime(player.speed > 3 ? (0.08 + gas * 0.05) : 0.03, audioCtx.currentTime, 0.1);
-    }
+			engineFilter.frequency.setTargetAtTime(80 + gas * 600 + rpm * 400, audioCtx.currentTime, 0.06);
+			noiseGain.gain.setTargetAtTime(0.015 + gas * 0.05, audioCtx.currentTime, 0.05);
+			masterGain.gain.setTargetAtTime(player.speed > 3 ? (0.08 + gas * 0.05) : 0.03, audioCtx.currentTime, 0.1);
+		} else {
+			masterGain.gain.setTargetAtTime(0, audioCtx.currentTime, 0);// Spegni il motore subito
+		}
+	}
+	
 	
     player.speed = Math.max(0, Math.min(player.speed, player.maxSpeed)); //inibisce la retro!
     player.z += player.speed;
@@ -1114,30 +1134,31 @@ function drawSprite(sprite, p) {
 		ctx.stroke();
 	} else if (sprite.type === 'water') {
 		// base acqua
-		ctx.fillStyle = '#3aa';
+		ctx.fillStyle = gamePalette.skyLight;
 		ctx.beginPath();
 		ctx.ellipse(x, y, radius * 2, radius * 0.22, 0, 0, Math.PI * 2);
 		ctx.fill();
 
-		// riflesso (highlight)
+		// riflesso
 		ctx.fillStyle = 'rgba(255,255,255,0.25)';
 		ctx.beginPath();
-		ctx.ellipse(x - radius * 0.5, y, radius, radius * 0.12, 0, 0, Math.PI * 2);
+		ctx.ellipse(x, y, radius, radius * 0.15, 0, 0, Math.PI * 2);
 		ctx.fill();
 	}	
 }
 
 //anche l'ombra ha una sua dignita'
-function drawFerrariShadow(cx, cy, w) {
-	let s = w / 120;//scalato a 120px
+function drawFerrariShadow(cx, cy, w, h) {
+	let sw = w / 120;//scalato a 120px
+	let sh = h / 120;//scalato a 120px in y
 	//ombra
     ctx.fillStyle = 'rgba(0,0,0,0.5)';
 	//ctx.fillRect(cx - w / 2 - 4, cy + 10, w + 8, 36);//rettangolone non ci piace
 	ctx.beginPath();
-	ctx.moveTo(cx - 60 * s + 6 * s, cy +  2 * s);
-	ctx.lineTo(cx - 60 * s - 4 * s, cy + 48 * s);
-	ctx.lineTo(cx + 60 * s + 4 * s, cy + 48 * s);
-	ctx.lineTo(cx + 60 * s - 6 * s, cy +  2 * s);
+	ctx.moveTo(cx - 60 * sw + 6 * sw, cy +  2 * sh);
+	ctx.lineTo(cx - 60 * sw - 4 * sw, cy + 48 * sh);
+	ctx.lineTo(cx + 60 * sw + 4 * sw, cy + 48 * sh);
+	ctx.lineTo(cx + 60 * sw - 6 * sw, cy +  2 * sh);
 	ctx.closePath();
 	ctx.fill();	
 
@@ -1248,13 +1269,14 @@ function drawCar() {
     ctx.save();
     let cx = width / 2;//ferrari sempre al centro (overlay)
     let cy = height - 70;//bloccata in basso
-    
-	drawFerrariShadow(cx, cy, CAR_WIDTH);
+    let w = Math.max(30, Math.abs( CAR_WIDTH * Math.cos(crashTimer * 0.25) ));
+
+	drawFerrariShadow(cx, cy, w, CAR_WIDTH);
 	
     ctx.translate(cx, cy);
 
     if (player.state === 'CRASHED') {
-        ctx.rotate(player.x > 0 ? crashTimer * 0.5 : -crashTimer * 0.5);
+        ctx.rotate(player.x > 0 ? crashTimer * 0.25 : -crashTimer * 0.25);
     } else {
 		ctx.rotate(player.tilt);
 	}        
@@ -1262,6 +1284,21 @@ function drawCar() {
     drawFerrari(0, 0, CAR_WIDTH, '#b00', '#f00');
 
     ctx.restore();
+	
+	// Fumo dal retro
+	for (let i = particles.length - 1; i >= 0; i--) {
+		let p = particles[i];
+		p.x += p.vx;
+		p.y += p.vy;
+		p.vy *= 0.98;
+		p.r += 0.1;
+		p.life -= 0.01;
+		if (p.life <= 0) { particles.splice(i, 1); continue; }
+		ctx.beginPath();
+		ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+		ctx.fillStyle = `rgba(${p.gray},${p.gray},${p.gray},${p.life * 0.45})`;
+		ctx.fill();
+	}
 }
 
 //cambiooo
@@ -1483,7 +1520,7 @@ function render() {
 
             // Collisione: segmento vicino + sovrapposizione X
             let segDist = n - startPos;
-            if (segDist > 5 && segDist < 20 && player.state === 'ALIVE' && s.sprite.type !== 'oil' && s.sprite.type !== 'water') {
+            if (segDist > 5 && segDist < 20 && player.state === 'ALIVE') {
 				
 				/*// DEBUG HITBOX SPRITE
 				ctx.strokeStyle = '#0f0';
@@ -1509,7 +1546,23 @@ function render() {
 				
 				if (overlap && segDist === 8) {
 					console.log(`overlap=${overlap}  segDist=${segDist}  seg=${n}  playerX=${player.x.toFixed(2)}|${carHalfW}  spriteX=${s.sprite.x}|${spriteHalfW}  dist=${Math.abs(player.x - s.sprite.x).toFixed(2)}`);
-                    player.state = 'CRASHED';
+					
+					if (s.sprite.type === 'oil' || s.sprite.type === 'water') {
+						let spawnCount = 4 + (player.speed / 40)|0;
+						for (let i = 0; i < spawnCount; i++) {
+							particles.push({
+								x: width * 0.5 + (Math.random() - 0.5) * 50,
+								y: height - 10,
+								vx: (Math.random() - 0.5) * 1.2,
+								vy: -(0.5 + Math.random() * 1.5),
+								life: 1.0,
+								r: 8 - Math.random() * 4,
+								gray: s.sprite.type === 'water' ? 230 : 30
+							});
+						}
+					} else {
+						player.state = 'CRASHED';
+					}
                 }
             }
         }
@@ -1562,7 +1615,7 @@ function render() {
 		let carW = scale * roadW * width * 0.1;
 		let carH = carW * 0.5;
 
-		drawFerrariShadow(screenX, screenY, carW * 1.4);//un po piu grande == piu belle
+		drawFerrariShadow(screenX, screenY, carW * 1.4, carW * 1.4);//un po piu grande == piu belle
 		drawFerrari(screenX, screenY, carW * 1.4, car.color.dark, car.color.light);//disegnate appena piu grandi
 				
 		if (player.state === 'ALIVE') {
@@ -1581,6 +1634,7 @@ function render() {
 		}
 	}
 
+	
 	
 
     // Player Car
