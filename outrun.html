@@ -81,9 +81,19 @@
 			background: rgba(255,60,60,0.25);
             border-color: rgba(255,60,60,0.75);
         }
+		#buildtime {
+			position: absolute;
+			top: 10px;
+			right: 10px;
+			color: rgba(255,255,255,0.5);
+			font: 10px monospace;
+			z-index: 50;
+			pointer-events: none;
+		}
     </style>
 </head>
 <body>
+<div id="buildtime">__BUILD_TIME__</div>
 <div id="wrapper">
     <canvas id="g"></canvas>
 
@@ -101,6 +111,14 @@
 </div>
 
 <script>
+fetch('https://api.github.com/repos/albertonellifun/lab/commits/main')
+  .then(r => r.json())
+  .then(data => {
+    let d = new Date(data.commit.author.date);
+    let ts = d.toLocaleString('it-IT', {timeZone:'Europe/Rome'});
+    document.getElementById('buildtime').textContent = ts;
+  });
+
 const canvas = document.getElementById('g');
 const ctx = canvas.getContext('2d');
 ctx.imageSmoothingEnabled = false;//velocizza?
@@ -147,7 +165,7 @@ function resizeCanvas() {
 	//fix redmi?
     const h = window.innerHeight;
     if (h < 700) {
-        document.getElementById('controls').style.paddingBottom = '40px';
+        document.getElementById('controls').style.paddingBottom = '56px';
     }
 }
 resizeCanvas();
