@@ -11,7 +11,9 @@
             margin: 0; padding: 0;
             background: #000;
             overflow: hidden;
-            width: 100%; height: 100%;
+            width: 100%; 
+			height: 100%;
+			height: 100dvh;/* fix redmi? */
             touch-action: none; /* blocca scroll/zoom con dita */
         }
         #wrapper {
@@ -19,6 +21,7 @@
 			inset: 0;
 			width: 100vw;
 			height: 100vh;
+			height: 100dvh;/* fix redmi? */
 			overflow: hidden;
 		}
 		canvas {
@@ -86,7 +89,7 @@
 			top: 10px;
 			right: 10px;
 			color: rgba(255,255,255,0.5);
-			font: 10px monospace;
+			font: 12px monospace;
 			z-index: 50;
 			pointer-events: none;
 		}
@@ -143,11 +146,6 @@ function resizeCanvas() {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     width = BASE_W;
     height = BASE_H;
-	//fix redmi?
-	const h = window.innerHeight;
-	if (h < 700) {
-        document.getElementById('controls').style.paddingBottom = '40px';
-    }
 }*/
 function resizeCanvas() {
     // Rimuoviamo il DPR (devicePixelRatio) per non sovraccaricare la GPU
@@ -162,11 +160,6 @@ function resizeCanvas() {
     ctx.setTransform(1, 0, 0, 1, 0, 0); 
     width = BASE_W;
     height = BASE_H;
-	//fix redmi?
-    const h = window.innerHeight;
-    if (h < 700) {
-        document.getElementById('controls').style.paddingBottom = '56px';
-    }
 }
 resizeCanvas();
 window.addEventListener('resize', resizeCanvas);
@@ -1140,11 +1133,10 @@ function drawFerrari(cx, cy, w, colDark, colLight) {
 
 function drawCar() {
     ctx.save();
-    let cx = width / 2;
-    let cy = height - 70;
-    let w = CAR_WIDTH; //TESTAROSSA E' LARGA!!!
-
-	drawFerrariShadow(cx, cy, w);
+    let cx = width / 2;//ferrari sempre al centro (overlay)
+    let cy = height - 70;//bloccata in basso
+    
+	drawFerrariShadow(cx, cy, CAR_WIDTH);
 	
     ctx.translate(cx, cy);
 
@@ -1154,7 +1146,7 @@ function drawCar() {
 		ctx.rotate(player.tilt);
 	}        
 
-    drawFerrari(0, 0, w * 1, '#b00', '#f00');
+    drawFerrari(0, 0, CAR_WIDTH, '#b00', '#f00');
 
     ctx.restore();
 }
@@ -1457,7 +1449,7 @@ function render() {
 		let carW = scale * roadW * width * 0.1;
 		let carH = carW * 0.5;
 
-		drawFerrariShadow(screenX, screenY, carW * 1.4);
+		drawFerrariShadow(screenX, screenY, carW * 1.4);//un po piu grande == piu belle
 		drawFerrari(screenX, screenY, carW * 1.4, car.color.dark, car.color.light);//disegnate appena piu grandi
 				
 		if (player.state === 'ALIVE') {
