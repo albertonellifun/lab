@@ -39,6 +39,7 @@
 			justify-content: space-between;
 			align-items: flex-end;
 			padding: 12px;
+			padding-bottom: max(28px, env(safe-area-inset-bottom, 28px));
 			pointer-events: none;
 			z-index: 40;
 		}
@@ -140,13 +141,10 @@ function resizeCanvas() {
     canvas.height = BASE_H; // Risoluzione fissa 600
     canvas.style.width = (BASE_W * scale) + "px";
     canvas.style.height = (BASE_H * scale) + "px";
-    
-    // Niente ctx.setTransform(dpr...), usiamo il piano 1:1
     ctx.setTransform(1, 0, 0, 1, 0, 0); 
-    
     width = BASE_W;
     height = BASE_H;
-
+	//fix redmi?
     const h = window.innerHeight;
     if (h < 700) {
         document.getElementById('controls').style.paddingBottom = '40px';
