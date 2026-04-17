@@ -196,54 +196,123 @@ let gear = 1;
 let rpm = 0.5;
 let rpmTarget = 0.5;
 let lastGear = 1;
-const gearRatios = [0, 1, 60, 120, 180, 240, 280, 350];// velocità a cui scatta il cambio
+const gearRatios = [0, 1, 60, 110, 170, 230, 290, 350];// velocità a cui scatta il cambio
 
 //motore auto realistico??? :-)
 const audioCtx = new(window.AudioContext || window.webkitAudioContext)();
 
-// 3 oscillatori: fondamentale + 2 armoniche
-const osc1 = audioCtx.createOscillator(); osc1.type = 'sawtooth'; // fondamentale — corpo del rombo
-const osc2 = audioCtx.createOscillator(); osc2.type = 'square';// 2a armonica — aggressività
-const osc3 = audioCtx.createOscillator(); osc3.type = 'triangle';// 3a armonica — coda metallica
+const audioNodes = initEngineAudio(audioCtx);
 
-const g1 = audioCtx.createGain(); g1.gain.value = 1.0;
-const g2 = audioCtx.createGain(); g2.gain.value = 0.4;
-const g3 = audioCtx.createGain(); g3.gain.value = 0.2;
+//INIT SUONO!
+function initEngineAudio(audioCtx) {
+  const CYLINDERS = 4;
+  const IDLE_FREQ = 25;   // ~750 RPM
+  const MAX_FREQ  = 175;  // ~5250 RPM
 
-// filtro bandpass: simula la camera d'aspirazione
-const engineFilter = audioCtx.createBiquadFilter();
-engineFilter.type = 'bandpass';
-engineFilter.frequency.value = 120;
-engineFilter.Q.value = 1.2;
+  // Fondamentale + armoniche dispari (suono motore a scoppio)
+  const osc1 = audioCtx.createOscillator();
+  const osc2 = audioCtx.createOscillator();
+  const osc3 = audioCtx.createOscillator();
+  const osc4 = audioCtx.createOscillator();
+  osc1.type = 'sawtooth';
+  osc2.type = 'square';
+  osc3.type = 'sawtooth';
+  osc4.type = 'square';
 
-// rumore di scoppio (combustione)
-const noiseBuffer = audioCtx.createBuffer(1, 65536, audioCtx.sampleRate);
-const nd = noiseBuffer.getChannelData(0);
-for (let i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1;
+  const g1 = audioCtx.createGain(); g1.gain.value = 0.5;
+  const g2 = audioCtx.createGain(); g2.gain.value = 0.3;
+  const g3 = audioCtx.createGain(); g3.gain.value = 0.15;
+  const g4 = audioCtx.createGain(); g4.gain.value = 0.08;
+  osc1.connect(g1); osc2.connect(g2);
+  osc3.connect(g3); osc4.connect(g4);
 
-const noiseSource = audioCtx.createBufferSource();
-noiseSource.buffer = noiseBuffer;
-noiseSource.loop = true;
+  // Modulazione AM → simula "colpi" dei cilindri
+  const amOsc  = audioCtx.createOscillator();
+  const amGain = audioCtx.createGain();
+  amOsc.type = 'sine';
+  amGain.gain.value = 0.35;
+  amOsc.connect(amGain);
 
-const noiseGain = audioCtx.createGain();
-noiseGain.gain.value = 0.02;
+  // Waveshaper = distorsione soft-clip (rombo realistico)
+  const ws = audioCtx.createWaveShaper();
+  ws.curve = makeDistCurve(180);
+  ws.oversample = '4x';
 
-const masterGain = audioCtx.createGain();
-masterGain.gain.value = 0;
+  // Filtri
+  const hp  = audioCtx.createBiquadFilter();
+  hp.type = 'highpass'; hp.frequency.value = 60;
 
-osc1.connect(g1); g1.connect(engineFilter);
-osc2.connect(g2); g2.connect(engineFilter);
-osc3.connect(g3); g3.connect(masterGain);
+  const lp1 = audioCtx.createBiquadFilter();
+  lp1.type = 'lowpass'; lp1.frequency.value = 1200; lp1.Q.value = 2;
 
-engineFilter.connect(masterGain);
-noiseSource.connect(noiseGain);
-noiseGain.connect(masterGain);
-masterGain.connect(audioCtx.destination);
+  const lp2 = audioCtx.createBiquadFilter();
+  lp2.type = 'lowpass'; lp2.frequency.value = 800;
 
-osc1.start(); 
-osc2.start(); 
-osc3.start(); 
-noiseSource.start();
+  const master = audioCtx.createGain();
+  master.gain.value = 0.12;
+
+  // Catena: oscillatori → waveshaper → hp → lp1 → amGain (moltiplicatore) → lp2 → master
+  const preMix = audioCtx.createGain();
+  [g1,g2,g3,g4].forEach(g => g.connect(preMix));
+  preMix.connect(ws);
+  ws.connect(hp);
+  hp.connect(lp1);
+  // AM: amGain si connette al gainNode del segnale pre-lp2
+  const amMod = audioCtx.createGain(); amMod.gain.value = 1;
+  lp1.connect(amMod);
+  amGain.connect(amMod.gain);   // modulazione in ampiezza
+  amMod.connect(lp2);
+  lp2.connect(master);
+  master.connect(audioCtx.destination);
+
+  [osc1,osc2,osc3,osc4,amOsc].forEach(o => o.start());
+  return { osc1,osc2,osc3,osc4,amOsc,amGain,hp,lp1,lp2,master };
+}
+
+function makeDistCurve(amount) {
+  const n = 256;
+  const curve = new Float32Array(n);
+  for (let i=0;i<n;i++) {
+    const x = (i*2/n)-1;
+    curve[i] = (Math.PI+amount)*x/(Math.PI+amount*Math.abs(x));
+  }
+  return curve;
+}
+
+//UPDATE SUONO!
+function updateEngineAudio(nodes, rpm, gas, audioCtx) {
+  // rpm: 0.10–1.0  |  gas: 0 o 1
+  const IDLE_FREQ = 25;//circa 750rpm
+  const MAX_FREQ = 230;//circa 6800rpm per ferrari ts
+  const T = audioCtx.currentTime;
+  const TC_PITCH = 0.06;   // costante di tempo pitch (smorzamento)
+  const TC_FILT  = 0.08;
+  const TC_GAIN  = 0.12;
+
+  const f0 = IDLE_FREQ + (MAX_FREQ - IDLE_FREQ) * Math.pow(rpm, 0.8);
+  //console.log('f0='+f0+' rpm='+rpm);
+  nodes.osc1.frequency.setTargetAtTime(f0*1,  T, TC_PITCH);//x1
+  nodes.osc2.frequency.setTargetAtTime(f0*2,  T, TC_PITCH);//x2
+  nodes.osc3.frequency.setTargetAtTime(f0*3.02,  T, TC_PITCH);//x3 sporcato
+  nodes.osc4.frequency.setTargetAtTime(f0*4.51,  T, TC_PITCH);//x4.5 sporcato
+
+  // AM freq = 2× fondamentale × cilindri/2  (4 cil = 2 scoppi/giro, 12 cil = 6 scoppi/giro)
+  const amFreq = f0 * 6;
+  nodes.amOsc.frequency.setTargetAtTime(amFreq, T, TC_PITCH);
+
+  // Profondità AM: più gas = più "strappato"
+  const amDepth = 0.25 + gas * 0.25 + rpm * 0.15;
+  nodes.amGain.gain.setTargetAtTime(amDepth, T, TC_FILT);
+
+  // Filtro LP1: apre con gas e rpm (scoperta armoniche acute)
+  const lpFreq = 300 + rpm * 900 + gas * 500;
+  nodes.lp1.frequency.setTargetAtTime(lpFreq, T, TC_FILT);
+  nodes.lp1.Q.value = 1.5 + gas * 2;
+
+  // Guadagno master
+  const vol = 0.08 + rpm * 0.07 + gas * 0.04;
+  nodes.master.gain.setTargetAtTime(vol, T, TC_GAIN);
+}
 
 function resumeAudio() {
     if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -387,8 +456,9 @@ function addSegment(idx, curve, y) {
 
 function initPalette() {
 	//ogni secondo switcha
-	let currentPalette = ((Date.now()/1000)|0) % 3;
+	let currentPalette = ((Date.now()/1000)|0) % 6;
 	if (currentPalette === 2) {
+		//DESERTO
 		gamePalette = {
 			skyLight:'#8ae',	
 			skyDark:'#68e', 
@@ -405,6 +475,7 @@ function initPalette() {
 			bushLight: '#ca6',//palme marroncine
 		};
 	} else if (currentPalette === 1) {
+		//GHIACCIO
 		gamePalette = {
 			skyLight: '#def',//cielo chiaro ghiacciato
 			skyDark:  '#6ad',//blu freddo
@@ -420,7 +491,59 @@ function initPalette() {
 			bushDark: '#cde',//cespugli ghiacciati
 			bushLight:'#def',//palme glacier
 		};
+	} else if (currentPalette === 3) {
+		//NEON
+		gamePalette = {
+			skyLight:  '#2d0060', // viola profondo orizzonte
+			skyDark:   '#0a0015', // nero-viola cielo alto
+			mountainsLight: '#280045', // montagne vicine viola
+			mountainsDark:  '#1a0030', // montagne lontane scure
+			terrain:   '#0d0020', // terreno quasi nero
+			roadDark:  '#1a0040', // asfalto viola scuro
+			roadLight: '#220055', // asfalto viola medio
+			grassDark: '#0d0020', // erba nera
+			grassLight:'#180030', // erba viola notte
+			rumbleDark: '#0ff',  // cordolo cyan neon
+			rumbleLight:'#f0f',  // cordolo magenta neon
+			bushDark:  '#300060',// cespugli viola scuro
+			bushLight: '#a04fff',// palme neon viola
+		};
+	} else if (currentPalette === 4) {
+		//MIAMI
+		gamePalette = {
+			skyLight:  '#f4a0c0', // rosa pesca orizzonte
+			skyDark:   '#c04080', // rosa scuro cielo alto
+			mountainsLight: '#7060a0', // silhouette viola chiara
+			mountainsDark:  '#4a4080', // silhouette viola scura
+			terrain:   '#50c0d0', // acquamarina
+			roadDark:  '#80a8c8', // asfalto azzurro
+			roadLight: '#a0c0d8', // asfalto azzurro chiaro
+			grassDark: '#50c0d0', // acqua scura
+			grassLight:'#70d8e8', // acqua chiara
+			rumbleDark: '#ff8040', // cordolo arancio alba
+			rumbleLight:'#ffb060', // cordolo pesca
+			bushDark:  '#2a1040', // palme silhouette scura
+			bushLight: '#40b0c0', // cespugli acquamarina
+		};
+	} else if (currentPalette === 5) {
+		//NIGHT DRIVER
+		gamePalette = {
+			skyLight:  '#0c0c18', // nero-blu notte
+			skyDark:   '#000008', // nero assoluto
+			mountainsLight: '#0c0c18', // sagome quasi invisibili
+			mountainsDark:  '#080810', // sagome nere
+			terrain:   '#050508', // terreno nero
+			roadDark:  '#0a0a10', // asfalto nero
+			roadLight: '#0e0e18', // asfalto leggermente visibile
+			grassDark: '#050508', // erba nera
+			grassLight:'#080810', // erba nera scura
+			rumbleDark: '#ffffcc', // cordolo bianco-giallo (fari)
+			rumbleLight:'#111108', // cordolo buio (alternato)
+			bushDark:  '#030306', // alberi silhouette
+			bushLight: '#050508', // cespugli silhouette
+		};
 	} else {
+		//DEFAULT=VERDE CITTAREALE
 		gamePalette = { 
 			skyLight:'#8cf',	
 			skyDark:'#05f',
@@ -475,10 +598,11 @@ function drawSky(offset) {
 	
 	//sole
 	// si muove lentamente con lo skyOffset, ma rimane sempre in cielo
-	let sunX = (width * 0.35 - offset * 0.01) % width;
-	if (sunX < 0) sunX += width;
-	let sunY = height * 0.25;
 	let sunR = 32;
+	let sunX = (width * 0.35 - offset * 0.01) % width;
+	if (sunX < -sunR) sunX += width;
+	let sunY = height * 0.25;
+	
 
 	// alone esterno (glow giallo pallido)
 	let glow = ctx.createRadialGradient(sunX, sunY, sunR * 0.6, sunX, sunY, sunR * 2.5);
@@ -594,7 +718,6 @@ let lastLapTime = null;
 let bestLapTime = null;
 
 function update() {
-	//
 	let offRoad = Math.abs(player.x) > 1;
 	let normalizedSpeed = player.speed / player.maxSpeed;
 	
@@ -603,11 +726,12 @@ function update() {
         crashTimer++;
 		
 		if (!isMute) {
-			masterGain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.3);// Spegni il motore gradualmente
+			audioCtx.resume();    // riprende
+			updateEngineAudio(audioNodes, 0, 0, audioCtx);
 		} else {
-			masterGain.gain.setTargetAtTime(0, audioCtx.currentTime, 0);// Spegni il motore subito
+			audioCtx.suspend();   // pausa
 		}
-		
+
         if (player.speed < 1) {
             player.state = 'ALIVE';
             crashTimer = 0;
@@ -664,26 +788,16 @@ function update() {
         // RPM target basato su posizione nella marcia attuale
         let gearBottom = gearRatios[gear] || 0;
         let gearTop = gearRatios[Math.min(gear + 1, gearRatios.length - 1)] || player.maxSpeed;
-        rpmTarget = Math.max(0.15, Math.min(1.0, (player.speed - gearBottom) / Math.max(1, gearTop - gearBottom)));
+        rpmTarget = Math.max(0.1, Math.min(1.0, (player.speed - gearBottom) / Math.max(1, gearTop - gearBottom)));//min 10%
 
         // RPM segue il target con inerzia — il drop/spike rimane udibile per ~0.3s
         rpm += (rpmTarget - rpm) * 0.08;
 
 		if (!isMute) {
-			// Frequenza fondamentale
-			let gas = keys.up ? 1 : 0;
-			let baseFreq = (800 + rpm * 3200) / 60 * 4;
-			baseFreq *= (0.85 + gas * 0.15);
-
-			osc1.frequency.setTargetAtTime(baseFreq, audioCtx.currentTime, 0.04);
-			osc2.frequency.setTargetAtTime(baseFreq * 2, audioCtx.currentTime, 0.04);
-			osc3.frequency.setTargetAtTime(baseFreq * 3, audioCtx.currentTime, 0.04);
-
-			engineFilter.frequency.setTargetAtTime(80 + gas * 600 + rpm * 400, audioCtx.currentTime, 0.06);
-			noiseGain.gain.setTargetAtTime(0.015 + gas * 0.05, audioCtx.currentTime, 0.05);
-			masterGain.gain.setTargetAtTime(player.speed > 3 ? (0.08 + gas * 0.05) : 0.03, audioCtx.currentTime, 0.1);
+			audioCtx.resume();    // riprende
+			updateEngineAudio(audioNodes, rpm, keys.up ? 1 : 0, audioCtx);
 		} else {
-			masterGain.gain.setTargetAtTime(0, audioCtx.currentTime, 0);// Spegni il motore subito
+			audioCtx.suspend();   // pausa
 		}
 	}
 	
@@ -721,6 +835,8 @@ function update() {
 		car.z = (car.z + car.speed + trackL) % trackL;
 	}
 }
+
+
 
 //ai bordi -> alberi o cartelloni
 function drawSprite(sprite, p) {
