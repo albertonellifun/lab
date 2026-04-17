@@ -586,6 +586,13 @@ function drawSegment(x1, y1, w1, x2, y2, w2, idx) {
     }
 }
 
+
+//LAPTIME
+let lastSegment = 0;
+let lapStart = null;
+let lastLapTime = null;
+let bestLapTime = null;
+
 function update() {
 	//
 	let offRoad = Math.abs(player.x) > 1;
@@ -686,7 +693,27 @@ function update() {
 	
     player.z = (player.z + trackL) % trackL;
 	
-    let cur = segments[Math.floor(player.z / segL) % segments.length];
+	let currentSegIdx = Math.floor(player.z / segL) % segments.length;
+    let cur = segments[currentSegIdx];
+	
+	//aggiorna palette sul traguardo
+	if (lastSegment !== currentSegIdx && currentSegIdx === START_IDX) {
+		initPalette();
+		
+		let now = performance.now();
+		if (lapStart !== null) {
+			lastLapTime = now - lapStart;
+			if (bestLapTime === null || lastLapTime < bestLapTime) {
+				bestLapTime = lastLapTime;
+			}
+		}
+		lapStart = now;
+	}
+	lastSegment = currentSegIdx;
+		
+	
+	
+	
     skyOffset += cur.curve * normalizedSpeed * 10;
 
 	//aggiorno anche il traffico!
@@ -1515,12 +1542,59 @@ function drawSpeedometer() {
 	ctx.lineWidth = 1;
 }
 
+function formatTime(ms) {
+    if (ms === null) return '--:--.---';
+    let m = Math.floor(ms / 60000);
+    let s = Math.floor((ms % 60000) / 1000);
+    let c = Math.floor(ms % 1000);
+    return m + ':' + String(s).padStart(2,'0') + '.' + String(c).padStart(3,'0');
+}
+function drawLapTimes() {
+    let now = performance.now();
+    let current = lapStart !== null ? now - lapStart : null;
+
+    ctx.font = '12px monospace';
+    ctx.textAlign = 'left';
+
+    ctx.fillStyle = 'rgba(0,0,0,0.5)';
+    ctx.fillRect(8, 8, 120, 60);
+
+    ctx.fillStyle = '#fff';
+    ctx.fillText('LAP   ' + formatTime(current), 16, 26);
+
+    ctx.fillStyle = '#aaa';
+    ctx.fillText('LAST  ' + formatTime(lastLapTime), 16, 44);
+
+    ctx.fillStyle = '#f00';
+    ctx.fillText('BEST  ' + formatTime(bestLapTime), 16, 62);
+}
 
 
 //RENDER!
+let fpsTime = 0;
+let fpsCount = 0;
+let fpsDisplay = 0;
+
 function render() {
+	//FPS
+	let now = performance.now();
+    fpsCount++;
+    if (now - fpsTime >= 1000) {
+        fpsDisplay = fpsCount;
+        fpsCount = 0;
+        fpsTime = now;
+    }
+
+
     update();
 	drawSky(skyOffset);
+	
+	//FPS
+	ctx.fillStyle = '#000';
+	ctx.font = '12px monospace';
+	ctx.textAlign = 'right';
+	ctx.fillText('FPS: ' + fpsDisplay, width - 10, 14);
+	
 	
 	let startPos = Math.floor(player.z / segL);
 	let camHeight = segments[startPos % segments.length].p1.world.y + camH;
@@ -1679,6 +1753,7 @@ function render() {
 	
 	drawSpeedometer();
 	drawGearStick();
+	drawLapTimes();
 
     requestAnimationFrame(render);
 }
