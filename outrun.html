@@ -162,7 +162,7 @@ window.addEventListener('resize', resizeCanvas);
 let roadW = 2000;
 const segL = 200;
 const camH = 1500;
-const drawDistance = 200;
+let   drawDistance = 200;
 const fieldOfView = 100;
 const camD = 1 / Math.tan((fieldOfView / 2) * Math.PI / 180);
 
@@ -1583,6 +1583,10 @@ function render() {
         fpsDisplay = fpsCount;
         fpsCount = 0;
         fpsTime = now;
+		//drawdistance fix n100 
+		if (fpsDisplay < 20) drawDistance = 80;
+		else if (fpsDisplay) < 50 drawDistance = 140;
+		else drawDistance = 200;
     }
 
 
