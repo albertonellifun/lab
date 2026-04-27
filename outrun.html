@@ -100,12 +100,20 @@
 			top: 20px;
 			left: 20px;
         }
+		#btn-palette {
+		    background: rgba(60,60,255,0.25);
+            border-color: rgba(60,60,255,0.75);
+			position: absolute;
+			top: 20px;
+			right: 20px;
+        }
     </style>
 </head>
 <body>
 <div id="buildtime">__BUILD_TIME__</div>
 <div id="wrapper">
 	<button class="btn" id="btn-mute" onclick="isMute=!isMute">🔊</button>
+	<button class="btn" id="btn-palette" onclick="initPalette()">🌈</button>
     <canvas id="g"></canvas>
 
     <!-- Controlli touch on-screen -->
@@ -364,6 +372,7 @@ const SPRITE_CONFIG = {
     oil:          { width: 0.40 },//
 	rock:         { width: 0.10 },//
 	rock2:        { width: 0.10 },//
+	cactus:       { width: 0.12 },//
 	water:        { width: 0.30 },
     start:        { width: 0   }
 };
@@ -377,6 +386,7 @@ function addSegment(idx, curve, y) {
 			(idx > 600 && idx < 800) || //frecce ogni 8 seg
 			(idx > 900 && idx < 1000) || //coni ogni 2 seg
 			(idx > 1200 && idx < 1500) || //bush ogni 4 seg
+			(idx > 1700 && idx < 1900) || //cactus
 			(idx > 2000 && idx < 2200) || //freccione ogni 8 seg
 			(idx > 2500 && idx < 2700) || //palme ogni 4 seg
 			(idx > 2800 && idx < 2900) //semafori ogni 4 seg
@@ -391,17 +401,19 @@ function addSegment(idx, curve, y) {
         else if (idx > 600 && idx < 800) type = 'signlow';
 		else if (idx > 900 && idx < 1000) type = 'cone';
 		else if (idx > 1200 && idx < 1500) type = 'bush';
+		else if (idx > 1700 && idx < 1900) type = 'cactus';
 		else if (idx > 2000 && idx < 2200) type = 'signhigh';
 		else if (idx > 2500 && idx < 2700) type = 'palm';
 		else if (idx > 2800 && idx < 2850) type = 'trafficlight';
         else {
 			const r = Math.random();
 			if (r < 0.15) type = 'tree';
-			else if (r < 0.30) type = 'bush';
-			else if (r < 0.50) type = 'rock';
-			else if (r < 0.70) type = 'rock2';
-			else if (r < 0.80) type = 'water';
-			else if (r < 0.90) type = 'oil';
+			else if (r < 0.25) type = 'bush';
+			else if (r < 0.45) type = 'rock';
+			else if (r < 0.65) type = 'rock2';
+			else if (r < 0.75) type = 'water';
+			else if (r < 0.80) type = 'oil';
+			else if (r < 0.90) type = 'cactus';
 			else if (r < 0.92) type = 'billboard';
 			else if (r < 0.94) type = 'signlow';
 			else if (r < 0.96) type = 'cone';
@@ -431,6 +443,8 @@ function addSegment(idx, curve, y) {
             position = idx % 8 === 0 ? -1.6 : 1.6;//albero/palma lato alternato
         } else if (type === 'rock' || type === 'rock2') {
 			position = Math.random() > 0.5 ? 2.2 - Math.random() : -2.2 + Math.random();//roccia esterna (-2..-1 o 1..2)
+		} else if (type === 'cactus') {
+			position = idx % 8 === 0 ? -1.6 : 1.6;
 		}
 
         sprite = {
@@ -460,6 +474,7 @@ function initPalette() {
 	if (currentPalette === 2) {
 		//DESERTO
 		gamePalette = {
+			id: 'desert',
 			skyLight:'#8ae',	
 			skyDark:'#68e', 
 			mountainsLight:'#db7', 
@@ -469,14 +484,45 @@ function initPalette() {
 			roadLight: '#cab', 
 			grassDark: '#db9', 
 			grassLight: '#eca', 
+			oil: '#200',
+			trafficPole: '#444',
+			trafficBody: '#db9',
 			rumbleDark: '#ffe',//cordolo marroncino
 			rumbleLight: '#963',//cordolo marroncino
 			bushDark: '#a84',//anche erba marroncina
 			bushLight: '#ca6',//palme marroncine
+			treeDark: '#a84',//anche erba marroncina
+			treeLight: '#ca6',//palme marroncine
+			palmDark: '#a84',//anche erba marroncina
+			palmLight: '#ca6',//palme marroncine
+			palmTrunkDark: '#853',
+			palmTrunkLight: '#742',
+			trunk: '#531',//tronco alberi
+			rockLower: '#766',
+			rockShadow: '#544',
+			rockLight: '#a98',
+			rockBorder: '#321',
+			coneDark: '#f80',
+			coneLight: '#fff',
+			cactusDark: '#483',
+			cactusLight: '#5a4',
+			startCheckered: '#222',
+			startLight: '#fff',
+			startDark: '#000',
+			signLowBackground: '#fff',
+			signLowBorder: '#000',
+			signLowForeground: '#f00',
+			signLowForegroundBorder: '#b00',
+			signHighPole: '#444',
+			signHighBackground: '#222',
+			signHighBorder: '#000',
+			signHighForeground: '#ff0',
+			signHighForegroundBorder: '#bb0',
 		};
 	} else if (currentPalette === 1) {
 		//GHIACCIO
 		gamePalette = {
+			id: 'ice',
 			skyLight: '#def',//cielo chiaro ghiacciato
 			skyDark:  '#6ad',//blu freddo
 			mountainsLight: '#eef',//montagne piccole
@@ -486,14 +532,45 @@ function initPalette() {
 			roadLight:'#777',//asfalto
 			grassDark: '#eee',//neve
 			grassLight:'#fff',//neve
+			oil: '#002',
+			trafficPole: '#444',
+			trafficBody: '#fc3',
 			rumbleDark: '#fff',//cordolo
 			rumbleLight:'#ccc',//cordolo
 			bushDark: '#cde',//cespugli ghiacciati
 			bushLight:'#def',//palme glacier
+			treeDark: '#cde',//cespugli ghiacciati
+			treeLight:'#def',//palme glacier
+			palmDark: '#cde',//cespugli ghiacciati
+			palmLight:'#def',//palme glacier
+			palmTrunkDark: '#853',
+			palmTrunkLight: '#742',
+			trunk: '#531',//tronco alberi
+			rockLower: '#766',
+			rockShadow: '#544',
+			rockLight: '#a98',
+			rockBorder: '#321',
+			coneDark: '#f00',
+			coneLight: '#ff0',
+			cactusDark: '#ddd',
+			cactusLight: '#fff',
+			startCheckered: '#222',
+			startLight: '#fff',
+			startDark: '#000',
+			signLowBackground: '#ff0',
+			signLowBorder: '#000',
+			signLowForeground: '#f00',
+			signLowForegroundBorder: '#b00',
+			signHighPole: '#444',
+			signHighBackground: '#222',
+			signHighBorder: '#000',
+			signHighForeground: '#ff0',
+			signHighForegroundBorder: '#bb0',
 		};
 	} else if (currentPalette === 3) {
 		//NEON
 		gamePalette = {
+			id: 'neon',
 			skyLight:  '#2d0060', // viola profondo orizzonte
 			skyDark:   '#0a0015', // nero-viola cielo alto
 			mountainsLight: '#280045', // montagne vicine viola
@@ -503,14 +580,45 @@ function initPalette() {
 			roadLight: '#220055', // asfalto viola medio
 			grassDark: '#0d0020', // erba nera
 			grassLight:'#180030', // erba viola notte
+			oil: '#103',
+			trafficPole: '#444',
+			trafficBody: '#fc3',
 			rumbleDark: '#0ff',  // cordolo cyan neon
 			rumbleLight:'#f0f',  // cordolo magenta neon
 			bushDark:  '#300060',// cespugli viola scuro
 			bushLight: '#a04fff',// palme neon viola
+			treeDark:  '#300060',// cespugli viola scuro
+			treeLight: '#a04fff',// palme neon viola
+			palmDark:  '#528',// cespugli viola scuro
+			palmLight: '#a5f',// palme neon viola
+			palmTrunkDark: '#853',
+			palmTrunkLight: '#742',
+			trunk: '#531',//tronco alberi
+			rockLower:  '#203',  // base viola scurissimo
+			rockShadow: '#100',  // ombra quasi nera
+			rockLight:  '#408',  // faccia illuminata viola
+			rockBorder: '#f0f',     // bordo magenta neon
+			coneDark: '#f0f',
+			coneLight: '#fff',
+			cactusDark:  '#032',  // corpo verde scurissimo
+			cactusLight: '#0ff',     // highlight cyan neon
+			startCheckered: '#220',
+			startLight: '#ff0',
+			startDark: '#000',
+			signLowBackground: '#ff0',
+			signLowBorder: '#000',
+			signLowForeground: '#f0f',
+			signLowForegroundBorder: '#b0b',
+			signHighPole: '#444',
+			signHighBackground: '#222',
+			signHighBorder: '#000',
+			signHighForeground: '#ff0',
+			signHighForegroundBorder: '#bb0',
 		};
 	} else if (currentPalette === 4) {
 		//MIAMI
 		gamePalette = {
+			id: 'miami',
 			skyLight:  '#f4a0c0', // rosa pesca orizzonte
 			skyDark:   '#c04080', // rosa scuro cielo alto
 			mountainsLight: '#7060a0', // silhouette viola chiara
@@ -520,14 +628,45 @@ function initPalette() {
 			roadLight: '#a0c0d8', // asfalto azzurro chiaro
 			grassDark: '#50c0d0', // acqua scura
 			grassLight:'#70d8e8', // acqua chiara
+			oil: '#000',
+			trafficPole: '#444',
+			trafficBody: '#fc3',
 			rumbleDark: '#ff8040', // cordolo arancio alba
 			rumbleLight:'#ffb060', // cordolo pesca
 			bushDark:  '#2a1040', // palme silhouette scura
 			bushLight: '#40b0c0', // cespugli acquamarina
+			treeDark:  '#2a1040', // palme silhouette scura
+			treeLight: '#40b0c0', // cespugli acquamarina
+			palmDark:  '#314', // palme silhouette scura
+			palmLight: '#425', // cespugli acquamarina
+			palmTrunkDark: '#853',
+			palmTrunkLight: '#742',
+			trunk: '#531',//tronco alberi
+			rockLower: '#766',
+			rockShadow: '#544',
+			rockLight: '#a98',
+			rockBorder: '#321',
+			coneDark: '#f80',
+			coneLight: '#fff',
+			cactusDark: '#483',
+			cactusLight: '#5a4',
+			startCheckered: '#222',
+			startLight: '#fff',
+			startDark: '#000',
+			signLowBackground: '#fff',
+			signLowBorder: '#000',
+			signLowForeground: '#f84',
+			signLowForegroundBorder: '#b40',
+			signHighPole: '#444',
+			signHighBackground: '#222',
+			signHighBorder: '#000',
+			signHighForeground: '#ff0',
+			signHighForegroundBorder: '#bb0',
 		};
 	} else if (currentPalette === 5) {
 		//NIGHT DRIVER
 		gamePalette = {
+			id: 'night',
 			skyLight:  '#0c0c18', // nero-blu notte
 			skyDark:   '#000008', // nero assoluto
 			mountainsLight: '#0c0c18', // sagome quasi invisibili
@@ -537,14 +676,45 @@ function initPalette() {
 			roadLight: '#0e0e18', // asfalto leggermente visibile
 			grassDark: '#050508', // erba nera
 			grassLight:'#080810', // erba nera scura
+			oil: '#330',
+			trafficPole: '#444',
+			trafficBody: '#fc3',
 			rumbleDark: '#ffffcc', // cordolo bianco-giallo (fari)
 			rumbleLight:'#111108', // cordolo buio (alternato)
 			bushDark:  '#030306', // alberi silhouette
 			bushLight: '#050508', // cespugli silhouette
+			treeDark:  '#030306', // alberi silhouette
+			treeLight: '#050508', // cespugli silhouette
+			palmDark:  '#030306', // alberi silhouette
+			palmLight: '#050508', // cespugli silhouette
+			palmTrunkDark: '#853',
+			palmTrunkLight: '#742',
+			trunk: '#531',//tronco alberi
+			rockLower: '#213',   // base roccia viola scurissimo
+			rockShadow: '#112',  // ombra quasi nera
+			rockLight:  '#325',  // faccia illuminata viola
+			rockBorder: '#f37',  // bordo neon rosa outrun
+			coneDark: '#ff0',
+			coneLight: '#fff',
+			cactusDark:  '#021',  // silhouette verde quasi nera
+			cactusLight: '#032',  // variante leggermente più chiara
+			startCheckered: '#220',
+			startLight: '#ff0',
+			startDark: '#000',
+			signLowBackground: '#ff0',
+			signLowBorder: '#000',
+			signLowForeground: '#f0f',
+			signLowForegroundBorder: '#b0b',
+			signHighPole: '#444',
+			signHighBackground: '#222',
+			signHighBorder: '#000',
+			signHighForeground: '#ff0',
+			signHighForegroundBorder: '#bb0',
 		};
 	} else {
 		//DEFAULT=VERDE CITTAREALE
 		gamePalette = { 
+			id: 'default',
 			skyLight:'#8cf',	
 			skyDark:'#05f',
 			mountainsLight:'#151',	
@@ -554,10 +724,40 @@ function initPalette() {
 			roadLight: '#555', 
 			grassDark: '#171', 
 			grassLight: '#181', 
+			oil: '#000',
+			trafficPole: '#444',
+			trafficBody: '#fc3',
 			rumbleDark: '#fff',//cordolo bianco/rosso
 			rumbleLight: '#f00',//cordolo bianco/rosso
 			bushDark: '#161',
 			bushLight: '#272',
+			treeDark: '#161',
+			treeLight: '#272',
+			palmDark: '#161',
+			palmLight: '#272',
+			palmTrunkDark: '#853',
+			palmTrunkLight: '#742',
+			trunk: '#531',//tronco alberi
+			rockLower: '#766',
+			rockShadow: '#544',
+			rockLight: '#a98',
+			rockBorder: '#321',
+			coneDark: '#f80',
+			coneLight: '#fff',
+			cactusDark: '#483',
+			cactusLight: '#5a4',
+			startCheckered: '#222',
+			startLight: '#fff',
+			startDark: '#000',
+			signLowBackground: '#fff',
+			signLowBorder: '#000',
+			signLowForeground: '#f00',
+			signLowForegroundBorder: '#b00',
+			signHighPole: '#444',
+			signHighBackground: '#222',
+			signHighBorder: '#000',
+			signHighForeground: '#ff0',
+			signHighForegroundBorder: '#bb0',
 		};
 	}
 }
@@ -679,13 +879,13 @@ function drawSegment(x1, y1, w1, x2, y2, w2, idx) {
     ctx.fillRect(0, y2, width, y1 - y2);
 	
     // Cordoli
-    ctx.fillStyle = idx%2 ? gamePalette.rumbleDark : gamePalette.rumbleLight; //cordolo
-    ctx.beginPath();
-    ctx.moveTo(x1 - w1 * 1.1, y1);
-    ctx.lineTo(x2 - w2 * 1.1, y2);
-    ctx.lineTo(x2 + w2 * 1.1, y2);
-    ctx.lineTo(x1 + w1 * 1.1, y1);
-    ctx.fill();
+	ctx.fillStyle = idx%2 ? gamePalette.rumbleDark : gamePalette.rumbleLight; //cordolo
+	ctx.beginPath();
+	ctx.moveTo(x1 - w1 * 1.1, y1);
+	ctx.lineTo(x2 - w2 * 1.1, y2);
+	ctx.lineTo(x2 + w2 * 1.1, y2);
+	ctx.lineTo(x1 + w1 * 1.1, y1);
+	ctx.fill();
 	
     // Strada
     ctx.fillStyle = idx%2 ? gamePalette.roadDark : gamePalette.roadLight; //asfalto
@@ -698,15 +898,52 @@ function drawSegment(x1, y1, w1, x2, y2, w2, idx) {
 
     // TRATTEGGIO: disegna il trapezio solo sui segmenti pari
     if (Math.floor(idx / 2) % 2 === 0) {
-        let dw1 = Math.max(1.5, w1 * 0.045);
-        let dw2 = Math.max(0.8, w2 * 0.045);
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+        let dw1 = Math.max(1.5, w1 * 0.03);//larghezza 0.045 piu massiccia, 0.030 slim
+        let dw2 = Math.max(0.8, w2 * 0.03);//larghezza 0.045 piu massiccia, 0.030 slim
+		ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+		
+		// Linea centrale
         ctx.beginPath();
         ctx.moveTo(x1 - dw1, y1);
         ctx.lineTo(x2 - dw2, y2);
         ctx.lineTo(x2 + dw2, y2);
         ctx.lineTo(x1 + dw1, y1);
         ctx.fill();
+		
+		/*
+		// Linea a 1/4 (sinistra)
+        ctx.beginPath();
+        ctx.moveTo(x1 - w1 * 0.5 - dw1, y1);
+        ctx.lineTo(x2 - w2 * 0.5 - dw2, y2);
+        ctx.lineTo(x2 - w2 * 0.5 + dw2, y2);
+        ctx.lineTo(x1 - w1 * 0.5 + dw1, y1);
+        ctx.fill();
+
+        // Linea a 3/4 (destra)
+        ctx.beginPath();
+        ctx.moveTo(x1 + w1 * 0.5 - dw1, y1);
+        ctx.lineTo(x2 + w2 * 0.5 - dw2, y2);
+        ctx.lineTo(x2 + w2 * 0.5 + dw2, y2);
+        ctx.lineTo(x1 + w1 * 0.5 + dw1, y1);
+        ctx.fill();
+		*/
+		/*
+		// Linea a 1/3 (sinistra)
+        ctx.beginPath();
+        ctx.moveTo(x1 - w1 * 0.333 - dw1, y1);
+        ctx.lineTo(x2 - w2 * 0.333 - dw2, y2);
+        ctx.lineTo(x2 - w2 * 0.333 + dw2, y2);
+        ctx.lineTo(x1 - w1 * 0.333 + dw1, y1);
+        ctx.fill();
+
+        // Linea a 2/3 (destra)
+        ctx.beginPath();
+        ctx.moveTo(x1 + w1 * 0.333 - dw1, y1);
+        ctx.lineTo(x2 + w2 * 0.333 - dw2, y2);
+        ctx.lineTo(x2 + w2 * 0.333 + dw2, y2);
+        ctx.lineTo(x1 + w1 * 0.333 + dw1, y1);
+        ctx.fill();
+		*/
     }
 }
 
@@ -862,8 +1099,8 @@ function drawSprite(sprite, p) {
         ctx.fillRect(x - poleWidth * 1.5, y - 4, barWidth + poleWidth * 3, h * 0.25);
 
         ctx.fill();
-        ctx.fillStyle = '#fff';
-        ctx.strokeStyle = '#000';
+        ctx.fillStyle = gamePalette.startLight;//'#fff';
+        ctx.strokeStyle = gamePalette.startDark;//'#000';
         //palo
         ctx.fillRect(x - poleWidth / 2, y - startHeight, poleWidth, startHeight);
         ctx.strokeRect(x - poleWidth / 2, y - startHeight, poleWidth, startHeight);
@@ -875,12 +1112,12 @@ function drawSprite(sprite, p) {
         ctx.fillRect(x, y - startHeight, barWidth, h * 2);
         ctx.strokeRect(x, y - startHeight, barWidth, h * 2);
         //scacchiera
-        ctx.fillStyle = '#222';
+        ctx.fillStyle = gamePalette.startCheckered;//'#222';
         for (let i = 0; i < 16; i++) {
             ctx.fillRect(x + 2 * i * quadratino, y - startHeight, quadratino, h * 0.5);
             ctx.fillRect(x + 2 * i * quadratino, y - startHeight + startBarHeight/2,  quadratino, h * 0.5);
         }
-        ctx.fillStyle = '#222';
+        ctx.fillStyle = gamePalette.startCheckered;//'#222';
         for (let i = 0; i < 16; i++) {
             ctx.fillRect(x + (2 * i + 1) * quadratino, y - startHeight + startBarHeight/4, quadratino, h * 0.5);
             ctx.fillRect(x + (2 * i + 1) * quadratino, y - startHeight + 3*startBarHeight/4, quadratino, h * 0.5);
@@ -894,18 +1131,18 @@ function drawSprite(sprite, p) {
         ctx.fill();
 
         //tronco alto h*2
-        ctx.fillStyle = '#531';
+        ctx.fillStyle = gamePalette.trunk;//'#531';
         ctx.fillRect(x - w * 0.1, y - h * 2, w * 0.2, h * 2);
 		ctx.fillStyle = '#642';
 		ctx.fillRect(x - w * 0.05, y - h * 2, w * 0.05, h * 2);
 
         //chioma w/2
-        ctx.fillStyle = gamePalette.bushDark;//'#161';
+        ctx.fillStyle = gamePalette.treeDark;//'#161';
         ctx.beginPath();
         ctx.arc(x, y - h * 2, radius * 1.5, 0, Math.PI * 2);
         ctx.fill();
 		//riflesso chiaro
-		ctx.fillStyle = gamePalette.bushLight;//'#161';
+		ctx.fillStyle = gamePalette.treeLight;//'#161';
         ctx.beginPath();
         ctx.arc(x - w * 0.1, y - h * 2.2, radius * 1, 3.14, 5.28);
 		ctx.closePath();
@@ -930,7 +1167,7 @@ function drawSprite(sprite, p) {
         ctx.fill();
 	} else if (sprite.type === 'oil') {
 		//ombra==chiazza d'olio
-        ctx.fillStyle = '#000';
+        ctx.fillStyle = gamePalette.oil;//'#000';
         ctx.beginPath();
         ctx.ellipse(x, y, radius * 2, radius * 0.2, 0, 0, Math.PI * 2);
         ctx.fill();
@@ -942,7 +1179,7 @@ function drawSprite(sprite, p) {
 		ctx.fill();
 
 		//triangolo
-		ctx.fillStyle = '#f60'; // arancione
+		ctx.fillStyle = gamePalette.coneDark;// arancione
 		ctx.beginPath();
 		ctx.moveTo(x, y - h * 0.75);                // punta
 		ctx.lineTo(x - w * 0.25, y);         // base sx
@@ -951,7 +1188,7 @@ function drawSprite(sprite, p) {
 		ctx.fill();
 
 		//strisce bianche
-		ctx.fillStyle = '#fff';
+		ctx.fillStyle = gamePalette.coneLight;
 
 		//striscia alta
 		ctx.beginPath();
@@ -978,13 +1215,13 @@ function drawSprite(sprite, p) {
 		ctx.fill();
 
 		//palo
-		ctx.fillStyle = '#444';
+		ctx.fillStyle = gamePalette.trafficPole;//'#444';
 		ctx.fillRect(x - w * 0.05, y - h * 1.5, w * 0.1, h * 1.5);
 
 		//corpo giallo
 		let boxW = w * 0.4;
 		let boxH = h * 0.9;
-		ctx.fillStyle = '#fc3'; // giallo acceso
+		ctx.fillStyle = gamePalette.trafficBody;//'#fc3'; // giallo acceso
 		ctx.fillRect(x - boxW / 2, y - h * 1.5 - boxH, boxW, boxH);
 		ctx.strokeStyle = '#da1';
 		ctx.lineWidth = 2;
@@ -1039,15 +1276,15 @@ function drawSprite(sprite, p) {
         ctx.fill();
 
         //cartellone
-        ctx.fillStyle = '#fff';
+        ctx.fillStyle = gamePalette.signLowBackground;//'#fff';
         ctx.fillRect(x - w * 0.5, y - h, w, h);
-        ctx.strokeStyle = '#000';
+        ctx.strokeStyle = gamePalette.signLowBorder;//'#000';
         ctx.strokeRect(x - w * 0.5, y - h, w, h);
 
         //freccione rosso
         if (sprite.x <= 0) {
-            ctx.fillStyle = '#f00';
-            ctx.strokeStyle = '#b00';
+            ctx.fillStyle = gamePalette.signLowForeground;//'#f00';
+            ctx.strokeStyle = gamePalette.signLowForegroundBorder;//'#b00';
             ctx.beginPath();
             ctx.moveTo(x - w * 0.5 + 2, y - h + 2); //alto sx
             ctx.lineTo(x - w * 0, y - h + 2); //alto dx
@@ -1056,8 +1293,8 @@ function drawSprite(sprite, p) {
             ctx.lineTo(x - w * 0.5 + 2, y - 2); //basso sx
             ctx.lineTo(x - w * 0 - 2, y - h / 2); //mezzo sx
         } else {
-            ctx.fillStyle = '#f00';
-            ctx.strokeStyle = '#b00';
+            ctx.fillStyle = gamePalette.signLowForeground;//'#f00';
+            ctx.strokeStyle = gamePalette.signLowForegroundBorder;//'#b00';
             ctx.beginPath();
             ctx.moveTo(x + w * 0.5 - 2, y - h + 2); //alto dx
             ctx.lineTo(x + w * 0, y - h + 2); //alto sx
@@ -1075,21 +1312,21 @@ function drawSprite(sprite, p) {
         ctx.beginPath();
         ctx.ellipse(x, y, radius * 1.5, radius * 0.15, 0, 0, Math.PI * 2);
         ctx.fill();
-		
+
 		//palo
-		ctx.fillStyle = '#444';
+		ctx.fillStyle = gamePalette.signHighPole;
 		ctx.fillRect(x - w * 0.05, y - h * 2.1, w * 0.1, h * 2.1);
 
         //cartellone
-        ctx.fillStyle = '#000';
+        ctx.fillStyle = gamePalette.signHighBackground;
         ctx.fillRect(x - w * 0.5, y - h*2, w, h);
-        ctx.strokeStyle = '#000';
+        ctx.strokeStyle = gamePalette.signHighBorder;
         ctx.strokeRect(x - w * 0.5, y - h*2, w, h);
 
         //freccione rosso
         if (sprite.x <= 0) {
-            ctx.fillStyle = '#ff0';
-            ctx.strokeStyle = '#bb0';
+            ctx.fillStyle = gamePalette.signHighForeground;
+            ctx.strokeStyle = gamePalette.signHighForegroundBorder;
             ctx.beginPath();
             ctx.moveTo(x - w * 0.5 + 2, y - h*2 + 2); //alto sx
             ctx.lineTo(x - w * 0, y - h*2 + 2); //alto dx
@@ -1098,8 +1335,8 @@ function drawSprite(sprite, p) {
             ctx.lineTo(x - w * 0.5 + 2, y - h - 2); //basso sx
             ctx.lineTo(x - w * 0 - 2, y - h*1.5); //mezzo sx
         } else {
-            ctx.fillStyle = '#ff0';
-            ctx.strokeStyle = '#bb0';
+            ctx.fillStyle = gamePalette.signHighForeground;
+            ctx.strokeStyle = gamePalette.signHighForegroundBorder;
             ctx.beginPath();
             ctx.moveTo(x + w * 0.5 - 2, y - h*2 + 2); //alto dx
             ctx.lineTo(x + w * 0, y - h*2 + 2); //alto sx
@@ -1132,7 +1369,7 @@ function drawSprite(sprite, p) {
         ctx.fill();
 
 		// Fusto - fill marrone con valore chiaro
-		ctx.strokeStyle = '#853';
+		ctx.strokeStyle = gamePalette.palmTrunkLight;//'#853';
 		ctx.lineWidth = w * 0.22;
 		ctx.beginPath();
 		ctx.moveTo(x, y);
@@ -1140,7 +1377,7 @@ function drawSprite(sprite, p) {
 		ctx.stroke();
 
 		// Venatura del fusto (nodi, tratteggio scuro)
-		ctx.strokeStyle = '#742';
+		ctx.strokeStyle = gamePalette.palmTrunkDark;//'#742';
 		ctx.lineWidth = w * 0.1;
 		//ctx.setLineDash([w * 0.15, w * 0.25]);
 		ctx.beginPath();
@@ -1149,7 +1386,7 @@ function drawSprite(sprite, p) {
 		ctx.stroke();
 		//ctx.setLineDash([]);
 		
-		ctx.fillStyle = gamePalette.bushDark;
+		ctx.fillStyle = gamePalette.palmDark;
 		ctx.beginPath();
 		ctx.moveTo(tipX, tipY - h * 0.9);//su cx
 		ctx.lineTo(tipX + w * 0.35, tipY - h * 0.22);
@@ -1166,7 +1403,7 @@ function drawSprite(sprite, p) {
 		ctx.closePath();
 		ctx.fill();
 		//riflesso
-		ctx.fillStyle = gamePalette.bushLight;
+		ctx.fillStyle = gamePalette.palmLight;
 		ctx.beginPath();
 		ctx.moveTo(tipX, tipY - h * 0.9);//su cx
 		ctx.lineTo(tipX + w * 0.35, tipY - h * 0.22);
@@ -1187,7 +1424,7 @@ function drawSprite(sprite, p) {
 		ctx.fill();
 
 		// corpo roccia: un poligono irregolare
-		ctx.fillStyle = '#876';
+		ctx.fillStyle = gamePalette.rockLower;//'#876';
 		ctx.beginPath();
 		ctx.moveTo(x - w * 0.5,  y);
 		ctx.lineTo(x - w * 0.4,  y - h * 0.3);
@@ -1200,7 +1437,7 @@ function drawSprite(sprite, p) {
 		ctx.fill();
 
 		// lato in ombra (scuro)
-		ctx.fillStyle = '#543';
+		ctx.fillStyle = gamePalette.rockShadow;//'#543';
 		ctx.beginPath();
 		ctx.moveTo(x - w * 0.4,  y - h * 0.3);
 		ctx.lineTo(x + w * 0.1,  y - h * 0.2);
@@ -1212,7 +1449,7 @@ function drawSprite(sprite, p) {
 		ctx.fill();
 
 		// luce (faccia in alto a sinistra)
-		ctx.fillStyle = '#a98';
+		ctx.fillStyle = gamePalette.rockLight;//'#a98';
 		ctx.beginPath();
 		ctx.moveTo(x - w * 0.1,  y - h * 0.4);
 		ctx.lineTo(x + w * 0.2,  y - h * 0.5);
@@ -1222,7 +1459,7 @@ function drawSprite(sprite, p) {
 		ctx.fill();
 
 		// spigolo scuro
-		ctx.strokeStyle = '#321';
+		ctx.strokeStyle = gamePalette.rockBorder;//'#321';
 		ctx.lineWidth = 1;
 		ctx.beginPath();
 		ctx.moveTo(x - w * 0.5,  y);
@@ -1267,7 +1504,7 @@ function drawSprite(sprite, p) {
 		ctx.fill();
 
 		// corpo principale (più frastagliato e basso)
-		ctx.fillStyle = '#766';
+		ctx.fillStyle = gamePalette.rockLower;//'#766';
 		ctx.beginPath();
 		ctx.moveTo(x - w * 0.6,  y);
 		ctx.lineTo(x - w * 0.5,  y - h * 0.2);
@@ -1280,7 +1517,7 @@ function drawSprite(sprite, p) {
 		ctx.fill();
 
 		// faccia in ombra (destra)
-		ctx.fillStyle = '#544';
+		ctx.fillStyle = gamePalette.rockShadow;//'#544';
 		ctx.beginPath();
 		ctx.moveTo(x - w * 0.05, y - h * 0.5);
 		ctx.lineTo(x + w * 0.2,  y - h * 0.4);
@@ -1291,7 +1528,7 @@ function drawSprite(sprite, p) {
 		ctx.fill();
 
 		// faccia illuminata (sinistra)
-		ctx.fillStyle = '#a98';
+		ctx.fillStyle = gamePalette.rockLight;//'#a98';
 		ctx.beginPath();
 		ctx.moveTo(x - w * 0.3,  y - h * 0.45);
 		ctx.lineTo(x - w * 0.05, y - h * 0.5);
@@ -1301,7 +1538,7 @@ function drawSprite(sprite, p) {
 		ctx.fill();
 
 		// contorno spigoloso
-		ctx.strokeStyle = '#321';
+		ctx.strokeStyle = gamePalette.rockBorder;//'#321';
 		ctx.lineWidth = 1;
 		ctx.beginPath();
 		ctx.moveTo(x - w * 0.6,  y);
@@ -1324,6 +1561,71 @@ function drawSprite(sprite, p) {
 		ctx.beginPath();
 		ctx.ellipse(x, y, radius, radius * 0.15, 0, 0, Math.PI * 2);
 		ctx.fill();
+	} else if (sprite.type === 'cactus') {
+		// ombra
+		ctx.fillStyle = 'rgba(0,0,0,0.5)';
+		ctx.beginPath();
+		ctx.ellipse(x, y, radius * 0.8, radius * 0.15, 0, 0, Math.PI * 2);
+		ctx.fill();
+
+		let tw = w * 0.3; // spessore tronco
+		let th = h * 1.8;  // altezza tronco
+		let twHalf = tw * 0.5;//mezzo tronco
+
+		// TRONCO principale
+		ctx.fillStyle = gamePalette.cactusDark;
+		ctx.beginPath();
+		ctx.roundRect(x - twHalf, y - th, tw, th, [twHalf, twHalf, 4, 4]);
+		ctx.fill();
+		ctx.fillStyle = gamePalette.cactusLight;
+		ctx.beginPath();
+		ctx.roundRect(x - tw * 0.35, y - th + 4, tw * 0.25, th - 8, [4, 4, 2, 2]);
+		ctx.fill();
+
+		// BRACCIO SINISTRO
+		let armW = tw * 0.8;//braccio width
+		let armWHalf = armW * 0.5;
+		let armOutH = h * 0.4;  // segmento orizzontale
+		let armUpH  = h * 0.5;  // segmento verticale
+		let armY    = y - th * 0.6; // quota attacco al tronco
+
+		// orizzontale sx
+		ctx.fillStyle = gamePalette.cactusDark;
+		ctx.beginPath();
+		ctx.roundRect(x - twHalf - armOutH, armY - armWHalf, armOutH, armW, [armWHalf, 0, 0, armWHalf]);
+		ctx.fill();
+		// verticale sx (sale)
+		ctx.beginPath();
+		ctx.roundRect(x - twHalf - armOutH,
+					  armY - armWHalf - armUpH,
+					  armW, armUpH + armWHalf,
+					  [armWHalf, armWHalf, 0, 0]);
+		ctx.fill();
+		// verticale sx (luce)
+		ctx.fillStyle = gamePalette.cactusLight;
+		ctx.beginPath();
+		ctx.roundRect(x - twHalf - armOutH + 1,
+					  armY - armWHalf - armUpH + 4,
+					  armW * 0.3, armUpH + armWHalf - 8,
+					  [armWHalf, armWHalf, 0, 0]);
+		ctx.fill();
+		
+
+		// BRACCIO DESTRO (più basso per asimmetria)
+		let armY2 = y - th * 0.35;
+		// orizzontale dx
+		ctx.fillStyle = gamePalette.cactusDark;
+		ctx.beginPath();
+		ctx.roundRect(x + twHalf, armY2 - armWHalf, armOutH * 0.8, armW, [0, armWHalf, armWHalf, 0]);
+		ctx.fill();
+		// verticale dx
+		ctx.beginPath();
+		ctx.roundRect(x + tw * 0.5 + armOutH * 0.8 - armW,
+					  armY2 - armWHalf - armUpH * 0.75,
+					  armW, armUpH * 0.75 + armWHalf,
+					  [armW * 0.5, armW * 0.5, 0, 0]);
+		ctx.fill();
+		ctx.lineWidth = 1;
 	}	
 }
 
@@ -1702,6 +2004,8 @@ function render() {
 		//drawdistance fix n100 
 		if (fpsDisplay < 20) drawDistance = 80;
 		else if (fpsDisplay < 50) drawDistance = 140;
+		else if (fpsDisplay > 120) drawDistance = 400;
+		else if (fpsDisplay > 90) drawDistance = 300;
 		else drawDistance = 200;
     }
 
@@ -1713,7 +2017,8 @@ function render() {
 	ctx.fillStyle = '#000';
 	ctx.font = '12px monospace';
 	ctx.textAlign = 'right';
-	ctx.fillText('FPS: ' + fpsDisplay, width - 10, 14);
+	ctx.fillText('FPS:  ' + fpsDisplay, width - 10, 14);
+	ctx.fillText('DIST: ' + drawDistance, width - 10, 24);
 	
 	
 	let startPos = Math.floor(player.z / segL);
