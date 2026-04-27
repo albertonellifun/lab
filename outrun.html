@@ -374,6 +374,7 @@ const SPRITE_CONFIG = {
 	rock2:        { width: 0.10 },//
 	cactus:       { width: 0.12 },//
 	water:        { width: 0.30 },
+	tunnel:       { width: 0   },
     start:        { width: 0   }
 };
 
@@ -388,6 +389,7 @@ function addSegment(idx, curve, y) {
 			(idx > 1200 && idx < 1500) || //bush ogni 4 seg
 			(idx > 1700 && idx < 1900) || //cactus
 			(idx > 2000 && idx < 2200) || //freccione ogni 8 seg
+			(idx > 2300 && idx < 2400) || //tunnel
 			(idx > 2500 && idx < 2700) || //palme ogni 4 seg
 			(idx > 2800 && idx < 2900) //semafori ogni 4 seg
 			|| Math.random() > 0.75
@@ -403,6 +405,7 @@ function addSegment(idx, curve, y) {
 		else if (idx > 1200 && idx < 1500) type = 'bush';
 		else if (idx > 1700 && idx < 1900) type = 'cactus';
 		else if (idx > 2000 && idx < 2200) type = 'signhigh';
+		else if (idx > 2300 && idx < 2400) type = 'tunnel';
 		else if (idx > 2500 && idx < 2700) type = 'palm';
 		else if (idx > 2800 && idx < 2850) type = 'trafficlight';
         else {
@@ -444,6 +447,8 @@ function addSegment(idx, curve, y) {
         } else if (type === 'rock' || type === 'rock2') {
 			position = Math.random() > 0.5 ? 2.2 - Math.random() : -2.2 + Math.random();//roccia esterna (-2..-1 o 1..2)
 		} else if (type === 'cactus') {
+			position = idx % 8 === 0 ? -1.6 : 1.6;
+		} else if (type === 'tunnel') {
 			position = idx % 8 === 0 ? -1.6 : 1.6;
 		}
 
@@ -518,6 +523,8 @@ function initPalette() {
 			signHighBorder: '#000',
 			signHighForeground: '#ff0',
 			signHighForegroundBorder: '#bb0',
+			tunnelInner: '#644',
+			tunnelFace: '#977',
 		};
 	} else if (currentPalette === 1) {
 		//GHIACCIO
@@ -566,6 +573,8 @@ function initPalette() {
 			signHighBorder: '#000',
 			signHighForeground: '#ff0',
 			signHighForegroundBorder: '#bb0',
+			tunnelInner: '#666',
+			tunnelFace: '#999',
 		};
 	} else if (currentPalette === 3) {
 		//NEON
@@ -614,6 +623,8 @@ function initPalette() {
 			signHighBorder: '#000',
 			signHighForeground: '#ff0',
 			signHighForegroundBorder: '#bb0',
+			tunnelInner: '#044',
+			tunnelFace: '#0ff',
 		};
 	} else if (currentPalette === 4) {
 		//MIAMI
@@ -662,6 +673,8 @@ function initPalette() {
 			signHighBorder: '#000',
 			signHighForeground: '#ff0',
 			signHighForegroundBorder: '#bb0',
+			tunnelInner: '#646',
+			tunnelFace: '#979',
 		};
 	} else if (currentPalette === 5) {
 		//NIGHT DRIVER
@@ -710,6 +723,8 @@ function initPalette() {
 			signHighBorder: '#000',
 			signHighForeground: '#ff0',
 			signHighForegroundBorder: '#bb0',
+			tunnelInner: '#330',
+			tunnelFace: '#ffc',
 		};
 	} else {
 		//DEFAULT=VERDE CITTAREALE
@@ -758,6 +773,8 @@ function initPalette() {
 			signHighBorder: '#000',
 			signHighForeground: '#ff0',
 			signHighForegroundBorder: '#bb0',
+			tunnelInner: '#666',
+			tunnelFace: '#999',
 		};
 	}
 }
@@ -1085,7 +1102,60 @@ function drawSprite(sprite, p) {
 
     let radius = Math.max(0, w * 0.5); //OCHO: il raggio non puo essere negativo
 
-    if (sprite.type === 'start') {
+	if (sprite.type === 'tunnel') {
+		// Cavalcavia/tunnel in prospettiva
+		let halfRoad = scale * roadW * width / 2; // metà strada in px schermo
+		let pW = halfRoad * 0.15;    // spessore pilone
+		let archH = h * 6; // altezza piloni
+		let beamH = h;// altezza trave
+		let depth = pW * 0.25;// profondità effetto 3D
+
+		// X bordi strada
+		let lx = p.screen.x - halfRoad - pW;
+		let rx = p.screen.x + halfRoad + pW;
+		let baseY = y;
+		let topY  = y - archH;
+
+		// PILONE SINISTRO - fianco (prospettiva destra)
+		ctx.fillStyle = gamePalette.tunnelInner;
+		ctx.beginPath();
+		ctx.moveTo(lx + pW,         topY);
+		ctx.lineTo(lx + pW + depth, topY);
+		ctx.lineTo(lx + pW + depth, baseY - depth * 0.5);
+		ctx.lineTo(lx + pW,         baseY);
+		ctx.fill();
+		// PILONE SINISTRO - faccia frontale
+		ctx.fillStyle = gamePalette.tunnelFace;
+		ctx.fillRect(lx, topY, pW, archH);
+		ctx.strokeStyle = gamePalette.startDark;
+		ctx.strokeRect(lx, topY, pW, archH);
+	
+		// PILONE DESTRO - fianco (prospettiva sinistra, ombra)
+		ctx.fillStyle = gamePalette.tunnelInner;
+		ctx.beginPath();
+		ctx.moveTo(rx - pW,         topY);
+		ctx.lineTo(rx - pW - depth, topY);
+		ctx.lineTo(rx - pW - depth, baseY - depth * 0.5);
+		ctx.lineTo(rx - pW,         baseY);
+		ctx.fill();
+		// PILONE DESTRO - faccia frontale
+		ctx.fillStyle = gamePalette.tunnelFace;
+		ctx.fillRect(rx - pW, topY, pW, archH);
+		ctx.strokeStyle = gamePalette.startDark;
+		ctx.strokeRect(rx - pW, topY, pW, archH);
+
+		// TRAVE - faccia superiore (prospettiva)
+		let beamX = lx + pW;
+		let beamW = rx - pW - beamX;
+		
+		// TRAVE - faccia frontale
+		ctx.fillStyle = gamePalette.tunnelFace;
+		ctx.fillRect(beamX, topY, beamW, beamH);
+		ctx.strokeStyle = gamePalette.startDark;
+		ctx.strokeRect(beamX, topY, beamW, beamH);
+		
+		ctx.lineWidth = 1;
+	} else if (sprite.type === 'start') {
         let poleWidth = w / 4;
         let barWidth = w * 16;//non mi piace!
 		barWidth = roadW * scale * width * Math.abs(sprite.x);//1.6
