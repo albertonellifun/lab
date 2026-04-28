@@ -884,12 +884,17 @@ function project(p, camX, camY, camZ) {
 }
 
 // --- BACKGROUND ---
+let skyGradientCache = null;//piccola ottimizzazione
+let skyGradientPalette = null;//piccola ottimizzazione
 function drawSky(offset) {
-    //cielo
-    let g = ctx.createLinearGradient(0, 0, 0, height * 0.5);
-    g.addColorStop(0, gamePalette.skyDark);
-    g.addColorStop(1, gamePalette.skyLight);
-    ctx.fillStyle = g;
+    if (skyGradientPalette !== gamePalette.id) {
+        skyGradientCache = ctx.createLinearGradient(0, 0, 0, height * 0.5);
+        skyGradientCache.addColorStop(0, gamePalette.skyDark);
+        skyGradientCache.addColorStop(1, gamePalette.skyLight);
+        skyGradientPalette = gamePalette.id;
+    }
+	//cielo
+    ctx.fillStyle = skyGradientCache;
     ctx.fillRect(0, 0, width, height * 0.5);
     ctx.fillStyle = gamePalette.terrain;
     ctx.fillRect(0, height * 0.5, width, height);
@@ -2153,8 +2158,10 @@ function render() {
         fpsCount = 0;
         fpsTime = now;
 		//drawdistance fix n100 
-		if (fpsDisplay < 20) drawDistance = 80;
-		else if (fpsDisplay < 50) drawDistance = 140;
+		if (fpsDisplay < 15) drawDistance = 80;
+		else if (fpsDisplay < 30) drawDistance = 100;
+		else if (fpsDisplay < 45) drawDistance = 120;
+		else if (fpsDisplay < 55) drawDistance = 150;
 		else if (fpsDisplay > 120) drawDistance = 400;
 		else if (fpsDisplay > 90) drawDistance = 300;
 		else drawDistance = 200;
