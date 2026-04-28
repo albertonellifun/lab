@@ -99,14 +99,24 @@
 			position: absolute;
 			top: 20px;
 			left: 20px;
+			z-index: 40;
         }
 		#btn-palette {
-		    background: rgba(60,60,255,0.25);
-            border-color: rgba(60,60,255,0.75);
+		    background: rgba(0,255,0,0.25);
+            border-color: rgba(0,255,0,0.75);
 			position: absolute;
-			top: 20px;
-			right: 20px;
+			top: 150px;
+			left: 20px;
+			z-index: 40;
         }
+		#btn-lights {
+			background: rgba(255,255,0,0.25);
+            border-color: rgba(255,255,0,0.75);
+			position: absolute;
+			top: 280px;
+			left: 20px;
+			z-index: 40;
+		}
     </style>
 </head>
 <body>
@@ -114,17 +124,18 @@
 <div id="wrapper">
 	<button class="btn" id="btn-mute" onclick="isMute=!isMute">🔊</button>
 	<button class="btn" id="btn-palette" onclick="initPalette()">🌈</button>
+	<button class="btn" id="btn-lights" onclick="player.lights=!player.lights">💡</button>
     <canvas id="g"></canvas>
 
     <!-- Controlli touch on-screen -->
     <div id="controls">
+		<div class="ctrl-group">
+            <div class="btn" id="btn-brake">🔴</div>
+            <div class="btn" id="btn-gas">🟢</div>
+        </div>
         <div class="ctrl-group">
             <div class="btn" id="btn-left">◀</div>
             <div class="btn" id="btn-right">▶</div>
-        </div>
-        <div class="ctrl-group">
-            <div class="btn" id="btn-brake">🔴</div>
-            <div class="btn" id="btn-gas">🟢</div>
         </div>
     </div>
 </div>
@@ -184,6 +195,7 @@ const player = {
 	accel: 1,		//accelerazione max
 	brake: 1.8,		//max forza frenante
 	tilt: 0,		//inclinazione (in curva, figata!)
+	lights: false,	//luci accese anche di giorno e prudenza? SEMPRE!
 };
 
 let skyOffset = 0;
@@ -337,23 +349,29 @@ const trackL = SEGMENTS * segL;
 
 //JOHNNY, IL PROBLEMA DELLA SICILIA E' IL... TRAFFICO!!!
 const CAR_COLORS = [
-	{light:'#0f0',dark:'#0b0'},
-	{light:'#00f',dark:'#00b'},
-	{light:'#ff0',dark:'#bb0'},
-	{light:'#0ff',dark:'#0bb'},
-	{light:'#f0f',dark:'#b0b'},
-	{light:'#fff',dark:'#bbb'},
-	{light:'#999',dark:'#555'},
-	{light:'#444',dark:'#222'},
-	{light:'#f80',dark:'#b40'},
-	{light:'#0f4',dark:'#0b0'},
-	{light:'#04f',dark:'#00b'}
+	{light:'#0f0',dark:'#0b0'},//verde
+	{light:'#00f',dark:'#00b'},//blu
+	{light:'#ff0',dark:'#bb0'},//gialla
+	{light:'#0ff',dark:'#0bb'},//ciano
+	{light:'#f0f',dark:'#b0b'},//fuxia
+	{light:'#fff',dark:'#bbb'},//bianca
+	{light:'#999',dark:'#555'},//grigia
+	{light:'#444',dark:'#222'},//nera
+	{light:'#f80',dark:'#b40'},//arancio
+	{light:'#0f4',dark:'#0b0'},//verde chiaro
+	{light:'#04f',dark:'#00b'},//blu chiaro
+	{light:'#da4',dark:'#972'},//oro
+	{light:'#841',dark:'#520'},//marrone cuoio
+	{light:'#244',dark:'#122'},//verde petrolio
+	{light:'#eef',dark:'#aac'},//lavanda chiaro
+	{light:'#fbb',dark:'#c88'},//rosa tenue
+	{light:'#7fd',dark:'#3a9'},//acquamarina
 	];
 
-const trafficCars = Array.from({ length: 15 }, (_, i) => ({
+const trafficCars = Array.from({ length: 17 }, (_, i) => ({
     x: (i % 3 === 0) ? -0.35 : (i % 3 === 1) ? 0 : 0.35,
-    z: (i + 1) * (trackL / 15),     // distribuite lungo la pista
-    speed: 30 + Math.random() * 40, // 30-70, molto più lente della Ferrari
+    z: (i + 1) * (trackL / 17),                       // distribuite lungo la pista
+    speed: 50 + Math.ceil((Math.random() * 20) * 10), //50-250, le altre Ferrari sono indemoniate
     color: CAR_COLORS[i%CAR_COLORS.length]
 }));
 
@@ -389,7 +407,7 @@ function addSegment(idx, curve, y) {
 			(idx > 1200 && idx < 1500) || //bush ogni 4 seg
 			(idx > 1700 && idx < 1900) || //cactus
 			(idx > 2000 && idx < 2200) || //freccione ogni 8 seg
-			(idx > 2300 && idx < 2400) || //tunnel
+			(idx > 2200 && idx < 2400) || //tunnel
 			(idx > 2500 && idx < 2700) || //palme ogni 4 seg
 			(idx > 2800 && idx < 2900) //semafori ogni 4 seg
 			|| Math.random() > 0.75
@@ -405,7 +423,7 @@ function addSegment(idx, curve, y) {
 		else if (idx > 1200 && idx < 1500) type = 'bush';
 		else if (idx > 1700 && idx < 1900) type = 'cactus';
 		else if (idx > 2000 && idx < 2200) type = 'signhigh';
-		else if (idx > 2300 && idx < 2400) type = 'tunnel';
+		else if (idx > 2200 && idx < 2400) type = 'tunnel';
 		else if (idx > 2500 && idx < 2700) type = 'palm';
 		else if (idx > 2800 && idx < 2850) type = 'trafficlight';
         else {
@@ -525,6 +543,9 @@ function initPalette() {
 			signHighForegroundBorder: '#bb0',
 			tunnelInner: '#644',
 			tunnelFace: '#977',
+			billBackground: '#fff',
+			billForeground: '#f00',
+			billBorder: '#b00',
 		};
 	} else if (currentPalette === 1) {
 		//GHIACCIO
@@ -575,6 +596,9 @@ function initPalette() {
 			signHighForegroundBorder: '#bb0',
 			tunnelInner: '#666',
 			tunnelFace: '#999',
+			billBackground: '#66f',
+			billForeground: '#ff0',
+			billBorder: '#bb0',
 		};
 	} else if (currentPalette === 3) {
 		//NEON
@@ -625,6 +649,9 @@ function initPalette() {
 			signHighForegroundBorder: '#bb0',
 			tunnelInner: '#044',
 			tunnelFace: '#0ff',
+			billBackground: '#ff0',
+			billForeground: '#f80',
+			billBorder: '#b60',
 		};
 	} else if (currentPalette === 4) {
 		//MIAMI
@@ -675,6 +702,9 @@ function initPalette() {
 			signHighForegroundBorder: '#bb0',
 			tunnelInner: '#646',
 			tunnelFace: '#979',
+			billBackground: '#0ff',
+			billForeground: '#f0f',
+			billBorder: '#b0b',
 		};
 	} else if (currentPalette === 5) {
 		//NIGHT DRIVER
@@ -725,6 +755,9 @@ function initPalette() {
 			signHighForegroundBorder: '#bb0',
 			tunnelInner: '#330',
 			tunnelFace: '#ffc',
+			billBackground: '#fff',
+			billForeground: '#ff0',
+			billBorder: '#bb0',
 		};
 	} else {
 		//DEFAULT=VERDE CITTAREALE
@@ -775,6 +808,9 @@ function initPalette() {
 			signHighForegroundBorder: '#bb0',
 			tunnelInner: '#666',
 			tunnelFace: '#999',
+			billBackground: '#fff',
+			billForeground: '#f00',
+			billBorder: '#b00',
 		};
 	}
 }
@@ -895,7 +931,7 @@ function drawSegment(x1, y1, w1, x2, y2, w2, idx) {
     ctx.fillStyle = idx%2 ? gamePalette.grassDark : gamePalette.grassLight; //erba
     ctx.fillRect(0, y2, width, y1 - y2);
 	
-    // Cordoli
+	// Cordoli
 	ctx.fillStyle = idx%2 ? gamePalette.rumbleDark : gamePalette.rumbleLight; //cordolo
 	ctx.beginPath();
 	ctx.moveTo(x1 - w1 * 1.1, y1);
@@ -905,14 +941,14 @@ function drawSegment(x1, y1, w1, x2, y2, w2, idx) {
 	ctx.fill();
 	
     // Strada
-    ctx.fillStyle = idx%2 ? gamePalette.roadDark : gamePalette.roadLight; //asfalto
+	ctx.fillStyle = idx%2 ? gamePalette.roadDark : gamePalette.roadLight; //asfalto
     ctx.beginPath();
     ctx.moveTo(x1 - w1, y1 + 1);
     ctx.lineTo(x2 - w2, y2 - 1);
     ctx.lineTo(x2 + w2, y2 - 1);
     ctx.lineTo(x1 + w1, y1 + 1);
-    ctx.fill();
-
+	ctx.fill();
+	
     // TRATTEGGIO: disegna il trapezio solo sui segmenti pari
     if (Math.floor(idx * 0.5) % 2 === 0) {
         let dw1 = Math.max(1.5, w1 * 0.03);//larghezza 0.045 piu massiccia, 0.030 slim
@@ -962,6 +998,7 @@ function drawSegment(x1, y1, w1, x2, y2, w2, idx) {
         ctx.fill();
 		*/
     }
+
 }
 
 
@@ -1550,13 +1587,13 @@ function drawSprite(sprite, p) {
         ctx.fill();
 
         //cartellone
-        ctx.fillStyle = '#fff';
+        ctx.fillStyle = gamePalette.billBackground;//'#fff';
         ctx.fillRect(x - w*2, y - h, w * 4, h);
         ctx.strokeStyle = '#000';
         ctx.strokeRect(x - w*2, y - h, w * 4, h);
         
-		ctx.fillStyle = '#f00';
-        ctx.strokeStyle = '#b00';
+		ctx.fillStyle = gamePalette.billForeground;//'#f00';
+        ctx.strokeStyle = gamePalette.billBorder;//'#b00';
         ctx.beginPath();
         ctx.moveTo(x + w * 2 - 2, y - h + 2); //alto dx
         ctx.lineTo(x + w * 1, y - h + 2); //alto sx
@@ -1713,7 +1750,16 @@ function drawFerrariShadow(cx, cy, w, h) {
 	ctx.lineTo(cx + 60 * sw - 6 * sw, cy +  2 * sh);
 	ctx.closePath();
 	ctx.fill();	
-
+	//fari
+	if (player.lights) {
+		ctx.fillStyle = 'rgba(255,255,0,0.25)';
+		ctx.beginPath();
+		ctx.ellipse(cx - 30 * sw, cy - 0 * sh, 30 * sw, 20 * sh, -0.4, 0, 6.28);
+		ctx.fill();
+		ctx.beginPath();
+		ctx.ellipse(cx + 30 * sw, cy - 0 * sh, 30 * sw, 20 * sh, 0.4, 0, 6.28);
+		ctx.fill();
+	}
 }
 //un rettangolo rosso -> testarossa di alb spettacolare anche senza biondona al seguito
 function drawFerrari(cx, cy, w, colDark, colLight) {
@@ -1777,14 +1823,15 @@ function drawFerrari(cx, cy, w, colDark, colLight) {
     ctx.fillStyle = '#000';
     ctx.fillRect(cx - 60 * s + 5 * s, cy + 10 * s + bounce, 120 * s - 10 * s, 16 * s);
 
+
     //fari posteriori
-    ctx.fillStyle = '#500'; //rosso sotto
+    ctx.fillStyle = player.lights ? '#f00' : '#500'; //rosso sotto
     ctx.fillRect(cx - 60 * s + 10 * s, cy + 16 * s + bounce, 20 * s, 6 * s);
     ctx.fillRect(cx + 60 * s - 30 * s, cy + 16 * s + bounce, 20 * s, 6 * s);
-    ctx.fillStyle = '#f80'; //freccia gialla
+    ctx.fillStyle = player.lights ? '#840' : '#f80'; //freccia gialla
     ctx.fillRect(cx - 60 * s + 10 * s, cy + 12 * s + bounce, 20 * s, 4 * s);
     ctx.fillRect(cx + 60 * s - 30 * s, cy + 12 * s + bounce, 20 * s, 4 * s);
-    ctx.fillStyle = '#eee'; //bianco retro
+    ctx.fillStyle = player.lights ? '#999' : '#eee'; //bianco retro
     ctx.fillRect(cx - 60 * s + 30 * s, cy + 12 * s + bounce, 5 * s, 10 * s);
     ctx.fillRect(cx + 60 * s - 35 * s, cy + 12 * s + bounce, 5 * s, 10 * s);
 
@@ -1799,13 +1846,13 @@ function drawFerrari(cx, cy, w, colDark, colLight) {
     }
 
     //targa
-    ctx.fillStyle = '#fff';
+    ctx.fillStyle = player.lights ? '#ff4' : '#fff';
     ctx.fillRect(cx - 15 * s, cy + 28 * s + bounce, 30 * s, 6 * s);
 
     //stemma
-    ctx.fillStyle = '#ccc';
+    ctx.fillStyle = player.lights ? '#666' : '#ccc';
     ctx.fillRect(cx - 3 * s, cy + 15 * s + bounce, 6 * s, 6 * s);
-    ctx.fillStyle = '#fff';
+    ctx.fillStyle = player.lights ? '#999' : '#fff';
     ctx.fillRect(cx - 2 * s, cy + 16 * s + bounce, 4 * s, 4 * s);
 
     //cannoni
@@ -1865,9 +1912,9 @@ function drawGearStick() {
 
     // --- BASE METALLICA ---
     let grad = ctx.createLinearGradient(x, y, x + w, y + h);
-    grad.addColorStop(0, '#aaa');
-    grad.addColorStop(0.5, '#eee');
-    grad.addColorStop(1, '#888');
+    grad.addColorStop(0, player.lights ? '#aa0' : '#aaa');
+    grad.addColorStop(0.5, player.lights ? '#ee0' : '#eee');
+    grad.addColorStop(1, player.lights ? '#880' : '#888');
 
     ctx.fillStyle = grad;
     ctx.fillRect(x, y, w, h);
@@ -1948,7 +1995,7 @@ function drawGearStick() {
         baseX - 3, baseY - 3, 2,
         baseX, baseY, 12
     );
-    knobGrad.addColorStop(0, '#999');
+    knobGrad.addColorStop(0, player.lights ? '#990' : '#999');
     knobGrad.addColorStop(1, '#000');
 
     ctx.fillStyle = knobGrad;
@@ -1971,7 +2018,7 @@ function drawSpeedometer() {
     
 	// bordo	
 	ctx.lineWidth = 3;
-    ctx.strokeStyle = '#fff';
+    ctx.strokeStyle = player.lights ? '#ff0' : '#fff';
     ctx.stroke();
 
 	// zona rossa e' il contagiri
@@ -1983,7 +2030,7 @@ function drawSpeedometer() {
 	ctx.stroke();	
 	
     // tacche
-	ctx.strokeStyle = '#fff';
+	ctx.strokeStyle = player.lights ? '#ff0' : '#fff';
 	ctx.lineWidth = 3;
     for (let i = 0; i <= 6; i++) {
         let t = i / 6;
@@ -2018,11 +2065,11 @@ function drawSpeedometer() {
     // centro
     ctx.beginPath();
     ctx.arc(cx, cy, 5, 0, Math.PI * 2);
-    ctx.fillStyle = '#fff';
+    ctx.fillStyle = player.lights ? '#ff0' : '#fff';
     ctx.fill();
 
     // testo velocità
-    ctx.fillStyle = '#fff';
+    ctx.fillStyle = player.lights ? '#ff0' : '#fff';
     ctx.font = '12px monospace';
     ctx.textAlign = 'center';
     ctx.fillText((player.speed | 0) + ' km/h', cx, cy - 10);
@@ -2047,10 +2094,10 @@ function drawLapTimes() {
     ctx.fillStyle = 'rgba(0,0,0,0.5)';
     ctx.fillRect(8, 8, 120, 60);
 
-    ctx.fillStyle = '#fff';
+    ctx.fillStyle = player.lights ? '#ff0' : '#fff';
     ctx.fillText('LAP   ' + formatTime(current), 16, 26);
 
-    ctx.fillStyle = '#aaa';
+    ctx.fillStyle = player.lights ? '#aa0' : '#aaa';
     ctx.fillText('LAST  ' + formatTime(lastLapTime), 16, 44);
 
     ctx.fillStyle = '#f00';
@@ -2084,11 +2131,15 @@ function render() {
 	drawSky(skyOffset);
 	
 	//FPS
-	ctx.fillStyle = '#000';
+	ctx.fillStyle = 'rgba(0,0,0,0.5)';
+    ctx.fillRect(width - 128, 8, 120, 60);
+	ctx.fillStyle = player.lights ? '#ff0' : '#fff';
 	ctx.font = '12px monospace';
 	ctx.textAlign = 'right';
-	ctx.fillText('FPS:  ' + fpsDisplay, width - 10, 14);
-	ctx.fillText('DIST: ' + drawDistance, width - 10, 24);
+	ctx.fillText('FPS: ' + fpsDisplay, width - 20, 26);
+	ctx.fillText('DIST: ' + drawDistance, width - 20, 44);
+	ctx.fillText('ENV: ' + gamePalette.id, width - 20, 62);	
+	
 	
 	
 	let startPos = Math.floor(player.z / segL);
@@ -2149,9 +2200,11 @@ function render() {
                 let spriteHalfW = s.sprite.width * 0.5;// * s.p1.screen.scale;
 				let carHalfW = 0.1;//larga ~0.3 unità, centrata su playerX
 				let overlap = Math.abs(player.x - s.sprite.x) < (spriteHalfW + carHalfW);
+				//check tunnel
+				if (s.sprite.type === 'tunnel' && Math.abs(player.x) > 0.88 && Math.abs(player.x) < 1.3) overlap = true;
 				
 				if (overlap && segDist === 8) {
-					console.log(`overlap=${overlap}  segDist=${segDist}  seg=${n}  playerX=${player.x.toFixed(2)}|${carHalfW}  spriteX=${s.sprite.x}|${spriteHalfW}  dist=${Math.abs(player.x - s.sprite.x).toFixed(2)}`);
+					console.log(`overlap=${overlap}  segDist=${segDist}  seg=${n}  playerX=${player.x.toFixed(2)}|${carHalfW}  spriteX=${s.sprite.x}|${spriteHalfW} 	dist=${Math.abs(player.x - s.sprite.x).toFixed(2)}`);
 					
 					if (s.sprite.type === 'oil' || s.sprite.type === 'water') {
 						let spawnCount = 4 + (player.speed / 40)|0;
@@ -2260,6 +2313,9 @@ window.addEventListener('keydown', (e) => {
     if (e.keyCode == 39) keys.right = 1;
     if (e.keyCode == 38) keys.up = 1;
     if (e.keyCode == 40) keys.down = 1;
+	if (e.key === 'M' || e.key === 'm') isMute=!isMute;
+	if (e.key === 'L' || e.key === 'l') player.lights=!player.lights;
+	if (e.key === 'P' || e.key === 'p') initPalette();
 });
 window.addEventListener('keyup', (e) => {
     if (e.keyCode == 37) keys.left = 0;
