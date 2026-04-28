@@ -849,11 +849,11 @@ function drawSky(offset) {
     ctx.fillStyle = gamePalette.terrain;
     ctx.fillRect(0, height * 0.5, width, height);
 	
-	//sole
-	// si muove lentamente con lo skyOffset, ma rimane sempre in cielo
+	//sole, si muove lentamente con lo skyOffset, ma rimane sempre in cielo
 	let sunR = 32;
-	let sunX = (width * 0.35 - offset * 0.01) % width;
-	if (sunX < -sunR) sunX += width;
+	let sunX = (width * 0.35 - offset * 0.01) % (width * 2);
+	if (sunX < -(width * 0.5)) sunX += (width * 1.75);
+	if (sunX >  (width * 1.5)) sunX -= (width * 1.75);
 	let sunY = height * 0.25;
 	
 
@@ -2201,7 +2201,7 @@ function render() {
 				let carHalfW = 0.1;//larga ~0.3 unità, centrata su playerX
 				let overlap = Math.abs(player.x - s.sprite.x) < (spriteHalfW + carHalfW);
 				//check tunnel
-				if (s.sprite.type === 'tunnel' && Math.abs(player.x) > 0.88 && Math.abs(player.x) < 1.3) overlap = true;
+				if (!overlap && s.sprite.type === 'tunnel' && Math.abs(player.x) > 0.88 && Math.abs(player.x) < 1.3) overlap = true;
 				
 				if (overlap && segDist === 8) {
 					console.log(`overlap=${overlap}  segDist=${segDist}  seg=${n}  playerX=${player.x.toFixed(2)}|${carHalfW}  spriteX=${s.sprite.x}|${spriteHalfW} 	dist=${Math.abs(player.x - s.sprite.x).toFixed(2)}`);
