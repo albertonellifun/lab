@@ -2123,7 +2123,7 @@ function drawFerrari(cx, cy, w, colDark, colLight) {
 
     //cannoni
     ctx.fillStyle = '#000';
-	ctx.strokeStyle = '#ccc';
+	ctx.strokeStyle = '#ddd';
     [-45, -35, 35, 45].forEach(off => {
         ctx.fillRect(cx + off*s - 4*s, cy + 34*s + bounce, 8*s, 5*s);
         ctx.strokeRect(cx + off*s - 4*s, cy + 34*s + bounce, 8*s, 5*s);
@@ -2482,15 +2482,15 @@ function render() {
 					console.log(`overlap=${overlap}  segDist=${segDist}  seg=${n}  playerX=${player.x.toFixed(2)}|${carHalfW}  spriteX=${s.sprite.x}|${spriteHalfW} 	dist=${Math.abs(player.x - s.sprite.x).toFixed(2)}`);
 					
 					if (s.sprite.type === 'oil' || s.sprite.type === 'water') {
-						let spawnCount = 4 + (player.speed / 40)|0;
+						let spawnCount = 10 + (player.speed / 40)|0;
 						for (let i = 0; i < spawnCount; i++) {
 							particles.push({
 								x: width * 0.5 + (Math.random() - 0.5) * 50,
-								y: height - 10,
+								y: height - 20,
 								vx: (Math.random() - 0.5) * 1.2,
-								vy: -(0.5 + Math.random() * 1.5),
-								life: 1.0,
-								r: 8 - Math.random() * 4,
+								vy: -0.25 + Math.random() * 0.5,
+								life: 1,
+								r: 4 - Math.random() * 2,
 								gray: s.sprite.type === 'water' ? 230 : 30
 							});
 						}
@@ -2504,6 +2504,52 @@ function render() {
 	
 	drawTraffic(startPos);
 	drawCar();//Player Car
+	
+	if (player.speed < 150 && player.state === 'ALIVE') {
+		let life = 0.5 * (150 - player.speed) * 0.005;
+		let ww = width * 0.5;
+		let hh = height - 30;
+		let vvx = (Math.random() - 0.5) * 1.2;
+		let vvy = -0.5 + Math.random();
+		let rr = 6 - Math.random() * 3;
+		
+		particles.push({
+			x: ww - 35,
+			y: hh,
+			vx: vvx,
+			vy: vvy,
+			life: life,
+			r: rr,
+			gray: 200
+		});
+		particles.push({
+			x: ww - 45,
+			y: hh,
+			vx: vvx,
+			vy: vvy,
+			life: life,
+			r: rr,
+			gray: 200
+		});
+		particles.push({
+			x: ww + 35,
+			y: hh,
+			vx: vvx,
+			vy: vvy,
+			life: life,
+			r: rr,
+			gray: 200
+		});
+		particles.push({
+			x: ww + 45,
+			y: hh,
+			vx: vvx,
+			vy: vvy,
+			life: life,
+			r: rr,
+			gray: 200
+		});
+	}
 	
 	drawSpeedometer();
 	drawGearStick();
