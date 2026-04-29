@@ -168,6 +168,8 @@ const BASE_H = 600;
 let width = BASE_W;
 let height = BASE_H;
 
+let blink = ((Date.now()/1000)|0);
+
 function resizeCanvas() {
     // Rimuoviamo il DPR (devicePixelRatio) per non sovraccaricare la GPU
     const scale = Math.min(
@@ -201,6 +203,7 @@ const player = {
     z: 1,			//segmento
     speed: 0,		//velocita
 	maxSpeed: 340,	//velocita max
+	minSpeed: 0,	//negativo per retromarcia
 	accel: 1,		//accelerazione max
 	brake: 1.8,		//max forza frenante
 	tilt: 0,		//inclinazione (in curva, figata!)
@@ -392,38 +395,60 @@ let gamePalette = {};
 let segments = [];
 //nota: 1257 ha inizio e fine coincidenti sin/cos + aggiunti 500 tutti dritti
 //ocho ai dati in console -> ci piace quando s[0].y == s[last].y
-const SEGMENTS = 1257 * 2 + 486;//2514 + 486dx4 = 3000, numero intero
-const trackL = SEGMENTS * segL;
-
-//JOHNNY, IL PROBLEMA DELLA SICILIA E' IL... TRAFFICO!!!
-const CAR_COLORS = [
-	{light:'#0f0',dark:'#0b0'},//verde
-	{light:'#00f',dark:'#00b'},//blu
-	{light:'#ff0',dark:'#bb0'},//gialla
-	{light:'#0ff',dark:'#0bb'},//ciano
-	{light:'#f0f',dark:'#b0b'},//fuxia
-	{light:'#fff',dark:'#bbb'},//bianca
-	{light:'#999',dark:'#555'},//grigia
-	{light:'#444',dark:'#222'},//nera
-	{light:'#f80',dark:'#b40'},//arancio
-	{light:'#0f4',dark:'#0b0'},//verde chiaro
-	{light:'#04f',dark:'#00b'},//blu chiaro
-	{light:'#da4',dark:'#972'},//oro
-	{light:'#841',dark:'#520'},//marrone cuoio
-	{light:'#244',dark:'#122'},//verde petrolio
-	{light:'#eef',dark:'#aac'},//lavanda chiaro
-	{light:'#fbb',dark:'#c88'},//rosa tenue
-	{light:'#7fd',dark:'#3a9'},//acquamarina
-	];
-
-const trafficCars = Array.from({ length: 17 }, (_, i) => ({
-    x: (i % 3 === 0) ? -0.35 : (i % 3 === 1) ? 0 : 0.35,
-    z: (i + 1) * (trackL / 17),                       // distribuite lungo la pista
-    speed: 50 + Math.ceil((Math.random() * 20) * 10), //50-250, le altre Ferrari sono indemoniate
-    color: CAR_COLORS[i%CAR_COLORS.length]
-}));
+let SEGMENTS = 1257 * 2 + 486;//2514 + 486dx4 = 3000, numero intero
+let trackL = SEGMENTS * segL;
 
 
+// =============================================
+// TRACK SECTIONS - 7 sezioni tematiche
+// Ogni sezione: { segs, curve, hill, name }
+// curve: ampiezza curva (neg=sx, pos=dx)
+// hill:  ampiezza saliscendi
+// =============================================
+const TRACK_SECTIONS = [
+    // 1. RETTILINEO DI PARTENZA — piano e dritto, si prende velocità
+    { segs: 100, curve:  0.0, hill:    0, name: 'start'    },
+
+    // 2. ESSE SINUOSA — curve morbide alternate, ritmo da crociera
+    { segs: 300, curve:  2.5, hill:  3000, name: 'esse_a'   },
+    { segs: 300, curve: -2.5, hill: -3000, name: 'esse_b'   },
+    { segs: 200, curve:  1.8, hill:  2000, name: 'esse_c'   },
+    { segs: 200, curve: -1.8, hill: -2000, name: 'esse_d'   },
+
+    // 3. SALITA AL TORNANTE — curva stretta con pendenza decisa
+    { segs: 150, curve:  0.0, hill:  4000, name: 'climb'    },
+    { segs: 250, curve:  5.5, hill: -4000, name: 'hairpin_r'},
+    { segs: 150, curve:  0.0, hill:  2000, name: 'climb2'   },
+    { segs: 250, curve: -5.5, hill: -6000, name: 'hairpin_l'},
+
+    // 4. DISCESA VELOCE — leggera curva, pendenza giù, gas a tavoletta
+    { segs: 100, curve:  0.0, hill: -1000, name: 'pre_drop' },
+    { segs: 350, curve: -1.5, hill:  4000, name: 'drop'     },
+    { segs: 150, curve:  1.2, hill: -3000, name: 'drop2'    },
+
+    // 5. CHICANE STRETTA — curve brevi e rapide, guidare precisi
+    { segs:  80, curve:  4.5, hill:  4000, name: 'chic_a'   },
+    { segs:  80, curve: -4.5, hill: -1000, name: 'chic_b'   },
+    { segs:  80, curve:  4.0, hill:  3000, name: 'chic_c'   },
+    { segs:  80, curve: -4.0, hill: -1000, name: 'chic_d'   },
+    { segs: 100, curve:  0.0, hill: -2000, name: 'chic_end' },
+
+	// 5b. GALLERIA — tunnel continui, stretto e buio
+    { segs: 200, curve:  2.0, hill:  5000, name: 'tunnel_a' },
+    { segs: 200, curve: -2.0, hill: -1000, name: 'tunnel_b' },
+
+    // 5c. DESERTO — cactus a perdita d'occhio, pianeggiante
+    { segs: 300, curve:  1.5, hill:  2000, name: 'cactus_a' },
+    { segs: 300, curve: -1.5, hill: -1000, name: 'cactus_b' },
+	
+    // 6. PIANURA ONDULATA — lunghe curve larghissime con dolci ondulazioni
+    { segs: 400, curve:  1.2, hill:  4000, name: 'plain_a'  },
+    { segs: 400, curve: -1.0, hill: -2000, name: 'plain_b'  },
+    { segs: 400, curve:  0.8, hill: -1000, name: 'plain_c'  },
+
+    // 7. RETTILINEO FINALE — dritto, leggera discesa verso il traguardo
+    { segs: 100, curve:  0.0, hill: 3000, name: 'final'    },
+];
 
 //per la hitbox
 const SPRITE_CONFIG = {
@@ -445,6 +470,143 @@ const SPRITE_CONFIG = {
     start:        { width: 0   }
 };
 
+
+
+//NUOVA GESTIONE TRACCIATO: SPRITE PLACEMENT per ogni sezione
+function spriteForSection(sectionName, idx, curve) {
+    const r = Math.random();
+    // mapping sezione → tipo prevalente
+    const sectionSprites = {
+        start:     'bush',
+        esse_a:    'tree',
+        esse_b:    'tree',
+        esse_c:    'tree',
+        esse_d:    'bush',
+        climb:     'rock',
+        hairpin_r: 'rock2',
+        climb2:    'rock',
+        hairpin_l: 'rock2',
+        pre_drop:  'signlow',
+        drop:      'signhigh',
+        drop2:     'cone',
+        chic_a:    'cone',
+        chic_b:    'pole',
+        chic_c:    'cone',
+        chic_d:    'cone',
+        chic_end:  'trafficlight',
+		tunnel_a:  'tunnel',
+		tunnel_b:  'tunnel',
+		cactus_a:  'cactus',
+		cactus_b:  'cactus',
+        plain_a:   'palm',
+        plain_b:   'palm',
+        plain_c:   'bush',
+        final:     'trafficlight',
+    };
+
+    let type = null;
+    let baseName = sectionName;
+
+    // ogni 4 segmenti metti uno sprite, + qualche random
+    if (idx === START_IDX) {
+        type = 'start';
+    } else if (idx % 4 === 0) {
+        type = sectionSprites[baseName] || null;
+    } else if (idx % 4 === 1) {
+		// aggiungi varietà random (olio, acqua, tunnel, billboard…)
+        if (r > 0.9) {
+            const extras = ['rock','rock2','oil','water','pole','billboard','signlow','cone'];
+			type = extras[Math.floor(Math.random() * 100) % extras.length];
+        }
+	}
+    if (!type) return null;
+
+    let position = 0;
+    if (type === 'billboard')         position = curve > 0 ? -1.6 : 1.6;
+    else if (type === 'signlow' || type === 'signhigh') position = curve > 0 ? -1.3 : 1.3;
+    else if (type === 'start')        position = -1.6;
+    else if (type === 'cone')         position = idx % 8 === 0 ? -0.9 : 0.9;
+    else if (type === 'trafficlight' || type === 'pole') position = idx % 8 === 0 ? -1.2 : 1.2;
+    else if (type === 'bush')         position = idx % 8 === 0 ? -1.4 : 1.4;
+    else if (type === 'oil' || type === 'water') position = 0.85 - Math.random() * 1.7;
+    else if (type === 'palm' || type === 'tree') position = idx % 8 === 0 ? -1.6 : 1.6;
+    else if (type === 'rock' || type === 'rock2') position = Math.random() > 0.5 ? 2.2 - Math.random() : -2.2 + Math.random();
+    else if (type === 'cactus')       position = idx % 8 === 0 ? -1.6 : 1.6;
+    else if (type === 'tunnel')       position = idx % 8 === 0 ? -1.6 : 1.6;
+
+    return { x: position, type, width: (SPRITE_CONFIG[type] || {width:0.2}).width };
+}
+
+//NUOVA GESTIONE TRACCIATO: genera il tracciato a sezioni con smooth easing tra sezioni adiacenti
+function initSegmentsNEW() {
+    segments = [];
+	
+	// Conta totale segmenti, poi arrotonda per chiudere bene il loop
+	SEGMENTS = TRACK_SECTIONS.reduce((acc, s) => acc + s.segs, 0);
+	trackL = SEGMENTS * segL;
+
+	
+    let globalIdx = 0;
+    let currentY  = 0;
+
+    // --- PRE-CALCOLA il delta Y totale per correggere il loop ---
+    let totalDeltaY = 0;
+    for (let si = 0; si < TRACK_SECTIONS.length; si++) {
+        const sec = TRACK_SECTIONS[si];
+        for (let i = 0; i < sec.segs; i++) {
+            const t = i / sec.segs;
+            totalDeltaY += Math.sin(t * Math.PI) * (sec.hill / sec.segs);
+        }
+    }
+    // totalDeltaY è lo spostamento verticale netto del giro — vogliamo annullarlo
+    // Lo spalmiamo come correzione uniforme su ogni segmento
+    const yCorrection = -totalDeltaY / SEGMENTS;
+
+    for (let si = 0; si < TRACK_SECTIONS.length; si++) {
+        const sec  = TRACK_SECTIONS[si];
+        const next = TRACK_SECTIONS[(si + 1) % TRACK_SECTIONS.length];
+        const n    = sec.segs;
+
+        for (let i = 0; i < n; i++) {
+            const t = i / n;
+
+            // curva: blend verso la sezione successiva nell'ultimo 15%
+            const curve = t < 0.85
+                ? sec.curve
+                : sec.curve + (next.curve - sec.curve) * ((t - 0.85) / 0.15);
+
+            // altitudine smooth + correzione loop
+            const hillSlope = Math.sin(t * Math.PI) * (sec.hill / n) + yCorrection;
+            currentY += hillSlope;
+
+            const sprite = spriteForSection(sec.name, globalIdx, curve);
+
+            segments.push({
+                sectionName: sec.name,
+                p1: {
+                    world:  { x: 0, y: currentY, z: globalIdx * segL },
+                    screen: { x: 0, y: 0, w: 0 }
+                },
+                p2: {
+                    world:  { x: 0, y: currentY + hillSlope, z: (globalIdx + 1) * segL },
+                    screen: { x: 0, y: 0, w: 0 }
+                },
+                curve,
+                sprite
+            });
+
+            globalIdx++;
+        }
+    }
+
+    console.log('Segmenti:', segments.length);
+    console.log('Delta Y residuo:', (segments[segments.length-1].p2.world.y - segments[0].p1.world.y).toFixed(2));
+}
+
+
+
+
+//VECCHIA GESTIONE TRACCIATO
 function addSegment(idx, curve, y) {
 	let n = segments.length;
     let sprite = null;
@@ -542,9 +704,65 @@ function addSegment(idx, curve, y) {
     });
 }
 
+//VECCHIA GESTIONE TRACCIATO
+function initSegmentsOLD() {
+	for (let i = 0; i < SEGMENTS - 486; i++) {
+        addSegment(i, Math.sin(i / 90) * 4, Math.cos(i / 50) * 1500);
+		//console.log('i=' + i + '\ty=' + Math.cos(i / 50) * 1000);
+    }
+	let last = SEGMENTS - 486;
+	let lastSin = Math.sin(last / 90);
+	let lastCos = Math.cos(last / 50) * 1500;
+	for (let i = last; i < SEGMENTS; i++) {
+		addSegment(i, lastSin, lastCos);
+	}
+	console.log('delta= ' + (segments[0].p1.world.x - segments[SEGMENTS - 1].p1.world.x) + ' ' + (segments[0].p1.world.y - segments[SEGMENTS - 1].p1.world.y) );
+}
+
+
+
+
+
+
+
+
+//JOHNNY, IL PROBLEMA DELLA SICILIA E' IL... TRAFFICO!!!
+const CAR_COLORS = [
+	{light:'#0f0',dark:'#0b0'},//verde
+	{light:'#00f',dark:'#00b'},//blu
+	{light:'#ff0',dark:'#bb0'},//gialla
+	{light:'#0ff',dark:'#0bb'},//ciano
+	{light:'#f0f',dark:'#b0b'},//fuxia
+	{light:'#fff',dark:'#bbb'},//bianca
+	{light:'#999',dark:'#555'},//grigia
+	{light:'#444',dark:'#222'},//nera
+	{light:'#f80',dark:'#b40'},//arancio
+	{light:'#0f4',dark:'#0b0'},//verde chiaro
+	{light:'#04f',dark:'#00b'},//blu chiaro
+	{light:'#da4',dark:'#972'},//oro
+	{light:'#841',dark:'#520'},//marrone cuoio
+	{light:'#244',dark:'#122'},//verde petrolio
+	{light:'#eef',dark:'#aac'},//lavanda chiaro
+	{light:'#fbb',dark:'#c88'},//rosa tenue
+	{light:'#7fd',dark:'#3a9'},//acquamarina
+	];
+
+const trafficCars = [];
+
+function initTrafficCars() {
+	let cars = 17;
+	for (let i=0; i<cars; i++) {
+		let posx = (i % 3 === 0) ? -0.35 : (i % 3 === 1) ? 0 : 0.35;
+		let posz = (i + 1) * (trackL / cars);//distribuite lungo la pista in modo uniforme
+		let spd = 50 + Math.ceil((Math.random() * 20) * 10);//50-250, le altre Ferrari sono indemoniate
+		let col = CAR_COLORS[i%CAR_COLORS.length];//colore da palette
+		trafficCars.push({x: posx, z: posz, speed: spd, color: col});
+	}
+}
+
 function initPalette() {
 	//ogni secondo switcha
-	let currentPalette = ((Date.now()/1000)|0) % 6;
+	let currentPalette = blink % 6;
 	if (currentPalette === 2) {
 		//DESERTO
 		gamePalette = {
@@ -610,7 +828,7 @@ function initPalette() {
 			roadLight:'#777',//asfalto
 			grassDark: '#eee',//neve
 			grassLight:'#fff',//neve
-			oil: '#002',
+			oil: '#220',
 			trafficPole: '#444',
 			trafficBody: '#fc3',
 			rumbleDark: '#fff',//cordolo
@@ -858,20 +1076,6 @@ function initPalette() {
 			billBorder: '#b00',
 		};
 	}
-}
-
-function initSegments() {
-	for (let i = 0; i < SEGMENTS - 486; i++) {
-        addSegment(i, Math.sin(i / 90) * 4, Math.cos(i / 50) * 1500);
-		//console.log('i=' + i + '\ty=' + Math.cos(i / 50) * 1000);
-    }
-	let last = SEGMENTS - 486;
-	let lastSin = Math.sin(last / 90);
-	let lastCos = Math.cos(last / 50) * 1500;
-	for (let i = last; i < SEGMENTS; i++) {
-		addSegment(i, lastSin, lastCos);
-	}
-	console.log('delta= ' + (segments[0].p1.world.x - segments[SEGMENTS - 1].p1.world.x) + ' ' + (segments[0].p1.world.y - segments[SEGMENTS - 1].p1.world.y) );
 }
 
 
@@ -1168,7 +1372,7 @@ function update() {
 	}
 	
 	
-    player.speed = Math.max(0, Math.min(player.speed, player.maxSpeed)); //inibisce la retro!
+    player.speed = Math.max(player.minSpeed, Math.min(player.speed, player.maxSpeed));//inibisce la retro se 0
     player.z += player.speed;
 	
     player.z = (player.z + trackL) % trackL;
@@ -1424,31 +1628,31 @@ function drawSprite(sprite, p) {
 		
 		ctx.beginPath();
 		ctx.arc(cx, top + boxH * 0.2, lightRadius * 1.4, 0, Math.PI * 2);
-		ctx.fillStyle = '#500';
+		ctx.fillStyle = blink % 3 === 0 ? '#c00' : '#500';
 		ctx.fill();
 		ctx.beginPath();
 		ctx.arc(cx+2, top + boxH * 0.2, lightRadius * 1.4, 0, Math.PI * 2);
-		ctx.fillStyle = '#700';
+		ctx.fillStyle = blink % 3 === 0 ? '#f00' : '#700';
 		ctx.fill();
 
 		//giallo
 		ctx.beginPath();
 		ctx.arc(cx, top + boxH * 0.5, lightRadius, 0, Math.PI * 2);
-		ctx.fillStyle = '#550';
+		ctx.fillStyle = blink % 3 === 1 ? '#cc0' : '#550';
 		ctx.fill();
 		ctx.beginPath();
 		ctx.arc(cx+1, top + boxH * 0.5, lightRadius * 0.8, 0, Math.PI * 2);
-		ctx.fillStyle = '#770';
+		ctx.fillStyle = blink % 3 === 1 ? '#ff0' : '#770';
 		ctx.fill();
 
 		//verde
 		ctx.beginPath();
 		ctx.arc(cx, top + boxH * 0.8, lightRadius, 0, Math.PI * 2);
-		ctx.fillStyle = '#070';
+		ctx.fillStyle = blink % 3 === 2 ? '#0c0' : '#070';
 		ctx.fill();
 		ctx.beginPath();
 		ctx.arc(cx+1, top + boxH * 0.8, lightRadius * 0.8, 0, Math.PI * 2);
-		ctx.fillStyle = '#0e0';
+		ctx.fillStyle = blink % 3 === 2 ? '#0f0' : '#090';
 		ctx.fill();
 	} else if (sprite.type === 'signlow') {
         //ombra
@@ -1575,39 +1779,37 @@ function drawSprite(sprite, p) {
 		// Venatura del fusto (nodi, tratteggio scuro)
 		ctx.strokeStyle = gamePalette.palmTrunkDark;//'#742';
 		ctx.lineWidth = w * 0.1;
-		//ctx.setLineDash([w * 0.15, w * 0.25]);
 		ctx.beginPath();
 		ctx.moveTo(x - lean * 2, y);
 		ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, tipX - lean * 2, tipY);
 		ctx.stroke();
-		//ctx.setLineDash([]);
 		
 		ctx.fillStyle = gamePalette.palmDark;
 		ctx.beginPath();
 		ctx.moveTo(tipX, tipY - h * 0.9);//su cx
-		ctx.lineTo(tipX + w * 0.35, tipY - h * 0.22);
-		ctx.lineTo(tipX + w * 1.8, tipY - h * 0.4);//su dx
-		ctx.lineTo(tipX + w * 0.6, tipY + h * 0.05);
-		ctx.lineTo(tipX + w * 1.4, tipY + h * 0.6);//giu dx
-		ctx.lineTo(tipX + w * 0.2, tipY + h * 0.25);
-		ctx.lineTo(tipX - w * 0.6, tipY + h * 0.8);//giu cx
-		ctx.lineTo(tipX - w * 0.3, tipY + h * 0.25);
-		ctx.lineTo(tipX - w * 1.4, tipY + h * 0.6);//giu sx
-		ctx.lineTo(tipX - w * 0.6, tipY + h * 0.05);
-		ctx.lineTo(tipX - w * 1.8, tipY - h * 0.4);//su sx
-		ctx.lineTo(tipX - w * 0.25, tipY - h * 0.22);
+		ctx.lineTo(tipX + w * 1.2 * 0.35, tipY - h * 0.8 * 0.22);
+		ctx.lineTo(tipX + w * 1.2 * 1.8,  tipY - h * 0.8 * 0.4);//su dx
+		ctx.lineTo(tipX + w * 1.2 * 0.6,  tipY + h * 0.8 * 0.05);
+		ctx.lineTo(tipX + w * 1.2 * 1.4,  tipY + h * 0.8 * 0.6);//giu dx
+		ctx.lineTo(tipX + w * 1.2 * 0.2,  tipY + h * 0.8 * 0.25);
+		ctx.lineTo(tipX - w * 1.2 * 0.6,  tipY + h * 0.8 * 0.8);//giu cx
+		ctx.lineTo(tipX - w * 1.2 * 0.3,  tipY + h * 0.8 * 0.25);
+		ctx.lineTo(tipX - w * 1.2 * 1.4,  tipY + h * 0.8 * 0.6);//giu sx
+		ctx.lineTo(tipX - w * 1.2 * 0.6,  tipY + h * 0.8 * 0.05);
+		ctx.lineTo(tipX - w * 1.2 * 1.8,  tipY - h * 0.8 * 0.4);//su sx
+		ctx.lineTo(tipX - w * 1.2 * 0.25, tipY - h * 0.8 * 0.22);
 		ctx.closePath();
 		ctx.fill();
 		//riflesso
 		ctx.fillStyle = gamePalette.palmLight;
 		ctx.beginPath();
 		ctx.moveTo(tipX, tipY - h * 0.9);//su cx
-		ctx.lineTo(tipX + w * 0.35, tipY - h * 0.22);
-		ctx.lineTo(tipX + w * 1.8, tipY - h * 0.4);//su dx
-		ctx.lineTo(tipX - w * 1.4, tipY + h * 0.6);//giu sx
-		ctx.lineTo(tipX - w * 0.6, tipY + h * 0.05);
-		ctx.lineTo(tipX - w * 1.8, tipY - h * 0.4);//su sx
-		ctx.lineTo(tipX - w * 0.25, tipY - h * 0.22);
+		ctx.lineTo(tipX + w * 1.2 * 0.35, tipY - h * 0.8 * 0.22);
+		ctx.lineTo(tipX + w * 1.2 * 1.8,  tipY - h * 0.8 * 0.4);//su dx
+		ctx.lineTo(tipX - w * 1.2 * 1.4,  tipY + h * 0.8 * 0.6);//giu sx
+		ctx.lineTo(tipX - w * 1.2 * 0.6,  tipY + h * 0.8 * 0.05);
+		ctx.lineTo(tipX - w * 1.2 * 1.8,  tipY - h * 0.8 * 0.4);//su sx
+		ctx.lineTo(tipX - w * 1.2 * 0.25, tipY - h * 0.8 * 0.22);
 		ctx.closePath();
 		ctx.fill();
 		
@@ -1808,10 +2010,10 @@ function drawFerrariShadow(cx, cy, w, h) {
     ctx.fillStyle = 'rgba(0,0,0,0.5)';
 	//ctx.fillRect(cx - w / 2 - 4, cy + 10, w + 8, 36);//rettangolone non ci piace
 	ctx.beginPath();
-	ctx.moveTo(cx - 60 * sw + 6 * sw, cy +  2 * sh);
+	ctx.moveTo(cx - 60 * sw + 8 * sw, cy +  2 * sh);
 	ctx.lineTo(cx - 60 * sw - 4 * sw, cy + 48 * sh);
 	ctx.lineTo(cx + 60 * sw + 4 * sw, cy + 48 * sh);
-	ctx.lineTo(cx + 60 * sw - 6 * sw, cy +  2 * sh);
+	ctx.lineTo(cx + 60 * sw - 8 * sw, cy +  2 * sh);
 	ctx.closePath();
 	ctx.fill();	
 	//fari
@@ -1837,9 +2039,9 @@ function drawFerrari(cx, cy, w, colDark, colLight) {
 
     //corpo principale rosso ferrari scuro+chiaro
     ctx.fillStyle = colDark; // Rosso scuro per i lati
-    ctx.fillRect(cx - 60 * s, cy + bounce, 120 * s, 36 * s);
+    ctx.fillRect(cx - 60 * s, cy + bounce + 1 * s, 120 * s, 36 * s);
     ctx.fillStyle = colLight; // Rosso acceso sopra
-    ctx.fillRect(cx - 60 * s + 2 * s, cy + bounce + 1 * s, 120 * s - 4 * s, 30 * s);
+    ctx.fillRect(cx - 60 * s + 2 * s, cy + bounce + 2 * s, 120 * s - 4 * s, 30 * s);
 
     //tetto rosso acceso
     ctx.fillStyle = colLight;
@@ -1921,12 +2123,13 @@ function drawFerrari(cx, cy, w, colDark, colLight) {
 
     //cannoni
     ctx.fillStyle = '#000';
-    ctx.fillRect(cx - 30 * s - 5 * s, cy + 32 * s + bounce,  15 * s, 6 * s);
-    ctx.fillRect(cx + 30 * s + 5 * s, cy + 32 * s + bounce, -15 * s, 6 * s);
-    ctx.strokeStyle = '#ccc';
-    ctx.strokeRect(cx - 30 * s - 5 * s, cy + 32 * s + bounce,  15 * s, 6 * s);
-    ctx.strokeRect(cx + 30 * s + 5 * s, cy + 32 * s + bounce, -15 * s, 6 * s);
+	ctx.strokeStyle = '#ccc';
+    [-45, -35, 35, 45].forEach(off => {
+        ctx.fillRect(cx + off*s - 4*s, cy + 34*s + bounce, 8*s, 5*s);
+        ctx.strokeRect(cx + off*s - 4*s, cy + 34*s + bounce, 8*s, 5*s);
+    });
 }
+
 
 function drawCar() {
     ctx.save();
@@ -1938,12 +2141,13 @@ function drawCar() {
 	
     ctx.translate(cx, cy);
 
-    if (player.state === 'CRASHED') {
-        ctx.rotate(player.x > 0 ? crashTimer * 0.25 : -crashTimer * 0.25);
+	if (player.state === 'CRASHED') {
+	    ctx.rotate(player.x > 0 ? crashTimer * 0.25 : -crashTimer * 0.25);
     } else {
 		ctx.rotate(player.tilt);
 	}        
 
+	
     drawFerrari(0, 0, CAR_WIDTH, '#b00', '#f00');
 
     ctx.restore();
@@ -2174,8 +2378,22 @@ let fpsTime = 0;
 let fpsCount = 0;
 let fpsDisplay = 0;
 
+function drawFPS() {
+	ctx.fillStyle = 'rgba(0,0,0,0.5)';
+	ctx.fillRect(width - 128, 8, 120, 60);
+	ctx.fillStyle = player.lights ? '#ff0' : '#fff';
+	ctx.font = '12px monospace';
+	ctx.textAlign = 'right';
+	ctx.fillText('FPS: ' + fpsDisplay, width - 20, 26);
+	ctx.fillText('DIST: ' + drawDistance, width - 20, 44);
+	ctx.fillText('PAL: ' + gamePalette.id, width - 20, 62);	
+}
+	
+
 function render() {
-	//FPS
+	blink = ((Date.now()/1000)|0);
+
+	//calcolo FPS
 	let now = performance.now();
     fpsCount++;
     if (now - fpsTime >= 1000) {
@@ -2193,18 +2411,8 @@ function render() {
     }
 	
 	update();
-	drawSky(skyOffset);
-	
-	//FPS
-	ctx.fillStyle = 'rgba(0,0,0,0.5)';
-	ctx.fillRect(width - 128, 8, 120, 60);
-	ctx.fillStyle = player.lights ? '#ff0' : '#fff';
-	ctx.font = '12px monospace';
-	ctx.textAlign = 'right';
-	ctx.fillText('FPS: ' + fpsDisplay, width - 20, 26);
-	ctx.fillText('DIST: ' + drawDistance, width - 20, 44);
-	ctx.fillText('PAL: ' + gamePalette.id, width - 20, 62);	
-    
+	drawSky(skyOffset);//cielo+montagne
+	drawFPS();//fps
 		
 	let startPos = Math.floor(player.z / segL);
 	let camHeight = segments[startPos % segments.length].p1.world.y + camH;
@@ -2212,9 +2420,9 @@ function render() {
     let x = 0;
     let dx = 0;
 	
-    // Road Loop
+    //Road Loop - prima la strada vicina (che viene coperta da quella lontana)
     for (let n = startPos; n < startPos + drawDistance; n++) {
-        let s = segments[n % segments.length];
+	    let s = segments[n % segments.length];
         let loop = (n >= segments.length) ? trackL : 0;
 
         project(s.p1, player.x * roadW - x, camHeight, player.z - loop);
@@ -2234,7 +2442,7 @@ function render() {
     }
 	
 	
-    // Sprites & Collision (simplified logic for performance)
+    //Sprites & Collision - prima gli oggetti lontani (che vengono coperti da quelli vicini)
     for (let n = startPos + drawDistance; n > startPos; n--) {
         let s = segments[n % segments.length];
 		let prev = segments[(n - 1) % segments.length];
@@ -2294,7 +2502,19 @@ function render() {
         }
     }
 	
-	//traffico!
+	drawTraffic(startPos);
+	drawCar();//Player Car
+	
+	drawSpeedometer();
+	drawGearStick();
+	drawLapTimes();
+
+    requestAnimationFrame(render);
+}
+
+
+//traffico!
+function drawTraffic(startPos) {
 	const visibleCars = trafficCars
     .map(car => {
         let rz = car.z - player.z;
@@ -2302,8 +2522,7 @@ function render() {
         return { car, rz };
     })
     .filter(({ rz }) => rz < segL * drawDistance)
-    //.sort((a, b) => b.rz - a.rz)
-	;
+    .sort((a, b) => b.rz - a.rz);
 	
 	for (let { car, rz } of visibleCars) {
 
@@ -2314,7 +2533,7 @@ function render() {
 
 		let baseIndex = (startPos + segIndex) % segments.length;
 
-		let lookAhead = 2;
+		let lookAhead = 2;//mahhh
 
 		let s0 = segments[baseIndex];
 		let s1 = segments[(baseIndex + lookAhead) % segments.length];
@@ -2360,19 +2579,8 @@ function render() {
 			}
 		}
 	}
-
-	
-	
-
-    // Player Car
-    drawCar();
-	
-	drawSpeedometer();
-	drawGearStick();
-	drawLapTimes();
-
-    requestAnimationFrame(render);
 }
+
 
 // ====== INPUT: TASTIERA ======
 window.addEventListener('keydown', (e) => {
@@ -2393,8 +2601,7 @@ window.addEventListener('keyup', (e) => {
     if (e.keyCode == 40) keys.down = 0;
 });
 
-// ====== INPUT: TOUCH (multi-touch) ======
-// Mappa: quale tasto preme ogni bottone on-screen
+// ====== INPUT: TOUCH - quale tasto preme ogni bottone on-screen
 const btnMap = {
     'btn-left':  'left',
     'btn-right': 'right',
@@ -2461,8 +2668,14 @@ document.getElementById('controls').addEventListener('touchcancel', (e) => {
 // Blocca context menu su long press (mobile)
 document.addEventListener('contextmenu', e => e.preventDefault());
 
+
+
 // ====== AVVIO ======
-initSegments();
+if (blink % 2 === 0) 
+	initSegmentsOLD();
+else 
+	initSegmentsNEW();
+initTrafficCars();
 initPalette();
 render();
 </script>
