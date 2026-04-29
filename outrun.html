@@ -1048,6 +1048,31 @@ function drawSegment(x1, y1, w1, x2, y2, w2, idx) {
 		*/
     }
 
+
+
+	// PISTA CICLABILE A DESTRA
+    let laneW1 = w1 * 0.5; // Larghezza rispetto strada originale
+    let laneW2 = w2 * 0.5;
+    let offset1 = w1 * 1.9; // Distanza dal centro strada alla base
+    let offset2 = w2 * 1.9; // Distanza dal centro strada in cima
+
+	//cordolo
+    ctx.fillStyle = idx % 2 ? gamePalette.rumbleDark : gamePalette.rumbleLight; //cordolo
+    ctx.beginPath();
+    ctx.moveTo(x1 + offset1 - laneW1 * 0.1, y1);
+    ctx.lineTo(x2 + offset2 - laneW2 * 0.1, y2);
+    ctx.lineTo(x2 + offset2 + laneW2 * 1.1, y2);
+    ctx.lineTo(x1 + offset1 + laneW1 * 1.1, y1);
+    ctx.fill();
+
+	//asfalto
+    ctx.fillStyle = idx % 2 ? gamePalette.roadDark : gamePalette.roadLight; //asfalto
+    ctx.beginPath();
+    ctx.moveTo(x1 + offset1, y1 + 1);
+    ctx.lineTo(x2 + offset2, y2 - 1);
+    ctx.lineTo(x2 + offset2 + laneW2, y2 - 1);
+    ctx.lineTo(x1 + offset1 + laneW1, y1 + 1);
+    ctx.fill();
 }
 
 
@@ -1803,7 +1828,7 @@ function drawFerrariShadow(cx, cy, w, h) {
 //un rettangolo rosso -> testarossa di alb spettacolare anche senza biondona al seguito
 function drawFerrari(cx, cy, w, colDark, colLight) {
     let s = w / 120;//scalato a 120px
-	let bounce = (Math.random() * 2) * (player.speed / player.maxSpeed) * s;
+	let bounce = Math.random() * (350 - player.speed * 0.5) * 0.005 * s;//a bassa velocità balla di piu, me gustaaa!!!
 	
 	//gomme
     ctx.fillStyle = '#111';
@@ -2166,23 +2191,21 @@ function render() {
 		else if (fpsDisplay > 90) drawDistance = 300;
 		else drawDistance = 200;
     }
-
-
-    update();
+	
+	update();
 	drawSky(skyOffset);
 	
 	//FPS
 	ctx.fillStyle = 'rgba(0,0,0,0.5)';
-    ctx.fillRect(width - 128, 8, 120, 60);
+	ctx.fillRect(width - 128, 8, 120, 60);
 	ctx.fillStyle = player.lights ? '#ff0' : '#fff';
 	ctx.font = '12px monospace';
 	ctx.textAlign = 'right';
 	ctx.fillText('FPS: ' + fpsDisplay, width - 20, 26);
 	ctx.fillText('DIST: ' + drawDistance, width - 20, 44);
 	ctx.fillText('PAL: ' + gamePalette.id, width - 20, 62);	
-	
-	
-	
+    
+		
 	let startPos = Math.floor(player.z / segL);
 	let camHeight = segments[startPos % segments.length].p1.world.y + camH;
 	
@@ -2279,13 +2302,14 @@ function render() {
         return { car, rz };
     })
     .filter(({ rz }) => rz < segL * drawDistance)
-    .sort((a, b) => b.rz - a.rz);
+    //.sort((a, b) => b.rz - a.rz)
+	;
 	
 	for (let { car, rz } of visibleCars) {
 
 		let z = rz;
 
-		let segIndex = Math.floor(z / segL);
+		let segIndex = Math.floor(z / segL);//TREMOLIO!
 		let frac = (z % segL) / segL;
 
 		let baseIndex = (startPos + segIndex) % segments.length;
