@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<title>Il Programmatore Tipico™ v2.0.1</title>
+<link href="https://fonts.googleapis.com/css2?family=VT323&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --green:  #39ff14;
+    --red:    #ff2d55;
+    --yellow: #ffe600;
+    --orange: #ff8c00;
+    --blue:   #00cfff;
+    --purple: #c77dff;
+    --bg:     #0a0a0f;
+    --panel:  #0f0f1a;
+    --border: #2a2a4a;
+    --text:   #c8c8e0;
+    --dim:    #555577;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Share Tech Mono', monospace;
+    background: var(--bg);
+    color: var(--text);
+    height: 100vh;
+    overflow: hidden;
+    cursor: crosshair;
+  }
+
+  /* CRT scanlines overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.18) 2px,
+      rgba(0,0,0,0.18) 4px
+    );
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* Screen flicker */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: rgba(57,255,20,0.015);
+    pointer-events: none;
+    z-index: 9998;
+    animation: flicker 8s infinite;
+  }
+
+  @keyframes flicker {
+    0%,100% { opacity: 1; }
+    92% { opacity: 1; }
+    93% { opacity: 0.7; }
+    94% { opacity: 1; }
+    96% { opacity: 0.85; }
+    97% { opacity: 1; }
+  }
+
+  /* ── TOPBAR ── */
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 16px;
+    background: var(--panel);
+    border-bottom: 2px solid var(--border);
+    height: 64px;
+    gap: 20px;
+  }
+
+  .topbar-title {
+    font-family: 'VT323', monospace;
+    font-size: 22px;
+    color: var(--green);
+    text-shadow: 0 0 8px var(--green);
+    white-space: nowrap;
+    letter-spacing: 1px;
+    flex-shrink: 0;
+  }
+
+  .topbar-title span {
+    color: var(--dim);
+    font-size: 14px;
+  }
+
+  .bars-area {
+    display: flex;
+    gap: 20px;
+    flex: 1;
+    justify-content: flex-end;
+  }
+
+  .bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    max-width: 280px;
+  }
+
+  .bar label {
+    font-family: 'VT323', monospace;
+    font-size: 18px;
+    white-space: nowrap;
+    color: var(--dim);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    flex-shrink: 0;
+    min-width: 90px;
+    text-align: right;
+  }
+
+  .bar label.stress-label { color: #ff2d55cc; }
+  .bar label.quality-label { color: #39ff1499; }
+
+  .progress-wrap {
+    flex: 1;
+    position: relative;
+  }
+
+  .progress {
+    height: 18px;
+    background: #0a0a12;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .progress::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 8px,
+      rgba(0,0,0,0.25) 8px,
+      rgba(0,0,0,0.25) 9px
+    );
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  .fill {
+    height: 100%;
+    width: 50%;
+    transition: width 0.25s, background 0.5s;
+    position: relative;
+  }
+
+  .fill::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: rgba(255,255,255,0.6);
+    filter: blur(2px);
+  }
+
+  .bar-value {
+    font-family: 'VT323', monospace;
+    font-size: 18px;
+    width: 34px;
+    text-align: right;
+    color: var(--dim);
+    flex-shrink: 0;
+  }
+
+  /* ── MAIN LAYOUT ── */
+  .container {
+    display: grid;
+    grid-template-columns: 270px 1fr 270px;
+    height: calc(100vh - 64px - 60px);
+  }
+
+  .panel {
+    background: var(--panel);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .panel.right {
+    border-right: none;
+    border-left: 1px solid var(--border);
+  }
+
+  .panel-header {
+    padding: 8px 12px;
+    background: #14142a;
+    border-bottom: 1px solid var(--border);
+    font-family: 'VT323', monospace;
+    font-size: 17px;
+    letter-spacing: 2px;
+    color: var(--blue);
+    text-shadow: 0 0 6px var(--blue);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .panel-header .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--blue);
+    box-shadow: 0 0 6px var(--blue);
+    animation: blink 1.2s infinite;
+  }
+
+  .panel-header.events-header { color: var(--red); }
+  .panel-header.events-header .dot { background: var(--red); box-shadow: 0 0 6px var(--red); animation-delay: 0.6s; }
+
+  @keyframes blink {
+    0%,100% { opacity: 1; }
+    50% { opacity: 0.2; }
+  }
+
+  .panel-scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+
+  /* ── TASK CARDS ── */
+  .task {
+    background: #12121f;
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--blue);
+    padding: 8px 10px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    border-radius: 2px;
+    transition: border-color 0.2s, background 0.2s, transform 0.1s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .task::before {
+    content: '▶ CLICK';
+    position: absolute;
+    right: 8px; top: 8px;
+    font-size: 10px;
+    color: var(--blue);
+    opacity: 0;
+    transition: opacity 0.15s;
+    font-family: 'VT323', monospace;
+    letter-spacing: 1px;
+  }
+
+  .task:hover {
+    background: #1a1a30;
+    border-left-color: var(--green);
+    transform: translateX(2px);
+  }
+
+  .task:hover::before { opacity: 1; }
+
+  .task.urgent {
+    border-left-color: var(--red) !important;
+    background: #1f0a0a !important;
+    animation: urgentPulse 0.6s infinite;
+  }
+
+  @keyframes urgentPulse {
+    0%,100% { border-left-color: var(--red); }
+    50% { border-left-color: #660000; }
+  }
+
+  .task-name {
+    font-family: 'VT323', monospace;
+    font-size: 16px;
+    color: var(--text);
+    margin-bottom: 4px;
+    padding-right: 50px;
+  }
+
+  .task-meta {
+    font-size: 10px;
+    color: var(--dim);
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .task-meta .ttl {
+    color: var(--yellow);
+  }
+
+  .task-meta .ttl.low { color: var(--red); }
+
+  /* TTL minibar */
+  .ttl-bar {
+    height: 2px;
+    background: var(--border);
+    margin-top: 6px;
+    border-radius: 1px;
+    overflow: hidden;
+  }
+
+  .ttl-fill {
+    height: 100%;
+    background: var(--green);
+    transition: width 0.25s, background 0.25s;
+  }
+
+  /* ── EVENT CARDS ── */
+  .event {
+    background: #1a0a0f;
+    border: 1px solid #2a0a14;
+    border-left: 3px solid var(--red);
+    padding: 8px 10px;
+    margin-bottom: 8px;
+    border-radius: 2px;
+    animation: slideIn 0.3s ease;
+  }
+
+  @keyframes slideIn {
+    from { transform: translateY(-10px); opacity: 0; }
+    to   { transform: translateY(0);     opacity: 1; }
+  }
+
+  .event-name {
+    font-family: 'VT323', monospace;
+    font-size: 16px;
+    color: #ff8090;
+    margin-bottom: 4px;
+  }
+
+  .event-meta {
+    font-size: 10px;
+    color: var(--dim);
+    display: flex;
+    gap: 12px;
+  }
+
+  .event-meta .neg { color: var(--red); }
+  .event-meta .pos { color: var(--green); }
+
+  /* ── CENTER ── */
+  .center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 20px;
+    background: var(--bg);
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Pixel grid bg */
+  .center::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(57,255,20,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(57,255,20,0.03) 1px, transparent 1px);
+    background-size: 32px 32px;
+    pointer-events: none;
+  }
+
+  .character-wrap {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+  }
+
+  #character {
+    font-size: 72px;
+    display: block;
+    filter: drop-shadow(0 0 20px rgba(57,255,20,0.3));
+    transition: filter 0.5s;
+    line-height: 1;
+    animation: float 3s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%,100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+  }
+
+  .status-badge {
+    font-family: 'VT323', monospace;
+    font-size: 13px;
+    letter-spacing: 3px;
+    color: var(--dim);
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+
+  .task-display {
+    z-index: 2;
+    width: 85%;
+    max-width: 400px;
+    text-align: center;
+  }
+
+  #currentTask {
+    font-family: 'VT323', monospace;
+    font-size: 20px;
+    color: var(--green);
+    text-shadow: 0 0 10px rgba(57,255,20,0.5);
+    margin-bottom: 10px;
+    min-height: 28px;
+    letter-spacing: 1px;
+  }
+
+  .progress-label {
+    font-size: 10px;
+    color: var(--dim);
+    text-align: left;
+    margin-bottom: 4px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .progress.main-bar {
+    height: 22px;
+    border: 1px solid var(--border);
+    border-radius: 0;
+    position: relative;
+  }
+
+  #taskProgress {
+    background: linear-gradient(90deg, #008b00, var(--green));
+    box-shadow: 0 0 8px rgba(57,255,20,0.4);
+  }
+
+  .corner-tag {
+    position: absolute;
+    font-family: 'VT323', monospace;
+    font-size: 11px;
+    color: var(--border);
+    letter-spacing: 1px;
+  }
+
+  .corner-tag.tl { top: 8px; left: 12px; }
+  .corner-tag.tr { top: 8px; right: 12px; }
+  .corner-tag.bl { bottom: 8px; left: 12px; }
+  .corner-tag.br { bottom: 8px; right: 12px; }
+
+  /* ── ACTIONS BAR ── */
+  .actions {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    background: #0f0f1a;
+    border-top: 2px solid var(--border);
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    padding: 8px 16px;
+    height: 60px;
+    align-items: center;
+  }
+
+  .actions button {
+    font-family: 'VT323', monospace;
+    font-size: 17px;
+    letter-spacing: 1px;
+    padding: 6px 18px;
+    border: 1px solid transparent;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-transform: uppercase;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .actions button::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(255,255,255,0.08);
+    opacity: 0;
+    transition: opacity 0.1s;
+  }
+
+  .actions button:hover::after { opacity: 1; }
+  .actions button:active { transform: scale(0.96); }
+
+  .coffee   { background: #1a1000; color: var(--yellow); border-color: #554400 !important; }
+  .coffee:hover   { background: #2a1a00; box-shadow: 0 0 12px rgba(255,230,0,0.3); }
+
+  .refactor { background: #001a0a; color: var(--green); border-color: #004422 !important; }
+  .refactor:hover { background: #002a10; box-shadow: 0 0 12px rgba(57,255,20,0.3); }
+
+  .ignore   { background: #1a000a; color: var(--red); border-color: #440022 !important; }
+  .ignore:hover   { background: #2a0010; box-shadow: 0 0 12px rgba(255,45,85,0.3); }
+
+  .cazzeggio { background: #0a001a; color: var(--purple); border-color: #330055 !important; min-width: 36px; }
+  .cazzeggio:hover { background: #150030; box-shadow: 0 0 12px rgba(199,125,255,0.3); }
+
+  /* clock */
+  #clock {
+    font-family: 'VT323', monospace;
+    font-size: 16px;
+    color: var(--dim);
+    margin-left: auto;
+    letter-spacing: 2px;
+  }
+
+  /* Game over overlay */
+  #gameOverScreen {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    z-index: 10000;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  #gameOverScreen.show { display: flex; }
+
+  #gameOverMsg {
+    font-family: 'VT323', monospace;
+    font-size: 52px;
+    color: var(--red);
+    text-shadow: 0 0 30px var(--red);
+    text-align: center;
+    animation: glitch 0.3s infinite;
+    line-height: 1.2;
+  }
+
+  @keyframes glitch {
+    0%   { text-shadow: 0 0 30px var(--red); transform: none; }
+    20%  { text-shadow: 3px 0 0 cyan, -3px 0 0 var(--red); transform: skewX(2deg); }
+    40%  { text-shadow: -3px 0 0 cyan, 3px 0 0 var(--red); transform: skewX(-2deg); }
+    60%  { text-shadow: 0 0 30px var(--red); transform: none; }
+    100% { text-shadow: 0 0 30px var(--red); transform: none; }
+  }
+
+  #restartBtn {
+    font-family: 'VT323', monospace;
+    font-size: 22px;
+    padding: 10px 30px;
+    background: transparent;
+    border: 2px solid var(--green);
+    color: var(--green);
+    cursor: pointer;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    transition: all 0.2s;
+  }
+
+  #restartBtn:hover {
+    background: var(--green);
+    color: var(--bg);
+    box-shadow: 0 0 20px var(--green);
+  }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-title">
+    IL PROGRAMMATORE TIPICO™ <span>v0.9.1-HOTFIX</span>
+  </div>
+
+  <div class="bars-area">
+    <div class="bar">
+      <label class="stress-label">STRESS</label>
+      <div class="progress-wrap">
+        <div class="progress">
+          <div id="stressFill" class="fill"></div>
+        </div>
+      </div>
+      <div class="bar-value" id="stressVal">20</div>
+    </div>
+
+    <div class="bar">
+      <label class="quality-label">QUALITÀ</label>
+      <div class="progress-wrap">
+        <div class="progress">
+          <div id="qualityFill" class="fill"></div>
+        </div>
+      </div>
+      <div class="bar-value" id="qualityVal">80</div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="container">
+
+  <!-- TASKS -->
+  <div class="panel">
+    <div class="panel-header">
+      <span class="dot"></span> TASK DAL CAPO
+    </div>
+    <div class="panel-scroll" id="taskList"></div>
+  </div>
+
+  <!-- CENTER -->
+  <div class="center">
+    <span class="corner-tag tl">SYS_OK</span>
+    <span class="corner-tag tr" id="clock">00:00:00</span>
+    <span class="corner-tag bl">WORKSTATION_7</span>
+    <span class="corner-tag br">LOC:CASA</span>
+
+    <div class="character-wrap">
+      <span id="character">😐</span>
+      <div class="status-badge" id="statusBadge">IDLE</div>
+    </div>
+
+    <div class="task-display">
+      <div class="progress-label">▸ TASK IN CORSO</div>
+      <div id="currentTask">Sono scarico...</div>
+      <div class="progress main-bar">
+        <div id="taskProgress" class="fill"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EVENTS -->
+  <div class="panel right">
+    <div class="panel-header events-header">
+      <span class="dot"></span> EVENTI INFAUSTI
+    </div>
+    <div class="panel-scroll" id="eventList"></div>
+  </div>
+
+</div>
+
+<!-- ACTIONS -->
+<div class="actions">
+  <button class="coffee"    onclick="coffee()">☕ Pausa Caffè</button>
+  <button class="refactor"  onclick="refactor()">🛠 Refactor</button>
+  <button class="ignore"    onclick="ignore()">🙈 Ignora il Capo</button>
+  <button class="cazzeggio" onclick="cazzeggio()" title="Cazzeggio">🎮</button>
+  <div id="clock2" style="font-family:'VT323',monospace;font-size:15px;color:var(--dim);margin-left:auto;letter-spacing:2px;"></div>
+</div>
+
+<!-- GAME OVER -->
+<div id="gameOverScreen">
+  <div id="gameOverMsg">GAME OVER</div>
+  <div id="gameOverSub" style="font-family:'VT323',monospace;font-size:22px;color:var(--dim);text-align:center;"></div>
+  <button id="restartBtn" onclick="location.reload()">▶ RIPROVA</button>
+</div>
+
+<script>
+const state = {
+  stress: 20, quality: 80,
+  tasks: [], currentTask: null,
+  events: [], gameOver: false,
+  taskTTLMax: {}
+};
+
+const TASKS = [
+  { name: "Sviluppetto carino",                           duration: 5000, stress: 15, quality: -6 },
+  { name: "CR urgente",                                   duration: 3000, stress: 10, quality: -6 },
+  { name: "Bug semplice",                                 duration: 2000, stress: 3,  quality: -3 },
+  { name: "Call improvvisa",                              duration: 3000, stress: 10, quality: -4 },
+  { name: "Timesheet entro ieri",                         duration: 5000, stress: 8,  quality: -5 },
+  { name: "Corso obbligatorio (click avanti avanti)",     duration: 4000, stress: 2,  quality: -1 },
+  { name: "Corso con quiz finale bastardo",               duration: 6000, stress: 12, quality: -4 },
+  { name: "Implementare requisito da spegnere in Prod",   duration: 4000, stress: 7,  quality: -3 },
+  { name: "Bug in Produzione",                            duration: 3000, stress: 7,  quality: -6 },
+  { name: "Rilascio all'ora di pranzo",                   duration: 2000, stress: 7,  quality: -2 },
+  { name: "CR con Specifiche fumose",                     duration: 3000, stress: 7,  quality: -5 },
+  { name: "Estrarre Log Splunk",                          duration: 4000, stress: 8,  quality: -1 },
+  { name: "Rispondere email thread biblico",              duration: 5000, stress: 10, quality: -4 },
+  { name: "KT ultra-tecnico a collega salumiere",         duration: 6000, stress: 10, quality: -2 },
+  { name: "Scrivere specifiche inutili",                  duration: 7000, stress: 10, quality: -3 },
+  { name: "Bug Critico - War Room",                       duration: 8000, stress: 20, quality: -4 },
+  { name: "Usare nuovo framework buggato",                duration: 3000, stress: 15, quality: -4 },
+  { name: "Rifare le stime per requisito già stimato",    duration: 4000, stress: 12, quality: -5 },
+  { name: "Smoke test su BIGv6",                         duration: 3000, stress: 15, quality: -3 },
+  { name: "Analisi sul benefit Lounge Premio",            duration: 5000, stress: 15, quality: -3 },
+  { name: "Project Manager chiede PPT per la demo",       duration: 2000, stress: 8,  quality: -6 },
+  { name: "Cambio label per offerta last minute",         duration: 3000, stress: 5,  quality: -2 },
+  { name: "Capire perchè la SOA è ancora down",          duration: 5000, stress: 5,  quality: -2 },
+  { name: "Fixare i caratteri accentati sul GRM",         duration: 1000, stress: 5,  quality: -2 },
+  { name: "Pulizia cache Akamai",                         duration: 1000, stress: 5,  quality: -2 },
+  { name: "Requisito senza specifiche",                   duration: 2000, stress: 8,  quality: -3 },
+];
+
+const EVENTS = [
+  { name: "Bimbo con febbre",                             stress: 5,  quality: -2 },
+  { name: "Gatto vomita sul PC",                          stress: 10, quality: -5 },
+  { name: "Windows Update obbligatorio",                  stress: 3,  quality: -3 },
+  { name: "PC fuori policy",                              stress: 4,  quality: -4 },
+  { name: "Le Carte di Test non funzionano",              stress: 12, quality: -2 },
+  { name: "Nuova VPN down",                               stress: 15, quality: -8 },
+  { name: "Rotte chiuse verso i server",                  stress: 5,  quality: -2 },
+  { name: "Pipeline bloccata in Produzione",              stress: 20, quality: -10 },
+  { name: "Buttato dentro una call a sorpresa",           stress: 18, quality: -3 },
+  { name: "Pacco Amazon perso dal corriere",              stress: 8,  quality: -1 },
+  { name: "Teams oggi non funziona",                      stress: 7,  quality: -2 },
+  { name: "SOA down durante gli IT",                      stress: 9,  quality: -2 },
+  { name: "GRM con tag non chiuso rompe tutto",           stress: 7,  quality: -4 },
+  { name: "Email apericena con gruppo liceo",             stress: 6,  quality: -4 },
+  { name: "Griglia treni vuota per qualsiasi data",       stress: 10, quality: -5 },
+  { name: "Toner giallo esaurito e stampante bloccata",   stress: 4,  quality: -7 },
+  { name: "Cambio password obbligatorio",                 stress: 8,  quality: -1 },
+  { name: "Driver Audio e/o cuffiette KO",                stress: 6,  quality: -3 },
+  { name: "Hai vinto uno sviluppetto carino",             stress: 18, quality: -10 },
+  { name: "Authenticator sul cellulare scarico",          stress: 7,  quality: -3 },
+  { name: "BitLocker bloccato, chiama assistenza",        stress: 8,  quality: -3 },
+  { name: "Mal di schiena improvviso",                    stress: 11, quality: -5 },
+  { name: "Router con segnale wi-fi disturbato",          stress: 13, quality: -3 },
+  { name: "Webcam accesa mentre eri in mutande",          stress: 12, quality: -9 },
+  { name: "Moglie che urla via WhatsApp",                 stress: 15, quality: -8 },
+  { name: "Jessico Calcetto annulla partita giovedi",     stress: 20, quality: -10 },
+  { name: "Email di phishing inattesa",                   stress: 2,  quality: -3 },
+  { name: "Finiti crediti AI",                            stress: 11, quality: -10 },
+  { name: "Dimissioni collega bravo",                     stress: 13, quality: -8 },
+  { name: "Telefonata da call-center albanese",           stress: 4,  quality: -4 },
+  { name: "Stampante di rete che non funziona",           stress: 9,  quality: -2 },
+  { name: "Cena improvvisa dai suoceri",                  stress: 12, quality: -2 },
+  { name: "Cane ti morde il piede",                       stress: 8,  quality: -3 },
+  { name: "68 notifiche dal gruppo mamme di scuola",      stress: 11, quality: -6 },
+  { name: "Dimenticato microfono acceso in call",         stress: 14, quality: -6 },
+  { name: "Popup 40enni vogliose in Team Presenting",     stress: 17, quality: -10 },
+  { name: "Rilascio anticipato di 3 giorni",              stress: 16, quality: -18 },
+  { name: "Auto aziendale ti lascia a piedi",             stress: 10, quality: -5 },
+  { name: "Abbonamento Netflix sgamato dalla Finanza",    stress: 30, quality: -15 },
+  { name: "Cellulare aziendale cade nel WC",              stress: 20, quality: -12 },
+  { name: "Macchinetta del caffè rotta",                  stress: 10, quality: -4 },
+  { name: "Elettricista vuole essere pagato in nero",     stress: 15, quality: -4 },
+  { name: "Idraulico vuole essere pagato in natura",      stress: 25, quality: -8 },
+  { name: "Hai vinto una trasferta a Domodossola",        stress: 18, quality: -10 },
+  { name: "GTA 5 ha smesso di funzionare",               stress: 6,  quality: -6 },
+  { name: "Ctrl-C Ctrl-V ha smesso di funzionare",       stress: 6,  quality: -6 },
+  { name: "Caffè caduto copiosamente sul notebook",       stress: 9,  quality: -8 },
+  { name: "Riconoscimento facciale si rifiuta di credere che sei tu", stress: 4, quality: -2 },
+  { name: "PIN sblocco dimenticato dopo serata di bagordi", stress: 6, quality: -4 },
+  { name: "Annullate ferie per problemi critici in produzione", stress: 14, quality: -6 },
+  { name: "Vigili urbani ti caricano l'auto anche se parcheggiata bene", stress: 12, quality: -2 },
+  { name: "Parcometro scaduto e 39 euro di multa",       stress: 10, quality: -2 },
+  { name: "Peperonata del giorno prima si ripropone durante colloquio", stress: 8, quality: -8 },
+  { name: "Riunione in presenza ed interlocutore con fiatella letale", stress: 10, quality: -3 },
+  { name: "Requisito finito nel dimenticatoio è diventato urgentissimo", stress: 12, quality: -3 },
+  { name: "Hard Disk è pieno al 99%",                    stress: 7,  quality: -3 },
+  { name: "Mouse wireless con batteria scarica",         stress: 5,  quality: -2 },
+  { name: "Malware apre 87 popup e Windows si blocca",   stress: 8,  quality: -3 },
+  { name: "Internet Explorer crash inatteso",            stress: 3,  quality: -2 },
+  { name: "Windows Explorer ha smesso di funzionare",    stress: 4,  quality: -1 },
+  { name: "Collega burlone ti gira lo schermo",          stress: 7,  quality: -1 },
+  { name: "Collega burlone ti imposta mouse da mancini", stress: 4,  quality: -2 },
+  { name: "Call alle 18:00 di venerdi prima delle ferie",stress: 14, quality: -4 },
+  /* BONUS */
+  { name: "Yeeh! Sei il Numero Uno!",                    stress: -20, quality: 10 },
+  { name: "Benefit Aziendale: buono da 10€!",            stress: -10, quality: 3 },
+  { name: "Benefit Aziendale: buono da 50€!",            stress: -20, quality: 4 },
+  { name: "Benefit Aziendale: buono da 150€!",           stress: -30, quality: 5 },
+  { name: "Uscita anticipata alle 17:00",                stress: -20, quality: 3 },
+];
+
+function spawnTask() {
+  const t = TASKS[Math.floor(Math.random() * TASKS.length)];
+  const ttl = 5000 + Math.random() * 5000;
+  const id = Date.now() + Math.random();
+  state.taskTTLMax[id] = ttl;
+  state.tasks.push({ ...t, id, progress: 0, ttl });
+}
+
+function triggerEvent() {
+  const e = EVENTS[Math.floor(Math.random() * EVENTS.length)];
+  state.stress += e.stress;
+  state.quality += e.quality;
+  state.events.unshift(e);
+  if (state.events.length > 5) state.events.pop();
+}
+
+function startTask(task) {
+  if (state.currentTask) return;
+  state.currentTask = task;
+  state.tasks = state.tasks.filter(t => t.id !== task.id);
+}
+
+function updateTasks(delta) {
+  if (state.currentTask) {
+    state.currentTask.progress += delta;
+    if (state.currentTask.progress >= state.currentTask.duration) {
+      state.stress  += state.currentTask.stress;
+      state.quality += state.currentTask.quality;
+      state.currentTask = null;
+    }
+  }
+
+  state.tasks.forEach(t => {
+    t.ttl -= delta;
+    if (t.ttl <= 0) {
+      state.stress  += 10;
+      state.quality -= 5;
+      state.tasks = state.tasks.filter(x => x !== t);
+      delete state.taskTTLMax[t.id];
+    }
+  });
+}
+
+function coffee()    { state.stress -= 10; }
+function refactor()  { state.quality += 10; }
+function ignore()    { state.stress -= 5; state.quality -= 10; }
+function cazzeggio() { state.stress -= 10; state.quality -= 10; }
+
+function clamp() {
+  state.stress  = Math.max(0, Math.min(100, state.stress));
+  state.quality = Math.max(0, Math.min(100, state.quality));
+}
+
+function checkGameOver() {
+  if (state.stress >= 100) {
+    document.getElementById('gameOverMsg').innerText = '💀 SEI MORTO DI STRESS';
+    document.getElementById('gameOverSub').innerText = 'Lo sapevi che era una settimana corta?';
+    document.getElementById('gameOverScreen').classList.add('show');
+    state.gameOver = true;
+  }
+  if (state.quality <= 0) {
+    document.getElementById('gameOverMsg').innerText = '🐛 LICENZIATO IN TRONCO';
+    document.getElementById('gameOverSub').innerText = 'Troppi bug in produzione... come sempre!';
+    document.getElementById('gameOverScreen').classList.add('show');
+    state.gameOver = true;
+  }
+}
+
+function updateClock() {
+  const now = new Date();
+  const hh = String(now.getHours()).padStart(2,'0');
+  const mm = String(now.getMinutes()).padStart(2,'0');
+  const ss = String(now.getSeconds()).padStart(2,'0');
+  const t = `${hh}:${mm}:${ss}`;
+  const clockEl = document.getElementById('clock');
+  if (clockEl) clockEl.innerText = t;
+  document.getElementById('clock2').innerText = t;
+}
+
+function render() {
+  // Stress bar
+  const sf = document.getElementById("stressFill");
+  sf.style.width = state.stress + "%";
+  sf.style.background = state.stress < 25 ? '#39ff14' :
+                        state.stress < 50 ? '#ffe600' :
+                        state.stress < 75 ? '#ff8c00' : '#ff2d55';
+  sf.style.boxShadow = state.stress >= 75 ? '0 0 8px #ff2d55' : 'none';
+  document.getElementById("stressVal").innerText = Math.round(state.stress);
+
+  // Quality bar
+  const qf = document.getElementById("qualityFill");
+  qf.style.width = state.quality + "%";
+  qf.style.background = state.quality > 75 ? '#39ff14' :
+                        state.quality > 50 ? '#ffe600' :
+                        state.quality > 25 ? '#ff8c00' : '#ff2d55';
+  qf.style.boxShadow = state.quality <= 25 ? '0 0 8px #ff2d55' : 'none';
+  document.getElementById("qualityVal").innerText = Math.round(state.quality);
+
+  // Current task
+  const currentTaskEl = document.getElementById("currentTask");
+  const progressEl    = document.getElementById("taskProgress");
+
+  if (state.currentTask) {
+    currentTaskEl.innerText = '▸ ' + state.currentTask.name;
+    const perc = (state.currentTask.progress / state.currentTask.duration) * 100;
+    progressEl.style.width = perc + "%";
+  } else {
+    currentTaskEl.innerText = "[ IDLE — aspetto un requisito assurdo ]";
+    progressEl.style.width = "0%";
+  }
+
+  // Task list
+  const taskList = document.getElementById("taskList");
+  while (taskList.firstChild) taskList.removeChild(taskList.firstChild);
+
+  state.tasks.forEach(t => {
+    const el = document.createElement("div");
+    el.className = "task" + (t.ttl < 3000 ? " urgent" : "");
+
+    const seconds  = Math.max(0, Math.floor(t.ttl / 1000));
+    const duration = Math.floor(t.duration / 1000);
+    const maxTTL   = state.taskTTLMax[t.id] || 10000;
+    const ttlPerc  = Math.max(0, (t.ttl / maxTTL) * 100);
+    const ttlClass = t.ttl < 3000 ? 'low' : '';
+
+    el.innerHTML = `
+      <div class="task-name">${t.name}</div>
+      <div class="task-meta">
+        <span>⏱ ~${duration}h</span>
+        <span class="ttl ${ttlClass}">⚠ ${seconds}s</span>
+      </div>
+      <div class="ttl-bar">
+        <div class="ttl-fill" style="width:${ttlPerc}%;background:${t.ttl<3000?'#ff2d55':t.ttl<6000?'#ff8c00':'#39ff14'}"></div>
+      </div>`;
+
+    el.onmousedown = () => startTask(t);
+    taskList.appendChild(el);
+  });
+
+  // Event list
+  const eventList = document.getElementById("eventList");
+  eventList.innerHTML = state.events.map(e => {
+    const isBonus = e.stress < 0 || e.quality > 0;
+    return `<div class="event" style="${isBonus ? 'border-left-color:#39ff14;background:#0a1a0a' : ''}">
+      <div class="event-name" style="${isBonus ? 'color:#39ff14' : ''}">${isBonus ? '✦' : '⚡'} ${e.name}</div>
+      <div class="event-meta">
+        <span class="${e.stress > 0 ? 'neg' : 'pos'}">STRESS ${e.stress > 0 ? '+' : ''}${e.stress}</span>
+        <span class="${e.quality < 0 ? 'neg' : 'pos'}">QUALITÀ ${e.quality > 0 ? '+' : ''}${e.quality}</span>
+      </div>
+    </div>`;
+  }).join("");
+
+  // Character
+  const char = document.getElementById("character");
+  const badge = document.getElementById("statusBadge");
+  const stressEmojis = [
+    [35,  '😊', 'RILASSATO'],
+    [50,  '😐', 'OK_ISH'],
+    [60,  '☹️', 'SOTTO_STRESS'],
+    [70,  '😔', 'SOFFERENTE'],
+    [80,  '😤', 'AL_LIMITE'],
+    [90,  '🤬', 'COLLASSO_IMMINENTE'],
+    [101, '💀', 'FLATLINE']
+  ];
+  for (const [threshold, emoji, label] of stressEmojis) {
+    if (state.stress < threshold) {
+      char.innerText = emoji;
+      badge.innerText = label;
+      char.style.filter = state.stress > 70
+        ? `drop-shadow(0 0 20px rgba(255,45,85,0.5))`
+        : `drop-shadow(0 0 20px rgba(57,255,20,0.3))`;
+      break;
+    }
+  }
+}
+
+let last = 0, lastRender = 0;
+
+setInterval(updateClock, 1000);
+updateClock();
+
+function loop(ts) {
+  if (state.gameOver) return;
+  const delta = ts - last;
+  last = ts;
+
+  updateTasks(delta);
+  if (Math.random() < 0.005) spawnTask();
+  if (Math.random() < 0.005) triggerEvent();
+
+  clamp();
+  checkGameOver();
+
+  if (ts - lastRender > 250) {
+    render();
+    lastRender = ts;
+  }
+  requestAnimationFrame(loop);
+}
+
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
