@@ -16,7 +16,12 @@
     --panel:  #0f0f1a;
     --border: #2a2a4a;
     --text:   #c8c8e0;
-    --dim:    #555577;
+    --dim:    #666699;
+	
+	--font-s: 10px;
+	--font-m: 16px;
+	--font-l: 20px;
+	--font-x: 48px;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -77,7 +82,7 @@
 
   .topbar-title {
     font-family: 'VT323', monospace;
-    font-size: 22px;
+    font-size: var(--font-l);
     color: var(--green);
     text-shadow: 0 0 8px var(--green);
     white-space: nowrap;
@@ -87,7 +92,7 @@
 
   .topbar-title span {
     color: var(--dim);
-    font-size: 14px;
+    font-size: var(--font-m);
   }
 
   .bars-area {
@@ -107,7 +112,7 @@
 
   .bar label {
     font-family: 'VT323', monospace;
-    font-size: 18px;
+    font-size: var(--font-l);
     white-space: nowrap;
     color: var(--dim);
     text-transform: uppercase;
@@ -170,7 +175,7 @@
 
   .bar-value {
     font-family: 'VT323', monospace;
-    font-size: 18px;
+    font-size: var(--font-l);
     width: 34px;
     text-align: right;
     color: var(--dim);
@@ -201,7 +206,7 @@
     background: #14142a;
     border-bottom: 1px solid var(--border);
     font-family: 'VT323', monospace;
-    font-size: 17px;
+    font-size: var(--font-l);
     letter-spacing: 2px;
     color: var(--blue);
     text-shadow: 0 0 6px var(--blue);
@@ -251,7 +256,7 @@
     content: '▶ CLICK';
     position: absolute;
     right: 8px; top: 8px;
-    font-size: 12px;
+    font-size: var(--font-s);
     color: var(--green);
     opacity: 0;
     transition: opacity 0.15s;
@@ -280,14 +285,14 @@
 
   .task-name {
     font-family: 'VT323', monospace;
-    font-size: 16px;
+    font-size: var(--font-m);
     color: var(--text);
     margin-bottom: 4px;
     padding-right: 50px;
   }
 
   .task-meta {
-    font-size: 10px;
+    font-size: var(--font-s);
     color: var(--blue);
     display: flex;
     justify-content: space-between;
@@ -327,16 +332,16 @@
 
   .event-name {
     font-family: 'VT323', monospace;
-    font-size: 16px;
+    font-size: var(--font-m);
     color: var(--text);
     margin-bottom: 4px;
   }
 
   .event-meta {
-    font-size: 10px;
+    font-size: var(--font-s);
     color: var(--dim);
     display: flex;
-    gap: 12px;
+    gap: 14px;
 	justify-content: space-between;
   }
 
@@ -372,7 +377,7 @@
   }
 
   #character {
-    font-size: 72px;
+    font-size: 96px;
     display: block;
     filter: drop-shadow(0 0 20px rgba(57,255,20,0.3));
     transition: filter 0.5s;
@@ -387,7 +392,7 @@
 
   .status-badge {
     font-family: 'VT323', monospace;
-    font-size: 13px;
+    font-size: var(--font-m);
     letter-spacing: 3px;
     color: var(--dim);
     text-transform: uppercase;
@@ -403,7 +408,7 @@
 
   #currentTask {
     font-family: 'VT323', monospace;
-    font-size: 20px;
+    font-size: var(--font-l);
     color: var(--green);
     text-shadow: 0 0 10px rgba(57,255,20,0.5);
     margin-bottom: 10px;
@@ -412,7 +417,7 @@
   }
 
   .progress-label {
-    font-size: 10px;
+    font-size: var(--font-s);
     color: var(--dim);
     text-align: left;
     margin-bottom: 4px;
@@ -435,15 +440,15 @@
   .corner-tag {
     position: absolute;
     font-family: 'VT323', monospace;
-    font-size: 11px;
-    color: var(--border);
+    font-size: var(--font-m);
+    color: var(--dim);
     letter-spacing: 1px;
   }
 
-  .corner-tag.tl { top: 8px; left: 12px; }
-  .corner-tag.tr { top: 8px; right: 12px; }
-  .corner-tag.bl { bottom: 8px; left: 12px; }
-  .corner-tag.br { bottom: 8px; right: 12px; }
+  .corner-tag.tl { top: 8px; left: var(--font-m); }
+  .corner-tag.tr { top: 8px; right: var(--font-m); }
+  .corner-tag.bl { bottom: 8px; left: var(--font-m); }
+  .corner-tag.br { bottom: 8px; right: var(--font-m); }
 
   .actions {
     position: fixed;
@@ -461,7 +466,7 @@
 
   .actions button {
     font-family: 'VT323', monospace;
-    font-size: 17px;
+    font-size: var(--font-l);
     letter-spacing: 1px;
     padding: 6px 18px;
     border: 1px solid transparent;
@@ -497,8 +502,7 @@
   .cazzeggio { background: #0a001a; color: var(--purple); border-color: #330055 !important; min-width: 36px; }
   .cazzeggio:hover { background: #150030; box-shadow: 0 0 12px rgba(199,125,255,0.3); }
 
-  #clock  { font-family: 'VT323', monospace; font-size: 16px; color: var(--dim); margin-left: auto; letter-spacing: 2px; }
-  #clock2 { font-family: 'VT323', monospace; color: var(--dim); font-size: 15px; margin-left: auto; letter-spacing: 2px; }
+  #clock  { font-family: 'VT323', monospace; font-size: var(--font-m); color: var(--dim); margin-left: auto; letter-spacing: 2px; }
 
   /* ── BAR FLASH (generico per tutte e tre le barre) ── */
   @keyframes flashGood { 0%,100%{box-shadow:none} 50%{box-shadow:0 0 18px var(--flash-color)} }
@@ -532,7 +536,7 @@
 
   #gameOverMsg {
     font-family: 'VT323', monospace;
-    font-size: 52px;
+    font-size: var(--font-x);
     color: var(--red);
     text-shadow: 0 0 30px var(--red);
     text-align: center;
@@ -543,7 +547,7 @@
   #gameOverSub {
     font-family: 'VT323', monospace;
     color: var(--dim);
-    font-size: 22px;
+    font-size: var(--font-l);
     text-align: center;
   }
 
@@ -557,7 +561,7 @@
 
   #restartBtn {
     font-family: 'VT323', monospace;
-    font-size: 22px;
+    font-size: var(--font-l);
     padding: 10px 30px;
     background: transparent;
     border: 2px solid var(--green);
@@ -665,7 +669,6 @@
   <button class="refactor"  onclick="refactor()"  title="Aumenta la qualità del codice">🛠 Refactor del Codice</button>
   <button class="ignore"    onclick="ignore()"    title="Diminuisce stress e qualità del codice">🙈 Ignora il Capo</button>
   <button class="cazzeggio" onclick="cazzeggio()" title="Diminuisce stress e qualità del codice, chargeability a picco">🎮 Cazzeggio Assoluto</button>
-  <div id="clock2" title="La giornata è ancora lunga: inutile guardare l'orologio..."></div>
 </div>
 
 <!-- GAME OVER -->
@@ -688,101 +691,105 @@ const state = {
 };
 
 const TASKS = [
-  { name: "Sviluppetto carino",                           duration: 5000, stress: 15, quality: -6 },
-  { name: "CR urgente",                                   duration: 3000, stress: 10, quality: -6 },
-  { name: "Bug semplice",                                 duration: 2000, stress: 3,  quality: -3 },
-  { name: "Call improvvisa",                              duration: 3000, stress: 10, quality: -4 },
-  { name: "Timesheet entro ieri",                         duration: 5000, stress: 8,  quality: -5 },
-  { name: "Corso obbligatorio (click avanti avanti)",     duration: 4000, stress: 2,  quality: -1 },
-  { name: "Corso con quiz finale bastardo",               duration: 6000, stress: 12, quality: -4 },
-  { name: "Implementare requisito da spegnere in Prod",   duration: 4000, stress: 7,  quality: -3 },
-  { name: "Bug in Produzione",                            duration: 3000, stress: 7,  quality: -6 },
-  { name: "Rilascio all'ora di pranzo",                   duration: 2000, stress: 7,  quality: -2 },
-  { name: "CR con Specifiche fumose",                     duration: 3000, stress: 7,  quality: -5 },
-  { name: "Estrarre Log Splunk",                          duration: 4000, stress: 8,  quality: -1 },
-  { name: "Rispondere email thread biblico",              duration: 5000, stress: 10, quality: -4 },
-  { name: "KT ultra-tecnico a collega salumiere",         duration: 6000, stress: 10, quality: -2 },
-  { name: "Scrivere specifiche inutili",                  duration: 7000, stress: 10, quality: -3 },
-  { name: "Bug Critico - War Room",                       duration: 8000, stress: 20, quality: -4 },
-  { name: "Usare nuovo framework buggato",                duration: 3000, stress: 15, quality: -4 },
-  { name: "Rifare le stime per requisito già stimato",    duration: 4000, stress: 12, quality: -5 },
-  { name: "Smoke test su BIGv6",                          duration: 3000, stress: 15, quality: -3 },
-  { name: "Analisi sul benefit Lounge Premio",            duration: 5000, stress: 15, quality: -3 },
-  { name: "Project Manager chiede PPT per la demo",       duration: 2000, stress: 8,  quality: -6 },
-  { name: "Cambio label per offerta last minute",         duration: 3000, stress: 5,  quality: -2 },
-  { name: "Capire perchè la SOA è ancora down",           duration: 5000, stress: 5,  quality: -2 },
-  { name: "Fixare i caratteri accentati sul GRM",         duration: 1000, stress: 5,  quality: -2 },
-  { name: "Pulizia cache Akamai",                         duration: 1000, stress: 5,  quality: -2 },
-  { name: "Requisito senza specifiche",                   duration: 2000, stress: 8,  quality: -3 },
-  { name: "Tracciamenti Google Analytics",                duration: 2000, stress: 4,  quality: -2 },
-  { name: "Fix urgente su Sitecore in Produzione",        duration: 3000, stress: 6,  quality: -4 },
+  { name: "Sviluppetto carino",                               duration: 5000, stress: 15, quality: -6 },
+  { name: "CR urgente",                                       duration: 3000, stress: 10, quality: -6 },
+  { name: "Bug semplice",                                     duration: 2000, stress: 3,  quality: -3 },
+  { name: "Call improvvisa",                                  duration: 3000, stress: 10, quality: -4 },
+  { name: "Timesheet entro ieri",                             duration: 5000, stress: 8,  quality: -5 },
+  { name: "Corso obbligatorio (click avanti avanti)",         duration: 4000, stress: 2,  quality: -1 },
+  { name: "Corso senza transcript con quiz finale bastardo",  duration: 6000, stress: 12, quality: -4 },
+  { name: "Implementare requisito da spegnere in Produzione", duration: 4000, stress: 7,  quality: -3 },
+  { name: "Bug in Produzione",                                duration: 3000, stress: 7,  quality: -6 },
+  { name: "Rilascio all'ora di pranzo",                       duration: 2000, stress: 7,  quality: -2 },
+  { name: "CR con Specifiche fumose",                         duration: 3000, stress: 7,  quality: -5 },
+  { name: "Estrarre Log da Splunk",                           duration: 4000, stress: 8,  quality: -1 },
+  { name: "Rispondere email thread biblico",                  duration: 5000, stress: 10, quality: -4 },
+  { name: "Fare KT ultra-tecnico a collega salumiere",        duration: 6000, stress: 10, quality: -2 },
+  { name: "Scrivere specifiche inutili",                      duration: 7000, stress: 10, quality: -3 },
+  { name: "Bug Critico - War Room immediata",                 duration: 8000, stress: 20, quality: -4 },
+  { name: "Usare un nuovo framework buggato",                 duration: 3000, stress: 15, quality: -4 },
+  { name: "Rifare le stime per un requisito già stimato",     duration: 4000, stress: 12, quality: -5 },
+  { name: "Smoke test su BIGv6",                              duration: 3000, stress: 15, quality: -3 },
+  { name: "Analisi sul benefit Lounge Premio",                duration: 5000, stress: 15, quality: -3 },
+  { name: "Analisi sul Pet Kit in caso di Upgrade",           duration: 4000, stress: 12, quality: -3 },
+  { name: "Nuovo metodo di pagamento Loyalty da Benefit",     duration: 3000, stress: 10, quality: -3 },
+  { name: "Project Manager chiede PPT per la demo",           duration: 2000, stress: 8,  quality: -6 },
+  { name: "Cambio label per offerta last minute",             duration: 3000, stress: 5,  quality: -2 },
+  { name: "Capire perchè la SOA è ancora down",               duration: 5000, stress: 5,  quality: -2 },
+  { name: "Fixare i caratteri accentati sul GRM",             duration: 1000, stress: 5,  quality: -2 },
+  { name: "Pulizia cache Akamai",                             duration: 1000, stress: 5,  quality: -2 },
+  { name: "Requisito senza specifiche",                       duration: 2000, stress: 8,  quality: -3 },
+  { name: "Tracciamenti Google Analytics",                    duration: 3000, stress: 4,  quality: -2 },
+  { name: "Sbloccare la pipeline su Azure",                   duration: 2000, stress: 3,  quality: -1 },
+  { name: "Fix urgente su Sitecore in Produzione",            duration: 3000, stress: 6,  quality: -4 },
 ];
 
 const EVENTS = [
-  { name: "Bimbo con febbre",                             stress: 5,  quality: -2 },
-  { name: "Gatto vomita sul PC",                          stress: 10, quality: -5 },
-  { name: "Windows Update obbligatorio",                  stress: 3,  quality: -3 },
-  { name: "Microsoft Antivirus ti blocca il PC",          stress: 6,  quality: -3 },
-  { name: "PC fuori policy",                              stress: 4,  quality: -4 },
-  { name: "Le carte Nexi di test non funzionano",         stress: 12, quality: -2 },
-  { name: "Nuova VPN down",                               stress: 15, quality: -8 },
-  { name: "Rotte chiuse verso i server",                  stress: 5,  quality: -2 },
-  { name: "I carnet si sono rotti in Produzione",         stress: 10, quality: -4 },
-  { name: "Pipeline bloccata in Produzione",              stress: 20, quality: -10 },
-  { name: "Buttato dentro una call a sorpresa",           stress: 18, quality: -3 },
-  { name: "Pacco Amazon perso dal corriere",              stress: 8,  quality: -1 },
-  { name: "Pacco AliExpress preso a calci dal corriere",  stress: 8,  quality: -1 },
-  { name: "Pacco Shein di 4 taglie più piccolo",          stress: 8,  quality: -1 },
-  { name: "Teams oggi non funziona",                      stress: 7,  quality: -2 },
-  { name: "SOA down durante gli IT",                      stress: 9,  quality: -2 },
-  { name: "GRM con tag non chiuso rompe tutto",           stress: 7,  quality: -4 },
-  { name: "Email apericena con gruppo liceo",             stress: 6,  quality: -4 },
-  { name: "Griglia treni vuota per qualsiasi data",       stress: 10, quality: -5 },
-  { name: "Attacco di dissenteria quando sei in ufficio", stress: 15, quality: -8 },
-  { name: "Toner giallo esaurito e stampante bloccata",   stress: 4,  quality: -7 },
-  { name: "Cambio password obbligatorio",                 stress: 2,  quality: -1 },
-  { name: "Driver Audio e/o cuffiette KO",                stress: 6,  quality: -3 },
-  { name: "Hai vinto uno sviluppetto carino",             stress: 18, quality: -10 },
-  { name: "Authenticator sul cellulare scarico",          stress: 7,  quality: -3 },
-  { name: "BitLocker bloccato, chiama assistenza",        stress: 8,  quality: -3 },
-  { name: "Mal di schiena improvviso",                    stress: 11, quality: -5 },
-  { name: "Router con segnale Wi-fi disturbato",          stress: 13, quality: -3 },
-  { name: "Webcam accesa mentre eri in mutande",          stress: 12, quality: -9 },
-  { name: "Vocale delirante di 7 minuti da moglie",       stress: 15, quality: -8 },
-  { name: "Moglie che urla via WhatsApp",                 stress: 15, quality: -8 },
-  { name: "Jessico Calcetto annulla partita giovedi",     stress: 20, quality: -10 },
-  { name: "Email di phishing ti svuota il conto",         stress: 8,  quality: -2 },
-  { name: "Finiti i crediti AI a metà sviluppo",          stress: 11, quality: -10 },
-  { name: "Dimissioni collega bravo",                     stress: 13, quality: -8 },
-  { name: "Telefonata da call-center albanese",           stress: 4,  quality: -4 },
-  { name: "Stampante di rete che non funziona",           stress: 9,  quality: -2 },
-  { name: "Cena improvvisa dai suoceri",                  stress: 12, quality: -2 },
-  { name: "Cane ti morde il piede",                       stress: 8,  quality: -3 },
-  { name: "68 notifiche dal gruppo mamme di scuola",      stress: 11, quality: -6 },
-  { name: "Dimenticato microfono acceso in call",         stress: 14, quality: -6 },
-  { name: "Popup 40enni vogliose in Team Presenting",     stress: 17, quality: -10 },
-  { name: "Rilascio anticipato di 3 giorni",              stress: 16, quality: -18 },
-  { name: "Auto aziendale ti lascia a piedi",             stress: 10, quality: -5 },
-  { name: "Abbonamento Netflix sgamato dalla Finanza",    stress: 30, quality: -15 },
-  { name: "Cellulare aziendale cade nel WC",              stress: 20, quality: -12 },
-  { name: "Macchinetta del caffè rotta",                  stress: 10, quality: -4 },
-  { name: "Elettricista vuole essere pagato in nero",     stress: 15, quality: -4 },
-  { name: "Idraulico vuole essere pagato in natura",      stress: 25, quality: -8 },
-  { name: "Hai vinto una trasferta a Domodossola",        stress: 18, quality: -10 },
-  { name: "GTA 5 ha smesso di funzionare",                stress: 6,  quality: -6 },
-  { name: "Ctrl-C Ctrl-V ha smesso di funzionare",        stress: 6,  quality: -6 },
-  { name: "Caffè caduto copiosamente sul notebook",       stress: 9,  quality: -8 },
-  { name: "Spazio su disco esaurito, il PC si blocca",    stress: 11, quality: -3 },
-  { name: "Mouse wireless con batteria scarica",          stress: 5,  quality: -2 },
-  { name: "Malware apre 87 popup e Windows si blocca",    stress: 8,  quality: -3 },
-  { name: "Internet Explorer crash inatteso",             stress: 3,  quality: -2 },
-  { name: "Windows Explorer ha smesso di funzionare",     stress: 4,  quality: -1 },
-  { name: "Google Chrome blocca l'estensione CORS",       stress: 6,  quality: -3 },
-  { name: "YouTube oggi non vuole proprio funzionare",    stress: 4,  quality: -2 },
-  { name: "StackOverflow down in manutenzione",           stress: 5,  quality: -4 },
-  { name: "Collega burlone ti gira lo schermo",           stress: 7,  quality: -1 },
-  { name: "Collega burlone ti imposta il mouse da mancini",  stress: 4,  quality: -2 },
-  { name: "Call alle 18:00 di venerdi prima delle ferie",    stress: 14, quality: -4 },
+  { name: "Bimbo con febbre",                                            stress: 5,  quality: -2 },
+  { name: "Gatto vomita sul PC",                                         stress: 10, quality: -5 },
+  { name: "Windows Update obbligatorio",                                 stress: 3,  quality: -3 },
+  { name: "Microsoft Antivirus ti blocca il PC",                         stress: 6,  quality: -3 },
+  { name: "PC fuori policy",                                             stress: 4,  quality: -4 },
+  { name: "Le carte Nexi di test non funzionano",                        stress: 12, quality: -2 },
+  { name: "Nuova VPN down",                                              stress: 15, quality: -8 },
+  { name: "Rotte chiuse verso i server",                                 stress: 5,  quality: -2 },
+  { name: "I carnet si sono rotti in Produzione",                        stress: 10, quality: -4 },
+  { name: "Pipeline bloccata in Produzione",                             stress: 20, quality: -10 },
+  { name: "Buttato dentro una call a sorpresa",                          stress: 18, quality: -3 },
+  { name: "Pacco Amazon perso dal corriere",                             stress: 8,  quality: -1 },
+  { name: "Pacco AliExpress preso a calci dal corriere",                 stress: 8,  quality: -1 },
+  { name: "Pacco Shein di 4 taglie più piccolo",                         stress: 8,  quality: -1 },
+  { name: "Teams oggi non funziona",                                     stress: 7,  quality: -2 },
+  { name: "SOA down durante gli IT",                                     stress: 9,  quality: -2 },
+  { name: "GRM con tag non chiuso rompe tutto",                          stress: 7,  quality: -4 },
+  { name: "Griglia treni vuota per qualsiasi data",                      stress: 10, quality: -5 },
+  { name: "Attacco di dissenteria quando sei in ufficio",                stress: 15, quality: -8 },
+  { name: "Toner giallo esaurito e stampante bloccata",                  stress: 4,  quality: -7 },
+  { name: "Cambio password obbligatorio",                                stress: 2,  quality: -1 },
+  { name: "Driver Audio e/o cuffiette KO",                               stress: 6,  quality: -3 },
+  { name: "Hai vinto uno sviluppetto carino",                            stress: 18, quality: -10 },
+  { name: "Authenticator sul cellulare scarico",                         stress: 7,  quality: -3 },
+  { name: "BitLocker ko, ricevi assistenza dall'India",                  stress: 8,  quality: -3 },
+  { name: "Mal di schiena improvviso",                                   stress: 11, quality: -5 },
+  { name: "Router con segnale Wi-fi disturbato",                         stress: 13, quality: -3 },
+  { name: "Webcam accesa mentre eri in mutande",                         stress: 12, quality: -9 },
+  { name: "Vocale delirante di 7 minuti da moglie",                      stress: 15, quality: -8 },
+  { name: "Moglie che urla via WhatsApp",                                stress: 13, quality: -10 },
+  { name: "Ti sei dimenticato dell'anniversario... RIP!",                stress: 18, quality: -7 },
+  { name: "Jessico Calcetto annulla partita del giovedi",                stress: 20, quality: -10 },
+  { name: "Vanesso Padel annulla incontro di martedi sera",              stress: 16, quality: -14 },
+  { name: "Tatiano Palestra annulla allenamento di mercoledi",           stress: 18, quality: -12 },
+  { name: "Email di phishing ti svuota il conto",                        stress: 8,  quality: -2 },
+  { name: "Finiti i crediti AI a metà sviluppo",                         stress: 11, quality: -10 },
+  { name: "Dimissioni del collega bravo",                                stress: 13, quality: -8 },
+  { name: "Telefonata da call-center albanese",                          stress: 4,  quality: -4 },
+  { name: "Stampante di rete che non funziona",                          stress: 9,  quality: -2 },
+  { name: "Cena improvvisa dai suoceri",                                 stress: 12, quality: -2 },
+  { name: "Cane ti morde il piede",                                      stress: 8,  quality: -3 },
+  { name: "68 notifiche dal gruppo mamme di scuola",                     stress: 11, quality: -6 },
+  { name: "Dimenticato microfono acceso in call",                        stress: 14, quality: -6 },
+  { name: "Popup 40enni vogliose in Team Presenting",                    stress: 17, quality: -10 },
+  { name: "Rilascio anticipato di 3 giorni",                             stress: 16, quality: -18 },
+  { name: "Auto aziendale ti lascia a piedi",                            stress: 10, quality: -5 },
+  { name: "Abbonamento Netflix sgamato dalla Finanza",                   stress: 30, quality: -15 },
+  { name: "Cellulare aziendale cade nel WC",                             stress: 20, quality: -12 },
+  { name: "Macchinetta del caffè rotta",                                 stress: 10, quality: -4 },
+  { name: "Elettricista vuole essere pagato in nero",                    stress: 15, quality: -4 },
+  { name: "Idraulico vuole essere pagato in natura",                     stress: 25, quality: -8 },
+  { name: "Hai vinto una trasferta a Domodossola",                       stress: 18, quality: -10 },
+  { name: "Ctrl-C Ctrl-V ha smesso di funzionare",                       stress: 6,  quality: -6 },
+  { name: "Caffè caduto copiosamente sul notebook",                      stress: 9,  quality: -8 },
+  { name: "Spazio su disco esaurito, il PC si blocca",                   stress: 11, quality: -3 },
+  { name: "Mouse wireless con batteria scarica",                         stress: 5,  quality: -2 },
+  { name: "Malware apre 87 popup e Windows si blocca",                   stress: 8,  quality: -3 },
+  { name: "Internet Explorer crash inatteso",                            stress: 3,  quality: -2 },
+  { name: "Windows Explorer ha smesso di funzionare",                    stress: 4,  quality: -1 },
+  { name: "Google Chrome blocca l'estensione CORS",                      stress: 6,  quality: -3 },
+  { name: "StackOverflow down in manutenzione",                          stress: 5,  quality: -4 },
+  { name: "Collega burlone ti gira lo schermo",                          stress: 7,  quality: -1 },
+  { name: "Testimoni di Geova irrompono in casa tua",                    stress: 15, quality: -8 },
+  { name: "Collega burlone ti imposta il mouse da mancini",              stress: 4,  quality: -2 },
+  { name: "Call alle 18:00 di venerdi prima delle ferie",                stress: 14, quality: -4 },
   { name: "Il cliente ti richiede in presenza ma tu sei in Croazia",     stress: 5,  quality: -5 },
   { name: "Riconoscimento facciale si rifiuta di credere che sei tu",    stress: 4,  quality: -2 },
   { name: "PIN sblocco dimenticato dopo serata di bagordi",              stress: 6,  quality: -4 },
@@ -794,22 +801,29 @@ const EVENTS = [
   { name: "Requisito finito nel dimenticatoio è diventato urgentissimo", stress: 12, quality: -3 },
   { name: "Collega gnocca ti convoca urgentemente: situazione delicata", stress: 20, quality: -10 },
   { name: "Ti rechi in ufficio il giorno della chiusura aziendale",      stress: 8,  quality: -5 },
-  { name: "Nuova collega gnocca nel team (ma tu lavori da remoto)",      stress: 5,  quality: -3 },
-  { name: "Azienda ti sgama in finta malattia",                     stress: 20,  quality: -8 },
+  { name: "Azienda ti sgama in finta malattia",                          stress: 20, quality: -7 },
+  { name: "INPS ha perso 6 mesi di contributi",                          stress: 14, quality: -6 },
+  { name: "Azienda ti dimezza i buoni pasto causa smart working",        stress: 8,  quality: -5 },
+  { name: "Ex-azienda non ti paga il TFR",                               stress: 14, quality: -4 },
+  /* MIX */
+  { name: "Email apericena con gruppo liceo",                            stress: -6, quality: -4 },
+  { name: "GTA 5 ha smesso di funzionare",                               stress: 6,  quality: 10 },
+  { name: "YouTube oggi non vuole proprio funzionare",                   stress: 4,  quality: 2  },
+  { name: "Nuova collega gnocca nel team (ma tu lavori da remoto)",      stress: -5, quality: -8 },
   /* BONUS */
-  { name: "Yeeh! Sei il Numero Uno!",                               stress: -20, quality: 10 },
-  { name: "Promozione inaspettata dopo 16 anni da Junior!",         stress: -30, quality: 20 },
-  { name: "Hai donato il sangue e puoi restare a casa!",            stress: -15, quality: 5 },
-  { name: "Oggi è San Cremenzio patrono degli sfruttati!",          stress: -10, quality: 2 },
-  { name: "Oggi è San Pancrazio: 4 ore di permesso obbligatorio!",  stress: -10, quality: 2 },
-  { name: "Collega senior 78enne finalmente va in pensione!",       stress: -15, quality: 4 },
-  { name: "Collega festeggia con dolcetti fatti in casa!",          stress: -12, quality: 5 },
-  { name: "Devi fare KT a nuova collega super-gnocca!",             stress: -15, quality: 2 },
-  { name: "Benefit Aziendale: buono da 10€!",                       stress: -10, quality: 3 },
-  { name: "Benefit Aziendale: buono da 50€!",                       stress: -20, quality: 4 },
-  { name: "Benefit Aziendale: buono da 150€!",                      stress: -30, quality: 5 },
-  { name: "Uscita anticipata alle 17:00!",                          stress: -20, quality: 3 },
-  { name: "Bonus Renzi da 47€ di nuovo in busta paga!",             stress: -10, quality: 1 },
+  { name: "Yeeh! Sei il Numero Uno!",                                    stress: -20, quality: 10 },
+  { name: "Promozione inaspettata dopo 16 anni da Junior!",              stress: -30, quality: 20 },
+  { name: "Hai donato il sangue e puoi restare a casa!",                 stress: -15, quality: 5 },
+  { name: "Oggi è San Cremenzio patrono degli sfruttati!",               stress: -10, quality: 2 },
+  { name: "Oggi è San Pancrazio: 4 ore di permesso obbligatorio!",       stress: -10, quality: 2 },
+  { name: "Collega senior 78enne finalmente va in pensione!",            stress: -15, quality: 4 },
+  { name: "Collega festeggia con dolcetti fatti in casa!",               stress: -12, quality: 5 },
+  { name: "Devi fare KT a nuova collega super-gnocca!",                  stress: -15, quality: 2 },
+  { name: "Benefit Aziendale: buono da 10€!",                            stress: -10, quality: 3 },
+  { name: "Benefit Aziendale: buono da 50€!",                            stress: -20, quality: 4 },
+  { name: "Benefit Aziendale: buono da 150€!",                           stress: -30, quality: 5 },
+  { name: "Uscita anticipata alle 17:00!",                               stress: -20, quality: 3 },
+  { name: "Bonus Renzi da 47€ di nuovo in busta paga!",                  stress: -10, quality: 1 },
   
 ];
 
@@ -920,7 +934,6 @@ function updateClock() {
   const t = `${hh}:${mm}:${ss}`;
   const clockEl = document.getElementById('clock');
   if (clockEl) clockEl.innerText = t;
-  document.getElementById('clock2').innerText = t;
 }
 
 function render() {
@@ -1037,7 +1050,7 @@ function loop(ts) {
 
   updateTasks(delta);
   if (Math.random() < 0.003) spawnTask();
-  if (Math.random() < 0.001) triggerEvent();
+  if (Math.random() < 0.002) triggerEvent();
 
   clamp();
   checkGameOver();
