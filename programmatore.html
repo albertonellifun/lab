@@ -974,11 +974,13 @@ function render() {
       </div>`;
     el.onmousedown = () => startTask(t);
     taskList.appendChild(el);
-  });
+  });  
+  
 
   // ── EVENT LIST ──
   const eventList = document.getElementById('eventList');
-  eventList.innerHTML = state.events.map(e => {
+  // Genera l'HTML degli eventi
+  const newHtml = state.events.map(e => {
     const isBonus = e.stress < 0 || e.quality > 0;
     return `<div class="event" style="${isBonus ? 'border-left-color:#39ff14;background:#0a1a0a' : ''}">
       <div class="event-name" style="${isBonus ? 'color:#39ff14' : ''}">${isBonus ? '✦' : '⚡'} ${e.name}</div>
@@ -988,6 +990,11 @@ function render() {
       </div>
     </div>`;
   }).join('');
+
+  // Aggiorna il DOM solo se il contenuto è effettivamente diverso
+  if (eventList.innerHTML !== newHtml) eventList.innerHTML = newHtml;
+  
+  
 
   // ── CHARACTER ──
   const char  = document.getElementById('character');
