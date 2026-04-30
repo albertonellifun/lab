@@ -179,7 +179,7 @@
 
   .container {
     display: grid;
-    grid-template-columns: 270px 1fr 270px;
+    grid-template-columns: 320px 1fr 320px;
     height: calc(100vh - 64px - 60px);
   }
 
@@ -251,8 +251,8 @@
     content: '▶ CLICK';
     position: absolute;
     right: 8px; top: 8px;
-    font-size: 10px;
-    color: var(--blue);
+    font-size: 12px;
+    color: var(--green);
     opacity: 0;
     transition: opacity 0.15s;
     font-family: 'VT323', monospace;
@@ -288,7 +288,7 @@
 
   .task-meta {
     font-size: 10px;
-    color: var(--dim);
+    color: var(--blue);
     display: flex;
     justify-content: space-between;
   }
@@ -328,7 +328,7 @@
   .event-name {
     font-family: 'VT323', monospace;
     font-size: 16px;
-    color: #ff8090;
+    color: var(--text);
     margin-bottom: 4px;
   }
 
@@ -337,6 +337,7 @@
     color: var(--dim);
     display: flex;
     gap: 12px;
+	justify-content: space-between;
   }
 
   .event-meta .neg { color: var(--red); }
@@ -623,7 +624,7 @@
 <div class="container">
 
   <div class="panel">
-    <div class="panel-header">
+    <div class="panel-header"    title="Tutto ciò che la mente umana può partorire per spillare soldi al cliente">
       <span class="dot"></span> TASK DAL CAPO
     </div>
     <div class="panel-scroll" id="taskList"></div>
@@ -631,7 +632,7 @@
 
   <div class="center">
     <span class="corner-tag tl">SYS_OK</span>
-    <span class="corner-tag tr" id="clock">00:00:00</span>
+    <span class="corner-tag tr" id="clock" title="La giornata è ancora lunga: inutile guardare l'orologio...">00:00:00</span>
     <span class="corner-tag bl">WORKSTATION_7</span>
     <span class="corner-tag br">LOC:CASA</span>
 
@@ -650,7 +651,7 @@
   </div>
 
   <div class="panel right">
-    <div class="panel-header events-header">
+    <div class="panel-header events-header"    title="La fortuna è cieca, ma la sfiga ci vede benissimo!">
       <span class="dot"></span> EVENTI INFAUSTI
     </div>
     <div class="panel-scroll" id="eventList"></div>
@@ -664,7 +665,7 @@
   <button class="refactor"  onclick="refactor()"  title="Aumenta la qualità del codice">🛠 Refactor del Codice</button>
   <button class="ignore"    onclick="ignore()"    title="Diminuisce stress e qualità del codice">🙈 Ignora il Capo</button>
   <button class="cazzeggio" onclick="cazzeggio()" title="Diminuisce stress e qualità del codice, chargeability a picco">🎮 Cazzeggio Assoluto</button>
-  <div id="clock2"></div>
+  <div id="clock2" title="La giornata è ancora lunga: inutile guardare l'orologio..."></div>
 </div>
 
 <!-- GAME OVER -->
@@ -676,9 +677,9 @@
 
 <script>
 const state = {
-  stress: 20,
+  stress: 10,
   quality: 80,
-  chargeability: 50,      // ← NUOVO
+  chargeability: 50,
   tasks: [],
   currentTask: null,
   events: [],
@@ -745,13 +746,13 @@ const EVENTS = [
   { name: "Authenticator sul cellulare scarico",          stress: 7,  quality: -3 },
   { name: "BitLocker bloccato, chiama assistenza",        stress: 8,  quality: -3 },
   { name: "Mal di schiena improvviso",                    stress: 11, quality: -5 },
-  { name: "Router con segnale wi-fi disturbato",          stress: 13, quality: -3 },
+  { name: "Router con segnale Wi-fi disturbato",          stress: 13, quality: -3 },
   { name: "Webcam accesa mentre eri in mutande",          stress: 12, quality: -9 },
   { name: "Vocale delirante di 7 minuti da moglie",       stress: 15, quality: -8 },
   { name: "Moglie che urla via WhatsApp",                 stress: 15, quality: -8 },
   { name: "Jessico Calcetto annulla partita giovedi",     stress: 20, quality: -10 },
-  { name: "Email di phishing inattesa",                   stress: 2,  quality: -3 },
-  { name: "Finiti crediti AI",                            stress: 11, quality: -10 },
+  { name: "Email di phishing ti svuota il conto",         stress: 8,  quality: -2 },
+  { name: "Finiti i crediti AI a metà sviluppo",          stress: 11, quality: -10 },
   { name: "Dimissioni collega bravo",                     stress: 13, quality: -8 },
   { name: "Telefonata da call-center albanese",           stress: 4,  quality: -4 },
   { name: "Stampante di rete che non funziona",           stress: 9,  quality: -2 },
@@ -776,9 +777,12 @@ const EVENTS = [
   { name: "Malware apre 87 popup e Windows si blocca",    stress: 8,  quality: -3 },
   { name: "Internet Explorer crash inatteso",             stress: 3,  quality: -2 },
   { name: "Windows Explorer ha smesso di funzionare",     stress: 4,  quality: -1 },
+  { name: "Google Chrome blocca l'estensione CORS",       stress: 6,  quality: -3 },
+  { name: "YouTube oggi non vuole proprio funzionare",    stress: 4,  quality: -2 },
+  { name: "StackOverflow down in manutenzione",           stress: 5,  quality: -4 },
   { name: "Collega burlone ti gira lo schermo",           stress: 7,  quality: -1 },
-  { name: "Collega burlone ti imposta mouse da mancini",  stress: 4,  quality: -2 },
-  { name: "Call alle 18:00 di venerdi prima delle ferie", stress: 14, quality: -4 },
+  { name: "Collega burlone ti imposta il mouse da mancini",  stress: 4,  quality: -2 },
+  { name: "Call alle 18:00 di venerdi prima delle ferie",    stress: 14, quality: -4 },
   { name: "Il cliente ti richiede in presenza ma tu sei in Croazia",     stress: 5,  quality: -5 },
   { name: "Riconoscimento facciale si rifiuta di credere che sei tu",    stress: 4,  quality: -2 },
   { name: "PIN sblocco dimenticato dopo serata di bagordi",              stress: 6,  quality: -4 },
@@ -786,11 +790,12 @@ const EVENTS = [
   { name: "Vigili urbani ti caricano l'auto anche se parcheggiata bene", stress: 12, quality: -2 },
   { name: "Parcometro scaduto e 39 euro di multa",                       stress: 10, quality: -2 },
   { name: "Peperonata del giorno prima si ripropone durante colloquio",  stress: 8,  quality: -8 },
-  { name: "Riunione in presenza ed interlocutore con fiatella letale",   stress: 10, quality: -3 },
+  { name: "Riunione in presenza (ed interlocutore con fiatella letale)", stress: 10, quality: -3 },
   { name: "Requisito finito nel dimenticatoio è diventato urgentissimo", stress: 12, quality: -3 },
   { name: "Collega gnocca ti convoca urgentemente: situazione delicata", stress: 20, quality: -10 },
-  { name: "Vieni in ufficio il giorno della chiusura aziendale",         stress: 8,  quality: -5 },
-  { name: "Nuova collega gnocca nel team ma tu lavori da remoto!",       stress: 5,  quality: -3 },
+  { name: "Ti rechi in ufficio il giorno della chiusura aziendale",      stress: 8,  quality: -5 },
+  { name: "Nuova collega gnocca nel team (ma tu lavori da remoto)",      stress: 5,  quality: -3 },
+  { name: "Azienda ti sgama in finta malattia",                     stress: 20,  quality: -8 },
   /* BONUS */
   { name: "Yeeh! Sei il Numero Uno!",                               stress: -20, quality: 10 },
   { name: "Promozione inaspettata dopo 16 anni da Junior!",         stress: -30, quality: 20 },
@@ -805,7 +810,7 @@ const EVENTS = [
   { name: "Benefit Aziendale: buono da 150€!",                      stress: -30, quality: 5 },
   { name: "Uscita anticipata alle 17:00!",                          stress: -20, quality: 3 },
   { name: "Bonus Renzi da 47€ di nuovo in busta paga!",             stress: -10, quality: 1 },
-  { name: "Bonus Renzi da 47€ di nuovo in busta paga!",             stress: -10, quality: 1 },
+  
 ];
 
 // ── Helpers flash barra chargeability ──
@@ -966,7 +971,7 @@ function render() {
     el.innerHTML = `
       <div class="task-name">${t.name}</div>
       <div class="task-meta">
-        <span>⏱ ~${duration}h</span>
+        <span class="ttl ${ttlClass}">⏱ ~${duration}h</span>
         <span class="ttl ${ttlClass}">⚠ ${seconds}s</span>
       </div>
       <div class="ttl-bar">
@@ -983,7 +988,7 @@ function render() {
   const newHtml = state.events.map(e => {
     const isBonus = e.stress < 0 || e.quality > 0;
     return `<div class="event" style="${isBonus ? 'border-left-color:#39ff14;background:#0a1a0a' : ''}">
-      <div class="event-name" style="${isBonus ? 'color:#39ff14' : ''}">${isBonus ? '✦' : '⚡'} ${e.name}</div>
+      <div class="event-name">${isBonus ? '✦' : '⚡'} ${e.name}</div>
       <div class="event-meta">
         <span class="${e.stress  > 0 ? 'neg' : 'pos'}">STRESS ${e.stress  > 0 ? '+' : ''}${e.stress}</span>
         <span class="${e.quality < 0 ? 'neg' : 'pos'}">QUALITÀ ${e.quality > 0 ? '+' : ''}${e.quality}</span>
@@ -1001,11 +1006,11 @@ function render() {
   const badge = document.getElementById('statusBadge');
   const stressEmojis = [
     [35,  '😊', 'RILASSATO'],
-    [50,  '😐', 'QUASI OK'],
-    [60,  '☹️', 'SOTTO STRESS'],
-    [70,  '😔', 'SOFFERENTE'],
-    [80,  '😤', 'AL LIMITE'],
-    [90,  '🤬', 'COLLASSO IMMINENTE'],
+    [45,  '😐', 'QUASI OK'],
+    [55,  '☹️', 'SOTTO STRESS'],
+    [65,  '😔', 'SOFFERENTE'],
+    [75,  '😤', 'AL LIMITE'],
+    [85,  '🤬', 'COLLASSO IMMINENTE'],
     [101, '💀', 'RIPOSA IN PACE']
   ];
   for (const [threshold, emoji, label] of stressEmojis) {
