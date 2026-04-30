@@ -653,7 +653,7 @@
   <button class="coffee"    onclick="coffee()">☕ Pausa Caffè</button>
   <button class="refactor"  onclick="refactor()">🛠 Refactor</button>
   <button class="ignore"    onclick="ignore()">🙈 Ignora il Capo</button>
-  <button class="cazzeggio" onclick="cazzeggio()" title="Cazzeggio">🎮</button>
+  <button class="cazzeggio" onclick="cazzeggio()">🎮 Cazzeggio Assoluto</button>
   <div id="clock2" style="font-family:'VT323',monospace;font-size:15px;color:var(--dim);margin-left:auto;letter-spacing:2px;"></div>
 </div>
 
@@ -819,7 +819,7 @@ function updateTasks(delta) {
 function coffee()    { state.stress -= 10; }
 function refactor()  { state.quality += 10; }
 function ignore()    { state.stress -= 5; state.quality -= 10; }
-function cazzeggio() { state.stress -= 10; state.quality -= 10; }
+function cazzeggio() { state.stress -= 20; state.quality -= 10; }
 
 function clamp() {
   state.stress  = Math.max(0, Math.min(100, state.stress));
