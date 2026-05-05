@@ -411,13 +411,13 @@ const TRACK_SECTIONS = [
 
     // 2. ESSE SINUOSA — curve morbide alternate, ritmo da crociera
     { segs: 300, curve:  2.5, hill:  3000, name: 'esse_a'   },
-    { segs: 300, curve: -2.5, hill: -3000, name: 'esse_b'   },
-    { segs: 200, curve:  1.8, hill:  2000, name: 'esse_c'   },
+    { segs: 300, curve: -2.5, hill: -4000, name: 'esse_b'   },
+    { segs: 200, curve:  1.8, hill:  3000, name: 'esse_c'   },
     { segs: 200, curve: -1.8, hill: -2000, name: 'esse_d'   },
 
     // 3. SALITA AL TORNANTE — curva stretta con pendenza decisa
     { segs: 150, curve:  0.0, hill:  4000, name: 'climb'    },
-    { segs: 250, curve:  5.5, hill: -4000, name: 'hairpin_r'},
+    { segs: 250, curve:  5.5, hill: -5000, name: 'hairpin_r'},
     { segs: 150, curve:  0.0, hill:  2000, name: 'climb2'   },
     { segs: 250, curve: -5.5, hill: -6000, name: 'hairpin_l'},
 
@@ -428,7 +428,7 @@ const TRACK_SECTIONS = [
 
     // 5. CHICANE STRETTA — curve brevi e rapide, guidare precisi
     { segs:  80, curve:  4.5, hill:  4000, name: 'chic_a'   },
-    { segs:  80, curve: -4.5, hill: -1000, name: 'chic_b'   },
+    { segs:  80, curve: -4.5, hill: -2000, name: 'chic_b'   },
     { segs:  80, curve:  4.0, hill:  3000, name: 'chic_c'   },
     { segs:  80, curve: -4.0, hill: -1000, name: 'chic_d'   },
     { segs: 100, curve:  0.0, hill: -2000, name: 'chic_end' },
@@ -443,11 +443,11 @@ const TRACK_SECTIONS = [
 	
     // 6. PIANURA ONDULATA — lunghe curve larghissime con dolci ondulazioni
     { segs: 400, curve:  1.2, hill:  4000, name: 'plain_a'  },
-    { segs: 400, curve: -1.0, hill: -2000, name: 'plain_b'  },
+    { segs: 400, curve: -1.0, hill: -3000, name: 'plain_b'  },
     { segs: 400, curve:  0.8, hill: -1000, name: 'plain_c'  },
 
     // 7. RETTILINEO FINALE — dritto, leggera discesa verso il traguardo
-    { segs: 100, curve:  0.0, hill: 3000, name: 'final'    },
+    { segs: 100, curve:  0.0, hill: -2000, name: 'final'    },
 ];
 
 //per la hitbox
@@ -600,7 +600,8 @@ function initSegmentsNEW() {
             globalIdx++;
         }
     }
-
+	console.log('totalDeltaY:', totalDeltaY);
+	console.log('yCorrection:', yCorrection);
     console.log('Segmenti:', segments.length);
     console.log('Delta Y residuo:', (segments[segments.length-1].p2.world.y - segments[0].p1.world.y).toFixed(2));
 }
@@ -1418,7 +1419,7 @@ function drawSprite(sprite, p) {
     let w = Math.max(0, 400 * scale * (width * 0.5));
     let h = Math.max(0, 400 * scale * (width * 0.5));
 
-    if (p.screen.y < -h * 6 || p.screen.y > canvas.height + 20) return;
+    if (p.screen.y < -h * 6 || p.screen.y > canvas.height + h * 2) return;
 	if (p.screen.x < -w * 3 || p.screen.x > canvas.width + w * 3) return;
 
 	let radius = Math.max(0, w * 0.5); //OCHO: il raggio non puo essere negativo
@@ -1474,8 +1475,6 @@ function drawSprite(sprite, p) {
 		ctx.fillRect(beamX, topY, beamW, beamH);
 		ctx.strokeStyle = gamePalette.startDark;
 		ctx.strokeRect(beamX, topY, beamW, beamH);
-		
-		ctx.lineWidth = 1;
 	} else if (sprite.type === 'start') {
         let poleWidth = w * 0.25;
         let barWidth = w * 16;//non mi piace!
@@ -1822,7 +1821,7 @@ function drawSprite(sprite, p) {
 	} else if (sprite.type === 'tree2') {
 		//il fusto si inclina sempre verso il centro della strada
 		let lean = (sprite.x <= 0) ? 1 : -1;
-
+		/*
 		// Tip del fusto: offset orizzontale e altezza scalati con w/h
 		let tipX = x + lean * w * 1.4;
 		let tipY = y - h * 4;
@@ -1832,7 +1831,17 @@ function drawSprite(sprite, p) {
 		let cp1y = y - h * 1.5;
 		let cp2x = x + lean * w * 0.8;
 		let cp2y = y - h * 2.8;
+		*/
+		// Tip del fusto: offset orizzontale e altezza scalati con w/h
+		let tipX = x + lean * w * 1.05;  // era 1.4
+		let tipY = y - h * 3;             // era h*4
 
+		// Punti di controllo della curva di Bézier cubica
+		let cp1x = x + lean * w * 0.2;
+		let cp1y = y - h * 1.15;      
+		let cp2x = x + lean * w * 0.6;
+		let cp2y = y - h * 2.1;       		
+		
 		//ombra
 		ctx.fillStyle = 'rgba(0,0,0,0.5)';
         ctx.beginPath();
@@ -1868,7 +1877,7 @@ function drawSprite(sprite, p) {
 		ctx.closePath();
         ctx.fill();
 		
-		
+		/*
 		// Tip del fusto: offset orizzontale e altezza scalati con w/h
 		tipX = x - lean * w * 0.8;
 		tipY = y - h * 3;
@@ -1878,6 +1887,17 @@ function drawSprite(sprite, p) {
 		cp1y = y - h * 1.15;//1.5==4 -> 0.75==2 -> 
 		cp2x = x + lean * w * 0.6;
 		cp2y = y - h * 2.0;
+		*/
+		// Tip del fusto secondario
+		tipX = x - lean * w * 0.6;    // era w*0.8
+		tipY = y - h * 2.5;            // era h*3
+
+		// Punti di controllo
+		cp1x = x + lean * w * 0.2;
+		cp1y = y - h * 0.95;           // era h*1.15
+		cp2x = x + lean * w * 0.45;   // era w*0.6
+		cp2y = y - h * 1.6;            // era h*2.0
+		
 
 		// Fusto - fill marrone con valore chiaro
 		ctx.strokeStyle = gamePalette.palmTrunkLight;//'#853';
@@ -1950,8 +1970,6 @@ function drawSprite(sprite, p) {
 		ctx.lineTo(x - w * 0.15, y - h * 0.4);
 		ctx.closePath();
 		ctx.fill();
-
-		ctx.lineWidth = 1;
 	} else if (sprite.type === 'billboard') {
 		//billboard
 		//ombra
@@ -2093,7 +2111,6 @@ function drawSprite(sprite, p) {
 					  armW, armUpH * 0.75 + armWHalf,
 					  [armW * 0.5, armW * 0.5, 0, 0]);
 		ctx.fill();
-		ctx.lineWidth = 1;
 	}	
 }
 
@@ -2198,7 +2215,6 @@ function drawFerrari(cx, cy, w, colDark, colLight) {
 
     //linee orizzontali sopra i fari
     ctx.strokeStyle = '#111';
-    ctx.lineWidth = 1;
     for (let i = 0; i < 5; i++) {
         ctx.beginPath();
         ctx.moveTo(cx - 60 * s + 5 * s, cy + 12 * s + (i * 3) * s + bounce);
@@ -2507,7 +2523,6 @@ function render() {
 	
 	update();
 	drawSky(skyOffset);//cielo+montagne
-	drawFPS();//fps
 		
 	let startPos = Math.floor(player.z / segL);
 	let camHeight = segments[startPos % segments.length].p1.world.y + camH;
@@ -2649,6 +2664,7 @@ function render() {
 	drawSpeedometer();
 	drawGearStick();
 	drawLapTimes();
+	drawFPS();//fps
 
     requestAnimationFrame(render);
 }
