@@ -222,6 +222,57 @@ const START_IDX = 15;//dove e' visivamente il traguardo "alto"
 const particles = [];
 
 
+//texture puntiricchiata asfalto
+let asphaltTexture = null;
+let asphaltPattern = null;
+
+// In init() — una volta sola
+function generaTexturePuntiricchiata() {
+    const offscreen = document.createElement('canvas');
+    offscreen.width = 512;
+    offscreen.height = 256;
+    const offCtx = offscreen.getContext('2d');
+    const img = offCtx.createImageData(512, 256);
+    const data = img.data;
+
+    for (let i = 0; i < data.length; i += 4) {
+        const grana = (Math.random() * 50 - 25) | 0;
+        data[i]     = 128 + grana;
+        data[i + 1] = 128 + grana;
+        data[i + 2] = 128 + grana;
+        data[i + 3] = 255;
+    }
+
+    offCtx.putImageData(img, 0, 0);
+    asphaltPattern = ctx.createPattern(offscreen, 'repeat');
+}
+
+// Nel loop di rendering, DOPO aver disegnato tutti i segmenti
+function applicaTexturePuntiricchiata(startPos) {
+    if (!asphaltPattern) return;
+    ctx.globalCompositeOperation = 'overlay';
+    ctx.fillStyle = asphaltPattern;
+
+    for (let n = startPos; n < startPos + drawDistance; n++) {
+        const s  = segments[n % segments.length];
+        const s2 = segments[(n + 1) % segments.length];
+
+        // usa p2 del seg corrente e p2 del successivo come y1/y2
+        const y = s2.p2.screen.y;
+        const h = s.p2.screen.y - s2.p2.screen.y;
+        if (h < 0.5) continue;
+
+        const t = (n - startPos) / drawDistance; // 0=vicino, 1=orizzonte
+		ctx.globalAlpha = 0.15 + (1-t) * (1-t) * 0.15;
+
+        ctx.fillRect(0, y, width, h + 1);
+    }
+
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.globalAlpha = 1.0;
+}
+
+
 //AUDIO BRUM BRUM!
 let isMute = false;
 let gear = 1;
@@ -2551,6 +2602,8 @@ function render() {
         }
     }
 	
+	applicaTexturePuntiricchiata(startPos);
+	
 	
     //Sprites & Collision - prima gli oggetti lontani (che vengono coperti da quelli vicini)
     for (let n = startPos + drawDistance; n > startPos; n--) {
@@ -2718,6 +2771,8 @@ function drawTraffic(startPos) {
 		let carW = scale * roadW * width * 0.1;
 		let carH = carW * 0.5;
 
+		if (screenY < height * 0.45 || screenY > height + carH * 4) continue;//non disegnare le auto in cielo nè sotto terra
+		
 		drawFerrariShadow(screenX, screenY, carW * 1.4, carW * 1.5);//un po piu grande == piu belle
 		drawFerrari(screenX, screenY, carW * 1.5, car.color.dark, car.color.light);//disegnate appena piu grandi
 				
@@ -2834,6 +2889,7 @@ else
 	initSegmentsNEW();
 initTrafficCars();
 initPalette();
+generaTexturePuntiricchiata();//puntiricchiamento ambientale
 render();
 </script>
 </body>
