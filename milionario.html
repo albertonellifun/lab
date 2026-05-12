@@ -1,0 +1,1378 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chi Vuole Essere Milionario?</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --navy: #000428;
+    --deep-blue: #001a6e;
+    --mid-blue: #003399;
+    --royal: #0047cc;
+    --bright: #1565ff;
+    --glow: #4da6ff;
+    --gold: #ffd700;
+    --gold-light: #ffe566;
+    --gold-dark: #b8860b;
+    --silver: #c0c8d8;
+    --white: #ffffff;
+    --correct: #00cc44;
+    --wrong: #ff2200;
+    --reveal: #ff8800;
+    --final: #cc00ff;
+	--orange: #ff8800;       /* il colore piu bello del mondo */
+    --orange-light: #ffaa33; 
+    --orange-dark: #bb5500; 
+  }
+  
+  @font-face {
+    font-family: 'ITC Conduit';
+    src: url('./milionario-itc-conduit.otf') format('opentype');
+    font-weight: normal;
+    font-style: normal;
+  }
+
+  body {
+    font-family: 'ITC Conduit', sans-serif;
+    background: var(--navy);
+    color: var(--white);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow-x: hidden;
+    letter-spacing: 1px;
+  }
+
+  /* BACKGROUND RAYS */
+  body::after {
+    content: '';
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    width: 200vmax;
+    height: 200vmax;
+    transform: translate(-50%, -50%);
+    background: conic-gradient(
+      from 0deg,
+      transparent 0deg, rgba(0,80,220,0.08) 10deg,
+      transparent 20deg, rgba(0,80,220,0.08) 30deg,
+      transparent 40deg, rgba(0,80,220,0.08) 50deg,
+      transparent 60deg, rgba(0,80,220,0.08) 70deg,
+      transparent 80deg, rgba(0,80,220,0.08) 90deg,
+      transparent 100deg, rgba(0,80,220,0.08) 110deg,
+      transparent 120deg, rgba(0,80,220,0.08) 130deg,
+      transparent 140deg, rgba(0,80,220,0.08) 150deg,
+      transparent 160deg, rgba(0,80,220,0.08) 170deg,
+      transparent 180deg, rgba(0,80,220,0.08) 190deg,
+      transparent 200deg, rgba(0,80,220,0.08) 210deg,
+      transparent 220deg, rgba(0,80,220,0.08) 230deg,
+      transparent 240deg, rgba(0,80,220,0.08) 250deg,
+      transparent 260deg, rgba(0,80,220,0.08) 270deg,
+      transparent 280deg, rgba(0,80,220,0.08) 290deg,
+      transparent 300deg, rgba(0,80,220,0.08) 310deg,
+      transparent 320deg, rgba(0,80,220,0.08) 330deg,
+      transparent 340deg, rgba(0,80,220,0.08) 350deg,
+      transparent 360deg
+    );
+    pointer-events: none;
+    z-index: 0;
+    animation: slowSpin 60s linear infinite;
+  }
+
+  @keyframes slowSpin { to { transform: translate(-50%,-50%) rotate(360deg); } }
+
+  /* SCREEN VIEWS */
+  .screen { position: relative; z-index: 1; width: 100%; max-width: 900px; padding: 20px; display: none; flex-direction: column; align-items: center; }
+  .screen.active { display: flex; }
+
+  /* ===== START SCREEN ===== */
+  #startScreen { justify-content: center; min-height: 100vh; gap: 24px; }
+
+  .logo-area { text-align: center; }
+
+  .logo-title {
+    font-family: 'ITC Conduit', sans-serif;
+    font-size: clamp(28px, 6vw, 48px);
+    font-weight: 900;
+    color: var(--gold);
+    text-shadow: 0 0 30px rgba(255,215,0,0.7), 0 0 60px rgba(255,215,0,0.3);/* #ffdd00 */
+    letter-spacing: 1px;
+    line-height: 1.2;
+    margin-bottom: 6px;
+  }
+  
+  .logo-title-big {
+    font-family: 'ITC Conduit', sans-serif;
+    font-size: clamp(56px, 12vw, 96px);
+    font-weight: 900;
+    color: var(--gold);
+    text-shadow: 0 0 30px rgba(255,215,0,0.7), 0 0 60px rgba(255,215,0,0.3);/* #ffdd00 */
+    letter-spacing: 1px;
+    line-height: 1;
+    margin-top: -24px;
+  }
+
+  .logo-sub {
+    font-family: 'ITC Conduit', sans-serif;
+    font-size: clamp(12px, 2vw, 20px);
+    color: var(--silver);
+    letter-spacing: 6px;
+  }
+
+  .logo-diamond {
+    width: 80px;
+    height: 80px;
+    margin: 10px auto;
+    position: relative;
+  }
+
+  .logo-diamond svg { width: 100%; height: 100%; }
+
+  /* ===== SHARED HEX BUTTON SYSTEM ===== */
+  .hex-btn {
+    position: relative;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.25s, filter 0.25s;
+    text-decoration: none;
+  }
+  .hex-btn:hover:not(:disabled) { transform: scale(1.03); filter: brightness(1.2); }
+  .hex-btn:active:not(:disabled) { transform: scale(0.97); }
+  .hex-btn:disabled { opacity: 0.3; cursor: default; }
+  .hex-btn.used { opacity: 0.4; cursor: default; pointer-events: none; }
+
+  /* outer border shell */
+  .hex-btn .hb-outer {
+    position: absolute;
+    inset: 0;
+    clip-path: polygon(16px 0%, calc(100% - 16px) 0%, 100% 50%, calc(100% - 16px) 100%, 16px 100%, 0% 50%);
+    background: rgba(255,255,255,0.85);
+    transition: background 0.25s;
+  }
+  /* inner fill */
+  .hex-btn .hb-inner {
+    position: absolute;
+    inset: 2px;
+    clip-path: polygon(14px 0%, calc(100% - 14px) 0%, 100% 50%, calc(100% - 14px) 100%, 14px 100%, 0% 50%);
+    background: linear-gradient(160deg, #001a6e 0%, #000e3a 100%);
+    transition: background 0.25s;
+  }
+  /* label on top */
+  .hex-btn .hb-label {
+    position: relative;
+    z-index: 2;
+    font-family: 'ITC Conduit', sans-serif;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: 1px;
+    white-space: nowrap;
+    padding: 0 32px;
+    line-height: 1;
+  }
+
+  /* SIZE VARIANTS */
+  .hex-btn.hb-md  { height: 44px; min-width: 150px; }
+  .hex-btn.hb-md .hb-label { font-size: 13px; }
+  .hex-btn.hb-sm  { height: 36px; min-width: 100px; }
+  .hex-btn.hb-sm .hb-label { font-size: 11px; letter-spacing: 1px; padding: 0 22px; }
+
+  /* COLOUR VARIANTS for border */
+  .hex-btn.hb-gold .hb-outer  { background: var(--gold); }
+  .hex-btn.hb-white .hb-outer { background: rgba(255,255,255,0.85); }
+  .hex-btn.hb-blue .hb-outer  { background: var(--glow); }
+
+  /* used/crossed-out lifeline */
+  .hex-btn.used .hb-outer { background: rgba(150,150,170,0.4); }
+
+  .start-btn { /* legacy alias */ }
+
+  .rules-box {
+    background: rgba(0,30,100,0.6);
+    border: 1px solid rgba(77,166,255,0.3);
+    border-radius: 12px;
+    padding: 20px 30px;
+    max-width: 520px;
+    width: 100%;
+    text-align: center;
+  }
+
+  .rules-box h3 { color: var(--gold); font-family: 'ITC Conduit', sans-serif; margin-bottom: 12px; font-size: 14px; letter-spacing: 2px; }
+  .rules-box p { color: var(--silver); font-size: 14px; line-height: 1.7; }
+
+  /* ===== GAME SCREEN ===== */
+  #gameScreen { min-height: 100vh; padding: 15px; gap: 0; }
+
+  .game-layout {
+    display: grid;
+    grid-template-columns: 180px 1fr;
+    grid-template-rows: auto 1fr auto;
+    gap: 15px;
+    width: 100%;
+    align-items: start;
+  }
+
+  /* TOP BAR */
+  .top-bar {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(0,20,80,0.7);
+    border: 1px solid rgba(77,166,255,0.2);
+    border-radius: 10px;
+    padding: 10px 20px;
+    backdrop-filter: blur(4px);
+  }
+
+  .show-title { font-family: 'ITC Conduit', sans-serif; color: var(--gold); font-size: clamp(12px, 2vw, 18px); letter-spacing: 1px; }
+  .current-prize { text-align: right; }
+  .current-prize .label { color: var(--silver); font-size: 11px; letter-spacing: 1px; }
+  .current-prize .amount { color: var(--gold); font-size: clamp(16px, 2.5vw, 24px); font-weight: 700; font-family: 'ITC Conduit', sans-serif; }
+
+  /* LIFELINES */
+  .lifelines {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  /* lifeline / next / overlay-close / restart — all use .hex-btn system above */
+
+  /* QUESTION AREA */
+  .question-area { grid-column: 2; display: flex; flex-direction: column; gap: 15px; }
+
+  .question-number {
+    text-align: center;
+    color: var(--glow);
+    font-size: 13px;
+    letter-spacing: 2px;
+    font-weight: 600;
+  }
+
+  .question-box {
+    position: relative;
+    min-height: 90px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: visible;
+  }
+
+  .question-hex-outer {
+    position: absolute;
+    inset: 0;
+    clip-path: polygon(16px 0%, calc(100% - 16px) 0%, 100% 50%, calc(100% - 16px) 100%, 16px 100%, 0% 50%);
+    background: rgba(255,255,255,0.85);
+  }
+
+  .question-hex-inner {
+    position: absolute;
+    inset: 2px;
+    clip-path: polygon(14px 0%, calc(100% - 14px) 0%, 100% 50%, calc(100% - 14px) 100%, 14px 100%, 0% 50%);
+    background: linear-gradient(160deg, #001060 0%, #000830 100%);
+  }
+
+  .question-text {
+    position: relative; 
+	z-index: 2; 
+	font-size: clamp(14px, 2.5vw, 22px);
+    font-weight: 600;
+    line-height: 1.5;
+    color: var(--white);
+    text-shadow: 0 0 20px rgba(77,166,255,0.4);
+    padding: 20px 50px;
+    text-align: center;
+    width: 100%;
+  }
+
+  /* ANSWERS GRID */
+  .answers-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px 16px;
+  }
+
+  /* HEXAGONAL ANSWER BUTTON — achieved with clip-path */
+  .answer-btn {
+    position: relative;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    transition: transform 0.25s, filter 0.25s;
+    min-height: 56px;
+    display: block;
+    width: 100%;
+  }
+
+  .answer-btn:hover:not(:disabled) { transform: scale(1.03); filter: brightness(1.15); }
+  .answer-btn:disabled { cursor: default; }
+
+  /* Outer border layer — WHITE by default */
+  .hex-outer {
+    position: absolute;
+    inset: 0;
+    clip-path: polygon(18px 0%, calc(100% - 18px) 0%, 100% 50%, calc(100% - 18px) 100%, 18px 100%, 0% 50%);
+    background: rgba(255,255,255,0.85);
+    transition: background 0.25s;
+  }
+
+  /* Inner fill layer */
+  .hex-inner {
+    position: absolute;
+    inset: 2px;
+    clip-path: polygon(16px 0%, calc(100% - 16px) 0%, 100% 50%, calc(100% - 16px) 100%, 16px 100%, 0% 50%);
+    background: linear-gradient(160deg, #001a6e 0%, #000e3a 100%);
+    transition: background 0.25s;
+  }
+  
+  
+  /* LINEA DIVISORIA ORIZZONTALE FIGHISSIMA */
+  /* Top-half tint for the TV-show "two-tone" look */
+  .hex-inner::after, 
+  .question-hex-inner::after, 
+  .hb-inner::after  {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 50%;
+    background: rgba(255,255,255,0.055);
+    pointer-events: none;
+  }
+
+  
+  /* Content row inside the hex */
+  .hex-content {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 13px 28px 13px 22px;
+    min-height: 56px;
+  }
+
+  .answer-letter {
+    font-family: 'ITC Conduit', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--gold);
+    flex-shrink: 0;
+    min-width: 18px;
+    text-align: center;
+  }
+
+  .ans-sep {
+    width: 1px;
+    height: 22px;
+    background: rgba(255,255,255,0.4);
+    flex-shrink: 0;
+  }
+
+  .ans-text {
+    color: var(--white);
+    font-size: clamp(12px, 1.5vw, 14px);
+    font-weight: 700;
+    line-height: 1.3;
+    text-align: left;
+    letter-spacing: 1px;
+  }
+
+
+  /* ─── HOVER: gold border ─── */
+  .answer-btn:hover:not(:disabled) .hex-outer { background: var(--gold); }
+  .answer-btn:hover:not(:disabled) .hex-inner { background: linear-gradient(180deg, #1a1200 0%, #0a0800 100%); }
+  
+
+  /* STATE: selected -> GOLD border */
+  .answer-btn.selected .hex-outer { background: var(--gold); }
+  .answer-btn.selected .hex-inner { background: linear-gradient(160deg, #3a2200 0%, #221500 100%); }
+
+  /* STATE: correct -> GREEN border */
+  .answer-btn.correct .hex-outer { background: #00ee55; }
+  .answer-btn.correct .hex-inner { background: linear-gradient(160deg, #003d15 0%, #001f0a 100%); }
+  .answer-btn.correct { filter: drop-shadow(0 0 14px rgba(0,230,80,0.7)); animation: correctFlash 0.6s; }
+
+  /* STATE: wrong -> RED border */
+  .answer-btn.wrong .hex-outer { background: #ff2200; }
+  .answer-btn.wrong .hex-inner { background: linear-gradient(160deg, #4a0000 0%, #280000 100%); }
+  .answer-btn.wrong { filter: drop-shadow(0 0 14px rgba(255,30,0,0.7)); }
+
+  /* STATE: hidden by 50/50 */
+  .answer-btn.hidden-50 { visibility: hidden; }
+
+  @keyframes correctFlash { 0%{transform:scale(1)} 50%{transform:scale(1.05)} 100%{transform:scale(1)} }
+
+  /* PRIZE LADDER */
+  .prize-ladder {
+    grid-column: 1;
+    grid-row: 2 / 10;
+    background: rgba(0,15,60,0.85);
+    border: 1px solid rgba(77,166,255,0.2);
+    border-radius: 12px;
+    padding: 12px 8px;
+    backdrop-filter: blur(4px);
+    position: sticky;
+    top: 15px;
+  }
+
+  .ladder-title {
+    text-align: center;
+    color: var(--gold);
+    font-family: 'ITC Conduit', sans-serif;
+    font-size: 11px;
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(77,166,255,0.2);
+  }
+
+  .ladder-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 8px;
+    border-radius: 6px;
+    margin-bottom: 2px;
+    transition: all 0.25s;
+  }
+
+  .ladder-item .step-num { color: rgba(77,166,255,0.6); font-size: 10px; width: 18px; font-weight: 700; }
+  .ladder-item .step-prize { color: var(--silver); font-size: 11px; font-weight: 700; text-align: right; flex: 1; letter-spacing: 0.3px; }
+  .ladder-item.current { background: rgba(0,80,200,0.5); border: 1px solid var(--glow); }
+  .ladder-item.current .step-prize { color: var(--gold); font-size: 12px; }
+  .ladder-item.current .step-num { color: var(--glow); }
+  .ladder-item.passed { opacity: 0.45; }
+  .ladder-item.passed .step-prize { color: #66ffaa; }
+  .ladder-item.safe .step-num { color: var(--gold); }
+  .ladder-item.safe .step-prize { color: var(--gold); font-weight: 700; }
+  .ladder-item.safe.current .step-prize { font-size: 13px; }
+
+  /* TIMER BAR */
+  .timer-wrap {
+    grid-column: 1 / -1;
+    height: 4px;
+    background: rgba(0,30,100,0.8);
+    border-radius: 2px;
+    overflow: hidden;
+    display: none;
+  }
+
+  .timer-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--glow), var(--gold));
+    width: 100%;
+    transition: width 0.1s linear;
+  }
+
+  /* FEEDBACK OVERLAY */
+  .feedback-msg {
+    grid-column: 1;
+    text-align: center;
+    font-size: 20px;
+    font-weight: 700;
+    font-family: 'ITC Conduit', sans-serif;
+    padding: 10px;
+    animation: fadeIn 0.4s;
+    display: none;
+  }
+
+  .feedback-msg.correct { color: var(--correct); text-shadow: 0 0 20px rgba(0,204,68,0.6); }
+  .feedback-msg.wrong { color: var(--wrong); text-shadow: 0 0 20px rgba(255,34,0,0.6); }
+
+  @keyframes fadeIn { from{opacity:0;transform:translateY(-10px)} to{opacity:1;transform:translateY(0)} }
+
+  /* NEXT BUTTON — uses hex-btn, just control display */
+  .next-btn { display: none; align-self: center; margin-top: 8px; }
+
+  /* LIFELINE OVERLAY */
+  .overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,20,0.85);
+    z-index: 100;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.6s;
+  }
+
+  .overlay.active { display: flex; }
+
+  .overlay-box {
+    background: linear-gradient(180deg, rgba(0,20,80,0.98), rgba(0,10,40,0.98));
+    border: 2px solid var(--glow);
+    border-radius: 16px;
+    padding: 30px 40px;
+    max-width: 500px;
+    width: 90%;
+    text-align: center;
+    box-shadow: 0 0 60px rgba(77,166,255,0.3);
+	display: flex;
+	flex-direction: column;
+	gap: 30px;
+  }
+
+  .overlay-box h3 { 
+    font-family: 'ITC Conduit', sans-serif; 
+	color: var(--gold); 
+	font-size: 20px; 
+  }
+
+  .phone-text {
+    color: var(--silver);
+    font-size: 15px;
+    line-height: 1.8;
+    margin-bottom: 20px;
+    font-style: italic;
+  }
+
+  .audience-bars {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 16px;
+    height: 120px;
+    margin: 20px auto;
+  }
+
+  .aud-bar-wrap { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .aud-bar { width: 50px; border-radius: 4px 4px 0 0; transition: height 0.8s cubic-bezier(0.34,1.56,0.64,1); position: relative; }
+  .aud-bar.A { background: linear-gradient(180deg, #4da6ff, #0047cc); }
+  .aud-bar.B { background: linear-gradient(180deg, #ff8c42, #cc5500); }
+  .aud-bar.C { background: linear-gradient(180deg, #ffd700, #b8860b); }
+  .aud-bar.D { background: linear-gradient(180deg, #00e676, #00994d); }
+  .aud-pct { color: var(--white); font-weight: 700; font-size: 14px; }
+  .aud-lbl { color: var(--silver); font-size: 13px; font-weight: 700; }
+
+  /* overlay-close uses hex-btn */ 
+  .overlay-close-wrap { 
+    display: flex; 
+	justify-content: center; 
+  }
+
+  /* END SCREEN */
+  #endScreen { justify-content: center; min-height: 100vh; gap: 24px; text-align: center; }
+
+  .end-title {
+    font-family: 'ITC Conduit', sans-serif;
+    font-size: clamp(24px, 5vw, 48px);
+    font-weight: 900;
+    animation: titleGlow 2s ease-in-out infinite;
+  }
+
+  .end-title.win { color: var(--gold); text-shadow: 0 0 40px rgba(255,215,0,0.8); }
+  .end-title.lose { color: #ff6644; text-shadow: 0 0 40px rgba(255,68,0,0.6); }
+
+  @keyframes titleGlow {
+    0%,100%{text-shadow:0 0 30px rgba(255,215,0,0.6)}
+    50%{text-shadow:0 0 60px rgba(255,215,0,1),0 0 100px rgba(255,215,0,0.4)}
+  }
+
+  .end-prize-box {
+    background: linear-gradient(135deg, rgba(0,30,100,0.9), rgba(0,15,60,0.9));
+    border: 2px solid var(--gold);
+    border-radius: 16px;
+    padding: 30px 50px;
+    box-shadow: 0 0 60px rgba(255,215,0,0.2);
+  }
+
+  .end-prize-label { color: var(--silver); font-size: 14px; letter-spacing: 2px; margin-bottom: 8px; }
+  .end-prize-amount { color: var(--gold); font-family: 'ITC Conduit', sans-serif; font-size: clamp(28px, 6vw, 56px); font-weight: 900; }
+
+  .end-msg { color: var(--silver); font-size: 16px; max-width: 400px; line-height: 1.6; }
+
+  /* restart-btn uses hex-btn */
+
+  /* CONFETTI CANVAS */
+  #confetti { position: fixed; inset: 0; pointer-events: none; z-index: 50; }
+
+  /* RESPONSIVENESS */
+  @media (max-width: 680px) {
+    .game-layout { grid-template-columns: 1fr; }
+    .prize-ladder { grid-column: 1; grid-row: auto; position: static; }
+    .question-area { grid-column: 1; }
+    .answers-grid { grid-template-columns: 1fr; }
+    .lifelines { flex-wrap: wrap; justify-content: center; }
+  }
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  @media (min-width: 680px) {
+
+  #gameScreen {
+    height: 100vh;
+    display: flex;
+  }
+
+  .game-layout {
+    height: 100%;
+    display: grid;
+
+    /* 1 riga per la top-bar (auto) + 1 riga che si espande */
+    grid-template-rows: auto 1fr;
+
+    grid-template-columns: 180px 1fr;
+    gap: 15px;
+  }
+
+  /* top-bar resta naturale */
+  .top-bar {
+    grid-column: 1 / -1;
+    height: auto;
+  }
+
+  /* la colonna sinistra si espande */
+  .prize-ladder {
+    height: 100%;
+    align-self: stretch;
+    position: sticky;
+    top: 15px;
+	display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  /* la colonna destra si espande */
+  .question-area {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+
+
+
+
+
+
+/* Stile per la X rossa */
+.x-mark {
+  position: absolute;
+  inset: -4px;
+  z-index: 5;
+  display: none;
+  pointer-events: none;
+  
+  background: 
+    linear-gradient(45deg, transparent 48%, #ff0000 48%, #ff0000 52%, transparent 52%),
+    linear-gradient(-45deg, transparent 48%, #ff0000 48%, #ff0000 52%, transparent 52%);
+  
+  filter: drop-shadow(0 0 5px #ff0000);
+}
+
+.hex-btn.used .x-mark {
+  display: block;
+}
+
+
+
+/* Rendiamo la riga corrente il punto di riferimento per il diamante */
+.ladder-item.current {
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.ladder-item.current::after {
+    content: '◆';             /* Il simbolo del diamante */
+    position: absolute;
+    top: 2px;                 /* Lo posizioniamo in alto nel padding creato */
+    left: 50%;                /* Lo spostiamo a metà larghezza */
+    transform: translateX(-50%); /* Lo centriamo perfettamente */
+    
+    color: var(--gold);
+    font-size: 16px;
+    font-weight: bold;
+    text-shadow: 0 0 8px var(--gold), 0 0 15px rgba(255, 215, 0, 0.6);
+    animation: diamondGlow 1.5s ease-in-out infinite alternate;
+}
+
+@keyframes diamondGlow {
+    from { opacity: 0.7; transform: translateX(-50%) scale(0.9); }
+    to { opacity: 1; transform: translateX(-50%) scale(1.1); }
+}
+</style>
+</head>
+<body>
+
+<canvas id="confetti"></canvas>
+
+<!-- START SCREEN -->
+<div class="screen active" id="startScreen">
+  <div class="logo-area">
+    <div class="logo-diamond">
+      <svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <radialGradient id="dg" cx="50%" cy="40%" r="60%">
+            <stop offset="0%" stop-color="#4da6ff"/>
+            <stop offset="100%" stop-color="#0033aa"/>
+          </radialGradient>
+        </defs>
+        <polygon points="40,4 74,40 40,76 6,40" fill="url(#dg)" stroke="#ffd700" stroke-width="2"/>
+        <polygon points="40,4 74,40 40,40" fill="rgba(255,255,255,0.15)"/>
+        <polygon points="40,76 6,40 40,40" fill="rgba(0,0,0,0.2)"/>
+        <polygon points="40,4 74,40 40,76 6,40" fill="none" stroke="#ffe566" stroke-width="0.5" opacity="0.6"/>
+      </svg>
+    </div>
+    <div class="logo-title">Chi Vuole Essere</div>
+    <div class="logo-title-big">Milionario?</div>
+    <div class="logo-sub">EDIZIONE SCUOLA MEDIA</div>
+  </div>
+
+  <div class="rules-box">
+    <h3>COME SI GIOCA</h3>
+    <p>
+      15 domande, 4 risposte. Scegli quella giusta per avanzare!<br/><br/>
+      Hai 3 aiuti: <br/>
+	  <strong>50 : 50</strong> (elimina 2 risposte sbagliate)<br/>
+      <strong>📞 AMICO</strong> (chiama un amico)<br/>
+	  <strong>👥 PUBBLICO</strong> (chiedi al pubblico)<br/>
+	  <br/>
+      I traguardi garantiti sono a €1.000 ed a €32.000.
+    </p>
+  </div>
+
+  <button class="hex-btn hb-md" onclick="startGame()">
+    <div class="hb-outer"></div>
+	<div class="hb-inner"></div>
+    <span class="hb-label">Inizia a giocare</span>
+  </button>
+</div>
+
+<!-- GAME SCREEN -->
+<div class="screen" id="gameScreen">
+  <div class="game-layout">
+
+    <div class="top-bar">
+      <div class="show-title">CHI VUOLE ESSERE MILIONARIO?</div>
+      <div class="lifelines" id="lifelinesArea">
+        <button class="hex-btn hb-sm hb-white" id="btn50" onclick="useLifeline('50')">
+			<div class="hb-outer"></div>
+			<div class="hb-inner"></div>
+			<span class="hb-label">50 : 50</span>
+			<div class="x-mark"></div>
+		</button>
+        <button class="hex-btn hb-sm hb-white" id="btnPhone" onclick="useLifeline('phone')">
+			<div class="hb-outer"></div>
+			<div class="hb-inner"></div>
+			<span class="hb-label">📞 AMICO</span>
+			<div class="x-mark"></div>
+		</button>
+        <button class="hex-btn hb-sm hb-white" id="btnAudience" onclick="useLifeline('audience')">
+			<div class="hb-outer"></div>
+			<div class="hb-inner"></div>
+			<span class="hb-label">👥 PUBBLICO</span>
+			<div class="x-mark"></div>
+		</button>
+      </div>
+      <div class="current-prize">
+        <div class="label">Premio attuale</div>
+        <div class="amount" id="currentPrizeDisplay">€ 0</div>
+      </div>
+    </div>
+
+    <div class="prize-ladder" id="prizeLadder"></div>
+
+    <div class="question-area" id="questionArea">
+      <div class="question-number" id="questionNumber">Domanda 1 di 15</div>
+      <div class="question-box">
+        <div class="question-hex-outer"></div>
+        <div class="question-hex-inner"></div>
+        <div class="question-text" id="questionText"></div>
+      </div>
+      <div class="answers-grid" id="answersGrid">
+        <button class="answer-btn" id="ansA" onclick="selectAnswer(0)">
+          <div class="hex-outer"></div>
+          <div class="hex-inner"></div>
+          <div class="hex-content">
+			<span class="answer-letter">A</span>
+			<span class="ans-sep"></span>
+			<span class="ans-text"></span>
+		  </div>
+        </button>
+        <button class="answer-btn" id="ansB" onclick="selectAnswer(1)">
+          <div class="hex-outer"></div>
+          <div class="hex-inner"></div>
+          <div class="hex-content">
+			<span class="answer-letter">B</span>
+			<span class="ans-sep"></span>
+			<span class="ans-text"></span>
+		  </div>
+        </button>
+        <button class="answer-btn" id="ansC" onclick="selectAnswer(2)">
+          <div class="hex-outer"></div>
+          <div class="hex-inner"></div>
+          <div class="hex-content">
+			<span class="answer-letter">C</span>
+		    <span class="ans-sep"></span>
+		    <span class="ans-text"></span>
+		  </div>
+        </button>
+        <button class="answer-btn" id="ansD" onclick="selectAnswer(3)">
+          <div class="hex-outer"></div>
+          <div class="hex-inner"></div>
+          <div class="hex-content">
+			<span class="answer-letter">D</span>
+			<span class="ans-sep"></span>
+			<span class="ans-text"></span>
+		  </div>
+        </button>
+      </div>
+      <div class="feedback-msg" id="feedbackMsg"></div>
+      <button class="hex-btn hb-md next-btn" id="nextBtn" onclick="nextQuestion()">
+		<div class="hb-outer"></div>
+		<div class="hb-inner"></div>
+		<span class="hb-label">Prossima domanda</span>
+	  </button>
+    </div>
+
+    </div><!-- end game-layout -->
+  </div><!-- end gameScreen -->
+
+<!-- END SCREEN -->
+<div class="screen" id="endScreen">
+  <div class="end-title" id="endTitle"></div>
+  <div class="end-prize-box">
+    <div class="end-prize-label">HAI VINTO</div>
+    <div class="end-prize-amount" id="endPrize"></div>
+  </div>
+  <div class="end-msg" id="endMsg"></div>
+  <button class="hex-btn hb-md" onclick="restartGame()">
+	<div class="hb-outer"></div>
+	<div class="hb-inner"></div>
+	<span class="hb-label">Gioca ancora</span>
+  </button>
+</div>
+
+<!-- LIFELINE OVERLAY -->
+<div class="overlay" id="lifelineOverlay">
+  <div class="overlay-box" id="overlayContent">
+    <h3 id="overlayTitle"></h3>
+    <div id="overlayBody"></div>
+    <div class="overlay-close-wrap">
+      <button class="hex-btn hb-md hb-white overlay-close" onclick="closeOverlay()">
+		<div class="hb-outer"></div>
+		<div class="hb-inner"></div>
+		<span class="hb-label">Chiudi</span>
+	  </button>
+    </div>
+  </div>
+</div>
+
+<script>
+const bgMusic = new Audio('milionario.mp3'); bgMusic.loop = true; bgMusic.volume = 0.2;
+
+const PRIZES = [
+  100, 200, 300, 500, 1000,
+  2000, 4000, 8000, 16000, 32000,
+  64000, 125000, 250000, 500000, 1000000
+];
+
+const SAFE_LEVELS = [4, 9, 14]; // 0-indexed: €1.000 e €32.000
+
+const QUESTIONS = [
+  { q:"Quante zampe ha un ragno?", a:["4","6","8","10"], c:2 },
+  { q:"Qual è la capitale d'Italia?", a:["Milano","Roma","Napoli","Torino"], c:1 },
+  { q:"Quanto fa 7 × 8?", a:["54","56","58","64"], c:1 },
+  { q:"Quale pianeta è il più vicino al Sole?", a:["Venere","Marte","Mercurio","Terra"], c:2 },
+  { q:"Da quanti colori è composto l'arcobaleno?", a:["5","6","7","8"], c:2 },
+  { q:"Chi ha scritto 'Pinocchio'?", a:["Edmondo De Amicis","Carlo Collodi","Giovanni Verga","Luigi Pirandello"], c:1 },
+  { q:"Qual è la formula chimica dell'acqua?", a:["CO2","O2","H2O","NaCl"], c:2 },
+  { q:"Quanti centimetri ci sono in un metro?", a:["10","100","1000","10000"], c:1 },
+  { q:"Quale animale è il simbolo dell'Australia?", a:["Orso polare","Panda","Canguro","Koala"], c:2 },
+  { q:"Chi ha dipinto la Gioconda?", a:["Michelangelo","Raffaello","Leonardo da Vinci","Botticelli"], c:2 },
+  { q:"Quanti lati ha un pentagono?", a:["4","5","6","7"], c:1 },
+  { q:"Quale è il pianeta più grande del sistema solare?", a:["Saturno","Nettuno","Terra","Giove"], c:3 },
+  { q:"In che anno è scoppiata la Prima Guerra Mondiale?", a:["1905","1914","1918","1939"], c:1 },
+  { q:"Quanti stati ci sono negli USA?", a:["48","49","50","52"], c:2 },
+  { q:"Qual è il fiume più lungo del mondo?", a:["Nilo","Rio delle Amazzoni","Mississippi","Fiume Giallo"], c:0 },
+  { q:"Quale gas respirano le piante per fare la fotosintesi?", a:["Ossigeno","Idrogeno","Azoto","Anidride carbonica"], c:3 },
+  { q:"Quante ore ha un giorno?", a:["12","20","24","36"], c:2 },
+  { q:"Chi ha inventato la lampadina?", a:["Alexander Bell","Thomas Edison","Galileo Galilei","Isaac Newton"], c:1 },
+  { q:"Quale metallo è liquido a temperatura ambiente?", a:["Oro","Argento","Mercurio","Rame"], c:2 },
+  { q:"Quanti secondi ha un minuto?", a:["30","60","90","120"], c:1 },
+  { q:"Quale è la montagna più alta del mondo?", a:["Monte Bianco","Kilimanjaro","Everest","K2"], c:2 },
+  { q:"In quale continente si trova l'Egitto?", a:["Asia","Europa","Africa","America"], c:2 },
+  { q:"Quante note ha la scala musicale?", a:["5","6","7","8"], c:2 },
+  { q:"Qual è il simbolo chimico dell'oro?", a:["Or","Go","Au","Ar"], c:2 },
+  { q:"Chi ha scritto 'I Promessi Sposi'?", a:["Dante Alighieri","Alessandro Manzoni","Francesco Petrarca","Giovanni Boccaccio"], c:1 },
+  { q:"Quante settimane ha un anno?", a:["48","50","52","54"], c:2 },
+  { q:"Quale organo del corpo purifica il sangue?", a:["Polmone","Fegato","Reni","Cuore"], c:2 },
+  { q:"Da quale paese proviene la pizza?", a:["Spagna","Francia","Grecia","Italia"], c:3 },
+  { q:"Quanti grammi ha un chilogrammo?", a:["100","500","1000","10000"], c:2 },
+  { q:"Quale è la capitale della Francia?", a:["Londra","Berlino","Madrid","Parigi"], c:3 },
+  { q:"Quale sport si gioca a Wimbledon?", a:["Golf","Tennis","Cricket","Rugby"], c:1 },
+  { q:"Quanti mesi ha un anno?", a:["10","11","12","13"], c:2 },
+  { q:"Come si chiama lo scheletro esterno degli insetti?", a:["Esoscheletro","Endoscheletro","Carapace","Corazza"], c:0 },
+  { q:"Quale pianeta ha gli anelli più famosi?", a:["Giove","Urano","Nettuno","Saturno"], c:3 },
+  { q:"Quanto fa la radice quadrata di 144?", a:["10","11","12","13"], c:2 },
+  { q:"Quale oceano è il più grande?", a:["Atlantico","Indiano","Artico","Pacifico"], c:3 },
+  { q:"In quale anno Cristoforo Colombo scoprì l'America?", a:["1488","1492","1498","1502"], c:1 },
+  { q:"Quanti denti permanenti ha un adulto?", a:["28","30","32","34"], c:2 },
+  { q:"Quale è la capitale della Germania?", a:["Monaco","Amburgo","Berlino","Francoforte"], c:2 },
+  { q:"Come si chiama il processo per cui l'acqua evapora e poi ricade come pioggia?", a:["Fotosintesi","Ciclo dell'acqua","Osmosi","Precipitazione"], c:1 },
+  { q:"Quante facce ha un cubo?", a:["4","5","6","8"], c:2 },
+  { q:"Quale è la velocità della luce (circa)?", a:["100.000 km/h","300.000 km/s","330 m/s","1.000.000 km/s"], c:1 },
+  { q:"Chi ha composto la Quinta Sinfonia?", a:["Mozart","Bach","Beethoven","Vivaldi"], c:2 },
+  { q:"Quanti ossi ha il corpo umano adulto?", a:["106","186","206","306"], c:2 },
+  { q:"Quale paese ha la bandiera con la foglia d'acero?", a:["Australia","Nuova Zelanda","Canada","Brasile"], c:2 },
+  { q:"Quanto fa il 25% di 200?", a:["25","40","50","75"], c:2 },
+  { q:"Quale lingua si parla in Brasile?", a:["Spagnolo","Italiano","Francese","Portoghese"], c:3 },
+  { q:"Quale è l'osso più lungo del corpo umano?", a:["Tibia","Omero","Femore","Radio"], c:2 },
+  { q:"In quale mare si trova la Sardegna?", a:["Mar Rosso","Mar Nero","Mar Tirreno","Mar Adriatico"], c:2 },
+  { q:"Quale animale è il più veloce sulla terra?", a:["Leone","Ghepardo","Visone","Struzzo"], c:1 },
+  { q:"Quante lettere ha l'alfabeto italiano?", a:["21","23","24","26"], c:0 },
+  { q:"Quale è il lago più grande d'Italia?", a:["Lago di Como","Lago Maggiore","Lago di Garda","Lago di Lugano"], c:2 },
+  { q:"Chi ha inventato il telefono?", a:["Edison","Marconi","Bell","Tesla"], c:2 },
+  { q:"Quanti lati ha un esagono?", a:["5","6","7","8"], c:1 },
+  { q:"Quale è la lingua ufficiale del Messico?", a:["Portoghese","Inglese","Azteco","Spagnolo"], c:3 },
+  { q:"Quale è la distanza media dalla Terra al Sole?", a:["50 milioni di km","150 milioni di km","100.000 km","500 miliardi di km"], c:1 },
+  { q:"Come si chiama il padre di Gesù adottivo secondo il Vangelo?", a:["Pietro","Paolo","Giuseppe","Giovanni"], c:2 },
+  { q:"Quale è la valuta del Giappone?", a:["Yuan","Lira","Yen","Dollaro"], c:2 },
+  { q:"Quale organo produce l'insulina?", a:["Fegato","Stomaco","Pancreas","Milza"], c:2 },
+  { q:"Quante stagioni ha un anno?", a:["2","3","4","5"], c:2 },
+  { q:"Quale è il colore della clorofilla?", a:["Rosso","Blu","Giallo","Verde"], c:3 },
+  
+  
+  { q: "Qual è il pianeta più vicino alla Terra?", a: ["Marte", "Venere", "Mercurio", "La Terra"], c: 1 },
+  { q: "Chi ha scritto 'La Divina Commedia'?", a: ["Giovanni Boccaccio", "Francesco Petrarca", "Dante Alighieri", "Niccolò Machiavelli"], c: 2 },
+  { q: "Quanti sono i nani di Biancaneve?", a: ["5", "6", "7", "8"], c: 2 },
+  { q: "In quale città si trova il Colosseo?", a: ["Napoli", "Venezia", "Firenze", "Roma"], c: 3 },
+  { q: "Qual è l'unità di misura della forza?", a: ["Joule", "Watt", "Newton", "Pascal"], c: 2 },
+  { q: "Quale gas è fondamentale per la respirazione umana?", a: ["Anidride carbonica", "Idrogeno", "Ossigeno", "Azoto"], c: 2 },
+  { q: "In che anno è caduto il Muro di Berlino?", a: ["1979", "1989", "1991", "2000"], c: 1 },
+  { q: "Come si chiama il triangolo con due lati uguali?", a: ["Equilatero", "Isoscele", "Scaleno", "Rettangolo"], c: 1 },
+  { q: "Qual è la capitale della Spagna?", a: ["Barcellona", "Siviglia", "Madrid", "Valencia"], c: 2 },
+  { q: "Quale strumento musicale ha 88 tasti?", a: ["Chitarra", "Arpa", "Pianoforte", "Violino"], c: 2 },
+  { q: "Chi ha scoperto la gravità guardando cadere una mela?", a: ["Albert Einstein", "Isaac Newton", "Galileo Galilei", "Marie Curie"], c: 1 },
+  { q: "Quanti continenti esistono secondo il modello più comune?", a: ["5", "6", "7", "8"], c: 1 },
+  { q: "Qual è la capitale degli Stati Uniti?", a: ["New York", "Los Angeles", "Washington D.C.", "Chicago"], c: 2 },
+  { q: "Quale animale depone l'uovo più grande?", a: ["Gallina", "Struzzo", "Aquila", "Pinguino"], c: 1 },
+  { q: "Chi è l'autore de 'Il Piccolo Principe'?", a: ["Jules Verne", "Antoine de Saint-Exupéry", "Victor Hugo", "Charles Baudelaire"], c: 1 },
+  { q: "Qual è l'elemento chimico con simbolo Fe?", a: ["Fluoro", "Fosforo", "Ferro", "Francio"], c: 2 },
+  { q: "Quale vulcano ha distrutto Pompei nel 79 d.C.?", a: ["Etna", "Vesuvio", "Stromboli", "Vulcano"], c: 1 },
+  { q: "Quanti anni dura un lustro?", a: ["5", "10", "25", "50"], c: 0 },
+  { q: "Qual è lo stato più piccolo del mondo?", a: ["San Marino", "Monaco", "Città del Vaticano", "Liechtenstein"], c: 2 },
+  { q: "In quale sport si usa il termine 'canestro'?", a: ["Calcio", "Pallavolo", "Basket", "Tennis"], c: 2 },
+  { q: "Qual è il colore risultante mescolando blu e giallo?", a: ["Viola", "Arancione", "Verde", "Marrone"], c: 2 },
+  { q: "Quale civiltà antica ha costruito le piramidi di Giza?", a: ["Romani", "Greci", "Egizi", "Maya"], c: 2 },
+  { q: "Qual è il prefisso telefonico internazionale dell'Italia?", a: ["+33", "+39", "+44", "+49"], c: 1 },
+  { q: "Chi ha dipinto la 'Nascita di Venere'?", a: ["Caravaggio", "Botticelli", "Tiziano", "Donatello"], c: 1 },
+  { q: "Come si chiama la parte dell'occhio che ne determina il colore?", a: ["Pupilla", "Cornea", "Iride", "Retina"], c: 2 },
+  { q: "Qual è la capitale del Regno Unito?", a: ["Dublino", "Edimburgo", "Cardiff", "Londra"], c: 3 },
+  { q: "Quale gas costituisce la maggior parte dell'aria che respiriamo?", a: ["Ossigeno", "Anidride carbonica", "Azoto", "Idrogeno"], c: 2 },
+  { q: "In quale anno è iniziata la Seconda Guerra Mondiale?", a: ["1914", "1918", "1939", "1945"], c: 2 },
+  { q: "Qual è il punto di ebollizione dell'acqua al livello del mare?", a: ["90°C", "100°C", "110°C", "120°C"], c: 1 },
+  { q: "Chi ha scritto la saga di 'Harry Potter'?", a: ["J.R.R. Tolkien", "C.S. Lewis", "J.K. Rowling", "Roald Dahl"], c: 2 },
+  { q: "Quanti minuti ci sono in un'ora?", a: ["30", "60", "90", "120"], c: 1 },
+  { q: "Qual è il fiume che attraversa la città di Roma?", a: ["Po", "Arno", "Tevere", "Adige"], c: 2 },
+  { q: "Quale mammifero è l'unico in grado di volare?", a: ["Scoiattolo", "Pipistrello", "Colibrì", "Struzzo"], c: 1 },
+  { q: "Chi fu il primo uomo a camminare sulla Luna?", a: ["Yuri Gagarin", "Buzz Aldrin", "Neil Armstrong", "John Glenn"], c: 2 },
+  { q: "Qual è la lingua più parlata al mondo per numero di madrelingua?", a: ["Inglese", "Spagnolo", "Cinese mandarino", "Portoghese"], c: 2 },
+  { q: "Quante corde ha un violino standard?", a: ["3", "4", "5", "6"], c: 1 },
+  { q: "Qual è l'oceano che bagna le coste della California?", a: ["Atlantico", "Indiano", "Pacifico", "Artico"], c: 2 },
+  { q: "Chi ha scolpito il celebre 'David' di marmo a Firenze?", a: ["Leonardo da Vinci", "Donatello", "Michelangelo", "Gian Lorenzo Bernini"], c: 2 },
+  { q: "Cosa studia la botanica?", a: ["Animali", "Stelle", "Rocce", "Piante"], c: 3 },
+  { q: "Qual è il prefisso metrico che significa 'mille'?", a: ["Cent-", "Deca-", "Kilo-", "Mega-"], c: 2 },
+  { q: "In quale continente si trova il deserto del Sahara?", a: ["Asia", "Africa", "Australia", "America"], c: 1 },
+  { q: "Come si chiamano i vasi sanguigni che portano il sangue dal cuore al resto del corpo?", a: ["Vene", "Arterie", "Capillari", "Linfatici"], c: 1 },
+  { q: "Qual è la capitale della Russia?", a: ["San Pietroburgo", "Vienna", "Mosca", "Varsavia"], c: 2 },
+  { q: "Quante zampe ha una mosca comune?", a: ["4", "6", "8", "10"], c: 1 },
+  { q: "Quale pianeta del sistema solare è soprannominato il 'Pianeta Rosso'?", a: ["Venere", "Marte", "Giove", "Saturno"], c: 1 },
+  { q: "Chi è il protagonista dell'Odissea di Omero?", a: ["Achille", "Enea", "Ulisse", "Ercole"], c: 2 },
+  { q: "Qual è il risultato di 9 moltiplicato per 9?", a: ["72", "81", "90", "99"], c: 1 },
+  { q: "Chi ha guidato la spedizione che scoprì l'America nel 1492?", a: ["Amerigo Vespucci", "Ferdinando Magellano", "Cristoforo Colombo", "Vasco da Gama"], c: 2 },
+  { q: "Qual è l'animale più grande del pianeta?", a: ["Elefante africano", "Balenottera azzurra", "Squalo balena", "Giraffa"], c: 1 },
+  { q: "Quale parte della pianta è responsabile della fotosintesi?", a: ["Radice", "Frutto", "Fiore", "Foglie"], c: 3 },
+  
+  
+  
+  { q: "Qual è la capitale del Portogallo?", a: ["Madrid", "Lisbona", "Porto", "Siviglia"], c: 1 },
+{ q: "A quale temperatura (Celsius) l'acqua gela?", a: ["0°C", "32°C", "100°C", "-10°C"], c: 0 },
+{ q: "In che anno è finita la Seconda Guerra Mondiale?", a: ["1918", "1943", "1945", "1950"], c: 2 },
+{ q: "Chi è l'autore di 'Sherlock Holmes'?", a: ["Agatha Christie", "Arthur Conan Doyle", "Edgar Allan Poe", "Stephen King"], c: 1 },
+{ q: "Qual è la somma degli angoli interni di un triangolo?", a: ["90°", "180°", "270°", "360°"], c: 1 },
+{ q: "Quale organo pompa il sangue in tutto il corpo?", a: ["Polmoni", "Cervello", "Fegato", "Cuore"], c: 3 },
+{ q: "Chi ha dipinto 'La notte stellata'?", a: ["Claude Monet", "Pablo Picasso", "Vincent van Gogh", "Salvador Dalì"], c: 2 },
+{ q: "Chi è il re degli dei nella mitologia greca?", a: ["Ade", "Poseidone", "Ares", "Zeus"], c: 3 },
+{ q: "Qual è il simbolo chimico dell'argento?", a: ["Ar", "Ag", "Si", "Au"], c: 1 },
+{ q: "In quale paese si trova la città di Tokyo?", a: ["Cina", "Giappone", "Corea del Sud", "Thailandia"], c: 1 },
+{ q: "Chi pronunciò il famoso discorso 'I have a dream'?", a: ["Malcolm X", "Nelson Mandela", "Martin Luther King Jr.", "Barack Obama"], c: 2 },
+{ q: "Come si chiama lo studio dei fossili?", a: ["Archeologia", "Geologia", "Paleontologia", "Antropologia"], c: 2 },
+{ q: "Cosa significa l'acronimo WWW?", a: ["World Wide Web", "Western Wide Web", "World West Web", "Web World Wide"], c: 0 },
+{ q: "In quale genere musicale eccelleva Miles Davis?", a: ["Rock", "Pop", "Jazz", "Classica"], c: 2 },
+{ q: "Quale di questi è un numero primo?", a: ["9", "12", "13", "15"], c: 2 },
+{ q: "Qual è il paese più grande del mondo per superficie?", a: ["Canada", "USA", "Cina", "Russia"], c: 3 },
+{ q: "Quale vitamina viene prodotta dalla pelle grazie alla luce solare?", a: ["Vitamina A", "Vitamina B12", "Vitamina C", "Vitamina D"], c: 3 },
+{ q: "Quanto è lunga una maratona standard?", a: ["21,097 km", "35 km", "42,195 km", "50 km"], c: 2 },
+{ q: "Chi ha scritto 'Don Chisciotte della Mancia'?", a: ["Miguel de Cervantes", "Gabriel García Márquez", "Jorge Luis Borges", "Federico García Lorca"], c: 0 },
+{ q: "Qual è il gas predominante nel Sole?", a: ["Ossigeno", "Idrogeno", "Elio", "Azoto"], c: 1 },
+{ q: "Quale mare separa l'Italia dalla penisola balcanica?", a: ["Mar Ionio", "Mar Ligure", "Mar Tirreno", "Mar Adriatico"], c: 3 },
+{ q: "Dove è nato Napoleone Bonaparte?", a: ["Parigi", "Marsiglia", "Ajaccio", "Roma"], c: 2 },
+{ q: "A quale movimento artistico apparteneva Pablo Picasso?", a: ["Impressionismo", "Cubismo", "Surrealismo", "Barocco"], c: 1 },
+{ q: "Come si chiama la parte centrale di un atomo?", a: ["Elettrone", "Protone", "Neutrone", "Nucleo"], c: 3 },
+{ q: "Quanti sono i colori della bandiera italiana?", a: ["2", "3", "4", "5"], c: 1 },
+{ q: "Qual è la capitale della Svizzera?", a: ["Zurigo", "Ginevra", "Berna", "Basilea"], c: 2 },
+{ q: "Quale mammifero depone le uova?", a: ["Canguro", "Ornitorinco", "Balena", "Pipistrello"], c: 1 },
+{ q: "Quale evento scatenò la Prima Guerra Mondiale?", a: ["L'invasione della Polonia", "L'attentato di Sarajevo", "Il crollo di Wall Street", "La presa della Bastiglia"], c: 1 },
+{ q: "Quale strumento a fiato è fatto solitamente di metallo ma appartiene ai legni?", a: ["Tromba", "Saxofono", "Trombone", "Tuba"], c: 1 },
+{ q: "Qual è il valore approssimativo del Pi greco ($\pi$)?", a: ["2,718", "3,14", "6,28", "42"], c: 1 },
+{ q: "Quale social network è stato fondato da Mark Zuckerberg?", a: ["Twitter", "Instagram", "Facebook", "Snapchat"], c: 2 },
+{ q: "Qual è la forma della molecola di DNA?", a: ["Cerchio", "Sfera", "Doppia elica", "Piramide"], c: 2 },
+{ q: "Qual è la cascata più alta del mondo?", a: ["Cascate del Niagara", "Cascate delle Marmore", "Salto Angel", "Cascate di Iguazú"], c: 2 },
+{ q: "In quale città si trova la Statua della Libertà?", a: ["Washington", "New York", "Boston", "Philadelphia"], c: 1 },
+{ q: "Chi fu il primo presidente degli Stati Uniti?", a: ["Thomas Jefferson", "Abraham Lincoln", "George Washington", "Benjamin Franklin"], c: 2 },
+{ q: "Qual è l'organo più esteso del corpo umano?", a: ["Fegato", "Cervello", "Intestino", "Pelle"], c: 3 },
+{ q: "Chi è il dio del mare nella mitologia romana?", a: ["Marte", "Nettuno", "Plutone", "Vulcano"], c: 1 },
+{ q: "Chi ha scritto la tragedia 'Romeo e Giulietta'?", a: ["Charles Dickens", "William Shakespeare", "Oscar Wilde", "Jane Austen"], c: 1 },
+{ q: "In quale isola si trova la città di Londra?", a: ["Irlanda", "Islanda", "Groenlandia", "Gran Bretagna"], c: 3 },
+{ q: "Quale pianeta ha la 'Grande Macchia Rossa'?", a: ["Marte", "Giove", "Saturno", "Nettuno"], c: 1 },
+{ q: "Qual è l'ingrediente principale del guacamole?", a: ["Pomodoro", "Cipolla", "Avocado", "Peperone"], c: 2 },
+{ q: "Quanti gradi misura un angolo giro?", a: ["90°", "180°", "270°", "360°"], c: 3 },
+{ q: "In che anno iniziò la Rivoluzione Francese?", a: ["1776", "1789", "1804", "1815"], c: 1 },
+{ q: "Qual è la sostanza naturale più dura sulla Terra?", a: ["Oro", "Ferro", "Diamante", "Quarzo"], c: 2 },
+{ q: "In quale paese si trova la Grande Muraglia?", a: ["Giappone", "India", "Cina", "Vietnam"], c: 2 },
+{ q: "Chi ha scritto il romanzo 'Moby Dick'?", a: ["Herman Melville", "Mark Twain", "Ernest Hemingway", "Jack London"], c: 0 },
+{ q: "Chi era il cantante della band britannica Queen?", a: ["Mick Jagger", "Freddie Mercury", "David Bowie", "John Lennon"], c: 1 },
+{ q: "Quale scala di temperatura inizia dallo zero assoluto?", a: ["Celsius", "Fahrenheit", "Kelvin", "Reaumur"], c: 2 },
+{ q: "In quale stato moderno si trova l'antica città di Petra?", a: ["Egitto", "Siria", "Iraq", "Giordania"], c: 3 },
+{ q: "Quanti sono i cerchi sulla bandiera olimpica?", a: ["3", "5", "8", "10"], c: 1 }
+];
+
+let gameQuestions = [];
+let currentQ = 0;
+let selectedAnswer = -1;
+let answered = false;
+let lifelineUsed = { '50': false, phone: false, audience: false };
+let safeAmount = 0;
+
+function fmt(n) {
+  //return '€ ' + Number(n).toLocaleString('it-IT');
+  return '€ ' + Number(n).toLocaleString('it-IT', { useGrouping: true });
+}
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function startGame() {
+  bgMusic.currentTime = 0;
+  bgMusic.pause();
+  bgMusic.play();
+  
+  // pick 15 random questions
+  gameQuestions = shuffle([...QUESTIONS]).slice(0, 15);
+  currentQ = 0;
+  selectedAnswer = -1;
+  answered = false;
+  lifelineUsed = { '50': false, phone: false, audience: false };
+  safeAmount = 0;
+
+  document.getElementById('btn50').classList.remove('used');
+  document.getElementById('btnPhone').classList.remove('used');
+  document.getElementById('btnAudience').classList.remove('used');
+  document.getElementById('btn50').disabled = false;
+  document.getElementById('btnPhone').disabled = false;
+  document.getElementById('btnAudience').disabled = false;
+
+  buildLadder();
+  showScreen('gameScreen');
+  loadQuestion();
+}
+
+function buildLadder() {
+  const ladder = document.getElementById('prizeLadder');
+  ladder.innerHTML = '<div class="ladder-title">PREMI</div>';
+  for (let i = 14; i >= 0; i--) {
+    const div = document.createElement('div');
+    div.className = 'ladder-item' + (SAFE_LEVELS.includes(i) ? ' safe' : '');
+    div.id = 'step' + i;
+    div.innerHTML = `<span class="step-num">${i+1}</span><span class="step-prize">${fmt(PRIZES[i])}</span>`;
+    ladder.appendChild(div);
+  }
+}
+
+function updateLadder() {
+  for (let i = 0; i < 15; i++) {
+    const el = document.getElementById('step' + i);
+    if (!el) continue;
+    el.className = 'ladder-item';
+    if (SAFE_LEVELS.includes(i)) el.classList.add('safe');
+    if (i === currentQ) el.classList.add('current');
+    else if (i < currentQ) el.classList.add('passed');
+  }
+}
+
+let shuffledOrder = []; // stores shuffled answer indices for current question
+
+function loadQuestion() {
+  answered = false;
+  selectedAnswer = -1;
+
+  const q = gameQuestions[currentQ];
+  document.getElementById('questionNumber').textContent = `Domanda ${currentQ + 1} di 15`;
+  document.getElementById('questionText').textContent = q.q;
+  document.getElementById('currentPrizeDisplay').textContent = currentQ > 0 ? fmt(PRIZES[currentQ - 1]) : '€ 0';
+
+  // shuffle answer indices
+  shuffledOrder = shuffle([0, 1, 2, 3]);
+
+  const btns = document.querySelectorAll('.answer-btn');
+  const labels = ['A','B','C','D'];
+  btns.forEach((btn, i) => {
+    btn.className = 'answer-btn';
+    btn.disabled = false;
+    btn.style.visibility = '';
+    btn.querySelector('.ans-text').textContent = q.a[shuffledOrder[i]];
+    btn.querySelector('.answer-letter').textContent = labels[i];
+  });
+
+  document.getElementById('feedbackMsg').style.display = 'none';
+  document.getElementById('nextBtn').style.display = 'none';
+  updateLadder();
+}
+
+function selectAnswer(idx) {
+  if (answered) return;
+  answered = true;
+  selectedAnswer = idx;
+
+  const btns = document.querySelectorAll('.answer-btn');
+  btns.forEach(b => b.disabled = true);
+  btns[idx].classList.add('selected');
+
+  setTimeout(() => revealAnswer(idx), 3000);
+}
+
+function revealAnswer(idx) {
+  const q = gameQuestions[currentQ];
+  const btns = document.querySelectorAll('.answer-btn');
+
+  // find which button position now holds the correct answer
+  const correctBtn = shuffledOrder.indexOf(q.c);
+
+  btns[correctBtn].classList.add('correct');
+  if (idx !== correctBtn) {
+    btns[idx].classList.remove('selected');
+    btns[idx].classList.add('wrong');
+  }
+
+  const fb = document.getElementById('feedbackMsg');
+  fb.style.display = 'block';
+
+  if (idx === correctBtn) {
+    fb.textContent = currentQ === 14 ? '🏆 MILIONARIO!' : '✓ RISPOSTA ESATTA!';
+    fb.className = 'feedback-msg correct';
+
+    if (SAFE_LEVELS.includes(currentQ)) safeAmount = PRIZES[currentQ];
+
+    if (currentQ === 14) {
+      setTimeout(() => endGame(true), 2000);
+    } else {
+      document.getElementById('nextBtn').style.display = 'block';
+    }
+  } else {
+    fb.textContent = `✗ SBAGLIATO! Era: ${q.a[q.c]}`;
+    fb.className = 'feedback-msg wrong';
+    setTimeout(() => endGame(false), 2500);
+  }
+}
+
+function nextQuestion() {
+  currentQ++;
+  document.getElementById('nextBtn').style.display = 'none';
+  loadQuestion();
+}
+
+function useLifeline(type) {
+  if (lifelineUsed[type]) return;
+  lifelineUsed[type] = true;
+
+  const q = gameQuestions[currentQ];
+  const correctBtn = shuffledOrder.indexOf(q.c); // button position of correct answer
+
+  if (type === '50') {
+    document.getElementById('btn50').classList.add('used');
+    document.getElementById('btn50').disabled = true;
+    const btns = document.querySelectorAll('.answer-btn');
+    // collect button positions that are NOT the correct answer
+    const wrongBtns = [0,1,2,3].filter(i => i !== correctBtn);
+    shuffle(wrongBtns);
+    wrongBtns.slice(0, 2).forEach(i => {
+      btns[i].classList.add('hidden-50');
+      btns[i].disabled = true;
+    });
+
+  } else if (type === 'phone') {
+    document.getElementById('btnPhone').classList.add('used');
+    document.getElementById('btnPhone').disabled = true;
+    showPhoneOverlay(q, q.c);
+
+  } else if (type === 'audience') {
+    document.getElementById('btnAudience').classList.add('used');
+    document.getElementById('btnAudience').disabled = true;
+    showAudienceOverlay(q, q.c);
+  }
+}
+
+function showPhoneOverlay(q, correct) {
+  const names = ['Alberto', 'Elisa', 'Andrea', 'Aurora', 'Marco', 'Giulia', 'Luca', 'Sofia', 'Matteo', 'Riccardo', 'Giada', 'Rachele', 'Elena', 'Samuele'];
+  const name = names[Math.floor(Math.random() * names.length)];
+  const confidence = Math.random() < 0.5 ? "sono quasi sicuro" : "non sono sicurissimo, ma";
+  const answer = Math.random() < 0.85 ? q.a[correct] : q.a[(correct + 1) % 4];
+  const prefix = Math.random() < 0.5 ? "Ciao, la domanda è" : "Mi serve un aiuto, rapido";
+  const suffix = Math.random() < 0.5 ? "Ti ricordi che ne parlammo a scuola la settimana scorsa?" : 
+									   Math.random() < 0.5 ? "Mi sembra te l'ho detto a casa giorni fa, o no?" : "Io risponderei cosi al posto tuo...";
+
+  document.getElementById('overlayTitle').textContent = '📞 Telefona ad un amico';
+  document.getElementById('overlayBody').innerHTML = `
+    <div class="phone-text">
+      <em>"${prefix}: ${q.q}"</em>
+	  <br/><br/>
+      <em>"Mmm... ${confidence}, direi <strong style="color:var(--gold)">${answer}</strong>. ${suffix}"</em>
+	  <br/><br/>
+      <small style="color:var(--royal)">— ${name}</small>
+    </div>`;
+  document.getElementById('lifelineOverlay').classList.add('active');
+}
+
+function showAudienceOverlay(q, correct) {
+  // generate plausible percentages biased toward correct
+  let pcts = [0, 0, 0, 0];
+  pcts[correct] = Math.floor(Math.random() * 25) + 55; // 55-80%
+  let remaining = 100 - pcts[correct];
+  const others = [0,1,2,3].filter(i => i !== correct);
+  others.forEach((idx, i) => {
+    if (i < others.length - 1) {
+      pcts[idx] = Math.floor(Math.random() * (remaining - (others.length - i - 1)));
+      remaining -= pcts[idx];
+    } else {
+      pcts[idx] = remaining;
+    }
+  });
+
+  const labels = ['A','B','C','D'];
+  const colors = ['A','B','C','D'];
+
+  let barsHTML = '';
+  for (let i = 0; i < 4; i++) {
+    barsHTML += `
+      <div class="aud-bar-wrap">
+        <div class="aud-pct">${pcts[i]}%</div>
+        <div class="aud-bar ${colors[i]}" style="height:${pcts[i]}px"></div>
+        <div class="aud-lbl">${labels[i]}</div>
+      </div>`;
+  }
+
+  document.getElementById('overlayTitle').textContent = '👥 Chiedi al pubblico';
+  document.getElementById('overlayBody').innerHTML = `<div class="audience-bars">${barsHTML}</div>`;
+  document.getElementById('lifelineOverlay').classList.add('active');
+}
+
+function closeOverlay() {
+  document.getElementById('lifelineOverlay').classList.remove('active');
+}
+
+function endGame(won) {
+  showScreen('endScreen');
+  const titleEl = document.getElementById('endTitle');
+  const prizeEl = document.getElementById('endPrize');
+  const msgEl = document.getElementById('endMsg');
+
+  if (won) {
+    titleEl.textContent = '🏆 SEI MILIONARIO!';
+    titleEl.className = 'end-title win';
+    prizeEl.textContent = fmt(PRIZES[14]);
+    msgEl.textContent = 'Incredibile! Hai risposto correttamente a tutte e 15 le domande. Sei un campione!';
+    launchConfetti();
+  } else {
+    const earnedAmount = safeAmount;
+    titleEl.textContent = earnedAmount > 0 ? 'HAI SBAGLIATO...' : 'RISPOSTA ERRATA!';
+    titleEl.className = 'end-title lose';
+    prizeEl.textContent = fmt(earnedAmount);
+    msgEl.textContent = earnedAmount > 0
+      ? `Peccato! Porti a casa il traguardo garantito. Riprova per arrivare più lontano!`
+      : `Peccato! Torni a casa a mani vuote. Ma non mollare, riprova!`;
+  }
+}
+
+function restartGame() {
+  showScreen('startScreen');
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// CONFETTI
+function launchConfetti() {
+  const canvas = document.getElementById('confetti');
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  const particles = [];
+  const colors = ['#ffd700','#ff8c00','#4da6ff','#00cc44','#ff66cc','#ffffff'];
+
+  for (let i = 0; i < 150; i++) {
+    particles.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height - canvas.height,
+      w: Math.random() * 10 + 5,
+      h: Math.random() * 6 + 3,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      rot: Math.random() * Math.PI * 2,
+      vx: (Math.random() - 0.5) * 3,
+      vy: Math.random() * 3 + 2,
+      vr: (Math.random() - 0.5) * 0.1,
+    });
+  }
+
+  let running = true;
+  setTimeout(() => { running = false; ctx.clearRect(0,0,canvas.width,canvas.height); }, 4000);
+
+  function animate() {
+    if (!running) return;
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    particles.forEach(p => {
+      p.x += p.vx;
+      p.y += p.vy;
+      p.rot += p.vr;
+      if (p.y > canvas.height) { p.y = -20; p.x = Math.random() * canvas.width; }
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot);
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+      ctx.restore();
+    });
+    requestAnimationFrame(animate);
+  }
+  animate();
+}
+</script>
+</body>
+</html>
