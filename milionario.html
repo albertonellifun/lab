@@ -40,10 +40,11 @@
     background: var(--navy);
     color: var(--white);
     min-height: 100vh;
+	min-height: 100dvh; 
     display: flex;
     flex-direction: column;
     align-items: center;
-    overflow-x: hidden;
+    overflow: hidden;
     letter-spacing: 1px;
   }
 
@@ -90,7 +91,13 @@
   .screen.active { display: flex; }
 
   /* ===== START SCREEN ===== */
-  #startScreen { justify-content: center; min-height: 100vh; gap: 24px; }
+  #startScreen { 
+    justify-content: center; 
+	min-height: 100vh; 
+	min-height: 100dvh;
+	gap: 24px; 
+	overflow: hidden; 
+  }
 
   .logo-area { text-align: center; }
 
@@ -209,7 +216,13 @@
   .rules-box p { color: var(--silver); font-size: 14px; line-height: 1.7; }
 
   /* ===== GAME SCREEN ===== */
-  #gameScreen { min-height: 100vh; padding: 15px; gap: 0; }
+  #gameScreen { 
+    height: 100vh; 
+	height: 100dvh; 
+	padding: 15px; 
+	gap: 0; 
+	overflow-y: auto; 
+  }
 
   .game-layout {
     display: grid;
@@ -564,7 +577,13 @@
   }
 
   /* END SCREEN */
-  #endScreen { justify-content: center; min-height: 100vh; gap: 24px; text-align: center; }
+  #endScreen { 
+    justify-content: center; 
+	min-height: 100vh; 
+	min-height: 100dvh;
+	gap: 24px; 
+	text-align: center; 
+  }
 
   .end-title {
     font-family: 'ITC Conduit', sans-serif;
@@ -1329,13 +1348,6 @@ function restartGame() {
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
-  
-  // Disabilita scroll su start e end screen
-  if (id === 'startScreen' || id === 'endScreen') {
-    document.body.style.overflow = 'hidden';
-  } else {
-    document.body.style.overflow = '';
-  }
 }
 
 // CONFETTI
