@@ -497,7 +497,10 @@
   /* LIFELINE OVERLAY */
   .overlay {
     position: fixed;
-    inset: 0;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
     background: rgba(0,0,20,0.85);
     z-index: 100;
     display: none;
@@ -594,7 +597,7 @@
   /* restart-btn uses hex-btn */
 
   /* CONFETTI CANVAS */
-  #confetti { position: fixed; inset: 0; pointer-events: none; z-index: 50; }
+  #confetti { position: fixed; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; z-index: 40; }
 
   /* RESPONSIVENESS */
   @media (max-width: 680px) {
@@ -878,7 +881,7 @@
 </div>
 
 <script>
-const bgMusic = new Audio('milionario.mp3'); bgMusic.loop = true; bgMusic.volume = 0.2;
+const bgMusic = new Audio('xxxmilionario.mp3'); bgMusic.loop = true; bgMusic.volume = 0.2;
 
 const PRIZES = [
   100, 200, 300, 500, 1000,
@@ -1006,55 +1009,55 @@ const QUESTIONS = [
   
   
   { q: "Qual è la capitale del Portogallo?", a: ["Madrid", "Lisbona", "Porto", "Siviglia"], c: 1 },
-{ q: "A quale temperatura (Celsius) l'acqua gela?", a: ["0°C", "32°C", "100°C", "-10°C"], c: 0 },
-{ q: "In che anno è finita la Seconda Guerra Mondiale?", a: ["1918", "1943", "1945", "1950"], c: 2 },
-{ q: "Chi è l'autore di 'Sherlock Holmes'?", a: ["Agatha Christie", "Arthur Conan Doyle", "Edgar Allan Poe", "Stephen King"], c: 1 },
-{ q: "Qual è la somma degli angoli interni di un triangolo?", a: ["90°", "180°", "270°", "360°"], c: 1 },
-{ q: "Quale organo pompa il sangue in tutto il corpo?", a: ["Polmoni", "Cervello", "Fegato", "Cuore"], c: 3 },
-{ q: "Chi ha dipinto 'La notte stellata'?", a: ["Claude Monet", "Pablo Picasso", "Vincent van Gogh", "Salvador Dalì"], c: 2 },
-{ q: "Chi è il re degli dei nella mitologia greca?", a: ["Ade", "Poseidone", "Ares", "Zeus"], c: 3 },
-{ q: "Qual è il simbolo chimico dell'argento?", a: ["Ar", "Ag", "Si", "Au"], c: 1 },
-{ q: "In quale paese si trova la città di Tokyo?", a: ["Cina", "Giappone", "Corea del Sud", "Thailandia"], c: 1 },
-{ q: "Chi pronunciò il famoso discorso 'I have a dream'?", a: ["Malcolm X", "Nelson Mandela", "Martin Luther King Jr.", "Barack Obama"], c: 2 },
-{ q: "Come si chiama lo studio dei fossili?", a: ["Archeologia", "Geologia", "Paleontologia", "Antropologia"], c: 2 },
-{ q: "Cosa significa l'acronimo WWW?", a: ["World Wide Web", "Western Wide Web", "World West Web", "Web World Wide"], c: 0 },
-{ q: "In quale genere musicale eccelleva Miles Davis?", a: ["Rock", "Pop", "Jazz", "Classica"], c: 2 },
-{ q: "Quale di questi è un numero primo?", a: ["9", "12", "13", "15"], c: 2 },
-{ q: "Qual è il paese più grande del mondo per superficie?", a: ["Canada", "USA", "Cina", "Russia"], c: 3 },
-{ q: "Quale vitamina viene prodotta dalla pelle grazie alla luce solare?", a: ["Vitamina A", "Vitamina B12", "Vitamina C", "Vitamina D"], c: 3 },
-{ q: "Quanto è lunga una maratona standard?", a: ["21,097 km", "35 km", "42,195 km", "50 km"], c: 2 },
-{ q: "Chi ha scritto 'Don Chisciotte della Mancia'?", a: ["Miguel de Cervantes", "Gabriel García Márquez", "Jorge Luis Borges", "Federico García Lorca"], c: 0 },
-{ q: "Qual è il gas predominante nel Sole?", a: ["Ossigeno", "Idrogeno", "Elio", "Azoto"], c: 1 },
-{ q: "Quale mare separa l'Italia dalla penisola balcanica?", a: ["Mar Ionio", "Mar Ligure", "Mar Tirreno", "Mar Adriatico"], c: 3 },
-{ q: "Dove è nato Napoleone Bonaparte?", a: ["Parigi", "Marsiglia", "Ajaccio", "Roma"], c: 2 },
-{ q: "A quale movimento artistico apparteneva Pablo Picasso?", a: ["Impressionismo", "Cubismo", "Surrealismo", "Barocco"], c: 1 },
-{ q: "Come si chiama la parte centrale di un atomo?", a: ["Elettrone", "Protone", "Neutrone", "Nucleo"], c: 3 },
-{ q: "Quanti sono i colori della bandiera italiana?", a: ["2", "3", "4", "5"], c: 1 },
-{ q: "Qual è la capitale della Svizzera?", a: ["Zurigo", "Ginevra", "Berna", "Basilea"], c: 2 },
-{ q: "Quale mammifero depone le uova?", a: ["Canguro", "Ornitorinco", "Balena", "Pipistrello"], c: 1 },
-{ q: "Quale evento scatenò la Prima Guerra Mondiale?", a: ["L'invasione della Polonia", "L'attentato di Sarajevo", "Il crollo di Wall Street", "La presa della Bastiglia"], c: 1 },
-{ q: "Quale strumento a fiato è fatto solitamente di metallo ma appartiene ai legni?", a: ["Tromba", "Saxofono", "Trombone", "Tuba"], c: 1 },
-{ q: "Qual è il valore approssimativo del Pi greco ($\pi$)?", a: ["2,718", "3,14", "6,28", "42"], c: 1 },
-{ q: "Quale social network è stato fondato da Mark Zuckerberg?", a: ["Twitter", "Instagram", "Facebook", "Snapchat"], c: 2 },
-{ q: "Qual è la forma della molecola di DNA?", a: ["Cerchio", "Sfera", "Doppia elica", "Piramide"], c: 2 },
-{ q: "Qual è la cascata più alta del mondo?", a: ["Cascate del Niagara", "Cascate delle Marmore", "Salto Angel", "Cascate di Iguazú"], c: 2 },
-{ q: "In quale città si trova la Statua della Libertà?", a: ["Washington", "New York", "Boston", "Philadelphia"], c: 1 },
-{ q: "Chi fu il primo presidente degli Stati Uniti?", a: ["Thomas Jefferson", "Abraham Lincoln", "George Washington", "Benjamin Franklin"], c: 2 },
-{ q: "Qual è l'organo più esteso del corpo umano?", a: ["Fegato", "Cervello", "Intestino", "Pelle"], c: 3 },
-{ q: "Chi è il dio del mare nella mitologia romana?", a: ["Marte", "Nettuno", "Plutone", "Vulcano"], c: 1 },
-{ q: "Chi ha scritto la tragedia 'Romeo e Giulietta'?", a: ["Charles Dickens", "William Shakespeare", "Oscar Wilde", "Jane Austen"], c: 1 },
-{ q: "In quale isola si trova la città di Londra?", a: ["Irlanda", "Islanda", "Groenlandia", "Gran Bretagna"], c: 3 },
-{ q: "Quale pianeta ha la 'Grande Macchia Rossa'?", a: ["Marte", "Giove", "Saturno", "Nettuno"], c: 1 },
-{ q: "Qual è l'ingrediente principale del guacamole?", a: ["Pomodoro", "Cipolla", "Avocado", "Peperone"], c: 2 },
-{ q: "Quanti gradi misura un angolo giro?", a: ["90°", "180°", "270°", "360°"], c: 3 },
-{ q: "In che anno iniziò la Rivoluzione Francese?", a: ["1776", "1789", "1804", "1815"], c: 1 },
-{ q: "Qual è la sostanza naturale più dura sulla Terra?", a: ["Oro", "Ferro", "Diamante", "Quarzo"], c: 2 },
-{ q: "In quale paese si trova la Grande Muraglia?", a: ["Giappone", "India", "Cina", "Vietnam"], c: 2 },
-{ q: "Chi ha scritto il romanzo 'Moby Dick'?", a: ["Herman Melville", "Mark Twain", "Ernest Hemingway", "Jack London"], c: 0 },
-{ q: "Chi era il cantante della band britannica Queen?", a: ["Mick Jagger", "Freddie Mercury", "David Bowie", "John Lennon"], c: 1 },
-{ q: "Quale scala di temperatura inizia dallo zero assoluto?", a: ["Celsius", "Fahrenheit", "Kelvin", "Reaumur"], c: 2 },
-{ q: "In quale stato moderno si trova l'antica città di Petra?", a: ["Egitto", "Siria", "Iraq", "Giordania"], c: 3 },
-{ q: "Quanti sono i cerchi sulla bandiera olimpica?", a: ["3", "5", "8", "10"], c: 1 }
+  { q: "A quale temperatura (Celsius) l'acqua gela?", a: ["0°C", "32°C", "100°C", "-10°C"], c: 0 },
+  { q: "In che anno è finita la Seconda Guerra Mondiale?", a: ["1918", "1943", "1945", "1950"], c: 2 },
+  { q: "Chi è l'autore di 'Sherlock Holmes'?", a: ["Agatha Christie", "Arthur Conan Doyle", "Edgar Allan Poe", "Stephen King"], c: 1 },
+  { q: "Qual è la somma degli angoli interni di un triangolo?", a: ["90°", "180°", "270°", "360°"], c: 1 },
+  { q: "Quale organo pompa il sangue in tutto il corpo?", a: ["Polmoni", "Cervello", "Fegato", "Cuore"], c: 3 },
+  { q: "Chi ha dipinto 'La notte stellata'?", a: ["Claude Monet", "Pablo Picasso", "Vincent van Gogh", "Salvador Dalì"], c: 2 },
+  { q: "Chi è il re degli dei nella mitologia greca?", a: ["Ade", "Poseidone", "Ares", "Zeus"], c: 3 },
+  { q: "Qual è il simbolo chimico dell'argento?", a: ["Ar", "Ag", "Si", "Au"], c: 1 },
+  { q: "In quale paese si trova la città di Tokyo?", a: ["Cina", "Giappone", "Corea del Sud", "Thailandia"], c: 1 },
+  { q: "Chi pronunciò il famoso discorso 'I have a dream'?", a: ["Malcolm X", "Nelson Mandela", "Martin Luther King Jr.", "Barack Obama"], c: 2 },
+  { q: "Come si chiama lo studio dei fossili?", a: ["Archeologia", "Geologia", "Paleontologia", "Antropologia"], c: 2 },
+  { q: "Cosa significa l'acronimo WWW?", a: ["World Wide Web", "Western Wide Web", "World West Web", "Web World Wide"], c: 0 },
+  { q: "In quale genere musicale eccelleva Miles Davis?", a: ["Rock", "Pop", "Jazz", "Classica"], c: 2 },
+  { q: "Quale di questi è un numero primo?", a: ["9", "12", "13", "15"], c: 2 },
+  { q: "Qual è il paese più grande del mondo per superficie?", a: ["Canada", "USA", "Cina", "Russia"], c: 3 },
+  { q: "Quale vitamina viene prodotta dalla pelle grazie alla luce solare?", a: ["Vitamina A", "Vitamina B12", "Vitamina C", "Vitamina D"], c: 3 },
+  { q: "Quanto è lunga una maratona standard?", a: ["21,097 km", "35 km", "42,195 km", "50 km"], c: 2 },
+  { q: "Chi ha scritto 'Don Chisciotte della Mancia'?", a: ["Miguel de Cervantes", "Gabriel García Márquez", "Jorge Luis Borges", "Federico García Lorca"], c: 0 },
+  { q: "Qual è il gas predominante nel Sole?", a: ["Ossigeno", "Idrogeno", "Elio", "Azoto"], c: 1 },
+  { q: "Quale mare separa l'Italia dalla penisola balcanica?", a: ["Mar Ionio", "Mar Ligure", "Mar Tirreno", "Mar Adriatico"], c: 3 },
+  { q: "Dove è nato Napoleone Bonaparte?", a: ["Parigi", "Marsiglia", "Ajaccio", "Roma"], c: 2 },
+  { q: "A quale movimento artistico apparteneva Pablo Picasso?", a: ["Impressionismo", "Cubismo", "Surrealismo", "Barocco"], c: 1 },
+  { q: "Come si chiama la parte centrale di un atomo?", a: ["Elettrone", "Protone", "Neutrone", "Nucleo"], c: 3 },
+  { q: "Quanti sono i colori della bandiera italiana?", a: ["2", "3", "4", "5"], c: 1 },
+  { q: "Qual è la capitale della Svizzera?", a: ["Zurigo", "Ginevra", "Berna", "Basilea"], c: 2 },
+  { q: "Quale mammifero depone le uova?", a: ["Canguro", "Ornitorinco", "Balena", "Pipistrello"], c: 1 },
+  { q: "Quale evento scatenò la Prima Guerra Mondiale?", a: ["L'invasione della Polonia", "L'attentato di Sarajevo", "Il crollo di Wall Street", "La presa della Bastiglia"], c: 1 },
+  { q: "Quale strumento a fiato è fatto solitamente di metallo ma appartiene ai legni?", a: ["Tromba", "Saxofono", "Trombone", "Tuba"], c: 1 },
+  { q: "Qual è il valore approssimativo del Pi greco ($\pi$)?", a: ["2,718", "3,14", "6,28", "42"], c: 1 },
+  { q: "Quale social network è stato fondato da Mark Zuckerberg?", a: ["Twitter", "Instagram", "Facebook", "Snapchat"], c: 2 },
+  { q: "Qual è la forma della molecola di DNA?", a: ["Cerchio", "Sfera", "Doppia elica", "Piramide"], c: 2 },
+  { q: "Qual è la cascata più alta del mondo?", a: ["Cascate del Niagara", "Cascate delle Marmore", "Salto Angel", "Cascate di Iguazú"], c: 2 },
+  { q: "In quale città si trova la Statua della Libertà?", a: ["Washington", "New York", "Boston", "Philadelphia"], c: 1 },
+  { q: "Chi fu il primo presidente degli Stati Uniti?", a: ["Thomas Jefferson", "Abraham Lincoln", "George Washington", "Benjamin Franklin"], c: 2 },
+  { q: "Qual è l'organo più esteso del corpo umano?", a: ["Fegato", "Cervello", "Intestino", "Pelle"], c: 3 },
+  { q: "Chi è il dio del mare nella mitologia romana?", a: ["Marte", "Nettuno", "Plutone", "Vulcano"], c: 1 },
+  { q: "Chi ha scritto la tragedia 'Romeo e Giulietta'?", a: ["Charles Dickens", "William Shakespeare", "Oscar Wilde", "Jane Austen"], c: 1 },
+  { q: "In quale isola si trova la città di Londra?", a: ["Irlanda", "Islanda", "Groenlandia", "Gran Bretagna"], c: 3 },
+  { q: "Quale pianeta ha la 'Grande Macchia Rossa'?", a: ["Marte", "Giove", "Saturno", "Nettuno"], c: 1 },
+  { q: "Qual è l'ingrediente principale del guacamole?", a: ["Pomodoro", "Cipolla", "Avocado", "Peperone"], c: 2 },
+  { q: "Quanti gradi misura un angolo giro?", a: ["90°", "180°", "270°", "360°"], c: 3 },
+  { q: "In che anno iniziò la Rivoluzione Francese?", a: ["1776", "1789", "1804", "1815"], c: 1 },
+  { q: "Qual è la sostanza naturale più dura sulla Terra?", a: ["Oro", "Ferro", "Diamante", "Quarzo"], c: 2 },
+  { q: "In quale paese si trova la Grande Muraglia?", a: ["Giappone", "India", "Cina", "Vietnam"], c: 2 },
+  { q: "Chi ha scritto il romanzo 'Moby Dick'?", a: ["Herman Melville", "Mark Twain", "Ernest Hemingway", "Jack London"], c: 0 },
+  { q: "Chi era il cantante della band britannica Queen?", a: ["Mick Jagger", "Freddie Mercury", "David Bowie", "John Lennon"], c: 1 },
+  { q: "Quale scala di temperatura inizia dallo zero assoluto?", a: ["Celsius", "Fahrenheit", "Kelvin", "Reaumur"], c: 2 },
+  { q: "In quale stato moderno si trova l'antica città di Petra?", a: ["Egitto", "Siria", "Iraq", "Giordania"], c: 3 },
+  { q: "Quanti sono i cerchi sulla bandiera olimpica?", a: ["3", "5", "8", "10"], c: 1 }
 ];
 
 let gameQuestions = [];
@@ -1161,6 +1164,12 @@ function selectAnswer(idx) {
 
   const btns = document.querySelectorAll('.answer-btn');
   btns.forEach(b => b.disabled = true);
+  
+  // Disabilita anche gli aiuti
+  document.getElementById('btn50').disabled = true;
+  document.getElementById('btnPhone').disabled = true;
+  document.getElementById('btnAudience').disabled = true;
+  
   btns[idx].classList.add('selected');
 
   setTimeout(() => revealAnswer(idx), 3000);
@@ -1207,7 +1216,7 @@ function nextQuestion() {
 }
 
 function useLifeline(type) {
-  if (lifelineUsed[type]) return;
+  if (answered || lifelineUsed[type]) return;
   lifelineUsed[type] = true;
 
   const q = gameQuestions[currentQ];
