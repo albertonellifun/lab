@@ -881,7 +881,7 @@
 </div>
 
 <script>
-const bgMusic = new Audio('xxxmilionario.mp3'); bgMusic.loop = true; bgMusic.volume = 0.2;
+const bgMusic = new Audio('milionario.mp3'); bgMusic.loop = true; bgMusic.volume = 0.2;
 
 const PRIZES = [
   100, 200, 300, 500, 1000,
@@ -1165,11 +1165,6 @@ function selectAnswer(idx) {
   const btns = document.querySelectorAll('.answer-btn');
   btns.forEach(b => b.disabled = true);
   
-  // Disabilita anche gli aiuti
-  document.getElementById('btn50').disabled = true;
-  document.getElementById('btnPhone').disabled = true;
-  document.getElementById('btnAudience').disabled = true;
-  
   btns[idx].classList.add('selected');
 
   setTimeout(() => revealAnswer(idx), 3000);
@@ -1334,6 +1329,13 @@ function restartGame() {
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
+  
+  // Disabilita scroll su start e end screen
+  if (id === 'startScreen' || id === 'endScreen') {
+    document.body.style.overflow = 'hidden';
+  } else {
+    document.body.style.overflow = '';
+  }
 }
 
 // CONFETTI
