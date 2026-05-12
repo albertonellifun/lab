@@ -1126,7 +1126,7 @@ function startGame() {
 
 function buildLadder() {
   const ladder = document.getElementById('prizeLadder');
-  ladder.innerHTML = '<div class="ladder-title">PREMI</div>';
+  ladder.innerHTML = '<div class="ladder-title" onclick="collapsePremi()">PREMI</div>';
   for (let i = 14; i >= 0; i--) {
     const div = document.createElement('div');
     div.className = 'ladder-item' + (SAFE_LEVELS.includes(i) ? ' safe' : '');
@@ -1186,7 +1186,7 @@ function selectAnswer(idx) {
   
   btns[idx].classList.add('selected');
 
-  setTimeout(() => revealAnswer(idx), 3000);
+  setTimeout(function(){ revealAnswer(idx); }, 2000);
 }
 
 function revealAnswer(idx) {
@@ -1212,14 +1212,14 @@ function revealAnswer(idx) {
     if (SAFE_LEVELS.includes(currentQ)) safeAmount = PRIZES[currentQ];
 
     if (currentQ === 14) {
-      setTimeout(() => endGame(true), 2000);
+      setTimeout(function(){ endGame(true); }, 2000);
     } else {
       document.getElementById('nextBtn').style.display = 'block';
     }
   } else {
     fb.textContent = `✗ SBAGLIATO! Era: ${q.a[q.c]}`;
     fb.className = 'feedback-msg wrong';
-    setTimeout(() => endGame(false), 2500);
+    setTimeout(function(){ endGame(false); }, 2000);
   }
 }
 
@@ -1348,6 +1348,10 @@ function restartGame() {
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
+}
+
+function collapsePremi() {
+  document.querySelectorAll('.ladder-item').forEach(s => s.style.display = s.style.display === 'none' ? 'flex' : 'none');
 }
 
 // CONFETTI
