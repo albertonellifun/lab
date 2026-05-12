@@ -1319,18 +1319,21 @@ function closeOverlay() {
 }
 
 function endGame(won) {
+alert(1);
   showScreen('endScreen');
   const titleEl = document.getElementById('endTitle');
   const prizeEl = document.getElementById('endPrize');
   const msgEl = document.getElementById('endMsg');
-
+alert(2);
   if (won) {
+  alert(3);
     titleEl.textContent = '🏆 SEI MILIONARIO!';
     titleEl.className = 'end-title win';
     prizeEl.textContent = fmt(PRIZES[14]);
-    msgEl.textContent = 'Incredibile! Hai risposto correttamente a tutte e 15 le domande. Sei un campione!';
+    msgEl.textContent = 'Incredibile! Hai risposto correttamente a tutte e 15 le domande. Sei un Campione!';
     launchConfetti();
   } else {
+  alert(4);
     const earnedAmount = safeAmount;
     titleEl.textContent = earnedAmount > 0 ? 'HAI SBAGLIATO...' : 'RISPOSTA ERRATA!';
     titleEl.className = 'end-title lose';
