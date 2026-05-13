@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Dell Firmware Update Loop</title>
+
+<style>
+	@font-face {
+		font-family: 'Dell Font';
+		src: url('./update-font.otf') format('opentype');
+		font-weight: normal;
+		font-style: normal;
+	}
+	
+    *{
+        margin:0;
+        padding:0;
+        box-sizing:border-box;
+        font-family: Arial, Helvetica, sans-serif;
+		cursor: default;
+    }
+	
+	
+    body{
+        background:#000;
+        overflow:hidden;
+        height:100vh;
+        display:flex;
+        justify-content:center;
+        align-items:center;
+    }
+	
+	/* fake boot */
+	#safebios {
+		font-size: 16px;
+		font-weight: 300;
+		margin-bottom: 100px;
+	}
+
+	#spinner {
+		width: 32px;
+		height: 32px;
+		border: 4px solid transparent;
+		border-top-color: #eee;
+		border-radius: 50%;
+		animation: spin 1.5s linear infinite;
+		position: absolute;
+		bottom: 25%;
+	}
+
+	@keyframes spin {
+		to { transform: rotate(360deg); }
+	}
+	
+	
+
+	/* fake update */
+	#update-content {
+		opacity: 0;
+		width: 100%;
+		transition: all 0.5s ease;
+	}
+	
+	.screen {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: flex-end;
+		width:100vw;
+        height:100vh;
+		width:100dvw;
+        height:100dvh;
+        background: radial-gradient(circle at center, #111 0%, #000 80%);
+        color: #eee;
+        position:relative;
+		overflow: hidden;
+		padding-bottom: 2%;
+	}
+	
+	.content {
+		width: 60%;
+		max-width: 600px;
+		text-align: left;
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		align-items: center;
+	}
+	
+    .logo{
+		font-family: 'Dell Font';
+        text-align:center;
+        font-size:60px;
+        margin-bottom:140px;
+    }
+	
+	.logo span{
+		font-family: 'Dell Font';
+        text-align:center;
+        font-size:50px;
+        margin-bottom:70px;
+        letter-spacing:4px;
+		position: relative;
+		top: -5px;
+    }
+
+    .title{
+        text-align:center;
+        font-size:18px;
+        margin-bottom:12px;
+        font-weight:300;
+    }
+
+    .warning{
+        text-align:center;
+        color:#f3c543;
+        font-size:16px;
+        margin-bottom:20px;
+    }
+
+    .progress-label{
+        font-size:16px;
+        margin-bottom:15px;
+		align-self: flex-start;
+    }
+
+    .bar-container{
+        width:100%;
+        height:22px;
+        background:#eee;
+        overflow:hidden;
+        position:relative;
+    }
+
+    .bar{
+        height:100%;
+        width:0%;
+        background:#2299ff;
+        transition: all 0.1s linear;
+    }
+
+    .percent{
+        margin:10px 0;
+        font-size:16px;
+		align-self: flex-start;
+    }
+
+    .component{
+        text-align:center;
+        font-size:16px;
+        color:#ddd;
+    }
+</style>
+</head>
+
+<body>
+<div class="screen">
+    <div class="content">
+		<div id="safebios">Secured with Dell SafeBIOS</div>
+        <div class="logo">D<span>E</span>LL</div>
+		<div id="spinner"></div>
+		<div id="update-content">
+			<div class="title">Updating your firmware</div>
+			<div class="warning">⚠️ Do not power down your system.</div>
+			<div class="progress-label">Flash Progress</div>
+			<div class="bar-container">
+				<div class="bar" id="bar"></div>
+			</div>
+			<div class="percent" id="percent">0%</div>
+			<div class="component" id="component">Please wait...</div>
+		</div>
+    </div>
+</div>
+
+<script>
+const bar = document.getElementById("bar");
+const percentText = document.getElementById("percent");
+const componentText = document.getElementById("component");
+
+let components = [
+    { name: "System BIOS", 							duration: 50 },
+    { name: "Intel Management Engine", 				duration: 40 },
+    { name: "Thunderbolt Controller", 				duration: 15 },
+    { name: "Embedded Controller", 					duration: 20 },
+    { name: "NVMe Firmware", 						duration: 30 },
+    { name: "Keyboard Firmware", 					duration: 20 },
+    { name: "GPU Firmware", 						duration: 60 },
+    { name: "Wi-Fi Module", 						duration: 70 },
+    { name: "Power Management", 					duration: 30 },
+    { name: "Security Processor", 					duration: 20 },
+    { name: "USB Controller", 						duration: 60 },
+    { name: "Thermal Controller", 					duration: 10 },
+    { name: "Battery Controller", 					duration: 15 },
+    { name: "TPM Firmware", 						duration: 25 },
+    { name: "Audio DSP", 							duration: 70 },
+    { name: "Dock Interface", 						duration: 10 },
+    { name: "BiosConnect Wireless drivers",			duration: 60 },
+	{ name: "Intel Microcode", 						duration: 50 },
+	{ name: "UEFI Runtime Services", 				duration: 20 },
+	{ name: "PCI Express Controller", 				duration: 40 },
+	{ name: "SATA AHCI Controller", 				duration: 50 },
+	{ name: "Platform Security Module", 			duration: 60 },
+	{ name: "Fan Curve Controller", 				duration: 70 },
+	{ name: "Memory Reference Code", 				duration: 30 },
+	{ name: "DDR5 Training Engine", 				duration: 20 },
+	{ name: "CPU Voltage Controller", 				duration: 10 },
+	{ name: "Integrated Graphics Firmware", 		duration: 40 },
+	{ name: "Discrete Graphics VBIOS", 				duration: 30 },
+	{ name: "Smart Charging Controller", 			duration: 10 },
+	{ name: "USB-C Power Delivery", 				duration: 10 },
+	{ name: "Bluetooth Module", 					duration: 50 },
+	{ name: "Wireless WAN Adapter", 				duration: 15 },
+	{ name: "Ethernet PXE Stack", 					duration: 70 },
+	{ name: "Secure Boot Keys", 					duration: 30 },
+	{ name: "Trusted Platform Services", 			duration: 40 },
+	{ name: "Intel Rapid Storage Option ROM", 		duration: 50 },
+	{ name: "PCIe Gen4 Retimer", 					duration: 90 },
+	{ name: "Camera ISP Firmware", 					duration: 60 },
+	{ name: "Touchpad Firmware", 					duration: 40 },
+	{ name: "Fingerprint Reader", 					duration: 30 },
+	{ name: "Smart Card Reader", 					duration: 25 },
+	{ name: "Display Color Engine", 				duration: 60 },
+	{ name: "Adaptive Brightness Controller", 		duration: 60 },
+	{ name: "Virtualization Engine", 				duration: 15 },
+	{ name: "Intel VT-d Services", 					duration: 80 },
+	{ name: "AMD PSP Security Core", 				duration: 10 },
+	{ name: "System Event Log", 					duration: 20 },
+	{ name: "ACPI Power Tables", 					duration: 90 },
+	{ name: "Boot Guard Verification", 				duration: 15 },
+	{ name: "Recovery Environment", 				duration: 10 },
+	{ name: "Preboot Diagnostics", 					duration: 40 },
+	{ name: "Dell Optimizer Services", 				duration: 90 },
+	{ name: "Thermal Calibration Data", 			duration: 70 },
+	{ name: "OLED Panel Controller", 				duration: 10 },
+	{ name: "DisplayPort Bridge", 					duration: 90 },
+	{ name: "HDMI Retimer Firmware", 				duration: 80 },
+	{ name: "Intel Gaussian Accelerator", 			duration: 20 },
+	{ name: "Neural Processing Unit", 				duration: 30 },
+	{ name: "RAID Controller Firmware", 			duration: 15 },
+	{ name: "Storage Encryption Engine", 			duration: 40 },
+	{ name: "Secure Erase Services", 				duration: 60 },
+	{ name: "Fan Tachometer Interface", 			duration: 40 },
+	{ name: "Chassis Intrusion Sensor", 			duration: 50 },
+	{ name: "Lid Sensor Controller", 				duration: 30 },
+	{ name: "RTC Clock Firmware", 					duration: 40 },
+	{ name: "Intel Dynamic Tuning", 				duration: 60 },
+	{ name: "Performance Profile Manager", 			duration: 10 },
+	{ name: "AI Noise Cancellation Engine", 		duration: 50 },
+	{ name: "Audio Codec Firmware", 				duration: 40 },
+	{ name: "System Telemetry Engine", 				duration: 20 },
+	{ name: "Dell SafeBIOS", 						duration: 90 },
+	{ name: "Kernel DMA Protection", 				duration: 80 },
+	{ name: "PCI Device Enumeration", 				duration: 70 },
+	{ name: "Wake-on-LAN Services", 				duration: 60 },
+	{ name: "Intel Sensor Hub", 					duration: 50 },
+	{ name: "Ambient Light Sensor", 				duration: 40 },
+	{ name: "Power Sequencing Logic", 				duration: 30 },
+	{ name: "Voltage Rail Monitor", 				duration: 80 },
+	{ name: "Boot Performance Database", 			duration: 60 },
+	{ name: "System Recovery Capsule", 				duration: 10 },
+	{ name: "BIOS Rollback Protection", 			duration: 30 },
+	{ name: "PCI Hotplug Services", 				duration: 20 },
+	{ name: "Type-C Alternate Mode", 				duration: 90 },
+	{ name: "Docking Authentication Module", 		duration: 10 },
+	{ name: "Intel TXT Security", 					duration: 20 },
+	{ name: "Secure Flash Authentication", 			duration: 20 },
+	{ name: "Low Power Island Controller", 			duration: 15 },
+	{ name: "Smart Fan Learning Engine", 			duration: 10 },
+	{ name: "Battery Health Monitor", 				duration: 40 },
+	{ name: "CPU Package Controller", 				duration: 30 },
+	{ name: "Power State Coordination", 			duration: 50 },
+	{ name: "Hybrid Graphics Switch", 				duration: 20 },
+	{ name: "Memory Integrity Services", 			duration: 30 },
+	{ name: "System Guard Runtime Monitor", 		duration: 40 },
+	{ name: "Secure Runtime Cache", 				duration: 10 },
+	{ name: "Device Trust Services", 				duration: 20 },
+	{ name: "Dell Endpoint Security", 				duration: 30 },
+	{ name: "Dynamic Platform Thermal Framework", 	duration: 40 },
+	{ name: "BitLocker Thrusted IRQ Enumeration", 	duration: 80 },
+];
+components.forEach(elem => elem.duration *= 1000);
+components = components.sort(() => Math.random() - 0.5);
+
+let currentComponent = 0;
+let progress = 0;
+let targetProgress = 0;
+let interval = null;
+
+let currentPrefix = 0;
+const prefixes = ['Updating', 'Flashing', 'Patching', 'Writing'];
+const suffixes = ['Update Completed.', 'Flash Completed.', 'Patch Completed.', 'Write Completed.'];
+
+function setBarPercentage(){
+    let value = (100 * progress / targetProgress) | 0;
+    bar.style.width = value+"%";
+    percentText.textContent = value+"%";
+}
+
+function loadComponent(index){
+    clearInterval(interval);
+
+    const component = components[index];
+	currentPrefix = Math.floor(Math.random() * prefixes.length);
+    componentText.textContent = prefixes[currentPrefix] + ' ' + component.name;
+
+    progress = 0;
+	targetProgress = component.duration;   
+    setBarPercentage();
+
+    interval = setInterval(tick, 250);
+}
+
+function tick(){
+    let speed = (Math.random() * 3) | 0;
+	progress += (speed * 200);
+	console.log(progress, targetProgress, (progress*100/targetProgress)|0);
+	
+	if(progress > targetProgress){
+        progress = targetProgress;
+		componentText.textContent = components[currentComponent].name + ' ' + suffixes[currentPrefix];
+		clearInterval(interval);
+		
+		setTimeout(function(){
+			currentComponent = (currentComponent + 1) % components.length;
+			loadComponent(currentComponent);
+		}, 500 * Math.random() * 10);
+    }
+	
+	setBarPercentage();
+}
+
+const bootDuration = 5000 + Math.random() * 5000;
+setTimeout(() => {
+    document.getElementById('spinner').style.display = 'none';
+    document.getElementById('safebios').style.display = 'none';
+    document.getElementById('update-content').style.opacity = '1';
+    setTimeout(function(){ loadComponent(0); }, 2000);
+}, bootDuration);
+</script>
+
+</body>
+</html>
