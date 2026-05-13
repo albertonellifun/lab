@@ -113,7 +113,9 @@
     height: 100vh; 
 	height: 100dvh;
 	overflow: hidden; 
-	justify-content: space-between; 
+	justify-content: center; 
+	gap: 10px;
+	gap: 5%;
   }
 
   .logo-area { text-align: center; }
@@ -204,9 +206,9 @@
   }
 
   /* SIZE VARIANTS */
-  .hex-btn.hb-md  { height: 44px; min-width: 150px; }
+  .hex-btn.hb-md  { height: 44px; min-width: 150px; min-height: 40px; }
   .hex-btn.hb-md .hb-label { font-size: 13px; }
-  .hex-btn.hb-sm  { height: 36px; min-width: 100px; }
+  .hex-btn.hb-sm  { height: 36px; min-width: 100px; min-height: 30px; }
   .hex-btn.hb-sm .hb-label { font-size: 11px; letter-spacing: 1px; padding: 0 22px; }
 
   /* COLOUR VARIANTS for border */
@@ -227,6 +229,9 @@
     max-width: 520px;
     width: 100%;
     text-align: center;
+	overflow-y: auto;
+	scrollbar-width: thin;
+	scrollbar-color: var(--bright) var(--deep-blue);
   }
 
   .rules-box h3 { color: var(--gold); font-family: 'ITC Conduit', sans-serif; margin-bottom: 12px; font-size: 14px; letter-spacing: 2px; }
