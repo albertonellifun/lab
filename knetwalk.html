@@ -2,6 +2,7 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>KNetWalk</title>
     <style>
         body {
@@ -43,6 +44,12 @@
         }
         canvas { background-color: #0f172a; display: block; cursor: pointer; border-radius: 4px; }
         #status { margin: 10px 0; height: 30px; font-size: 24px; font-weight: bold; color: #22c55e; text-shadow: 0 0 16px rgba(34, 197, 94, 0.3); }
+		
+		/* redmi fix? */
+		body {
+			touch-action: none; /* Blocca lo scroll e i gesti del browser */
+			user-select: none;  /* Impedisce di selezionare i testi per errore */
+		}
     </style>
 </head>
 <body>
@@ -96,7 +103,7 @@ function changeDifficulty(newSize, btn) {
 }
 
 function initGame() {
-    // Calcola lo spazio disponibile
+	// Calcola lo spazio disponibile
     const headerHeight = document.querySelector('.controls').offsetHeight;
     const statusHeight = statusDiv.offsetHeight;
     const padding = 60; // Padding container + margini
@@ -107,7 +114,7 @@ function initGame() {
     canvas.width = canvasSize;
     canvas.height = canvasSize;
     
-    // Ricalcola CELL_SIZE in base alla canvas effettiva
+	// Ricalcola CELL_SIZE in base alla canvas effettiva
     CELL_SIZE = canvasSize / SIZE;
 	
     grid = [];
@@ -236,10 +243,9 @@ function drawTileOLD(tile) {
     let mid = CELL_SIZE / 2;
     let activeColor = "#0ea5e9";
     let inactiveColor = "#334155";
-    let color = tile.connected ? activeColor : inactiveColor;
 
     // Disegna cavi
-    ctx.strokeStyle = color;
+    ctx.strokeStyle = tile.connected ? activeColor : inactiveColor;
     ctx.lineWidth = CELL_SIZE * 0.08;//Math.max(3, CELL_SIZE / 10);
     ctx.lineCap = "round";
     
@@ -261,9 +267,9 @@ function drawTileOLD(tile) {
 
     // Disegna icone
     if (tile.type === 'server') {
-        drawServer(x, y, color);
+        drawServer(x, y, tile.connected);
     } else if (tile.type === 'pc') {
-        drawPC(x, y, tile.subType, color);
+        drawPC(x, y, tile.subType, tile.connected);
     }
 }
 
@@ -599,7 +605,7 @@ function drawPC(x, y, type, connected) {
     ctx.restore();
 }
 
-canvas.addEventListener('mousedown', e => {
+/*canvas.addEventListener('mousedown', e => {
     if (gameWon) return;
     let r = canvas.getBoundingClientRect();
     let gx = Math.floor((e.clientX - r.left) / (r.width / SIZE));
@@ -608,7 +614,29 @@ canvas.addEventListener('mousedown', e => {
         grid[gy][gx].conns = rotateBitmask(grid[gy][gx].conns);
         updateConnectivity();
     }
-});
+});*/
+
+// Cerca questa parte in fondo e sostituiscila:
+canvas.addEventListener('pointerdown', e => {
+    e.preventDefault(); // Fondamentale per non far scattare altri eventi
+    if (gameWon) return;
+    
+    let r = canvas.getBoundingClientRect();
+    // Calcola la scala se la canvas è stata rimpicciolita dal CSS
+    let scaleX = canvas.width / r.width;
+    let scaleY = canvas.height / r.height;
+    
+    let clientX = e.clientX || (e.touches && e.touches[0].clientX);
+    let clientY = e.clientY || (e.touches && e.touches[0].clientY);
+    
+    let gx = Math.floor(((clientX - r.left) * scaleX) / CELL_SIZE);
+    let gy = Math.floor(((clientY - r.top) * scaleY) / CELL_SIZE);
+    
+    if (grid[gy] && grid[gy][gx]) {
+        grid[gy][gx].conns = rotateBitmask(grid[gy][gx].conns);
+        updateConnectivity();
+    }
+}, { passive: false });
 
 initGame();
 animate(); // Avvia l'animazione
