@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <title>KNetWalk</title>
+    <style>
+        body {
+            background-color: #020617;
+            color: #f8fafc;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+			height: 100dvh;
+            margin: 0;
+            overflow: hidden;
+        }
+        h1 { font-size: 24px; font-weight: bold; margin: 0 30px; color: #38bdf8; text-shadow: 0 0 16px rgba(56, 189, 248, 0.5); }
+        .controls { margin: 6px 0; display: flex; gap: 15px; align-items: center; }
+        button {
+            padding: 10px 20px;
+            font-size: 14px;
+            cursor: pointer;
+            background: #1e293b;
+            border: 1px solid #334155;
+            color: #94a3b8;
+            border-radius: 6px;
+            transition: all 0.3s;
+            font-weight: bold;
+			height: 40px;
+			line-height: 0.8;
+        }
+        button:hover { background: #334155; color: #38bdf8; border-color: #38bdf8; }
+        button.active { background: #0ea5e9; color: #ffffff; border-color: #0ea5e9; box-shadow: 0 0 15px rgba(14, 165, 233, 0.4); }
+        #game-container {
+            padding: 15px;
+            background: #1e293b;
+            border-radius: 12px;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.8);
+            border: 1px solid #334155;
+        }
+        canvas { background-color: #0f172a; display: block; cursor: pointer; border-radius: 4px; }
+        #status { margin: 10px 0; height: 30px; font-size: 24px; font-weight: bold; color: #22c55e; text-shadow: 0 0 16px rgba(34, 197, 94, 0.3); }
+    </style>
+</head>
+<body>
+
+    <div class="controls">
+		<h1>KNetWalk</h1>
+        <button onclick="changeDifficulty(5, this)" class="active">5x5</button>
+        <button onclick="changeDifficulty(7, this)">7x7</button>
+        <button onclick="changeDifficulty(10, this)">10x10</button>
+		<button onclick="changeAnimateFlag(this)">Animate<br/>Wires</button>
+    </div>
+
+	<div id="game-container">
+		<canvas id="gameCanvas"></canvas>
+	</div>
+
+	<div id="status"></div>
+
+<script>
+let SIZE = 5;
+const CANVAS_MAX_SIZE = 660;
+let CELL_SIZE = CANVAS_MAX_SIZE / SIZE;
+
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const statusDiv = document.getElementById('status');
+
+const N = 1, E = 2, S = 4, W = 8;
+const PC_TYPES = ['notebook', 'desktop', 'tablet', 'baraccone'];
+
+let grid = [];
+let serverPos = {x: 0, y: 0};
+let gameWon = false;
+let flowOffset = 0; //Per l'animazione dei dati
+let animateFlag = false;//animazione flag
+
+function changeAnimateFlag(btn) {
+	animateFlag = !animateFlag;
+	if(btn) {
+		if(animateFlag) btn.classList.add('active');
+		else btn.classList.remove('active');
+	}
+}
+
+function changeDifficulty(newSize, btn) {
+    SIZE = newSize;
+    CELL_SIZE = CANVAS_MAX_SIZE / SIZE;
+    document.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+    if(btn) btn.classList.add('active');
+    initGame();
+}
+
+function initGame() {
+    // Calcola lo spazio disponibile
+    const headerHeight = document.querySelector('.controls').offsetHeight;
+    const statusHeight = statusDiv.offsetHeight;
+    const padding = 60; // Padding container + margini
+    const availableHeight = window.innerHeight - headerHeight - statusHeight - padding;
+    
+    // Usa l'altezza disponibile, ma mantieni il massimo della larghezza
+    const canvasSize = Math.min(CANVAS_MAX_SIZE, availableHeight);
+    canvas.width = canvasSize;
+    canvas.height = canvasSize;
+    
+    // Ricalcola CELL_SIZE in base alla canvas effettiva
+    CELL_SIZE = canvasSize / SIZE;
+	
+    grid = [];
+    gameWon = false;
+    statusDiv.innerText = "";
+    
+    for (let y = 0; y < SIZE; y++) {
+        grid[y] = [];
+        for (let x = 0; x < SIZE; x++) {
+            grid[y][x] = { x, y, conns: 0, type: 'cable', subType: '', connected: false };
+        }
+    }
+
+    generateNetwork();
+    assignTypes();
+    shuffleGrid();
+    updateConnectivity();
+}
+
+function generateNetwork() {
+    let visited = Array(SIZE).fill().map(() => Array(SIZE).fill(false));
+    let walls = [];
+    serverPos = { x: Math.floor(Math.random()*SIZE), y: Math.floor(Math.random()*SIZE) };
+    visited[serverPos.y][serverPos.x] = true;
+    addWalls(serverPos.x, serverPos.y, walls, visited);
+
+    while (walls.length > 0) {
+        let wall = walls.splice(Math.floor(Math.random()*walls.length), 1)[0];
+        if (visited[wall.y2][wall.x2]) continue;
+        grid[wall.y1][wall.x1].conns |= wall.dir1;
+        grid[wall.y2][wall.x2].conns |= wall.dir2;
+        visited[wall.y2][wall.x2] = true;
+        addWalls(wall.x2, wall.y2, walls, visited);
+    }
+}
+
+function addWalls(x, y, walls, visited) {
+    if (y > 0) walls.push({x1:x, y1:y, x2:x, y2:y-1, dir1:N, dir2:S});
+    if (y < SIZE-1) walls.push({x1:x, y1:y, x2:x, y2:y+1, dir1:S, dir2:N});
+    if (x > 0) walls.push({x1:x, y1:y, x2:x-1, y2:y, dir1:W, dir2:E});
+    if (x < SIZE-1) walls.push({x1:x, y1:y, x2:x+1, y2:y, dir1:E, dir2:W});
+}
+
+function assignTypes() {
+    grid.forEach((row, y) => row.forEach((cell, x) => {
+        if (x === serverPos.x && y === serverPos.y) cell.type = 'server';
+        else {
+            let count = [N, E, S, W].filter(d => cell.conns & d).length;
+            if (count === 1) {
+                cell.type = 'pc';
+                cell.subType = PC_TYPES[Math.floor(Math.random() * PC_TYPES.length)];
+            }
+        }
+    }));
+}
+
+function shuffleGrid() {
+    grid.forEach(row => row.forEach(cell => {
+        let r = Math.floor(Math.random()*4);
+        for(let i=0; i<r; i++) cell.conns = rotateBitmask(cell.conns);
+    }));
+}
+
+function rotateBitmask(m) {
+    let n = 0;
+    if (m & N) n |= E; if (m & E) n |= S; if (m & S) n |= W; if (m & W) n |= N;
+    return n;
+}
+
+function updateConnectivity() {
+    grid.forEach(row => row.forEach(c => c.connected = false));
+    let q = [grid[serverPos.y][serverPos.x]];
+    grid[serverPos.y][serverPos.x].connected = true;
+    let head = 0;
+    while(head < q.length) {
+        let curr = q[head++];
+        [[N,0,-1,S],[E,1,0,W],[S,0,1,N],[W,-1,0,E]].forEach(d => {
+            if (curr.conns & d[0]) {
+                let nx = curr.x+d[1], ny = curr.y+d[2];
+                if (nx>=0 && nx<SIZE && ny>=0 && ny<SIZE) {
+                    let nb = grid[ny][nx];
+                    if (!nb.connected && (nb.conns & d[3])) {
+                        nb.connected = true;
+                        q.push(nb);
+                    }
+                }
+            }
+        });
+    }
+    if (grid.every(r => r.every(c => c.connected)) && !gameWon) {
+        gameWon = true;
+        statusDiv.innerText = "SISTEMA ONLINE - RETE CONFIGURATA!";
+    }
+}
+
+/** * RENDERING AVANZATO
+ */
+function animate() {
+    flowOffset += 0.2; // Velocità del flusso
+    draw();
+    requestAnimationFrame(animate);
+}
+
+function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // Griglia
+    ctx.strokeStyle = "#1e293b";
+    ctx.lineWidth = 1;
+    for(let i=0; i<=SIZE; i++) {
+        ctx.beginPath(); ctx.moveTo(i*CELL_SIZE,0); ctx.lineTo(i*CELL_SIZE,canvas.height); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(0,i*CELL_SIZE); ctx.lineTo(canvas.width,i*CELL_SIZE); ctx.stroke();
+    }
+
+    grid.forEach(row => row.forEach(tile => drawTile(tile)));
+}
+
+function drawTile(tile) {
+	if (animateFlag) drawTileANIMATE(tile);
+	else drawTileOLD(tile);
+}
+
+function drawTileOLD(tile) {
+    let x = tile.x * CELL_SIZE;
+    let y = tile.y * CELL_SIZE;
+    let mid = CELL_SIZE / 2;
+    let activeColor = "#0ea5e9";
+    let inactiveColor = "#334155";
+    let color = tile.connected ? activeColor : inactiveColor;
+
+    // Disegna cavi
+    ctx.strokeStyle = color;
+    ctx.lineWidth = CELL_SIZE * 0.08;//Math.max(3, CELL_SIZE / 10);
+    ctx.lineCap = "round";
+    
+    // Effetto bagliore se connesso
+    if(tile.connected) {
+        ctx.shadowBlur = 20;
+        ctx.shadowColor = activeColor;
+    } else {
+        ctx.shadowBlur = 0;
+    }
+
+    ctx.beginPath();
+    if (tile.conns & N) { ctx.moveTo(x + mid, y + mid); ctx.lineTo(x + mid, y); }
+    if (tile.conns & E) { ctx.moveTo(x + mid, y + mid); ctx.lineTo(x + CELL_SIZE, y + mid); }
+    if (tile.conns & S) { ctx.moveTo(x + mid, y + mid); ctx.lineTo(x + mid, y + CELL_SIZE); }
+    if (tile.conns & W) { ctx.moveTo(x + mid, y + mid); ctx.lineTo(x, y + mid); }
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    // Disegna icone
+    if (tile.type === 'server') {
+        drawServer(x, y, color);
+    } else if (tile.type === 'pc') {
+        drawPC(x, y, tile.subType, color);
+    }
+}
+
+
+
+function drawTileANIMATE(tile) {
+    let x = tile.x * CELL_SIZE, y = tile.y * CELL_SIZE, mid = CELL_SIZE/2;
+	
+    // Cavo Base (Sfondo spento)
+    ctx.setLineDash([]);
+    ctx.strokeStyle = "#1e293b";
+    ctx.lineWidth = CELL_SIZE * 0.08;
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    if (tile.conns & N) { ctx.moveTo(mid+x, mid+y); ctx.lineTo(mid+x, y); }
+    if (tile.conns & E) { ctx.moveTo(mid+x, mid+y); ctx.lineTo(x+CELL_SIZE, mid+y); }
+    if (tile.conns & S) { ctx.moveTo(mid+x, mid+y); ctx.lineTo(mid+x, y+CELL_SIZE); }
+    if (tile.conns & W) { ctx.moveTo(mid+x, mid+y); ctx.lineTo(x, mid+y); }
+    ctx.stroke();
+
+    // Flusso Dati (Animato)
+    if (tile.connected) {
+		ctx.lineCap = "butt";//default
+		ctx.strokeStyle = "#0ea5e9";
+        ctx.lineWidth = CELL_SIZE * 0.1;
+        ctx.setLineDash([CELL_SIZE*0.025, CELL_SIZE*0.025]); // Tratteggio
+        ctx.lineDashOffset = -flowOffset;
+		ctx.shadowBlur = 20;
+        ctx.shadowColor = "#38bdf8";
+		ctx.stroke();
+        ctx.shadowBlur = 0;
+    }
+
+    // Icone
+    if (tile.type === 'server') drawServer(x, y, tile.connected);
+    else if (tile.type === 'pc') drawPC(x, y, tile.subType, tile.connected);
+}
+
+function drawServer(x, y, connected) {
+    const s = CELL_SIZE * 0.75; 
+    const p = (CELL_SIZE - s) / 2;
+    
+    ctx.save();
+    ctx.translate(x + p, y + p);
+
+    // --- CASE ESTERNO (RACK) ---
+    // Effetto metallo spazzolato scuro
+    let caseGrad = ctx.createLinearGradient(0, 0, s, s);
+    caseGrad.addColorStop(0, "#334155");
+    caseGrad.addColorStop(0.5, "#1e293b");
+    caseGrad.addColorStop(1, "#0f172a");
+    
+    ctx.fillStyle = caseGrad;
+    ctx.beginPath();
+    ctx.roundRect(0, 0, s, s, 2);
+    ctx.fill();
+
+    // Bordi laterali del rack (le "orecchie" per il montaggio)
+    ctx.fillStyle = "#111827";
+    ctx.fillRect(0, 0, 4, s);
+    ctx.fillRect(s - 4, 0, 4, s);
+
+    // --- UNITÀ SERVER (Blade) ---
+    const units = 4;
+    const unitHeight = (s - 10) / units;
+    
+    for (let i = 0; i < units; i++) {
+        let uy = 5 + (i * unitHeight);
+        
+        // Slot dell'unità
+        ctx.fillStyle = "#020617";
+        ctx.fillRect(6, uy, s - 12, unitHeight - 2);
+        
+        // Griglia di ventilazione (linee sottili)
+        ctx.strokeStyle = "#1e293b";
+        ctx.lineWidth = 0.5;
+        for(let gx = 10; gx < s - 25; gx += 3) {
+            ctx.beginPath();
+            ctx.moveTo(gx, uy + 2);
+            ctx.lineTo(gx, uy + unitHeight - 4);
+            ctx.stroke();
+        }
+
+        // --- LED DI STATO PER OGNI UNITÀ ---
+        const ledRadius = Math.max(1, s * 0.02); // Scala i LED con la scocca
+        const ledSpacing = s * 0.1;
+        
+        if (connected) {
+            // LED Verde (Power/Link) - Fisso o lampeggio lento
+            ctx.fillStyle = (Math.sin(flowOffset * 0.1 + i) > -0.8) ? "#22c55e" : "#064e3b";
+            ctx.shadowBlur = 5; ctx.shadowColor = "#22c55e";
+            ctx.beginPath(); ctx.arc(s - ledSpacing * 4, uy + unitHeight/2, ledRadius, 0, Math.PI*2); ctx.fill();
+
+            // LED Arancione (Disk Activity) - Lampeggio frenetico
+            ctx.fillStyle = (Math.sin(flowOffset * 0.8 + i*2) > 0) ? "#f59e0b" : "#451a03";
+            ctx.shadowColor = "#f59e0b";
+            ctx.beginPath(); ctx.arc(s - ledSpacing * 3, uy + unitHeight/2, ledRadius, 0, Math.PI*2); ctx.fill();
+            
+            // LED Blu/Azzurro (Network Dati) - Lampeggio randomico
+            ctx.fillStyle = (Math.cos(flowOffset * 1.2 + i) > 0.3) ? "#38bdf8" : "#0c4a6e";
+            ctx.shadowColor = "#38bdf8";
+            ctx.beginPath(); ctx.arc(s - ledSpacing * 2, uy + unitHeight/2, ledRadius, 0, Math.PI*2); ctx.fill();
+            
+            ctx.shadowBlur = 0;
+        } else {
+            // Server Spento: solo un piccolo LED rosso di standby
+            ctx.fillStyle = "#7f1d1d"; // Rosso spento
+            if (i === 0) ctx.fillStyle = "#ef4444"; // Solo il primo ha il power standby
+            ctx.beginPath(); ctx.arc(s - ledSpacing * 4, uy + unitHeight/2, ledRadius, 0, Math.PI*2); ctx.fill();
+        }
+    }
+
+    // Maniglie frontali (dettaglio di classe)
+    ctx.strokeStyle = "#475569";
+    ctx.lineWidth = Math.max(1, s * 0.015);
+    ctx.lineCap = "round";
+    // Maniglia SX
+    ctx.beginPath(); ctx.moveTo(2, 10); ctx.lineTo(2, s-10); ctx.stroke();
+    // Maniglia DX
+    ctx.beginPath(); ctx.moveTo(s-2, 10); ctx.lineTo(s-2, s-10); ctx.stroke();
+
+    ctx.restore();
+}
+
+function drawPC(x, y, type, connected) {
+    const s = CELL_SIZE * 0.65; // Leggermente più grande per i dettagli
+    const p = (CELL_SIZE - s) / 2;
+    const isDark = !connected;
+    
+    // Palette realistica
+    const colors = {
+        bezel: "#1e293b",
+        silver: "#94a3b8",
+        darkSilver: "#475569",
+        screenOff: "#0f172a",
+        screenOn: "linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)",
+        glass: "rgba(255, 255, 255, 0.15)"
+    };
+
+    ctx.save();
+    ctx.translate(x + p, y + p);
+
+    if (type === 'desktop') {
+        // --- MONITOR ---
+        // Scocca posteriore/ombra
+        ctx.fillStyle = "#000";
+        ctx.beginPath(); ctx.roundRect(0, 0, s, s * 0.65, 4); ctx.fill();
+
+        // Bezel (Cornice)
+        let bezelGrad = ctx.createLinearGradient(0, 0, 0, s * 0.65);
+        bezelGrad.addColorStop(0, "#334155");
+        bezelGrad.addColorStop(1, "#111827");
+        ctx.fillStyle = bezelGrad;
+        ctx.beginPath(); ctx.roundRect(1, 1, s - 2, s * 0.65 - 2, 3); ctx.fill();
+
+        // Schermo
+        if (connected) {
+            let screenGrad = ctx.createLinearGradient(0, 0, s, s * 0.6);
+            screenGrad.addColorStop(0, "#38bdf8");
+            screenGrad.addColorStop(1, "#0369a1");
+            ctx.fillStyle = screenGrad;
+        } else {
+            ctx.fillStyle = colors.screenOff;
+        }
+        ctx.fillRect(4, 4, s - 8, s * 0.65 - 10);
+
+        // Riflesso "Glossy"
+        ctx.fillStyle = colors.glass;
+        ctx.beginPath();
+        ctx.moveTo(4, 4); ctx.lineTo(s - 4, 4); ctx.lineTo(4, s * 0.4);
+        ctx.fill();
+
+        // Webcam (piccolo puntino)
+        ctx.fillStyle = "#000";
+        ctx.beginPath(); ctx.arc(s / 2, 2.5, Math.max(0.5, s * 0.01), 0, Math.PI * 2); ctx.fill();
+
+        // --- STAND (Supporto) ---
+        let standGrad = ctx.createLinearGradient(s * 0.4, 0, s * 0.6, 0);
+        standGrad.addColorStop(0, colors.darkSilver);
+        standGrad.addColorStop(0.5, colors.silver);
+        standGrad.addColorStop(1, colors.darkSilver);
+        
+        ctx.fillStyle = standGrad;
+        ctx.fillRect(s * 0.42, s * 0.65, s * 0.16, s * 0.2); // Collo
+        ctx.beginPath(); ctx.roundRect(s * 0.2, s * 0.8, s * 0.6, s * 0.08, 2); ctx.fill(); // Base
+    } 
+    else if (type === 'notebook') {
+        // --- SCHERMO APERTO ---
+        ctx.fillStyle = "#111";
+        ctx.beginPath(); ctx.roundRect(s * 0.05, 0, s * 0.9, s * 0.6, 3); ctx.fill(); // Cornice
+        
+        // Schermo LCD
+        if (connected) {
+			let screenGrad = ctx.createLinearGradient(0, 0, s, s * 0.6);
+            screenGrad.addColorStop(0, "#38bdf8");
+            screenGrad.addColorStop(1, "#0369a1");
+            ctx.fillStyle = screenGrad;
+            //ctx.fillStyle = "#0ea5e9";
+            //ctx.shadowBlur = 10; ctx.shadowColor = "#38bdf8";
+        } else {
+            ctx.fillStyle = "#000";
+        }
+		ctx.fillRect(s * 0.05 + 3, 3, s * 0.9 - 6, s * 0.6 - 6);
+		
+		// Riflesso "Glossy"
+        ctx.fillStyle = colors.glass;
+        ctx.beginPath();
+        ctx.moveTo(8, 4); ctx.lineTo(s - 8, 4); ctx.lineTo(8, s * 0.4);
+        ctx.fill();
+		
+        //ctx.shadowBlur = 0;
+
+        // --- BASE TASTIERA (Prospettiva) ---
+        let baseGrad = ctx.createLinearGradient(0, s * 0.6, 0, s);
+        baseGrad.addColorStop(0, colors.silver);
+        baseGrad.addColorStop(1, colors.darkSilver);
+        ctx.fillStyle = baseGrad;
+
+        ctx.beginPath();
+        ctx.moveTo(s * 0.05, s * 0.6); // Attaccatura cerniera
+        ctx.lineTo(s * 0.95, s * 0.6);
+        ctx.lineTo(s + 2, s * 0.95); // Allargamento per prospettiva
+        ctx.lineTo(-2, s * 0.95);
+        ctx.closePath();
+        ctx.fill();
+
+        // Dettaglio tastiera (puntini) - SCALATI
+        const keySize = Math.max(1, s * 0.03);
+        const keySpacing = s * 0.1;
+        const keyRowSpacing = s * 0.04;
+        ctx.fillStyle = "rgba(0,0,0,0.2)";
+        for(let i=0; i<8; i++) {
+            for(let j=0; j<4; j++) {
+                ctx.fillRect(s*0.15 + (i*keySpacing), s*0.65 + (j*keyRowSpacing), keySize, keySize);
+            }
+        }
+        // Touchpad - SCALATO
+        ctx.fillRect(s*0.4, s*0.82, s*0.2, s*0.08);
+    } 
+    else if (type === 'tablet') {
+        // --- SCOCCA ---
+        let tabletGrad = ctx.createRadialGradient(s/2, s/2, 0, s/2, s/2, s);
+        tabletGrad.addColorStop(0, "#475569");
+        tabletGrad.addColorStop(1, "#0f172a");
+        ctx.fillStyle = tabletGrad;
+        ctx.beginPath(); ctx.roundRect(s*0.1, 0, s*0.8, s, 8); ctx.fill();
+
+        // Schermo Tutto Vetro
+        if (connected) {
+            //ctx.fillStyle = "#0284c7";
+            //ctx.shadowBlur = 8; ctx.shadowColor = "#38bdf8";
+			let screenGrad = ctx.createLinearGradient(0, 0, s, s * 0.6);
+            screenGrad.addColorStop(0, "#38bdf8");
+            screenGrad.addColorStop(1, "#0369a1");
+            ctx.fillStyle = screenGrad;
+        } else {
+            ctx.fillStyle = "#000";
+        }
+        ctx.beginPath(); 
+		ctx.roundRect(s*0.1 + 3, 3, s*0.8 - 6, s - 6, 5); 
+		ctx.fill();
+        
+		// Riflesso "Glossy"
+        ctx.fillStyle = colors.glass;
+        ctx.beginPath();
+        ctx.moveTo(12, 3); ctx.lineTo(s - 10, 3); ctx.lineTo(12, s * 0.4);
+        ctx.fill();
+		
+		//ctx.shadowBlur = 0;
+
+        // Riflesso curva
+        ctx.strokeStyle = "rgba(255,255,255,0.1)";
+        ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.arc(s*0.2, s*0.2, s*0.1, Math.PI, Math.PI*1.5); ctx.stroke();
+
+        // Sensore Webcam tablet
+        ctx.fillStyle = "#1e293b";
+        ctx.beginPath(); ctx.arc(s/2, 8, Math.max(0.8, s * 0.015), 0, Math.PI*2); ctx.fill();
+    } 
+	else if (type === 'baraccone') {
+		// Case
+		let grad = ctx.createLinearGradient(0, 0, s, s);
+		grad.addColorStop(0, "#475569"); 
+		grad.addColorStop(1, "#1e293b");
+		ctx.fillStyle = grad;
+		ctx.fillRect(0, 0, s, s);
+		
+		// Griglia frontale - SCALATA
+		const grillaHeight = s / 5;
+		const grillaMargin = s * 0.05;
+		ctx.fillStyle = "#0f172a";
+		for(let i=0; i<4; i++) {
+			ctx.fillRect(grillaMargin, grillaMargin + (i * grillaHeight), s - 2*grillaMargin, grillaHeight * 0.3);
+		}
+		
+		// LED - SCALATI
+		const ledRadius = Math.max(1.5, s * 0.04);
+		const ledY = s - ledRadius * 3;
+		
+		// LED VERDE A DX
+		ctx.fillStyle = connected ? "#22c55e" : "#064e3b"
+		if (connected && Math.sin(flowOffset*0.2) > 0) {
+			ctx.fillStyle = "#42e57e"; // Blinking
+			ctx.shadowBlur = 5; 
+			ctx.shadowColor = "#22c55e";
+		}
+		ctx.beginPath(); 
+		ctx.arc(s - ledRadius * 2.5, ledY, ledRadius, 0, Math.PI*2); 
+		ctx.fill();
+		
+		// LED ARANCIO A CX
+		ctx.fillStyle = connected ? "#c59e0b" : "#451a03"
+		if (connected && Math.cos(flowOffset*0.2) > 0) {
+			ctx.fillStyle = "#f5be3b"; // Blinking
+			ctx.shadowBlur = 5; 
+			ctx.shadowColor = "#c59e0b";
+		}
+		ctx.beginPath(); 
+		ctx.arc(s - ledRadius * 5, ledY, ledRadius, 0, Math.PI*2); 
+		ctx.fill();
+		
+		// LED ROSSO A SX
+		ctx.fillStyle = connected ? "#ef4444" : "#451a03"
+		if (connected && Math.cos(flowOffset*0.2) > 0) {
+			ctx.fillStyle = "#ff6464"; // Blinking
+			ctx.shadowBlur = 5; 
+			ctx.shadowColor = "#ef4444";
+		}
+		ctx.beginPath(); 
+		ctx.arc(s - ledRadius * 7.5, ledY, ledRadius, 0, Math.PI*2); 
+		ctx.fill();
+	}
+    ctx.restore();
+}
+
+canvas.addEventListener('mousedown', e => {
+    if (gameWon) return;
+    let r = canvas.getBoundingClientRect();
+    let gx = Math.floor((e.clientX - r.left) / (r.width / SIZE));
+    let gy = Math.floor((e.clientY - r.top) / (r.height / SIZE));
+    if (grid[gy] && grid[gy][gx]) {
+        grid[gy][gx].conns = rotateBitmask(grid[gy][gx].conns);
+        updateConnectivity();
+    }
+});
+
+initGame();
+animate(); // Avvia l'animazione
+</script>
+</body>
+</html>
