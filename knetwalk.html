@@ -134,7 +134,14 @@ const ctx = canvas.getContext('2d');
 const statusDiv = document.getElementById('status');
 
 const N = 1, E = 2, S = 4, W = 8;
-const PC_TYPES = ['notebook', 'desktop', 'tablet', 'baraccone', 'router'];
+const PC_TYPES = [
+	'notebook', 
+	'desktop', 
+	'tablet', 
+	'baraccone', 
+	'router',
+	'ipcamera'
+	];
 
 let grid = [];
 let serverPos = {x: 0, y: 0};
@@ -391,6 +398,7 @@ function drawTileANIMATE(tile) {
         ctx.shadowColor = "#38bdf8";
 		ctx.stroke();
         ctx.shadowBlur = 0;
+		ctx.setLineDash([]);
     }
 
     // Icone
@@ -609,9 +617,7 @@ function drawPC(x, y, type, connected) {
 
         // Schermo Tutto Vetro
         if (connected) {
-            //ctx.fillStyle = "#0284c7";
-            //ctx.shadowBlur = 8; ctx.shadowColor = "#38bdf8";
-			let screenGrad = ctx.createLinearGradient(0, 0, s, s * 0.6);
+            let screenGrad = ctx.createLinearGradient(0, 0, s, s * 0.6);
             screenGrad.addColorStop(0, "#38bdf8");
             screenGrad.addColorStop(1, "#0369a1");
             ctx.fillStyle = screenGrad;
@@ -625,7 +631,7 @@ function drawPC(x, y, type, connected) {
 		// Riflesso "Glossy"
         ctx.fillStyle = colors.glass;
         ctx.beginPath();
-        ctx.moveTo(12, 3); ctx.lineTo(s - 10, 3); ctx.lineTo(12, s * 0.4);
+        ctx.moveTo(12, 4); ctx.lineTo(s - 10, 4); ctx.lineTo(12, s * 0.4);
         ctx.fill();
 		
 		//ctx.shadowBlur = 0;
@@ -659,49 +665,53 @@ function drawPC(x, y, type, connected) {
 		const ledRadius = Math.max(1.5, s * 0.04);
 		const ledY = s - ledRadius * 3;
 		
+		// Blink smoothing per LED
+		const blinkGreen = Math.sin(flowOffset * 0.05) > -0.8;
+		const blinkOrange = Math.sin(flowOffset * 0.06 + 1.5) > -0.8;
+		const blinkRed = Math.sin(flowOffset * 0.07 + 3) > -0.8;
+		
 		// LED VERDE A DX
-		ctx.fillStyle = connected ? "#22c55e" : "#064e3b"
-		if (connected && Math.sin(flowOffset*0.2) > 0) {
-			ctx.fillStyle = "#42e57e"; // Blinking
-			ctx.shadowBlur = 5; 
+		ctx.fillStyle = connected ? (blinkGreen ? "#22c55e" : "#0d7a3a") : "#064e3b";
+		if (connected && blinkGreen) {
+			ctx.shadowBlur = 8; 
 			ctx.shadowColor = "#22c55e";
 		}
 		ctx.beginPath(); 
 		ctx.arc(s - ledRadius * 2.5, ledY, ledRadius, 0, Math.PI*2); 
 		ctx.fill();
+		ctx.shadowBlur = 0;
 		
 		// LED ARANCIO A CX
-		ctx.fillStyle = connected ? "#c59e0b" : "#451a03"
-		if (connected && Math.cos(flowOffset*0.2) > 0) {
-			ctx.fillStyle = "#f5be3b"; // Blinking
-			ctx.shadowBlur = 5; 
-			ctx.shadowColor = "#c59e0b";
+		ctx.fillStyle = connected ? (blinkOrange ? "#f59e0b" : "#7a4a03") : "#451a03";
+		if (connected && blinkOrange) {
+			ctx.shadowBlur = 8; 
+			ctx.shadowColor = "#f59e0b";
 		}
 		ctx.beginPath(); 
 		ctx.arc(s - ledRadius * 5, ledY, ledRadius, 0, Math.PI*2); 
 		ctx.fill();
+		ctx.shadowBlur = 0;
 		
 		// LED ROSSO A SX
-		ctx.fillStyle = connected ? "#ef4444" : "#451a03"
-		if (connected && Math.cos(flowOffset*0.2) > 0) {
-			ctx.fillStyle = "#ff6464"; // Blinking
-			ctx.shadowBlur = 5; 
+		ctx.fillStyle = connected ? (blinkRed ? "#ef4444" : "#7f1d1d") : "#451a03";
+		if (connected && blinkRed) {
+			ctx.shadowBlur = 8; 
 			ctx.shadowColor = "#ef4444";
 		}
 		ctx.beginPath(); 
 		ctx.arc(s - ledRadius * 7.5, ledY, ledRadius, 0, Math.PI*2); 
 		ctx.fill();
+		ctx.shadowBlur = 0;
 	}
 	else if (type === 'router') {
 		// --- ROUTER WiFi ---
-		// Case orizzontale allungato
 		let routerGrad = ctx.createLinearGradient(0, 0, s, s);
 		routerGrad.addColorStop(0, "#334155");
 		routerGrad.addColorStop(0.5, "#1e293b");
 		routerGrad.addColorStop(1, "#0f172a");
 		ctx.fillStyle = routerGrad;
 		ctx.beginPath();
-		ctx.roundRect(s*0.05, s*0.15, s*0.9, s*0.4, 3);
+		ctx.roundRect(s*0.05, s*0.3, s*0.9, s*0.4, 3);
 		ctx.fill();
 		
 		// Griglia ventilazione frontale
@@ -710,7 +720,7 @@ function drawPC(x, y, type, connected) {
 		const ventRows = 3;
 		const ventSpacing = s * 0.08;
 		for(let i = 0; i < ventRows; i++) {
-			const y = s*0.2 + (i * ventSpacing);
+			const y = s*0.35 + (i * ventSpacing);
 			for(let j = 0; j < 4; j++) {
 				const x = s*0.15 + (j * s*0.15);
 				ctx.beginPath();
@@ -722,15 +732,16 @@ function drawPC(x, y, type, connected) {
 		
 		// --- ANTENNE (4 antenne esterne) ---
 		const antennaPositions = [
-			{x: s*0.2, y: s*0.1, angle: -0.3},
-			{x: s*0.8, y: s*0.1, angle: 0.3},
+			{x: s*0.2, y: s*0.28, angle: -0.3},   // SX alto
+			{x: s*0.8, y: s*0.28, angle: 0.3},    // DX alto
 		];
 		
 		antennaPositions.forEach((pos, idx) => {
 			ctx.save();
 			ctx.translate(pos.x, pos.y);
 			
-			const antennaRotation = pos.angle;// + Math.sin(flowOffset*0.1 + idx*0.5)*0.15;
+			// Rotazione antenna con animazione
+			const antennaRotation = pos.angle; //+ Math.sin(flowOffset*0.1 + idx*0.5)*0.15;
 			ctx.rotate(antennaRotation);
 			
 			ctx.strokeStyle = "#475569";
@@ -745,14 +756,14 @@ function drawPC(x, y, type, connected) {
 		});
 		
 		// --- LED INDICATORI ---
-		const ledRadius = Math.max(1, s*0.01);
+		const ledRadius = Math.max(1.5, s*0.02);
 		const ledStartX = s*0.15;
-		const ledStartY = s*0.5;
+		const ledStartY = s*0.66;
 		const ledSpacing = s*0.15;
 		
-		// LED Power (Verde)
-		ctx.fillStyle = connected ? "#22c55e" : "#064e3b";
-		if (connected && Math.sin(flowOffset*0.15) > -0.5) {
+		// LED Power (Verde) - BLINK
+		ctx.fillStyle = connected ? (Math.sin(flowOffset*0.15) > -0.3 ? "#22c55e" : "#0d7a3a") : "#064e3b";
+		if (connected && Math.sin(flowOffset*0.15) > -0.3) {
 			ctx.shadowBlur = 6;
 			ctx.shadowColor = "#22c55e";
 		}
@@ -761,9 +772,9 @@ function drawPC(x, y, type, connected) {
 		ctx.fill();
 		ctx.shadowBlur = 0;
 		
-		// LED Internet/WAN (Blu)
-		ctx.fillStyle = connected ? "#38bdf8" : "#0c4a6e";
-		if (connected && Math.cos(flowOffset*0.2) > 0) {
+		// LED Internet/WAN (Blu) - BLINK
+		ctx.fillStyle = connected ? (Math.cos(flowOffset*0.2) > 0.2 ? "#38bdf8" : "#0c4a6e") : "#0c4a6e";
+		if (connected && Math.cos(flowOffset*0.2) > 0.2) {
 			ctx.shadowBlur = 6;
 			ctx.shadowColor = "#38bdf8";
 		}
@@ -772,9 +783,9 @@ function drawPC(x, y, type, connected) {
 		ctx.fill();
 		ctx.shadowBlur = 0;
 		
-		// LED WiFi 2.4GHz (Arancio)
-		ctx.fillStyle = connected ? "#f59e0b" : "#451a03";
-		if (connected && Math.sin(flowOffset*0.25 + 1) > 0) {
+		// LED WiFi 2.4GHz (Arancio) - BLINK
+		ctx.fillStyle = connected ? (Math.sin(flowOffset*0.25 + 1) > 0.1 ? "#f59e0b" : "#7a4a03") : "#451a03";
+		if (connected && Math.sin(flowOffset*0.25 + 1) > 0.1) {
 			ctx.shadowBlur = 6;
 			ctx.shadowColor = "#f59e0b";
 		}
@@ -783,9 +794,9 @@ function drawPC(x, y, type, connected) {
 		ctx.fill();
 		ctx.shadowBlur = 0;
 		
-		// LED WiFi 5GHz (Rosso)
-		ctx.fillStyle = connected ? "#ef4444" : "#451a03";
-		if (connected && Math.cos(flowOffset*0.3 + 2) > 0) {
+		// LED WiFi 5GHz (Rosso) - BLINK
+		ctx.fillStyle = connected ? (Math.cos(flowOffset*0.3 + 2) > 0.2 ? "#ef4444" : "#7f1d1d") : "#451a03";
+		if (connected && Math.cos(flowOffset*0.3 + 2) > 0.2) {
 			ctx.shadowBlur = 6;
 			ctx.shadowColor = "#ef4444";
 		}
@@ -800,7 +811,7 @@ function drawPC(x, y, type, connected) {
 			ctx.lineWidth = Math.max(0.5, s*0.01);
 			
 			const wifiX = s*0.8;
-			const wifiY = s*0.35;
+			const wifiY = s*0.5;
 			const wifiSize = s*0.07;
 			
 			[1, 2, 3].forEach((ring, i) => {
@@ -814,6 +825,88 @@ function drawPC(x, y, type, connected) {
 			ctx.arc(wifiX, wifiY, Math.max(0.8, s*0.01), 0, Math.PI*2);
 			ctx.fill();
 		}
+	}
+	else if (type === 'ipcamera') {
+		// --- IP CAMERA PTZ (Tipo Hôm-io) ---
+		
+		// Base cilindrica inferiore (bianca)
+		let baseGrad = ctx.createRadialGradient(s*0.5, s*0.75, 0, s*0.5, s*0.75, s*0.4);
+		baseGrad.addColorStop(0, "#ffffff");
+		baseGrad.addColorStop(0.5, "#e8e8e8");
+		baseGrad.addColorStop(1, "#bfbfbf");
+		ctx.fillStyle = baseGrad;
+		ctx.beginPath();
+		ctx.ellipse(s*0.5, s*0.75, s*0.35, s*0.15, 0, 0, Math.PI*2);
+		ctx.fill();
+		
+		// Bordo base (scuro)
+		ctx.strokeStyle = "#1a1a1a";
+		ctx.lineWidth = Math.max(1, s*0.02);
+		ctx.beginPath();
+		ctx.ellipse(s*0.5, s*0.75, s*0.35, s*0.15, 0, 0, Math.PI*2);
+		ctx.stroke();
+		
+		// Corpo superiore (arrotondato - bianco)
+		let bodyGrad = ctx.createLinearGradient(0, s*0.2, 0, s*0.65);
+		bodyGrad.addColorStop(0, "#ffffff");
+		bodyGrad.addColorStop(0.5, "#f5f5f5");
+		bodyGrad.addColorStop(1, "#e8e8e8");
+		ctx.fillStyle = bodyGrad;
+		ctx.beginPath();
+		ctx.ellipse(s*0.5, s*0.45, s*0.32, s*0.3, 0, 0, Math.PI*2);
+		ctx.fill();
+		
+		// Cornice lente (anello nero)
+		let lensRingGrad = ctx.createRadialGradient(s*0.5, s*0.3, s*0.05, s*0.5, s*0.3, s*0.18);
+		lensRingGrad.addColorStop(0, "#1a1a1a");
+		lensRingGrad.addColorStop(0.7, "#0a0a0a");
+		lensRingGrad.addColorStop(1, "#000");
+		ctx.fillStyle = lensRingGrad;
+		ctx.beginPath();
+		ctx.arc(s*0.5, s*0.3, s*0.16, 0, Math.PI*2);
+		ctx.fill();
+		
+		// Riflesso lente (se connessa)
+		if (connected) {
+			// Lente (obiettivo)
+			let lensGrad = ctx.createRadialGradient(s*0.5, s*0.28, s*0.02, s*0.5, s*0.3, s*0.12);
+			lensGrad.addColorStop(0, "#4a90e2");
+			lensGrad.addColorStop(0.5, "#1a1a2e");
+			lensGrad.addColorStop(1, "#000");
+			ctx.fillStyle = lensGrad;
+			ctx.beginPath();
+			ctx.arc(s*0.5, s*0.3, s*0.12, 0, Math.PI*2);
+			ctx.fill();	
+		
+			ctx.fillStyle = "rgba(74, 144, 226, 0.6)";
+			ctx.beginPath();
+			ctx.arc(s*0.47, s*0.27, s*0.04, 0, Math.PI*2);
+			ctx.fill();
+		}
+		
+		// Microfoni (piccolini sulla scocca)
+		ctx.fillStyle = "#bfbfbf";
+		for(let i = 0; i < 2; i++) {
+			const x = s*0.25 + (i * s*0.5);
+			ctx.fillRect(x - s*0.015, s*0.5, s*0.03, s*0.08);
+		}
+		
+		// LED indicatore di stato
+		ctx.fillStyle = connected ? "#22c55e" : "#7f1d1d";
+		if (connected && Math.sin(flowOffset*0.2) > 0) {
+			ctx.shadowBlur = 6;
+			ctx.shadowColor = "#22c55e";
+		}
+		ctx.beginPath();
+		ctx.arc(s*0.75, s*0.45, Math.max(1.5, s*0.025), 0, Math.PI*2);
+		ctx.fill();
+		ctx.shadowBlur = 0;
+		
+		// Ombra/sfumatura laterale per effetto 3D
+		ctx.fillStyle = "rgba(0, 0, 0, 0.15)";
+		ctx.beginPath();
+		ctx.ellipse(s*0.15, s*0.45, s*0.1, s*0.25, 0, 0, Math.PI*2);
+		ctx.fill();
 	}
     ctx.restore();
 }
