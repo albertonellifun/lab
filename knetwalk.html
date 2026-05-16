@@ -134,7 +134,7 @@ const ctx = canvas.getContext('2d');
 const statusDiv = document.getElementById('status');
 
 const N = 1, E = 2, S = 4, W = 8;
-const PC_TYPES = ['notebook', 'desktop', 'tablet', 'baraccone'];
+const PC_TYPES = ['notebook', 'desktop', 'tablet', 'baraccone', 'router'];
 
 let grid = [];
 let serverPos = {x: 0, y: 0};
@@ -159,6 +159,40 @@ function changeDifficulty(newSize, btn) {
 }
 
 function initGame() {
+	// Calcola lo spazio disponibile
+    const headerHeight = document.querySelector('.controls').offsetHeight;
+    const statusHeight = statusDiv.offsetHeight;
+    const padding = 60; // Padding container + margini
+    const availableHeight = window.innerHeight - headerHeight - statusHeight - padding;
+    
+    // Usa l'altezza disponibile, ma mantieni il massimo della larghezza
+    const canvasSize = Math.min(CANVAS_MAX_SIZE, availableHeight);
+											  
+ 
+    canvas.width = canvasSize;
+    canvas.height = canvasSize;
+    
+	// Ricalcola CELL_SIZE in base alla canvas effettiva
+    CELL_SIZE = canvasSize / SIZE;
+	
+    grid = [];
+    gameWon = false;
+    statusDiv.innerText = "";
+    
+    for (let y = 0; y < SIZE; y++) {
+        grid[y] = [];
+        for (let x = 0; x < SIZE; x++) {
+            grid[y][x] = { x, y, conns: 0, type: 'cable', subType: '', connected: false };
+        }
+    }
+
+    generateNetwork();
+    assignTypes();
+    shuffleGrid();
+    updateConnectivity();
+}
+
+function initGamexxx() {
 	const container = document.getElementById('game-container');
 	const availableWidth = container.clientWidth;
 	const availableHeight = container.clientHeight;
@@ -657,6 +691,129 @@ function drawPC(x, y, type, connected) {
 		ctx.beginPath(); 
 		ctx.arc(s - ledRadius * 7.5, ledY, ledRadius, 0, Math.PI*2); 
 		ctx.fill();
+	}
+	else if (type === 'router') {
+		// --- ROUTER WiFi ---
+		// Case orizzontale allungato
+		let routerGrad = ctx.createLinearGradient(0, 0, s, s);
+		routerGrad.addColorStop(0, "#334155");
+		routerGrad.addColorStop(0.5, "#1e293b");
+		routerGrad.addColorStop(1, "#0f172a");
+		ctx.fillStyle = routerGrad;
+		ctx.beginPath();
+		ctx.roundRect(s*0.05, s*0.15, s*0.9, s*0.4, 3);
+		ctx.fill();
+		
+		// Griglia ventilazione frontale
+		ctx.strokeStyle = "#475569";
+		ctx.lineWidth = 0.5;
+		const ventRows = 3;
+		const ventSpacing = s * 0.08;
+		for(let i = 0; i < ventRows; i++) {
+			const y = s*0.2 + (i * ventSpacing);
+			for(let j = 0; j < 4; j++) {
+				const x = s*0.15 + (j * s*0.15);
+				ctx.beginPath();
+				ctx.moveTo(x, y);
+				ctx.lineTo(x + s*0.08, y + s*0.02);
+				ctx.stroke();
+			}
+		}
+		
+		// --- ANTENNE (4 antenne esterne) ---
+		const antennaPositions = [
+			{x: s*0.2, y: s*0.1, angle: -0.3},
+			{x: s*0.8, y: s*0.1, angle: 0.3},
+		];
+		
+		antennaPositions.forEach((pos, idx) => {
+			ctx.save();
+			ctx.translate(pos.x, pos.y);
+			
+			const antennaRotation = pos.angle;// + Math.sin(flowOffset*0.1 + idx*0.5)*0.15;
+			ctx.rotate(antennaRotation);
+			
+			ctx.strokeStyle = "#475569";
+			ctx.lineWidth = Math.max(2, s*0.06);
+			ctx.lineCap = "round";
+			ctx.beginPath();
+			ctx.moveTo(0, 0);
+			ctx.lineTo(0, -s*0.3);
+			ctx.stroke();
+			
+			ctx.restore();
+		});
+		
+		// --- LED INDICATORI ---
+		const ledRadius = Math.max(1, s*0.01);
+		const ledStartX = s*0.15;
+		const ledStartY = s*0.5;
+		const ledSpacing = s*0.15;
+		
+		// LED Power (Verde)
+		ctx.fillStyle = connected ? "#22c55e" : "#064e3b";
+		if (connected && Math.sin(flowOffset*0.15) > -0.5) {
+			ctx.shadowBlur = 6;
+			ctx.shadowColor = "#22c55e";
+		}
+		ctx.beginPath();
+		ctx.arc(ledStartX, ledStartY, ledRadius, 0, Math.PI*2);
+		ctx.fill();
+		ctx.shadowBlur = 0;
+		
+		// LED Internet/WAN (Blu)
+		ctx.fillStyle = connected ? "#38bdf8" : "#0c4a6e";
+		if (connected && Math.cos(flowOffset*0.2) > 0) {
+			ctx.shadowBlur = 6;
+			ctx.shadowColor = "#38bdf8";
+		}
+		ctx.beginPath();
+		ctx.arc(ledStartX + ledSpacing, ledStartY, ledRadius, 0, Math.PI*2);
+		ctx.fill();
+		ctx.shadowBlur = 0;
+		
+		// LED WiFi 2.4GHz (Arancio)
+		ctx.fillStyle = connected ? "#f59e0b" : "#451a03";
+		if (connected && Math.sin(flowOffset*0.25 + 1) > 0) {
+			ctx.shadowBlur = 6;
+			ctx.shadowColor = "#f59e0b";
+		}
+		ctx.beginPath();
+		ctx.arc(ledStartX + ledSpacing*2, ledStartY, ledRadius, 0, Math.PI*2);
+		ctx.fill();
+		ctx.shadowBlur = 0;
+		
+		// LED WiFi 5GHz (Rosso)
+		ctx.fillStyle = connected ? "#ef4444" : "#451a03";
+		if (connected && Math.cos(flowOffset*0.3 + 2) > 0) {
+			ctx.shadowBlur = 6;
+			ctx.shadowColor = "#ef4444";
+		}
+		ctx.beginPath();
+		ctx.arc(ledStartX + ledSpacing*3, ledStartY, ledRadius, 0, Math.PI*2);
+		ctx.fill();
+		ctx.shadowBlur = 0;
+		
+		// --- SIMBOLO WiFi STILIZZATO ---
+		if (connected) {
+			ctx.strokeStyle = "#38bdf8";
+			ctx.lineWidth = Math.max(0.5, s*0.01);
+			
+			const wifiX = s*0.8;
+			const wifiY = s*0.35;
+			const wifiSize = s*0.07;
+			
+			[1, 2, 3].forEach((ring, i) => {
+				ctx.beginPath();
+				ctx.arc(wifiX, wifiY, wifiSize*(i+1)*0.33, 0, Math.PI, true);
+				ctx.stroke();
+			});
+			
+			ctx.fillStyle = "#38bdf8";
+			ctx.beginPath();
+			ctx.arc(wifiX, wifiY, Math.max(0.8, s*0.01), 0, Math.PI*2);
+			ctx.fill();
+		}
 	}
     ctx.restore();
 }
