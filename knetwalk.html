@@ -2,9 +2,11 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>KNetWalk</title>
     <style>
+        * { box-sizing: border-box; }
+        
         body {
             background-color: #020617;
             color: #f8fafc;
@@ -12,44 +14,98 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
+            justify-content: space-between;
+            width: 100vw;
             height: 100vh;
 			height: 100dvh;
             margin: 0;
+            padding: 0;
             overflow: hidden;
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
         }
-        h1 { font-size: 24px; font-weight: bold; margin: 0 30px; color: #38bdf8; text-shadow: 0 0 16px rgba(56, 189, 248, 0.5); }
-        .controls { margin: 6px 0; display: flex; gap: 15px; align-items: center; }
+        
+        h1 { 
+            font-size: clamp(16px, 5vw, 28px);
+            font-weight: bold; 
+            margin: 0;
+            color: #38bdf8; 
+            text-shadow: 0 0 16px rgba(56, 189, 248, 0.5);
+            white-space: nowrap;
+        }
+        
+        .controls { 
+            width: 100%;
+            padding: clamp(4px, 2vw, 8px) clamp(4px, 2vw, 12px);
+            display: flex;
+            gap: clamp(4px, 2vw, 12px);
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            background: rgba(30, 41, 59, 0.5);
+            border-bottom: 1px solid #334155;
+            min-height: fit-content;
+        }
+        
         button {
-            padding: 10px 20px;
-            font-size: 14px;
+            padding: clamp(6px, 2vw, 10px) clamp(8px, 2vw, 16px);
+            font-size: clamp(10px, 2.5vw, 14px);
             cursor: pointer;
             background: #1e293b;
             border: 1px solid #334155;
             color: #94a3b8;
-            border-radius: 6px;
+            border-radius: 4px;
             transition: all 0.3s;
             font-weight: bold;
-			height: 40px;
-			line-height: 0.8;
+            white-space: nowrap;
+            flex-shrink: 0;
+            line-height: 1;
         }
+        
         button:hover { background: #334155; color: #38bdf8; border-color: #38bdf8; }
         button.active { background: #0ea5e9; color: #ffffff; border-color: #0ea5e9; box-shadow: 0 0 15px rgba(14, 165, 233, 0.4); }
+        
         #game-container {
-            padding: 15px;
-            background: #1e293b;
-            border-radius: 12px;
-            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.8);
-            border: 1px solid #334155;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: clamp(4px, 2vw, 12px);
+            xxxbackground: #1e293b;
+            xxxborder: 1px solid #334155;
+            min-width: 0;
+            min-height: 0;
+			xxxborder-radius: 8px;
         }
-        canvas { background-color: #0f172a; display: block; cursor: pointer; border-radius: 4px; }
-        #status { margin: 10px 0; height: 30px; font-size: 24px; font-weight: bold; color: #22c55e; text-shadow: 0 0 16px rgba(34, 197, 94, 0.3); }
-		
-		/* redmi fix? */
-		body {
-			touch-action: none; /* Blocca lo scroll e i gesti del browser */
-			user-select: none;  /* Impedisce di selezionare i testi per errore */
-		}
+        
+        canvas { 
+            background-color: #0f172a; 
+            display: block; 
+            cursor: pointer; 
+            border-radius: 4px;
+            max-width: 100%;
+            max-height: 100%;
+            image-rendering: crisp-edges;
+			border: 4px solid #334155;
+        }
+        
+        #status { 
+            width: 100%;
+            padding: clamp(4px, 2vw, 8px);
+            height: auto;
+            min-height: fit-content;
+            font-size: clamp(14px, 3vw, 24px);
+            font-weight: bold; 
+            color: #22c55e; 
+            text-shadow: 0 0 16px rgba(34, 197, 94, 0.3);
+            text-align: center;
+            background: rgba(30, 41, 59, 0.5);
+            border-top: 1px solid #334155;
+            word-break: break-word;
+            line-height: 1.2;
+        }
     </style>
 </head>
 <body>
@@ -59,7 +115,7 @@
         <button onclick="changeDifficulty(5, this)" class="active">5x5</button>
         <button onclick="changeDifficulty(7, this)">7x7</button>
         <button onclick="changeDifficulty(10, this)">10x10</button>
-		<button onclick="changeAnimateFlag(this)">Animate<br/>Wires</button>
+		<button onclick="changeAnimateFlag(this)">Animate</button>
     </div>
 
 	<div id="game-container">
@@ -103,14 +159,14 @@ function changeDifficulty(newSize, btn) {
 }
 
 function initGame() {
-	// Calcola lo spazio disponibile
-    const headerHeight = document.querySelector('.controls').offsetHeight;
-    const statusHeight = statusDiv.offsetHeight;
-    const padding = 60; // Padding container + margini
-    const availableHeight = window.innerHeight - headerHeight - statusHeight - padding;
-    
-    // Usa l'altezza disponibile, ma mantieni il massimo della larghezza
-    const canvasSize = Math.min(CANVAS_MAX_SIZE, availableHeight);
+	const container = document.getElementById('game-container');
+	const availableWidth = container.clientWidth;
+	const availableHeight = container.clientHeight;
+	
+	// Calcola la canvas adattandosi allo spazio disponibile
+	const maxCanvasSize = Math.min(availableWidth, availableHeight, CANVAS_MAX_SIZE);
+	const canvasSize = Math.floor(maxCanvasSize);
+	
     canvas.width = canvasSize;
     canvas.height = canvasSize;
     
