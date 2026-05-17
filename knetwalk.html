@@ -134,7 +134,9 @@ const PC_TYPES = [
 	'notebook',  'desktop',  'tablet',  
 	'baraccone',  'router', 'ipcamera', 
 	'macintosh', 'imac', 
-	'gameboy', 'nintendoswitch' ];
+	'gameboy', 'nintendoswitch',
+	'hplaserjet', 'atari2600'
+	];
 
 let grid = [];
 let serverPos = {x: 0, y: 0};
@@ -1331,6 +1333,153 @@ function drawPC(x, y, type, connected) {
 		ctx.textBaseline = "middle";
 		ctx.fillText("HOME", s*0.5, s*0.75);
 	}
+	
+	else if (type === 'hplaserjet') {
+		// --- HP LASERJET 107w
+		
+		// Top grigio/nero
+		let topGrad = ctx.createLinearGradient(0, 0, s, s*0.3);
+		topGrad.addColorStop(0, "#333333");
+		topGrad.addColorStop(1, "#1a1a1a");
+		ctx.fillStyle = topGrad;
+		ctx.fillRect(s*0.05, s*0.05, s*0.9, s*0.3);
+		
+		// Bordo top
+		ctx.strokeStyle = "#000";
+		ctx.lineWidth = Math.max(1, s*0.02);
+		ctx.strokeRect(s*0.05, s*0.05, s*0.9, s*0.3);
+		
+		// Slot input/output (nero)
+		ctx.fillStyle = "#0a0a0a";
+		ctx.fillRect(s*0.1, s*0.07, s*0.8, s*0.2);
+		
+		// Linee del tray
+		ctx.strokeStyle = "#555";
+		ctx.lineWidth = 0.5;
+		for(let i = 0; i < 3; i++) {
+			ctx.beginPath();
+			ctx.moveTo(s*0.12, s*0.085 + (i*s*0.02));
+			ctx.lineTo(s*0.88, s*0.085 + (i*s*0.02));
+			ctx.stroke();
+		}
+		
+		// --- CORPO PRINCIPALE (bianco) ---
+		let bodyGrad = ctx.createLinearGradient(0, s*0.2, 0, s);
+		bodyGrad.addColorStop(0, "#ffffff");
+		bodyGrad.addColorStop(0.5, "#f5f5f5");
+		bodyGrad.addColorStop(1, "#e8e8e8");
+		ctx.fillStyle = bodyGrad;
+		ctx.fillRect(s*0.05, s*0.35, s*0.9, s*0.6);
+		
+		// Bordo corpo
+		ctx.strokeStyle = "#ccc";
+		ctx.lineWidth = Math.max(1, s*0.015);
+		ctx.strokeRect(s*0.05, s*0.35, s*0.9, s*0.6);
+		
+		
+		// --- LOGO HP (al centro) ---
+		ctx.fillStyle = connected ? "#0066cc" : "#cccccc";
+		ctx.beginPath();
+		ctx.arc(s*0.5, s*0.5, s*0.1, 0, Math.PI*2);
+		ctx.fill();
+		
+		// H del logo
+		ctx.fillStyle = "#fff";
+		ctx.font = `${Math.max(8, s*0.1)}px sans-serif`;
+		ctx.textAlign = "center";
+		ctx.textBaseline = "middle";
+		ctx.fillText("hp", s*0.5, s*0.5);
+		
+		// --- PULSANTI PANNELLO CONTROLLO ---
+		// Pulsante power (verde se acceso)
+		ctx.fillStyle = connected ? "#333333" : "#c5225e";
+		if (connected && Math.cos(flowOffset*0.15) > -0.5) {
+			ctx.fillStyle = "#22c55e";
+			ctx.shadowBlur = 8;
+			ctx.shadowColor = "#22c55e";
+		}
+		ctx.beginPath();
+		ctx.arc(s*0.85, s*0.15, s*0.025, 0, Math.PI*2);
+		ctx.fill();
+		ctx.shadowBlur = 0;
+	}
+	
+	else if (type === 'atari2600') {
+		// --- ATARI 2600 CLASSICO (1977) ---
+		
+		// Proporzioni: molto più largo che alto, compatto
+		
+		// --- SEZIONE INFERIORE (LEGNO MASSELLO) ---
+		let woodGrad = ctx.createLinearGradient(0, s*0.6, 0, s);
+		woodGrad.addColorStop(0, "#d4a574");
+		woodGrad.addColorStop(0.5, "#c89460");
+		woodGrad.addColorStop(1, "#b8804a");
+		ctx.fillStyle = woodGrad;
+		ctx.fillRect(0, s*0.5, s, s*0.25);
+		
+		//bordo legno nero
+		ctx.strokeStyle = '#111';
+		ctx.fillStyle = '#111';
+		ctx.lineWidth = s * 0.04;
+		ctx.strokeRect(0, s*0.5, s, s*0.25);
+		//base
+		ctx.fillRect(s*0.2, s*0.75, s*0.6, s*0.05);
+		
+		// Logo ATARI (piccolo, in basso a sinistra)
+		ctx.fillStyle = "rgba(255, 255, 255, 0.3)";
+		ctx.beginPath();
+		ctx.arc(s*0.9, s*0.65, s*0.04, 0, Math.PI*2);
+		ctx.fill();
+		
+		ctx.fillStyle = "#fff";
+		ctx.font = `bold ${Math.max(6, s*0.07)}px sans-serif`;
+		ctx.textAlign = "center";
+		ctx.textBaseline = "middle";
+		ctx.fillText("A", s*0.9, s*0.65);
+		
+		// --- SEZIONE SUPERIORE (NERO/GRIGIO) ---
+		let topGrad = ctx.createLinearGradient(0, 0, 0, s*0.5);
+		topGrad.addColorStop(0, "#4a4a4a");
+		topGrad.addColorStop(0.5, "#2a2a2a");
+		topGrad.addColorStop(1, "#1a1a1a");
+		ctx.fillStyle = topGrad;
+		ctx.fillRect(0, 0, s, s*0.5);
+		
+		//bordo arancione top
+		ctx.strokeStyle = '#ff8800';
+		ctx.lineWidth = s * 0.01;
+		ctx.roundRect(s*0.05, s*0.05, s*0.9, s*0.15, s*0.04);
+		ctx.stroke();
+		
+		//joys top
+		ctx.fillStyle = '#eeeeee';
+		ctx.fillRect(s*0.10, s*0.08, s*0.05, s*0.05);
+		ctx.fillRect(s*0.20, s*0.10, s*0.05, s*0.05);
+		ctx.fillRect(s*0.75, s*0.12, s*0.05, s*0.05);
+		ctx.fillRect(s*0.85, s*0.10, s*0.05, s*0.05);
+		
+		//slot top
+		ctx.fillStyle = '#111';
+		ctx.fillRect(s*0.35, s*0.08, s*0.35, s*0.10);
+		
+		//griglia
+		ctx.fillRect(s*0.08, s*0.23, s*0.70, s*0.025);
+		ctx.fillRect(s*0.06, s*0.30, s*0.86, s*0.025);
+		ctx.fillRect(s*0.04, s*0.37, s*0.92, s*0.025);
+		ctx.fillRect(s*0.02, s*0.44, s*0.96, s*0.025);
+		
+		// --- LED POWER (pic0colo, rosso) ---
+		ctx.fillStyle = connected ? "#22c55e" : "#0d3a0d";
+		if (connected && Math.sin(flowOffset*0.15) > -0.5) {
+			ctx.shadowBlur = 6;
+			ctx.shadowColor = "#22c55e";
+			ctx.beginPath();
+			ctx.arc(s*0.88, s*0.23, s*0.03, 0, Math.PI*2);
+			ctx.fill();
+			}		
+		ctx.shadowBlur = 0;
+	}	
+	
 	
 	ctx.restore();
 }
