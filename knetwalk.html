@@ -130,7 +130,11 @@ const ctx = canvas.getContext('2d');
 const statusDiv = document.getElementById('status');
 
 const N = 1, E = 2, S = 4, W = 8;
-const PC_TYPES = [ 'notebook',  'desktop',  'tablet',  'baraccone',  'router', 'ipcamera', 'macintosh', 'imac' ];
+const PC_TYPES = [ 
+	'notebook',  'desktop',  'tablet',  
+	'baraccone',  'router', 'ipcamera', 
+	'macintosh', 'imac', 
+	'gameboy', 'nintendoswitch' ];
 
 let grid = [];
 let serverPos = {x: 0, y: 0};
@@ -1116,6 +1120,216 @@ function drawPC(x, y, type, connected) {
 		ctx.arc(s*0.5, s*0.82, Math.max(1.2, s*0.015), 0, Math.PI*2);
 		ctx.fill();
 		ctx.shadowBlur = 0;
+	}
+	
+	else if (type === 'gameboy') {
+		// --- GAME BOY CLASSICO (1989) ---
+		
+		// Body grigio-beige
+		let gbGrad = ctx.createLinearGradient(0, 0, s, s);
+		gbGrad.addColorStop(0, "#c0c0c0");
+		gbGrad.addColorStop(0.5, "#b0b0b0");
+		gbGrad.addColorStop(1, "#a0a0a0");
+		ctx.fillStyle = gbGrad;
+		ctx.beginPath();
+		ctx.roundRect(s*0.1, s*0.05, s*0.75, s*0.9, s*0.04);
+		ctx.fill();
+		
+		// Bordo nero
+		ctx.strokeStyle = "#333";
+		ctx.lineWidth = Math.max(1, s*0.015);
+		ctx.beginPath();
+		ctx.roundRect(s*0.1, s*0.05, s*0.75, s*0.9, s*0.04);
+		ctx.stroke();
+		
+		// --- SCHERMO LCD ---
+		ctx.fillStyle = "#000";
+		ctx.beginPath();
+		ctx.roundRect(s*0.16, s*0.12, s*0.64, s*0.35, s*0.02);
+		ctx.fill();
+		
+		// Bezel schermo
+		ctx.fillStyle = "#222";
+		ctx.beginPath();
+		ctx.roundRect(s*0.18, s*0.14, s*0.6, s*0.31, 2);
+		ctx.fill();
+		
+		// LCD (verde o spento)
+		if (connected) {
+			ctx.fillStyle = "#4a7c4e";
+		} else {
+			ctx.fillStyle = "#0a0a0a";
+		}
+		ctx.fillRect(s*0.20, s*0.15, s*0.56, s*0.27);
+		
+		// Scanlines LCD
+		if (connected) {
+			ctx.strokeStyle = "rgba(0, 0, 0, 0.2)";
+			ctx.lineWidth = 0.4;
+			for(let i = 0; i < s*0.27; i += 1) {
+				ctx.beginPath();
+				ctx.moveTo(s*0.22, s*0.14 + i);
+				ctx.lineTo(s*0.78, s*0.14 + i);
+				ctx.stroke();
+			}
+		}
+		
+		// Speaker (griglia in alto)
+		ctx.strokeStyle = "#000";
+		ctx.lineWidth = 0.5;
+		for(let i = 0; i < 4; i++) {
+			ctx.beginPath();
+			ctx.moveTo(s*0.35 + (i*s*0.08), s*0.085);
+			ctx.lineTo(s*0.35 + (i*s*0.08) + s*0.04, s*0.085);
+			ctx.stroke();
+		}
+		
+		// --- D-PAD (CROCE NERA A SINISTRA) ---
+		const dpadX = s*0.3;
+		const dpadY = s*0.7;
+		const dpadSize = s*0.35;
+		
+		ctx.fillStyle = "#000";
+		// Centro croce
+		ctx.fillRect(dpadX - dpadSize*0.15, dpadY - dpadSize*0.15, dpadSize*0.3, dpadSize*0.3);
+		// Su
+		ctx.fillRect(dpadX - dpadSize*0.1, dpadY - dpadSize*0.35, dpadSize*0.2, dpadSize*0.2);
+		// Giù
+		ctx.fillRect(dpadX - dpadSize*0.1, dpadY + dpadSize*0.15, dpadSize*0.2, dpadSize*0.2);
+		// Sinistra
+		ctx.fillRect(dpadX - dpadSize*0.35, dpadY - dpadSize*0.1, dpadSize*0.2, dpadSize*0.2);
+		// Destra
+		ctx.fillRect(dpadX + dpadSize*0.15, dpadY - dpadSize*0.1, dpadSize*0.2, dpadSize*0.2);
+		
+		// --- TASTI A E B (ROSSI A DESTRA) ---
+		const buttonsX = s*0.7;
+		const buttonsY = s*0.7;
+		const buttonSize = s*0.06;
+		
+		// Tasto A (basso destra)
+		ctx.fillStyle = connected ? "#0088ff" : "#ff8800";
+		ctx.beginPath();
+		ctx.arc(buttonsX, buttonsY, buttonSize, 0, Math.PI*2);
+		ctx.fill();
+		
+		// Tasto B (alto sinistra)
+		ctx.fillStyle = connected ? "#0000ff" : "#ff0000";
+		ctx.beginPath();
+		ctx.arc(buttonsX - buttonSize * 1.5, buttonsY - buttonSize * 1.5, buttonSize, 0, Math.PI*2);
+		ctx.fill();
+		
+		// --- LED INDICATORE ---
+		ctx.fillStyle = connected ? "#22c55e" : "#064e3b";
+		if (connected && Math.sin(flowOffset*0.15) > -0.5) {
+			ctx.shadowBlur = 8;
+			ctx.shadowColor = "#22c55e";
+		}
+		ctx.beginPath();
+		ctx.arc(s*0.5, s*0.88, Math.max(1, s*0.02), 0, Math.PI*2);
+		ctx.fill();
+		ctx.shadowBlur = 0;
+	}
+	
+	else if (type === 'nintendoswitch') {
+		// --- NINTENDO SWITCH ---
+		
+		// Body nero principale
+		let switchGrad = ctx.createLinearGradient(0, 0, s, s);
+		switchGrad.addColorStop(0, "#1a1a1a");
+		switchGrad.addColorStop(0.5, "#0f0f0f");
+		switchGrad.addColorStop(1, "#000");
+		ctx.fillStyle = switchGrad;
+		ctx.fillRect(s*0.08, s*0.15, s*0.84, s*0.7);
+		
+		// Bordo metallico
+		ctx.strokeStyle = "#444";
+		ctx.lineWidth = Math.max(1, s*0.015);
+		ctx.strokeRect(s*0.08, s*0.15, s*0.84, s*0.7);
+		
+		// --- JOY-CON SINISTRO (grigio) ---
+		let joyLGrad = ctx.createLinearGradient(0, 0, s*0.15, s*0.7);
+		joyLGrad.addColorStop(0, "#3377cc");
+		joyLGrad.addColorStop(1, "#1155aa");
+		ctx.fillStyle = joyLGrad;
+		ctx.beginPath();
+		ctx.roundRect(0, s*0.15, s*0.2, s*0.7, s*0.06);
+		ctx.fill();
+		ctx.stroke();
+		
+		
+		// Joy-Con sinistro: croce
+		ctx.fillStyle = "#333";
+		const joyLX = s*0.1;
+		const joyLY = s*0.6;
+		ctx.fillRect(joyLX - s*0.02, joyLY - s*0.06, s*0.04, s*0.12);
+		ctx.fillRect(joyLX - s*0.06, joyLY - s*0.02, s*0.12, s*0.04);
+		
+		// Joy-Con sinistro: palla
+		ctx.beginPath();
+		ctx.arc(joyLX, joyLY * 0.6, s*0.04, 0, Math.PI * 2);
+		ctx.fill();
+		
+		
+		// --- JOY-CON DESTRO (rosso/blu) ---
+		let joyRGrad = ctx.createLinearGradient(s*0.85, 0, s, s*0.7);
+		joyRGrad.addColorStop(0, "#e74c3c");
+		joyRGrad.addColorStop(1, "#c0392b");
+		ctx.fillStyle = joyRGrad;
+		ctx.beginPath();
+		ctx.roundRect(s*0.8, s*0.15, s*0.2, s*0.7, s*0.06);
+		ctx.fill();
+		ctx.stroke();
+		
+		// Joy-Con destro: croce
+		const joyRX = s*0.9;
+		const joyRY = s*0.35;
+		const joyButtonSize = s*0.03;
+		
+		ctx.fillStyle = "#333";
+		ctx.fillRect(joyRX - s*0.02, joyRY - s*0.06, s*0.04, s*0.12);
+		ctx.fillRect(joyRX - s*0.06, joyRY - s*0.02, s*0.12, s*0.04);
+		
+		// Joy-Con destro: palla
+		ctx.beginPath();
+		ctx.arc(joyRX, joyRY * 1.6, s*0.04, 0, Math.PI * 2);
+		ctx.fill();
+		
+		// --- SCHERMO CENTRALE ---
+		ctx.fillStyle = "#000";
+		ctx.fillRect(s*0.2, s*0.18, s*0.6, s*0.45);
+		
+		// Schermo LCD (blu se connesso)
+		if (connected) {
+			let screenGrad = ctx.createLinearGradient(0, s*0.2, 0, s*0.6);
+			screenGrad.addColorStop(0, "#1e5a96");
+			screenGrad.addColorStop(0.5, "#2b7fb8");
+			screenGrad.addColorStop(1, "#1e5a96");
+			ctx.fillStyle = screenGrad;
+		} else {
+			ctx.fillStyle = "#0a0a0a";
+		}
+		ctx.fillRect(s*0.22, s*0.2, s*0.56, s*0.41);
+		
+		// Luci riflesse
+		if (connected) {
+			ctx.fillStyle = "rgba(255, 255, 255, 0.15)";
+			ctx.beginPath();
+			ctx.ellipse(s*0.3, s*0.28, s*0.08, s*0.06, -0.3, 0, Math.PI*2);
+			ctx.fill();
+		}
+		
+		// --- HOME BUTTON (al centro in basso) ---
+		ctx.fillStyle = "#555";
+		ctx.beginPath();
+		ctx.arc(s*0.5, s*0.75, s*0.03, 0, Math.PI*2);
+		ctx.fill();
+		
+		// Etichetta HOME
+		ctx.fillStyle = "#999";
+		ctx.font = `${Math.max(5, s*0.05)}px sans-serif`;
+		ctx.textAlign = "center";
+		ctx.textBaseline = "middle";
+		ctx.fillText("HOME", s*0.5, s*0.75);
 	}
 	
 	ctx.restore();
