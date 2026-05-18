@@ -148,6 +148,7 @@ const N = 1, E = 2, S = 4, W = 8;
 const PC_TYPES = [ 
 	{id:'notebook',      desc:'Generic Notebook'},
 	{id:'desktop',       desc:'Monitor + MiniPC all-in-one'},
+	{id:'minipc',        desc:'Morefine MiniPC N100'},
 	{id:'tablet',        desc:'Tablet'},
 	{id:'baraccone',     desc:'Baraccone anni 90'},
 	{id:'router',        desc:'Router Wi-Fi TpLink'},
@@ -609,7 +610,7 @@ function drawPC(x, y, type, connected) {
         ctx.beginPath(); ctx.arc(s * 0.5, s*0.025, Math.max(0.5, s * 0.01), 0, Math.PI * 2); ctx.fill();
 
         // --- STAND (Supporto) ---
-        let standGrad = ctx.createLinearGradient(s * 0.4, 0, s * 0.6, 0);
+        let standGrad = ctx.createLinearGradient(s * 0.4, 0, s * 0.5, 0);
         standGrad.addColorStop(0, colors.darkSilver);
         standGrad.addColorStop(0.5, colors.silver);
         standGrad.addColorStop(1, colors.darkSilver);
@@ -1279,8 +1280,7 @@ function drawPC(x, y, type, connected) {
 		ctx.stroke();
 		
 		
-	}
-	
+	}	
 	else if (type.id === 'nintendoswitch') {
 		// --- NINTENDO SWITCH ---
 		
@@ -1382,7 +1382,6 @@ function drawPC(x, y, type, connected) {
 		ctx.textBaseline = "middle";
 		ctx.fillText("HOME", s*0.5, s*0.75);
 	}
-	
 	else if (type.id === 'hplaserjet') {
 		// --- HP LASERJET 107w
 		
@@ -1452,7 +1451,6 @@ function drawPC(x, y, type, connected) {
 		ctx.fill();
 		ctx.shadowBlur = 0;
 	}
-	
 	else if (type.id === 'atari2600') {
 		// --- ATARI 2600 CLASSICO (1977) ---
 		// --- SEZIONE INFERIORE (LEGNO MASSELLO) ---
@@ -1538,8 +1536,6 @@ function drawPC(x, y, type, connected) {
 			}		
 		ctx.shadowBlur = 0;
 	}	
-	
-	
 	else if (type.id === 'hantarex') {
 		// IL MIO AMATO APPLE ][ / SHUTTLE (COMPATIBILE) CON MONITOR HANTAREX
 		// --- MONITOR SUPERIORE ---
@@ -1672,7 +1668,90 @@ function drawPC(x, y, type, connected) {
 		
 		ctx.shadowBlur = 0;
 	}
-	
+	else if (type.id === 'minipc') {
+		// --- SCOCCA ---
+        let minipcGrad = ctx.createRadialGradient(s*0.5, s*0.5, 0, s*0.5, s*0.5, s);
+        minipcGrad.addColorStop(0, "#273549");
+        minipcGrad.addColorStop(1, "#0f070a");
+        
+		//base NERA
+		ctx.fillStyle = '#111';
+		ctx.beginPath(); 
+		ctx.roundRect(s*0.2, s*0.43, s*0.6, s*0.4, s * 0.08); 
+		ctx.fill();
+		
+		//cerchio di luce
+		if (connected) {
+            let screenGrad = ctx.createRadialGradient(s*0.5, s*0.5, 0, s*0.5, s*0.5, s);
+            screenGrad.addColorStop(0, "#38bdf8");
+            screenGrad.addColorStop(1, "#0369a1");
+            ctx.fillStyle = screenGrad;
+        } else {
+            ctx.fillStyle = minipcGrad;
+        }
+		ctx.beginPath(); 
+		ctx.roundRect(s*0.2, s*0.4, s*0.6, s*0.4, s * 0.08); 
+		ctx.fill();
+		
+		//altra base nera
+		ctx.fillStyle = '#111';
+		ctx.beginPath(); 
+		ctx.roundRect(s*0.2, s*0.37, s*0.6, s*0.4, s * 0.08); 
+		ctx.fill();
+		
+		//mezzo grigio
+		ctx.fillStyle = minipcGrad;
+		ctx.beginPath(); 
+		ctx.roundRect(s*0.2, s*0.34, s*0.6, s*0.4, s * 0.08); 
+		ctx.fill();
+		
+		//top nero
+		ctx.fillStyle = '#111';
+		ctx.beginPath(); 
+		ctx.roundRect(s*0.2, s*0.20, s*0.6, s*0.4, s * 0.08); 
+		ctx.fill();
+		
+		//QC
+		ctx.lineWidth = s*0.01;
+		ctx.strokeStyle = '#eee';
+		ctx.fillStyle = '#393';
+		ctx.beginPath();
+		ctx.arc(s*0.4, s*0.3, s*0.08, 0, Math.PI*2);
+		ctx.fill();
+		ctx.stroke();
+		ctx.fillStyle = "#eee";
+		ctx.font = `${Math.max(0, s*0.08)}px sans-serif`;
+		ctx.textAlign = "left";
+		ctx.fillText("QC", s*0.33, s*0.33);
+		
+		//Etichetta
+		ctx.fillStyle = "#999";
+		ctx.font = `${Math.max(0, s*0.11)}px sans-serif`;
+		ctx.textAlign = "left";
+		ctx.fillText("MOREFINE", s*0.22, s*0.55);
+		
+		//usb + pulsantone
+		ctx.fillStyle = '#000';
+		ctx.fillRect(s*0.3, s*0.64, s*0.04, s*0.08);
+		ctx.fillRect(s*0.37, s*0.64, s*0.04, s*0.08);
+		ctx.fillRect(s*0.46, s*0.64, s*0.08, s*0.02);
+		ctx.fillRect(s*0.56, s*0.64, s*0.08, s*0.02);
+		ctx.lineWidth = s * 0.01;
+		ctx.strokeStyle = '#000';
+		ctx.beginPath();
+		ctx.arc(s*0.72, s*0.67, s*0.04, 0, Math.PI*2);
+		ctx.stroke();
+		
+		//led
+		ctx.fillStyle = connected ? "#38bdf8" : "#222";
+		if (connected && Math.sin(flowOffset*0.95) > -0.5) {
+			ctx.shadowBlur = 5;
+			ctx.shadowColor = "#38bdf8";
+		}
+		ctx.beginPath();
+		ctx.arc(s*0.72, s*0.67, s*0.01, 0, Math.PI*2);
+		ctx.fill();
+	}
 	ctx.restore();
 }
 
