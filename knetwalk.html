@@ -135,7 +135,8 @@ const PC_TYPES = [
 	'baraccone',  'router', 'ipcamera', 
 	'macintosh', 'imac', 
 	'gameboy', 'nintendoswitch',
-	'hplaserjet', 'atari2600'
+	'hplaserjet', 'atari2600',
+	'hantarex'
 	];
 
 let grid = [];
@@ -1481,19 +1482,144 @@ function drawPC(x, y, type, connected) {
 	}	
 	
 	
+	else if (type === 'hantarex') {
+		// IL MIO AMATO APPLE ][ / SHUTTLE (COMPATIBILE) CON MONITOR HANTAREX
+		
+		// --- MONITOR SUPERIORE ---
+		// Case beige/crema
+		let caseGrad = ctx.createLinearGradient(0, 0, s, s*0.6);
+		caseGrad.addColorStop(0, "#e8d7c3");
+		caseGrad.addColorStop(1, "#c4b4a0");
+		ctx.fillStyle = caseGrad;
+		ctx.beginPath();
+		ctx.roundRect(s*0.05, 0, s*0.9, s*0.7, s*0.04);
+		ctx.fill();
+		
+		// Bordo case
+		ctx.strokeStyle = "#999";
+		ctx.lineWidth = Math.max(1, s*0.015);
+		ctx.beginPath();
+		ctx.roundRect(s*0.05, 0, s*0.9, s*0.7, s*0.04);
+		ctx.stroke();
+		
+		// --- SCHERMO CRT (grande) ---
+		// Bordo nero profondo
+		ctx.fillStyle = "#111";
+		ctx.beginPath();
+		ctx.roundRect(s*0.15, s*0.05, s*0.7, s*0.5, s*0.04);
+		ctx.fill();
+		
+		// Schermo CRT (verde se acceso)
+		if (connected) {
+			ctx.fillStyle = "#3a5a3e";
+		} else {
+			ctx.fillStyle = "#0a0a0a";
+		}
+		ctx.beginPath();
+		ctx.roundRect(s*0.2, s*0.1, s*0.6, s*0.4, s*0.08);
+		ctx.fill();
+		
+		if (connected) {
+			ctx.fillStyle = "#bfb";
+			ctx.font = `${Math.max(3, s*0.03)}px sans-serif`;
+			ctx.textAlign = "center";
+			ctx.fillText("APPLE ][", s*0.5, s*0.15);
+			ctx.textAlign = "left";
+			ctx.fillText("]", s*0.24, s*0.45);
+			if(Math.sin(flowOffset*0.5) > -0.5) {
+				ctx.shadowBlur = 6;
+				ctx.fillText("O", s*0.26, s*0.45);
+				ctx.shadowBlur = 0;
+			}				
+		}
+		
+		// --- PANNELLO CONTROLLI (inferiore monitor) ---
+		ctx.fillStyle = "#645440";
+		ctx.fillRect(s*0.05, s*0.6, s*0.9, s*0.08);
+		
+		// --- 4 MANOPOLE CONTROLLO (DESTRA) ---
+		const knobY = s*0.65;
+		const knobSpacing = s*0.1;
+		
+		for(let i = 0; i < 4; i++) {
+			const knobX = s*0.6 + (i * knobSpacing);
+			
+			// Base manopola
+			ctx.fillStyle = i === 2 ? "#444" : "#666";  // Terza è più scura
+			ctx.beginPath();
+			ctx.arc(knobX, knobY, s*0.032, 0, Math.PI*2);
+			ctx.fill();
+			
+			// Bordo manopola
+			ctx.strokeStyle = "#333";
+			ctx.lineWidth = 1;
+			ctx.beginPath();
+			ctx.arc(knobX, knobY, s*0.032, 0, Math.PI*2);
+			ctx.stroke();
+			
+			// Indicatore (lineetta)
+			ctx.strokeStyle = i === 2 ? "#ef4444" : "#aaa";  // Rosso per la terza
+			ctx.lineWidth = Math.max(1, s*0.008);
+			ctx.lineCap = "round";
+			ctx.beginPath();
+			ctx.moveTo(knobX, knobY - s*0.018);
+			ctx.lineTo(knobX, knobY - s*0.026);
+			ctx.stroke();
+			
+			// Etichetta piccola
+			ctx.fillStyle = "#999";
+			ctx.font = `${Math.max(3, s*0.03)}px sans-serif`;
+			ctx.textAlign = "center";
+			ctx.fillText("●", knobX, knobY + s*0.05);
+		}
+		
+		//CASE alluminio
+		ctx.beginPath();
+		ctx.fillStyle = "#e8d7c3";
+		ctx.roundRect(-s*0.05,s*0.72,s*1.1,s*0.2,s*0.02);
+		ctx.fill();
+		//parte bassa
+		ctx.beginPath();
+		ctx.fillStyle = "#e8d7c3";
+		ctx.roundRect(-s*0.1,s*0.92,s*1.2,s*0.1,s*0.02);
+		ctx.fill();
+		
+		//nero alto	
+		ctx.beginPath();
+		ctx.fillStyle = "#111";
+		ctx.roundRect(0,s*0.77,s*1.0,s*0.15,s*0.02);
+		ctx.fill();
+		//nero basso
+		ctx.beginPath();
+		ctx.fillStyle = "#111";
+		ctx.roundRect(-s*0.05,s*0.92,s*1.1,s*0.05,s*0.02);
+		ctx.fill();
+		
+		//scritta logata shuttle [-
+		ctx.fillStyle = "#444";
+		ctx.fillRect(s*0.15, s*0.81, s*0.1, s*0.05);
+		
+		// --- LED INDICATORE (angolo inferiore destro) ---
+		ctx.fillStyle = connected ? "#ff5e22" : "#0d3a0d";
+		if (connected && Math.sin(flowOffset*0.15) > -0.5) {
+			ctx.shadowBlur = 5;
+			ctx.shadowColor = "#ff5e22";
+		}
+		ctx.beginPath();
+		ctx.arc(s*0.1, s*0.83, s*0.018, 0, Math.PI*2);
+		ctx.fill();
+		
+		ctx.beginPath();
+		ctx.arc(s*0.8, s*0.65, s*0.02, 0, Math.PI*2);
+		ctx.fill();
+		
+		ctx.shadowBlur = 0;
+	}
+	
 	ctx.restore();
 }
 
-/*canvas.addEventListener('mousedown', e => {
-    if (gameWon) return;
-    let r = canvas.getBoundingClientRect();
-    let gx = Math.floor((e.clientX - r.left) / (r.width / SIZE));
-    let gy = Math.floor((e.clientY - r.top) / (r.height / SIZE));
-    if (grid[gy] && grid[gy][gx]) {
-        grid[gy][gx].conns = rotateBitmask(grid[gy][gx].conns);
-        updateConnectivity();
-    }
-});*/
+
 
 // Cerca questa parte in fondo e sostituiscila:
 canvas.addEventListener('pointerdown', e => {
