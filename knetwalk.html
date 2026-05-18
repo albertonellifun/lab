@@ -923,9 +923,9 @@ function drawPC(x, y, type, connected) {
 		
 		// Cornice lente (anello nero)
 		let lensRingGrad = ctx.createRadialGradient(s*0.5, s*0.3, s*0.05, s*0.5, s*0.3, s*0.18);
-		lensRingGrad.addColorStop(0, "#1a1a1a");
-		lensRingGrad.addColorStop(0.7, "#0a0a0a");
-		lensRingGrad.addColorStop(1, "#000");
+		lensRingGrad.addColorStop(0, "#000");
+		lensRingGrad.addColorStop(0.7, "#222");
+		lensRingGrad.addColorStop(1, "#fff");
 		ctx.fillStyle = lensRingGrad;
 		ctx.beginPath();
 		ctx.arc(s*0.5, s*0.3, s*0.16, 0, Math.PI*2);
@@ -942,10 +942,10 @@ function drawPC(x, y, type, connected) {
 			ctx.beginPath();
 			ctx.arc(s*0.5, s*0.3, s*0.12, 0, Math.PI*2);
 			ctx.fill();	
-		
-			ctx.fillStyle = "rgba(74, 144, 226, 0.6)";
+			//centro lente blu
+			ctx.fillStyle = '#38bdf8';
 			ctx.beginPath();
-			ctx.arc(s*0.47, s*0.27, s*0.04, 0, Math.PI*2);
+			ctx.arc(s*0.5, s*0.27, s*0.04, 0, Math.PI*2);
 			ctx.fill();
 		}
 		
@@ -968,9 +968,9 @@ function drawPC(x, y, type, connected) {
 		ctx.shadowBlur = 0;
 		
 		// Ombra/sfumatura laterale per effetto 3D
-		ctx.fillStyle = "rgba(0, 0, 0, 0.15)";
+		ctx.fillStyle = "rgba(0, 0, 0, 0.1)";
 		ctx.beginPath();
-		ctx.ellipse(s*0.15, s*0.45, s*0.1, s*0.25, 0, 0, Math.PI*2);
+		ctx.ellipse(s*0.3, s*0.45, s*0.15, s*0.2, 0, 0, Math.PI*2);
 		ctx.fill();
 	}
     else if (type.id === 'macintosh') {
