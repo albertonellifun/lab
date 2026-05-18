@@ -102,13 +102,26 @@
             border-top: 1px solid #334155;
             word-break: break-word;
         }
+		
+		#tooltip {
+			position: absolute; 
+			display: none; 
+			pointer-events: none;
+			background: rgba(0, 0, 0, 0.8); 
+			color: white; 
+			padding: 5px 10px; 
+			border-radius: 4px; 
+			font-size: 12px;
+			z-index: 100;
+		}
     </style>
 </head>
 <body>
 
     <div class="controls">
 		<h1>KNetWalk</h1>
-        <button onclick="changeDifficulty(5, this)" class="active">5x5</button>
+		<button onclick="changeDifficulty(3, this)" class="active">3x3</button>
+        <button onclick="changeDifficulty(5, this)">5x5</button>
         <button onclick="changeDifficulty(7, this)">7x7</button>
         <button onclick="changeDifficulty(10, this)">10x10</button>
 		<button onclick="changeAnimateFlag(this)">Animate</button>
@@ -119,9 +132,11 @@
 	</div>
 
 	<div id="status"></div>
+	
+	<div id="tooltip"></div>
 
 <script>
-let SIZE = 5;
+let SIZE = 3;
 const CANVAS_MAX_SIZE = 660;
 let CELL_SIZE = CANVAS_MAX_SIZE / SIZE;
 
@@ -131,12 +146,19 @@ const statusDiv = document.getElementById('status');
 
 const N = 1, E = 2, S = 4, W = 8;
 const PC_TYPES = [ 
-	'notebook',  'desktop',  'tablet',  
-	'baraccone',  'router', 'ipcamera', 
-	'macintosh', 'imac', 
-	'gameboy', 'nintendoswitch',
-	'hplaserjet', 'atari2600',
-	'hantarex'
+	{id:'notebook',desc:'Generic Notebook'},
+	{id:'desktop',desc:'Monitor + MiniPC all-in-one'},
+	{id:'tablet',desc:'Tablet'},
+	{id:'baraccone',desc:'Baraccone anni 90'},
+	{id:'router',desc:'Router Wi-Fi TpLink'},
+	{id:'ipcamera',desc:'IP Camera TpLink'},
+	{id:'macintosh',desc:'Macintosh 128K del 1984'},
+	{id:'imac',desc:'iMac G4 del 2002'},
+	{id:'gameboy',desc:'GameBoy classic del 1989'},
+	{id:'nintendoswitch',desc:'Nintendo Switch 2017'},
+	{id:'hplaserjet',desc:'HP LaserJet 107w'},
+	{id:'atari2600',desc:'Atari 2600 del 1977'},
+	{id:'hantarex',desc:'Apple ][ Compatibile'},
 	];
 
 let grid = [];
@@ -552,7 +574,7 @@ function drawPC(x, y, type, connected) {
     ctx.save();
     ctx.translate(x + p, y + p);
 
-    if (type === 'desktop') {
+    if (type.id === 'desktop') {
         // --- MONITOR ---
         // Scocca posteriore/ombra
         ctx.fillStyle = "#000";
@@ -596,7 +618,7 @@ function drawPC(x, y, type, connected) {
         ctx.fillRect(s * 0.42, s * 0.65, s * 0.16, s * 0.2); // Collo
         ctx.beginPath(); ctx.roundRect(s * 0.2, s * 0.8, s * 0.6, s * 0.08, s * 0.02); ctx.fill(); // Base
     } 
-    else if (type === 'notebook') {
+    else if (type.id === 'notebook') {
         // --- SCHERMO APERTO ---
         ctx.fillStyle = "#111";
         ctx.beginPath(); ctx.roundRect(s * 0.05, 0, s * 0.9, s * 0.6, s * 0.03); ctx.fill(); // Cornice
@@ -649,7 +671,7 @@ function drawPC(x, y, type, connected) {
         // Touchpad - SCALATO
         ctx.fillRect(s*0.4, s*0.82, s*0.2, s*0.08);
     } 
-    else if (type === 'tablet') {
+    else if (type.id === 'tablet') {
         // --- SCOCCA ---
         let tabletGrad = ctx.createRadialGradient(s/2, s/2, 0, s/2, s/2, s);
         tabletGrad.addColorStop(0, "#475569");
@@ -687,7 +709,7 @@ function drawPC(x, y, type, connected) {
         ctx.fillStyle = "#1e293b";
         ctx.beginPath(); ctx.arc(s/2, 8, Math.max(0.8, s * 0.015), 0, Math.PI*2); ctx.fill();
     } 
-	else if (type === 'baraccone') {
+	else if (type.id === 'baraccone') {
 		// Case
 		let grad = ctx.createLinearGradient(0, 0, s, s);
 		grad.addColorStop(0, "#475569"); 
@@ -745,7 +767,7 @@ function drawPC(x, y, type, connected) {
 		ctx.fill();
 		ctx.shadowBlur = 0;
 	}
-	else if (type === 'router') {
+	else if (type.id === 'router') {
 		// --- ROUTER WiFi ---
 		let routerGrad = ctx.createLinearGradient(0, 0, s, s);
 		routerGrad.addColorStop(0, "#334155");
@@ -858,7 +880,7 @@ function drawPC(x, y, type, connected) {
 			
 			[1, 2, 3].forEach((ring, i) => {
 				ctx.beginPath();
-				ctx.arc(wifiX, wifiY, wifiSize*(i+1)*0.33, 0, Math.PI, true);
+				ctx.arc(wifiX, wifiY, wifiSize*(i+1)*0.33, 1.15 * Math.PI, 1.85 * Math.PI, false);
 				ctx.stroke();
 			});
 			
@@ -868,8 +890,8 @@ function drawPC(x, y, type, connected) {
 			ctx.fill();
 		}
 	}
-	else if (type === 'ipcamera') {
-		// --- IP CAMERA PTZ (Tipo Hôm-io) ---
+	else if (type.id === 'ipcamera') {
+		// --- IP CAMERA tp-link per casa
 		
 		// Base cilindrica inferiore (bianca)
 		let baseGrad = ctx.createRadialGradient(s*0.5, s*0.75, 0, s*0.5, s*0.75, s*0.4);
@@ -950,7 +972,7 @@ function drawPC(x, y, type, connected) {
 		ctx.ellipse(s*0.15, s*0.45, s*0.1, s*0.25, 0, 0, Math.PI*2);
 		ctx.fill();
 	}
-    else if (type === 'macintosh') {
+    else if (type.id === 'macintosh') {
 		// --- MACINTOSH 128K (1984) - Classic Beige ---
 		
 		// Case beige principale (molto arrotondato)
@@ -1015,9 +1037,8 @@ function drawPC(x, y, type, connected) {
 		ctx.fill();
 		ctx.shadowBlur = 0;
 	}
-	
-	else if (type === 'imac') {
-		// --- iMAC MODERNO (G4/Intel) ---
+	else if (type.id === 'imac') {
+		// --- iMAC MODERNO G4
 		
 		// Base emisfericale (bianca)
 		let baseGrad = ctx.createRadialGradient(s*0.5, s*1.0, 0, s*0.5, s*1.0, s*0.3);
@@ -1123,16 +1144,14 @@ function drawPC(x, y, type, connected) {
 		ctx.arc(s*0.5, s*0.82, Math.max(1.2, s*0.015), 0, Math.PI*2);
 		ctx.fill();
 		ctx.shadowBlur = 0;
-	}
-	
-	else if (type === 'gameboy') {
+	}	
+	else if (type.id === 'gameboy') {
 		// --- GAME BOY CLASSICO (1989) ---
 		
 		// Body grigio-beige
 		let gbGrad = ctx.createLinearGradient(0, 0, s, s);
-		gbGrad.addColorStop(0, "#c0c0c0");
-		gbGrad.addColorStop(0.5, "#b0b0b0");
-		gbGrad.addColorStop(1, "#a0a0a0");
+		gbGrad.addColorStop(0, "#f0f0f0");
+		gbGrad.addColorStop(1, "#b0b0b0");
 		ctx.fillStyle = gbGrad;
 		ctx.beginPath();
 		ctx.roundRect(s*0.1, s*0.05, s*0.75, s*0.9, s*0.04);
@@ -1154,7 +1173,7 @@ function drawPC(x, y, type, connected) {
 		// Bezel schermo
 		ctx.fillStyle = "#222";
 		ctx.beginPath();
-		ctx.roundRect(s*0.18, s*0.14, s*0.6, s*0.31, 2);
+		ctx.roundRect(s*0.20, s*0.14, s*0.6, s*0.33, s*0.02);
 		ctx.fill();
 		
 		// LCD (verde o spento)
@@ -1163,7 +1182,7 @@ function drawPC(x, y, type, connected) {
 		} else {
 			ctx.fillStyle = "#0a0a0a";
 		}
-		ctx.fillRect(s*0.20, s*0.15, s*0.56, s*0.27);
+		ctx.fillRect(s*0.22, s*0.15, s*0.54, s*0.3);
 		
 		// Scanlines LCD
 		if (connected) {
@@ -1204,36 +1223,65 @@ function drawPC(x, y, type, connected) {
 		// Destra
 		ctx.fillRect(dpadX + dpadSize*0.15, dpadY - dpadSize*0.1, dpadSize*0.2, dpadSize*0.2);
 		
-		// --- TASTI A E B (ROSSI A DESTRA) ---
-		const buttonsX = s*0.7;
+		// --- TASTI A E B (A DESTRA) ---
+		const buttonsX = s*0.6;
 		const buttonsY = s*0.7;
-		const buttonSize = s*0.06;
+		const buttonSize = s*0.05;
 		
-		// Tasto A (basso destra)
-		ctx.fillStyle = connected ? "#0088ff" : "#ff8800";
+		// Tasto A (basso)
+		ctx.fillStyle = "#aa0088";
 		ctx.beginPath();
 		ctx.arc(buttonsX, buttonsY, buttonSize, 0, Math.PI*2);
 		ctx.fill();
 		
-		// Tasto B (alto sinistra)
-		ctx.fillStyle = connected ? "#0000ff" : "#ff0000";
+		// Tasto B (alto)
+		ctx.fillStyle = "#aa0088";
 		ctx.beginPath();
-		ctx.arc(buttonsX - buttonSize * 1.5, buttonsY - buttonSize * 1.5, buttonSize, 0, Math.PI*2);
+		ctx.arc(buttonsX + buttonSize * 1.8, buttonsY - buttonSize * 1.5, buttonSize, 0, Math.PI*2);
+		ctx.fill();
+		
+		//select+start
+		ctx.fillStyle = "#444";
+		ctx.beginPath();
+		ctx.roundRect(s*0.4, s*0.85, s*0.05, s*0.02, s*0.02);
+		ctx.fill();
+		ctx.beginPath();
+		ctx.roundRect(s*0.5, s*0.85, s*0.05, s*0.02, s*0.02);
 		ctx.fill();
 		
 		// --- LED INDICATORE ---
-		ctx.fillStyle = connected ? "#22c55e" : "#064e3b";
+		ctx.fillStyle = connected ? "#c55e22" : "#4e3b06";
 		if (connected && Math.sin(flowOffset*0.15) > -0.5) {
 			ctx.shadowBlur = 8;
-			ctx.shadowColor = "#22c55e";
+			ctx.shadowColor = "#c55e22";
 		}
 		ctx.beginPath();
-		ctx.arc(s*0.5, s*0.88, Math.max(1, s*0.02), 0, Math.PI*2);
+		ctx.arc(s*0.2, s*0.3, Math.max(1, s*0.02), 0, Math.PI*2);
 		ctx.fill();
 		ctx.shadowBlur = 0;
+		
+		ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+		ctx.beginPath();
+		ctx.moveTo(s*0.68,s*0.82);
+		ctx.lineTo(s*0.74,s*0.88);
+		ctx.stroke();
+		ctx.beginPath();
+		ctx.moveTo(s*0.70,s*0.80);
+		ctx.lineTo(s*0.76,s*0.86);
+		ctx.stroke();
+		ctx.beginPath();
+		ctx.moveTo(s*0.72,s*0.78);
+		ctx.lineTo(s*0.78,s*0.84);
+		ctx.stroke();
+		ctx.beginPath();
+		ctx.moveTo(s*0.74,s*0.76);
+		ctx.lineTo(s*0.80,s*0.82);
+		ctx.stroke();
+		
+		
 	}
 	
-	else if (type === 'nintendoswitch') {
+	else if (type.id === 'nintendoswitch') {
 		// --- NINTENDO SWITCH ---
 		
 		// Body nero principale
@@ -1335,7 +1383,7 @@ function drawPC(x, y, type, connected) {
 		ctx.fillText("HOME", s*0.5, s*0.75);
 	}
 	
-	else if (type === 'hplaserjet') {
+	else if (type.id === 'hplaserjet') {
 		// --- HP LASERJET 107w
 		
 		// Top grigio/nero
@@ -1405,11 +1453,8 @@ function drawPC(x, y, type, connected) {
 		ctx.shadowBlur = 0;
 	}
 	
-	else if (type === 'atari2600') {
+	else if (type.id === 'atari2600') {
 		// --- ATARI 2600 CLASSICO (1977) ---
-		
-		// Proporzioni: molto più largo che alto, compatto
-		
 		// --- SEZIONE INFERIORE (LEGNO MASSELLO) ---
 		let woodGrad = ctx.createLinearGradient(0, s*0.6, 0, s);
 		woodGrad.addColorStop(0, "#d4a574");
@@ -1424,7 +1469,8 @@ function drawPC(x, y, type, connected) {
 		ctx.lineWidth = s * 0.04;
 		ctx.strokeRect(0, s*0.5, s, s*0.25);
 		//base
-		ctx.fillRect(s*0.2, s*0.75, s*0.6, s*0.05);
+		ctx.fillStyle = '#000';
+		ctx.fillRect(s*0.1, s*0.75, s*0.8, s*0.05);
 		
 		// Logo ATARI (piccolo, in basso a sinistra)
 		ctx.fillStyle = "rgba(255, 255, 255, 0.3)";
@@ -1436,38 +1482,50 @@ function drawPC(x, y, type, connected) {
 		ctx.font = `bold ${Math.max(6, s*0.07)}px sans-serif`;
 		ctx.textAlign = "center";
 		ctx.textBaseline = "middle";
-		ctx.fillText("A", s*0.9, s*0.65);
+		ctx.fillText("A", s*0.9, s*0.6);
 		
 		// --- SEZIONE SUPERIORE (NERO/GRIGIO) ---
-		let topGrad = ctx.createLinearGradient(0, 0, 0, s*0.5);
+		let topGrad = ctx.createLinearGradient(0, s*0.1, 0, s*0.5);
 		topGrad.addColorStop(0, "#4a4a4a");
 		topGrad.addColorStop(0.5, "#2a2a2a");
 		topGrad.addColorStop(1, "#1a1a1a");
+		ctx.fillStyle = '#111';
+		ctx.beginPath();
+		ctx.roundRect(s*0.05, s*0.15, s*0.9, s*0.15, s*0.02);
+		ctx.fill();
+		ctx.beginPath();
 		ctx.fillStyle = topGrad;
-		ctx.fillRect(0, 0, s, s*0.5);
+		ctx.moveTo(s*0.1, s*0.3);
+		ctx.lineTo(s*0.9, s*0.3);
+		ctx.lineTo(s*0.95, s*0.5);
+		ctx.lineTo(s*0.05, s*0.5);
+		ctx.lineTo(s*0.1, s*0.3);
+		ctx.closePath();
+		ctx.fill();
 		
 		//bordo arancione top
 		ctx.strokeStyle = '#ff8800';
+		ctx.beginPath();
 		ctx.lineWidth = s * 0.01;
-		ctx.roundRect(s*0.05, s*0.05, s*0.9, s*0.15, s*0.04);
+		ctx.roundRect(s*0.05, s*0.15, s*0.9, s*0.15, s*0.04);
 		ctx.stroke();
 		
 		//joys top
 		ctx.fillStyle = '#eeeeee';
-		ctx.fillRect(s*0.10, s*0.08, s*0.05, s*0.05);
-		ctx.fillRect(s*0.20, s*0.10, s*0.05, s*0.05);
-		ctx.fillRect(s*0.75, s*0.12, s*0.05, s*0.05);
-		ctx.fillRect(s*0.85, s*0.10, s*0.05, s*0.05);
+		ctx.fillRect(s*0.10, s*0.18, s*0.05, s*0.05);
+		ctx.fillRect(s*0.20, s*0.20, s*0.05, s*0.05);
+		ctx.fillRect(s*0.75, s*0.22, s*0.05, s*0.05);
 		
 		//slot top
 		ctx.fillStyle = '#111';
-		ctx.fillRect(s*0.35, s*0.08, s*0.35, s*0.10);
+		ctx.fillRect(s*0.35, s*0.18, s*0.35, s*0.10);
 		
 		//griglia
-		ctx.fillRect(s*0.08, s*0.23, s*0.70, s*0.025);
-		ctx.fillRect(s*0.06, s*0.30, s*0.86, s*0.025);
-		ctx.fillRect(s*0.04, s*0.37, s*0.92, s*0.025);
-		ctx.fillRect(s*0.02, s*0.44, s*0.96, s*0.025);
+		ctx.fillStyle = '#111';
+		ctx.fillRect(s*0.08, s*0.33, s*0.82, s*0.025);
+		ctx.fillRect(s*0.06, s*0.40, s*0.86, s*0.025);
+		ctx.fillRect(s*0.04, s*0.47, s*0.92, s*0.025);
+		ctx.fillRect(s*0.02, s*0.54, s*0.96, s*0.025);
 		
 		// --- LED POWER (pic0colo, rosso) ---
 		ctx.fillStyle = connected ? "#22c55e" : "#0d3a0d";
@@ -1482,7 +1540,7 @@ function drawPC(x, y, type, connected) {
 	}	
 	
 	
-	else if (type === 'hantarex') {
+	else if (type.id === 'hantarex') {
 		// IL MIO AMATO APPLE ][ / SHUTTLE (COMPATIBILE) CON MONITOR HANTAREX
 		
 		// --- MONITOR SUPERIORE ---
@@ -1619,7 +1677,37 @@ function drawPC(x, y, type, connected) {
 	ctx.restore();
 }
 
+//
+const tooltip = document.getElementById('tooltip');
 
+canvas.addEventListener('pointermove', e => {
+    let r = canvas.getBoundingClientRect();
+    let scaleX = canvas.width / r.width;
+    let scaleY = canvas.height / r.height;
+    
+    // Calcoliamo la posizione sulla griglia
+    let gx = Math.floor(((e.clientX - r.left) * scaleX) / CELL_SIZE);
+    let gy = Math.floor(((e.clientY - r.top) * scaleY) / CELL_SIZE);
+    
+    if (grid[gy] && grid[gy][gx]) {
+        const cell = grid[gy][gx];
+        
+        // Aggiorna contenuto
+        tooltip.innerHTML = `<strong>${cell.type === 'server' ? 'Server' : cell.subType ? cell.subType.desc : 'Collegamento'}</strong>`;
+        
+        // Posiziona la tooltip vicino al mouse (offset di 15px per non coprire il cursore)
+        tooltip.style.left = (e.clientX + 15) + 'px';
+        tooltip.style.top = (e.clientY + 15) + 'px';
+        tooltip.style.display = 'block';
+    } else {
+        tooltip.style.display = 'none';
+    }
+});
+
+// Nascondi la tooltip quando il mouse esce dal canvas
+canvas.addEventListener('pointerleave', () => {
+    tooltip.style.display = 'none';
+});
 
 // Cerca questa parte in fondo e sostituiscila:
 canvas.addEventListener('pointerdown', e => {
