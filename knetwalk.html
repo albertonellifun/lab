@@ -146,19 +146,19 @@ const statusDiv = document.getElementById('status');
 
 const N = 1, E = 2, S = 4, W = 8;
 const PC_TYPES = [ 
-	{id:'notebook',desc:'Generic Notebook'},
-	{id:'desktop',desc:'Monitor + MiniPC all-in-one'},
-	{id:'tablet',desc:'Tablet'},
-	{id:'baraccone',desc:'Baraccone anni 90'},
-	{id:'router',desc:'Router Wi-Fi TpLink'},
-	{id:'ipcamera',desc:'IP Camera TpLink'},
-	{id:'macintosh',desc:'Macintosh 128K del 1984'},
-	{id:'imac',desc:'iMac G4 del 2002'},
-	{id:'gameboy',desc:'GameBoy classic del 1989'},
+	{id:'notebook',      desc:'Generic Notebook'},
+	{id:'desktop',       desc:'Monitor + MiniPC all-in-one'},
+	{id:'tablet',        desc:'Tablet'},
+	{id:'baraccone',     desc:'Baraccone anni 90'},
+	{id:'router',        desc:'Router Wi-Fi TpLink'},
+	{id:'ipcamera',      desc:'IP Camera TpLink'},
+	{id:'macintosh',     desc:'Macintosh 128K del 1984'},
+	{id:'imac',          desc:'iMac G4 del 2002'},
+	{id:'gameboy',       desc:'GameBoy classic del 1989'},
 	{id:'nintendoswitch',desc:'Nintendo Switch 2017'},
-	{id:'hplaserjet',desc:'HP LaserJet 107w'},
-	{id:'atari2600',desc:'Atari 2600 del 1977'},
-	{id:'hantarex',desc:'Apple ][ Compatibile'},
+	{id:'hplaserjet',    desc:'HP LaserJet 107w'},
+	{id:'atari2600',     desc:'Atari 2600 del 1977'},
+	{id:'hantarex',      desc:'Apple ][ Compatibile del 1983'},
 	];
 
 let grid = [];
@@ -1542,7 +1542,6 @@ function drawPC(x, y, type, connected) {
 	
 	else if (type.id === 'hantarex') {
 		// IL MIO AMATO APPLE ][ / SHUTTLE (COMPATIBILE) CON MONITOR HANTAREX
-		
 		// --- MONITOR SUPERIORE ---
 		// Case beige/crema
 		let caseGrad = ctx.createLinearGradient(0, 0, s, s*0.6);
@@ -1550,15 +1549,15 @@ function drawPC(x, y, type, connected) {
 		caseGrad.addColorStop(1, "#c4b4a0");
 		ctx.fillStyle = caseGrad;
 		ctx.beginPath();
-		ctx.roundRect(s*0.05, 0, s*0.9, s*0.7, s*0.04);
+		ctx.roundRect(s*0.05, 0, s*0.9, s*0.7, s*0.02);
 		ctx.fill();
 		
-		// Bordo case
-		ctx.strokeStyle = "#999";
+		//contorno schermo marroncino
+		ctx.fillStyle = "#645440";
 		ctx.lineWidth = Math.max(1, s*0.015);
 		ctx.beginPath();
-		ctx.roundRect(s*0.05, 0, s*0.9, s*0.7, s*0.04);
-		ctx.stroke();
+		ctx.roundRect(s*0.07, s*0.03, s*0.86, s*0.55, s*0.02);
+		ctx.fill();
 		
 		// --- SCHERMO CRT (grande) ---
 		// Bordo nero profondo
@@ -1634,23 +1633,23 @@ function drawPC(x, y, type, connected) {
 		//CASE alluminio
 		ctx.beginPath();
 		ctx.fillStyle = "#e8d7c3";
-		ctx.roundRect(-s*0.05,s*0.72,s*1.1,s*0.2,s*0.02);
+		ctx.roundRect(-s*0.05,s*0.72,s*1.1,s*0.2,[s*0.08,s*0.08,0,0]);
 		ctx.fill();
 		//parte bassa
 		ctx.beginPath();
 		ctx.fillStyle = "#e8d7c3";
-		ctx.roundRect(-s*0.1,s*0.92,s*1.2,s*0.1,s*0.02);
+		ctx.roundRect(-s*0.1,s*0.92,s*1.2,s*0.1,[0,0,s*0.08,s*0.08]);
 		ctx.fill();
 		
 		//nero alto	
 		ctx.beginPath();
 		ctx.fillStyle = "#111";
-		ctx.roundRect(0,s*0.77,s*1.0,s*0.15,s*0.02);
+		ctx.roundRect(-s*0.02,s*0.75,s*1.04,s*0.17,[s*0.04,s*0.04,0,0]);
 		ctx.fill();
 		//nero basso
 		ctx.beginPath();
 		ctx.fillStyle = "#111";
-		ctx.roundRect(-s*0.05,s*0.92,s*1.1,s*0.05,s*0.02);
+		ctx.roundRect(-s*0.06,s*0.92,s*1.12,s*0.08,[0,0,s*0.04,s*0.04]);
 		ctx.fill();
 		
 		//scritta logata shuttle [-
