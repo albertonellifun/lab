@@ -403,7 +403,7 @@ function drawTileOLD(tile) {
     ctx.stroke();
 	
     ctx.shadowBlur = 0;
-
+	
     // Disegna icone
     if (tile.type === 'server') {
 		drawServer(x, y, tile.connected);
@@ -439,7 +439,7 @@ function drawTileANIMATE(tile) {
     if (tile.connected) {
 		ctx.lineCap = "butt";//default
 		ctx.strokeStyle = "#0ea5e9";
-        ctx.lineWidth = CELL_SIZE * 0.08;
+        ctx.lineWidth = CELL_SIZE * 0.02;
         ctx.setLineDash([CELL_SIZE*0.025, CELL_SIZE*0.025]); // Tratteggio
         ctx.lineDashOffset = -flowOffset;
 		ctx.shadowBlur = 20;
@@ -2100,8 +2100,8 @@ canvas.addEventListener('pointermove', e => {
         tooltip.innerHTML = `<strong>${cell.type === 'server' ? 'Server' : cell.subType ? cell.subType.desc : 'Collegamento'}</strong>`;
         
         // Posiziona la tooltip vicino al mouse (offset di 15px per non coprire il cursore)
-        tooltip.style.left = (e.clientX + 15) + 'px';
-        tooltip.style.top = (e.clientY + 15) + 'px';
+        tooltip.style.left = (e.clientX - 20) + 'px';
+        tooltip.style.top = (e.clientY - 40) + 'px';
         tooltip.style.display = 'block';
     } else {
         tooltip.style.display = 'none';
