@@ -165,6 +165,23 @@ const PC_TYPES = [
 	{id:'yamahathr',     desc:'Ampli Yamaha THR-V2'},
 	];
 
+//Palette realistica condivisa
+const colors = {
+    bezel: "#1e293b",
+    silver: "#94a3b8",
+    darkSilver: "#475569",
+    screenOff: "#0f172a",
+    glass: "rgba(255, 255, 255, 0.15)",
+	greenOn: "#22c55e",
+	greenOff: "#064e3b",
+	orangeOn: "#f59e0b",
+	orangeOff: "#451a03",
+	redOn: "#ef4444",
+	redOff: "#7f1d1d",
+	blueOn: "#38bdf8",
+	blueOff: "#0c4a6e",
+};
+
 let grid = [];
 let serverPos = {x: 0, y: 0};
 let gameWon = false;
@@ -403,13 +420,9 @@ function drawTileOLD(tile) {
     ctx.stroke();
 	
     ctx.shadowBlur = 0;
-	
-    // Disegna icone
-    if (tile.type === 'server') {
-		drawServer(x, y, tile.connected);
-    } else if (tile.type === 'pc') {
-		drawPC(x, y, tile.subType, tile.connected);
-    }
+		
+	// Disegna icone
+    drawPC(x, y, tile);
 }
 
 
@@ -443,220 +456,200 @@ function drawTileANIMATE(tile) {
         ctx.setLineDash([CELL_SIZE*0.025, CELL_SIZE*0.025]); // Tratteggio
         ctx.lineDashOffset = -flowOffset;
 		ctx.shadowBlur = 20;
-        ctx.shadowColor = "#38bdf8";
+        ctx.shadowColor = colors.blueOn;
 		ctx.stroke();
         ctx.shadowBlur = 0;
 		ctx.setLineDash([]);
     }
 
     // Icone
-    if (tile.type === 'server') drawServer(x, y, tile.connected);
-    else if (tile.type === 'pc') drawPC(x, y, tile.subType, tile.connected);
+    drawPC(x, y, tile);
 }
 
-function drawServer(x, y, connected) {
-    const s = CELL_SIZE * 0.75; 
-    const p = (CELL_SIZE - s) / 2;
+
+function drawPC(x, y, tile) {
+	const isServer = tile.type === 'server';
+	const type = tile.subType;
+	const connected = tile.connected;
+    const s = CELL_SIZE * (isServer ? 0.75 : 0.65);//Leggermente più grande per i dettagli
+    const p = (CELL_SIZE - s) * 0.5;
     
     ctx.save();
     ctx.translate(x + p, y + p);
+	
+	if (isServer) {
+		// --- CASE ESTERNO (RACK) ---
+		// Effetto metallo spazzolato scuro
+		let caseGrad = ctx.createLinearGradient(0, 0, s, s);
+		caseGrad.addColorStop(0, "#334155");
+		caseGrad.addColorStop(0.5, "#1e293b");
+		caseGrad.addColorStop(1, "#0f172a");
+		
+		ctx.fillStyle = caseGrad;
+		ctx.beginPath();
+		ctx.roundRect(0, 0, s, s, s * 0.02);
+		ctx.fill();
 
-    // --- CASE ESTERNO (RACK) ---
-    // Effetto metallo spazzolato scuro
-    let caseGrad = ctx.createLinearGradient(0, 0, s, s);
-    caseGrad.addColorStop(0, "#334155");
-    caseGrad.addColorStop(0.5, "#1e293b");
-    caseGrad.addColorStop(1, "#0f172a");
-    
-    ctx.fillStyle = caseGrad;
-    ctx.beginPath();
-    ctx.roundRect(0, 0, s, s, s * 0.02);
-    ctx.fill();
+		// Bordi laterali del rack (le "orecchie" per il montaggio)
+		ctx.fillStyle = "#111827";
+		ctx.fillRect(0, 0, 4, s);
+		ctx.fillRect(s - 4, 0, 4, s);
 
-    // Bordi laterali del rack (le "orecchie" per il montaggio)
-    ctx.fillStyle = "#111827";
-    ctx.fillRect(0, 0, 4, s);
-    ctx.fillRect(s - 4, 0, 4, s);
+		// --- UNITÀ SERVER (Blade) ---
+		const units = 4;
+		const unitHeight = (s - 10) / units;
+		
+		for (let i = 0; i < units; i++) {
+			let uy = 5 + (i * unitHeight);
+			
+			// Slot dell'unità
+			ctx.fillStyle = "#020617";
+			ctx.fillRect(6, uy, s - 12, unitHeight - 2);
+			
+			// Griglia di ventilazione (linee sottili)
+			ctx.strokeStyle = "#1e293b";
+			ctx.lineWidth = 0.5;
+			for(let gx = 10; gx < s - 25; gx += 3) {
+				ctx.beginPath();
+				ctx.moveTo(gx, uy + 2);
+				ctx.lineTo(gx, uy + unitHeight - 4);
+				ctx.stroke();
+			}
 
-    // --- UNITÀ SERVER (Blade) ---
-    const units = 4;
-    const unitHeight = (s - 10) / units;
-    
-    for (let i = 0; i < units; i++) {
-        let uy = 5 + (i * unitHeight);
-        
-        // Slot dell'unità
-        ctx.fillStyle = "#020617";
-        ctx.fillRect(6, uy, s - 12, unitHeight - 2);
-        
-        // Griglia di ventilazione (linee sottili)
-        ctx.strokeStyle = "#1e293b";
-        ctx.lineWidth = 0.5;
-        for(let gx = 10; gx < s - 25; gx += 3) {
-            ctx.beginPath();
-            ctx.moveTo(gx, uy + 2);
-            ctx.lineTo(gx, uy + unitHeight - 4);
-            ctx.stroke();
-        }
+			// --- LED DI STATO PER OGNI UNITÀ ---
+			const ledRadius = Math.max(1, s * 0.02); // Scala i LED con la scocca
+			const ledSpacing = s * 0.1;
+			
+			if (connected) {
+				// LED Verde (Power/Link) - Fisso o lampeggio lento
+				ctx.fillStyle = (Math.sin(flowOffset * 0.1 + i) > -0.8) ? colors.greenOn : colors.greenOff;
+				ctx.shadowBlur = 5; ctx.shadowColor = colors.greenOn;
+				ctx.beginPath(); ctx.arc(s - ledSpacing * 4, uy + unitHeight/2, ledRadius, 0, Math.PI*2); ctx.fill();
 
-        // --- LED DI STATO PER OGNI UNITÀ ---
-        const ledRadius = Math.max(1, s * 0.02); // Scala i LED con la scocca
-        const ledSpacing = s * 0.1;
-        
-        if (connected) {
-            // LED Verde (Power/Link) - Fisso o lampeggio lento
-            ctx.fillStyle = (Math.sin(flowOffset * 0.1 + i) > -0.8) ? "#22c55e" : "#064e3b";
-            ctx.shadowBlur = 5; ctx.shadowColor = "#22c55e";
-            ctx.beginPath(); ctx.arc(s - ledSpacing * 4, uy + unitHeight/2, ledRadius, 0, Math.PI*2); ctx.fill();
+				// LED Arancione (Disk Activity) - Lampeggio frenetico
+				ctx.fillStyle = (Math.sin(flowOffset * 0.8 + i*2) > 0) ? colors.orangeOn : colors.orangeOff;
+				ctx.shadowColor = colors.orangeOn;
+				ctx.beginPath(); ctx.arc(s - ledSpacing * 3, uy + unitHeight/2, ledRadius, 0, Math.PI*2); ctx.fill();
+				
+				// LED Blu/Azzurro (Network Dati) - Lampeggio randomico
+				ctx.fillStyle = (Math.cos(flowOffset * 1.2 + i) > 0.3) ? colors.blueOn : colors.blueOff;
+				ctx.shadowColor = colors.blueOn;
+				ctx.beginPath(); ctx.arc(s - ledSpacing * 2, uy + unitHeight/2, ledRadius, 0, Math.PI*2); ctx.fill();
+				
+				ctx.shadowBlur = 0;
+			} else {
+				// Server Spento: solo un piccolo LED rosso di standby
+				ctx.fillStyle = colors.redOff; // Rosso spento
+				if (i === 0) ctx.fillStyle = colors.redOn; // Solo il primo ha il power standby
+				ctx.beginPath(); ctx.arc(s - ledSpacing * 4, uy + unitHeight/2, ledRadius, 0, Math.PI*2); ctx.fill();
+			}
+		}
 
-            // LED Arancione (Disk Activity) - Lampeggio frenetico
-            ctx.fillStyle = (Math.sin(flowOffset * 0.8 + i*2) > 0) ? "#f59e0b" : "#451a03";
-            ctx.shadowColor = "#f59e0b";
-            ctx.beginPath(); ctx.arc(s - ledSpacing * 3, uy + unitHeight/2, ledRadius, 0, Math.PI*2); ctx.fill();
-            
-            // LED Blu/Azzurro (Network Dati) - Lampeggio randomico
-            ctx.fillStyle = (Math.cos(flowOffset * 1.2 + i) > 0.3) ? "#38bdf8" : "#0c4a6e";
-            ctx.shadowColor = "#38bdf8";
-            ctx.beginPath(); ctx.arc(s - ledSpacing * 2, uy + unitHeight/2, ledRadius, 0, Math.PI*2); ctx.fill();
-            
-            ctx.shadowBlur = 0;
-        } else {
-            // Server Spento: solo un piccolo LED rosso di standby
-            ctx.fillStyle = "#7f1d1d"; // Rosso spento
-            if (i === 0) ctx.fillStyle = "#ef4444"; // Solo il primo ha il power standby
-            ctx.beginPath(); ctx.arc(s - ledSpacing * 4, uy + unitHeight/2, ledRadius, 0, Math.PI*2); ctx.fill();
-        }
-    }
+		// Maniglie frontali (dettaglio di classe)
+		ctx.strokeStyle = colors.darkSilver;
+		ctx.lineWidth = Math.max(1, s * 0.015);
+		ctx.lineCap = "round";
+		// Maniglia SX
+		ctx.beginPath(); ctx.moveTo(2, 10); ctx.lineTo(2, s-10); ctx.stroke();
+		// Maniglia DX
+		ctx.beginPath(); ctx.moveTo(s-2, 10); ctx.lineTo(s-2, s-10); ctx.stroke();
+	} else if (type.id === 'desktop') {
+		// --- MONITOR ---
+		// Scocca posteriore/ombra
+		ctx.fillStyle = "#000";
+		ctx.beginPath(); ctx.roundRect(0, 0, s, s * 0.65, s * 0.04); ctx.fill();
 
-    // Maniglie frontali (dettaglio di classe)
-    ctx.strokeStyle = "#475569";
-    ctx.lineWidth = Math.max(1, s * 0.015);
-    ctx.lineCap = "round";
-    // Maniglia SX
-    ctx.beginPath(); ctx.moveTo(2, 10); ctx.lineTo(2, s-10); ctx.stroke();
-    // Maniglia DX
-    ctx.beginPath(); ctx.moveTo(s-2, 10); ctx.lineTo(s-2, s-10); ctx.stroke();
+		// Bezel (Cornice)
+		let bezelGrad = ctx.createLinearGradient(0, 0, 0, s * 0.65);
+		bezelGrad.addColorStop(0, "#334155");
+		bezelGrad.addColorStop(1, "#111827");
+		ctx.fillStyle = bezelGrad;
+		ctx.beginPath(); ctx.roundRect(s*0.01, s*0.01, s - s*0.02, s * 0.65 - s*0.02, s * 0.03); ctx.fill();
 
-    ctx.restore();
-}
-
-function drawPC(x, y, type, connected) {
-    const s = CELL_SIZE * 0.65; // Leggermente più grande per i dettagli
-    const p = (CELL_SIZE - s) / 2;
-    const isDark = !connected;
-    
-    // Palette realistica
-    const colors = {
-        bezel: "#1e293b",
-        silver: "#94a3b8",
-        darkSilver: "#475569",
-        screenOff: "#0f172a",
-        screenOn: "linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)",
-        glass: "rgba(255, 255, 255, 0.15)"
-    };
-
-    ctx.save();
-    ctx.translate(x + p, y + p);
-
-    if (type.id === 'desktop') {
-        // --- MONITOR ---
-        // Scocca posteriore/ombra
-        ctx.fillStyle = "#000";
-        ctx.beginPath(); ctx.roundRect(0, 0, s, s * 0.65, s * 0.04); ctx.fill();
-
-        // Bezel (Cornice)
-        let bezelGrad = ctx.createLinearGradient(0, 0, 0, s * 0.65);
-        bezelGrad.addColorStop(0, "#334155");
-        bezelGrad.addColorStop(1, "#111827");
-        ctx.fillStyle = bezelGrad;
-        ctx.beginPath(); ctx.roundRect(s*0.01, s*0.01, s - s*0.02, s * 0.65 - s*0.02, s * 0.03); ctx.fill();
-
-        // Schermo
-        if (connected) {
-            let screenGrad = ctx.createLinearGradient(0, 0, s, s * 0.6);
-            screenGrad.addColorStop(0, "#38bdf8");
-            screenGrad.addColorStop(1, "#0369a1");
-            ctx.fillStyle = screenGrad;
-        } else {
-            ctx.fillStyle = colors.screenOff;
-        }
-        ctx.fillRect(s*0.04, s*0.04, s - s*0.08, s * 0.65 - s*0.10);
-
-        // Riflesso "Glossy"
-        ctx.fillStyle = colors.glass;
-        ctx.beginPath();
-        ctx.moveTo(s*0.04, s*0.04); ctx.lineTo(s - s*0.04, s*0.04); ctx.lineTo(s*0.04, s * 0.4);
-        ctx.fill();
-
-        // Webcam (piccolo puntino)
-        ctx.fillStyle = "#000";
-        ctx.beginPath(); ctx.arc(s * 0.5, s*0.025, Math.max(0.5, s * 0.01), 0, Math.PI * 2); ctx.fill();
-
-        // --- STAND (Supporto) ---
-        let standGrad = ctx.createLinearGradient(s * 0.4, 0, s * 0.5, 0);
-        standGrad.addColorStop(0, colors.darkSilver);
-        standGrad.addColorStop(0.5, colors.silver);
-        standGrad.addColorStop(1, colors.darkSilver);
-        
-        ctx.fillStyle = standGrad;
-        ctx.fillRect(s * 0.42, s * 0.65, s * 0.16, s * 0.2); // Collo
-        ctx.beginPath(); ctx.roundRect(s * 0.2, s * 0.8, s * 0.6, s * 0.08, s * 0.02); ctx.fill(); // Base
-    } 
-    else if (type.id === 'notebook') {
-        // --- SCHERMO APERTO ---
-        ctx.fillStyle = "#111";
-        ctx.beginPath(); ctx.roundRect(s * 0.05, 0, s * 0.9, s * 0.6, s * 0.03); ctx.fill(); // Cornice
-        
-        // Schermo LCD
-        if (connected) {
+		// Schermo
+		if (connected) {
 			let screenGrad = ctx.createLinearGradient(0, 0, s, s * 0.6);
-            screenGrad.addColorStop(0, "#38bdf8");
-            screenGrad.addColorStop(1, "#0369a1");
-            ctx.fillStyle = screenGrad;
-            //ctx.fillStyle = "#0ea5e9";
-            //ctx.shadowBlur = 10; ctx.shadowColor = "#38bdf8";
-        } else {
-            ctx.fillStyle = "#000";
-        }
+			screenGrad.addColorStop(0, "#38bdf8");
+			screenGrad.addColorStop(1, "#0369a1");
+			ctx.fillStyle = screenGrad;
+		} else {
+			ctx.fillStyle = colors.screenOff;
+		}
+		ctx.fillRect(s*0.04, s*0.04, s - s*0.08, s * 0.65 - s*0.10);
+
+		// Riflesso "Glossy"
+		ctx.fillStyle = colors.glass;
+		ctx.beginPath();
+		ctx.moveTo(s*0.04, s*0.04); ctx.lineTo(s - s*0.04, s*0.04); ctx.lineTo(s*0.04, s * 0.4);
+		ctx.fill();
+
+		// Webcam (piccolo puntino)
+		ctx.fillStyle = "#000";
+		ctx.beginPath(); ctx.arc(s * 0.5, s*0.025, Math.max(0.5, s * 0.01), 0, Math.PI * 2); ctx.fill();
+
+		// --- STAND (Supporto) ---
+		let standGrad = ctx.createLinearGradient(s * 0.4, 0, s * 0.5, 0);
+		standGrad.addColorStop(0, colors.darkSilver);
+		standGrad.addColorStop(0.5, colors.silver);
+		standGrad.addColorStop(1, colors.darkSilver);
+		
+		ctx.fillStyle = standGrad;
+		ctx.fillRect(s * 0.42, s * 0.65, s * 0.16, s * 0.2); // Collo
+		ctx.beginPath(); ctx.roundRect(s * 0.2, s * 0.8, s * 0.6, s * 0.08, s * 0.02); ctx.fill(); // Base
+	} 
+	else if (type.id === 'notebook') {
+		// --- SCHERMO APERTO ---
+		ctx.fillStyle = "#111";
+		ctx.beginPath(); ctx.roundRect(s * 0.05, 0, s * 0.9, s * 0.6, s * 0.03); ctx.fill(); // Cornice
+		
+		// Schermo LCD
+		if (connected) {
+			let screenGrad = ctx.createLinearGradient(0, 0, s, s * 0.6);
+			screenGrad.addColorStop(0, "#38bdf8");
+			screenGrad.addColorStop(1, "#0369a1");
+			ctx.fillStyle = screenGrad;
+		} else {
+			ctx.fillStyle = "#000";
+		}
 		ctx.fillRect(s * 0.05 + s*0.03, s*0.03, s * 0.9 - s*0.06, s * 0.6 - s*0.06);
 		
 		// Riflesso "Glossy"
-        ctx.fillStyle = colors.glass;
-        ctx.beginPath();
-        ctx.moveTo(s*0.08, s*0.04); ctx.lineTo(s - s*0.08, s*0.04); ctx.lineTo(s*0.08, s * 0.4);
-        ctx.fill();
+		ctx.fillStyle = colors.glass;
+		ctx.beginPath();
+		ctx.moveTo(s*0.08, s*0.04); ctx.lineTo(s - s*0.08, s*0.04); ctx.lineTo(s*0.08, s * 0.4);
+		ctx.fill();
 		
-        //ctx.shadowBlur = 0;
+		//ctx.shadowBlur = 0;
 
-        // --- BASE TASTIERA (Prospettiva) ---
-        let baseGrad = ctx.createLinearGradient(0, s * 0.6, 0, s);
-        baseGrad.addColorStop(0, colors.silver);
-        baseGrad.addColorStop(1, colors.darkSilver);
-        ctx.fillStyle = baseGrad;
+		// --- BASE TASTIERA (Prospettiva) ---
+		let baseGrad = ctx.createLinearGradient(0, s * 0.6, 0, s);
+		baseGrad.addColorStop(0, colors.silver);
+		baseGrad.addColorStop(1, colors.darkSilver);
+		ctx.fillStyle = baseGrad;
 
-        ctx.beginPath();
-        ctx.moveTo(s * 0.05, s * 0.6); // Attaccatura cerniera
-        ctx.lineTo(s * 0.95, s * 0.6);
-        ctx.lineTo(s + s*0.02, s * 0.95); // Allargamento per prospettiva
-        ctx.lineTo(-s*0.02, s * 0.95);
-        ctx.closePath();
-        ctx.fill();
+		ctx.beginPath();
+		ctx.moveTo(s * 0.05, s * 0.6); // Attaccatura cerniera
+		ctx.lineTo(s * 0.95, s * 0.6);
+		ctx.lineTo(s + s*0.02, s * 0.95); // Allargamento per prospettiva
+		ctx.lineTo(-s*0.02, s * 0.95);
+		ctx.closePath();
+		ctx.fill();
 
-        // Dettaglio tastiera (puntini) - SCALATI
-        const keySize = Math.max(1, s * 0.03);
-        const keySpacing = s * 0.1;
-        const keyRowSpacing = s * 0.04;
-        ctx.fillStyle = "rgba(0,0,0,0.2)";
-        for(let i=0; i<8; i++) {
-            for(let j=0; j<4; j++) {
-                ctx.fillRect(s*0.15 + (i*keySpacing), s*0.65 + (j*keyRowSpacing), keySize, keySize);
-            }
-        }
-        // Touchpad - SCALATO
-        ctx.fillRect(s*0.4, s*0.82, s*0.2, s*0.08);
+		// Dettaglio tastiera (puntini) - SCALATI
+		const keySize = Math.max(1, s * 0.03);
+		const keySpacing = s * 0.1;
+		const keyRowSpacing = s * 0.04;
+		ctx.fillStyle = "rgba(0,0,0,0.2)";
+		for(let i=0; i<8; i++) {
+			for(let j=0; j<4; j++) {
+				ctx.fillRect(s*0.15 + (i*keySpacing), s*0.65 + (j*keyRowSpacing), keySize, keySize);
+			}
+		}
+		// Touchpad - SCALATO
+		ctx.fillRect(s*0.4, s*0.82, s*0.2, s*0.08);
 		
 		//led all'angolino
-		ctx.fillStyle = connected ? (Math.cos(flowOffset*0.92) > 0.2 ? "#fff" : "#0c4a6e") : "#0c4a6e";
+		ctx.fillStyle = connected ? (Math.cos(flowOffset*0.92) > 0.2 ? "#fff" : colors.blueOff) : colors.blueOff;
 		if (connected && Math.cos(flowOffset*0.92) > 0.2) {
 			ctx.shadowBlur = 6;
 			ctx.shadowColor = "#fff";
@@ -665,45 +658,45 @@ function drawPC(x, y, type, connected) {
 		ctx.arc(s * 0.87, s * 0.65, s * 0.01, 0, Math.PI*2);
 		ctx.fill();
 		ctx.shadowBlur = 0;
-    } 
-    else if (type.id === 'tablet') {
-        // --- SCOCCA ---
-        let tabletGrad = ctx.createRadialGradient(s/2, s/2, 0, s/2, s/2, s);
-        tabletGrad.addColorStop(0, "#475569");
-        tabletGrad.addColorStop(1, "#0f172a");
-        ctx.fillStyle = tabletGrad;
-        ctx.beginPath(); ctx.roundRect(s*0.1, 0, s*0.8, s, s * 0.08); ctx.fill();
+	} 
+	else if (type.id === 'tablet') {
+		// --- SCOCCA ---
+		let tabletGrad = ctx.createRadialGradient(s/2, s/2, 0, s/2, s/2, s);
+		tabletGrad.addColorStop(0, "#475569");
+		tabletGrad.addColorStop(1, "#0f172a");
+		ctx.fillStyle = tabletGrad;
+		ctx.beginPath(); ctx.roundRect(s*0.1, 0, s*0.8, s, s * 0.08); ctx.fill();
 
-        // Schermo Tutto Vetro
-        if (connected) {
-            let screenGrad = ctx.createLinearGradient(0, 0, s, s * 0.6);
-            screenGrad.addColorStop(0, "#38bdf8");
-            screenGrad.addColorStop(1, "#0369a1");
-            ctx.fillStyle = screenGrad;
-        } else {
-            ctx.fillStyle = "#000";
-        }
-        ctx.beginPath(); 
+		// Schermo Tutto Vetro
+		if (connected) {
+			let screenGrad = ctx.createLinearGradient(0, 0, s, s * 0.6);
+			screenGrad.addColorStop(0, "#38bdf8");
+			screenGrad.addColorStop(1, "#0369a1");
+			ctx.fillStyle = screenGrad;
+		} else {
+			ctx.fillStyle = "#000";
+		}
+		ctx.beginPath(); 
 		ctx.roundRect(s*0.1 + s*0.03, s*0.03, s*0.8 - s*0.06, s - s*0.06, s * 0.08); 
 		ctx.fill();
-        
+		
 		// Riflesso "Glossy"
-        ctx.fillStyle = colors.glass;
-        ctx.beginPath();
-        ctx.moveTo(s*0.12, s*0.04); ctx.lineTo(s - s*0.10, s*0.04); ctx.lineTo(s*0.12, s * 0.04);
-        ctx.fill();
+		ctx.fillStyle = colors.glass;
+		ctx.beginPath();
+		ctx.moveTo(s*0.12, s*0.04); ctx.lineTo(s - s*0.10, s*0.04); ctx.lineTo(s*0.12, s * 0.04);
+		ctx.fill();
 		
 		//ctx.shadowBlur = 0;
 
-        // Riflesso curva
-        ctx.strokeStyle = "rgba(255,255,255,0.1)";
-        ctx.lineWidth = 1;
-        ctx.beginPath(); ctx.arc(s*0.25, s*0.15, s*0.1, Math.PI, Math.PI*1.5); ctx.stroke();
+		// Riflesso curva
+		ctx.strokeStyle = "rgba(255,255,255,0.1)";
+		ctx.lineWidth = 1;
+		ctx.beginPath(); ctx.arc(s*0.25, s*0.15, s*0.1, Math.PI, Math.PI*1.5); ctx.stroke();
 
-        // Sensore Webcam tablet
-        ctx.fillStyle = "#1e293b";
-        ctx.beginPath(); ctx.arc(s*0.5, s*0.08, Math.max(0.8, s * 0.015), 0, Math.PI*2); ctx.fill();
-    } 
+		// Sensore Webcam tablet
+		ctx.fillStyle = "#1e293b";
+		ctx.beginPath(); ctx.arc(s*0.5, s*0.08, Math.max(0.8, s * 0.015), 0, Math.PI*2); ctx.fill();
+	} 
 	else if (type.id === 'baraccone') {
 		// Case
 		let grad = ctx.createLinearGradient(0, 0, s, s);
@@ -715,7 +708,7 @@ function drawPC(x, y, type, connected) {
 		// Griglia frontale - SCALATA
 		const grillaHeight = s / 5;
 		const grillaMargin = s * 0.05;
-		ctx.fillStyle = "#0f172a";
+		ctx.fillStyle = colors.screenOff;//"#0f172a";
 		for(let i=0; i<4; i++) {
 			ctx.fillRect(grillaMargin, grillaMargin + (i * grillaHeight), s - 2*grillaMargin, grillaHeight * 0.3);
 		}
@@ -730,10 +723,10 @@ function drawPC(x, y, type, connected) {
 		const blinkRed = Math.sin(flowOffset * 0.07 + 3) > -0.8;
 		
 		// LED VERDE A DX
-		ctx.fillStyle = connected ? (blinkGreen ? "#22c55e" : "#0d7a3a") : "#064e3b";
+		ctx.fillStyle = connected ? (blinkGreen ? colors.greenOn : colors.greenOff) : colors.greenOff;
 		if (connected && blinkGreen) {
 			ctx.shadowBlur = 8; 
-			ctx.shadowColor = "#22c55e";
+			ctx.shadowColor = colors.greenOn;
 		}
 		ctx.beginPath(); 
 		ctx.arc(s - ledRadius * 2.5, ledY, ledRadius, 0, Math.PI*2); 
@@ -741,10 +734,10 @@ function drawPC(x, y, type, connected) {
 		ctx.shadowBlur = 0;
 		
 		// LED ARANCIO A CX
-		ctx.fillStyle = connected ? (blinkOrange ? "#f59e0b" : "#7a4a03") : "#451a03";
+		ctx.fillStyle = connected ? (blinkOrange ? colors.orangeOn : colors.orangeOff) : colors.orangeOff;
 		if (connected && blinkOrange) {
 			ctx.shadowBlur = 8; 
-			ctx.shadowColor = "#f59e0b";
+			ctx.shadowColor = colors.orangeOn;
 		}
 		ctx.beginPath(); 
 		ctx.arc(s - ledRadius * 5, ledY, ledRadius, 0, Math.PI*2); 
@@ -752,10 +745,10 @@ function drawPC(x, y, type, connected) {
 		ctx.shadowBlur = 0;
 		
 		// LED ROSSO A SX
-		ctx.fillStyle = connected ? (blinkRed ? "#ef4444" : "#7f1d1d") : "#451a03";
+		ctx.fillStyle = connected ? (blinkRed ? colors.redOn : colors.redOff) : colors.redOff;
 		if (connected && blinkRed) {
 			ctx.shadowBlur = 8; 
-			ctx.shadowColor = "#ef4444";
+			ctx.shadowColor = colors.redOn;
 		}
 		ctx.beginPath(); 
 		ctx.arc(s - ledRadius * 7.5, ledY, ledRadius, 0, Math.PI*2); 
@@ -774,7 +767,7 @@ function drawPC(x, y, type, connected) {
 		ctx.fill();
 		
 		// Griglia ventilazione frontale
-		ctx.strokeStyle = "#475569";
+		ctx.strokeStyle = colors.darkSilver;
 		ctx.lineWidth = 0.5;
 		const ventRows = 3;
 		const ventSpacing = s * 0.08;
@@ -799,11 +792,9 @@ function drawPC(x, y, type, connected) {
 			ctx.save();
 			ctx.translate(pos.x, pos.y);
 			
-			// Rotazione antenna con animazione
-			const antennaRotation = pos.angle; //+ Math.sin(flowOffset*0.1 + idx*0.5)*0.15;
-			ctx.rotate(antennaRotation);
+			ctx.rotate(pos.angle);
 			
-			ctx.strokeStyle = "#475569";
+			ctx.strokeStyle = colors.darkSilver;
 			ctx.lineWidth = Math.max(2, s*0.06);
 			ctx.lineCap = "round";
 			ctx.beginPath();
@@ -821,10 +812,10 @@ function drawPC(x, y, type, connected) {
 		const ledSpacing = s*0.15;
 		
 		// LED Power (Verde) - BLINK
-		ctx.fillStyle = connected ? (Math.sin(flowOffset*0.15) > -0.3 ? "#22c55e" : "#0d7a3a") : "#064e3b";
+		ctx.fillStyle = connected ? (Math.sin(flowOffset*0.15) > -0.3 ? colors.greenOn : colors.greenOff) : colors.greenOff;
 		if (connected && Math.sin(flowOffset*0.15) > -0.3) {
 			ctx.shadowBlur = 6;
-			ctx.shadowColor = "#22c55e";
+			ctx.shadowColor = colors.greenOn;
 		}
 		ctx.beginPath();
 		ctx.arc(ledStartX, ledStartY, ledRadius, 0, Math.PI*2);
@@ -832,10 +823,10 @@ function drawPC(x, y, type, connected) {
 		ctx.shadowBlur = 0;
 		
 		// LED Internet/WAN (Blu) - BLINK
-		ctx.fillStyle = connected ? (Math.cos(flowOffset*0.2) > 0.2 ? "#38bdf8" : "#0c4a6e") : "#0c4a6e";
+		ctx.fillStyle = connected ? (Math.cos(flowOffset*0.2) > 0.2 ? colors.blueOn : colors.blueOff) : colors.blueOff;
 		if (connected && Math.cos(flowOffset*0.2) > 0.2) {
 			ctx.shadowBlur = 6;
-			ctx.shadowColor = "#38bdf8";
+			ctx.shadowColor = colors.blueOn;
 		}
 		ctx.beginPath();
 		ctx.arc(ledStartX + ledSpacing, ledStartY, ledRadius, 0, Math.PI*2);
@@ -843,10 +834,10 @@ function drawPC(x, y, type, connected) {
 		ctx.shadowBlur = 0;
 		
 		// LED WiFi 2.4GHz (Arancio) - BLINK
-		ctx.fillStyle = connected ? (Math.sin(flowOffset*0.25 + 1) > 0.1 ? "#f59e0b" : "#7a4a03") : "#451a03";
+		ctx.fillStyle = connected ? (Math.sin(flowOffset*0.25 + 1) > 0.1 ? colors.orangeOn : colors.orangeOff) : colors.orangeOff;
 		if (connected && Math.sin(flowOffset*0.25 + 1) > 0.1) {
 			ctx.shadowBlur = 6;
-			ctx.shadowColor = "#f59e0b";
+			ctx.shadowColor = colors.orangeOff;
 		}
 		ctx.beginPath();
 		ctx.arc(ledStartX + ledSpacing*2, ledStartY, ledRadius, 0, Math.PI*2);
@@ -854,10 +845,10 @@ function drawPC(x, y, type, connected) {
 		ctx.shadowBlur = 0;
 		
 		// LED WiFi 5GHz (Rosso) - BLINK
-		ctx.fillStyle = connected ? (Math.cos(flowOffset*0.3 + 2) > 0.2 ? "#ef4444" : "#7f1d1d") : "#451a03";
+		ctx.fillStyle = connected ? (Math.cos(flowOffset*0.3 + 2) > 0.2 ? colors.redOn : colors.redOff) : colors.redOff;
 		if (connected && Math.cos(flowOffset*0.3 + 2) > 0.2) {
 			ctx.shadowBlur = 6;
-			ctx.shadowColor = "#ef4444";
+			ctx.shadowColor = colors.redOn;
 		}
 		ctx.beginPath();
 		ctx.arc(ledStartX + ledSpacing*3, ledStartY, ledRadius, 0, Math.PI*2);
@@ -866,7 +857,7 @@ function drawPC(x, y, type, connected) {
 		
 		// --- SIMBOLO WiFi STILIZZATO ---
 		if (connected) {
-			ctx.strokeStyle = "#38bdf8";
+			ctx.strokeStyle = colors.blueOn;
 			ctx.lineWidth = Math.max(0.5, s*0.01);
 			
 			const wifiX = s*0.8;
@@ -879,7 +870,7 @@ function drawPC(x, y, type, connected) {
 				ctx.stroke();
 			});
 			
-			ctx.fillStyle = "#38bdf8";
+			ctx.fillStyle = colors.blueOn;
 			ctx.beginPath();
 			ctx.arc(wifiX, wifiY, Math.max(0.8, s*0.01), 0, Math.PI*2);
 			ctx.fill();
@@ -937,7 +928,7 @@ function drawPC(x, y, type, connected) {
 			ctx.arc(s*0.5, s*0.3, s*0.12, 0, Math.PI*2);
 			ctx.fill();	
 			//centro lente blu
-			ctx.fillStyle = '#38bdf8';
+			ctx.fillStyle = colors.blueOn;
 			ctx.beginPath();
 			ctx.arc(s*0.5, s*0.27, s*0.04, 0, Math.PI*2);
 			ctx.fill();
@@ -951,10 +942,10 @@ function drawPC(x, y, type, connected) {
 		}
 		
 		// LED indicatore di stato
-		ctx.fillStyle = connected ? "#22c55e" : "#7f1d1d";
+		ctx.fillStyle = connected ? colors.greenOn : colors.greenOff;
 		if (connected && Math.sin(flowOffset*0.2) > 0) {
 			ctx.shadowBlur = 6;
-			ctx.shadowColor = "#22c55e";
+			ctx.shadowColor = colors.greenOn;
 		}
 		ctx.beginPath();
 		ctx.arc(s*0.75, s*0.45, Math.max(1.5, s*0.025), 0, Math.PI*2);
@@ -967,7 +958,7 @@ function drawPC(x, y, type, connected) {
 		ctx.ellipse(s*0.3, s*0.45, s*0.15, s*0.2, 0, 0, Math.PI*2);
 		ctx.fill();
 	}
-    else if (type.id === 'macintosh') {
+	else if (type.id === 'macintosh') {
 		// --- MACINTOSH 128K (1984) - Classic Beige ---
 		
 		// Case beige principale (molto arrotondato)
@@ -1022,10 +1013,10 @@ function drawPC(x, y, type, connected) {
 		
 		
 		// --- LED INDICATORE (basso destra) ---
-		ctx.fillStyle = connected ? "#f59e0b" : "#451a03";
+		ctx.fillStyle = connected ? colors.orangeOn : colors.orangeOff;
 		if (connected && Math.sin(flowOffset*0.1) > -0.3) {
 			ctx.shadowBlur = 6;
-			ctx.shadowColor = "#f59e0b";
+			ctx.shadowColor = colors.orangeOn;
 		}
 		ctx.beginPath();
 		ctx.arc(s*0.85, s*0.78, Math.max(1.5, s*0.022), 0, Math.PI*2);
@@ -1130,10 +1121,10 @@ function drawPC(x, y, type, connected) {
 		ctx.fill();
 		
 		// --- LED INDICATORE (basso, sotto il stand) ---
-		ctx.fillStyle = connected ? "#22c55e" : "#064e3b";
+		ctx.fillStyle = connected ? colors.greenOn : colors.greenOff;
 		if (connected && Math.sin(flowOffset*0.12) > -0.4) {
 			ctx.shadowBlur = 6;
-			ctx.shadowColor = "#22c55e";
+			ctx.shadowColor = colors.greenOn;
 		}
 		ctx.beginPath();
 		ctx.arc(s*0.5, s*0.82, Math.max(1.2, s*0.015), 0, Math.PI*2);
@@ -1445,9 +1436,9 @@ function drawPC(x, y, type, connected) {
 		// Pulsante power (verde se acceso)
 		ctx.fillStyle = connected ? "#333333" : "#c5225e";
 		if (connected && Math.cos(flowOffset*0.15) > -0.5) {
-			ctx.fillStyle = "#22c55e";
+			ctx.fillStyle = colors.greenOn;
 			ctx.shadowBlur = 8;
-			ctx.shadowColor = "#22c55e";
+			ctx.shadowColor = colors.greenOn;
 		}
 		ctx.beginPath();
 		ctx.arc(s*0.85, s*0.15, s*0.025, 0, Math.PI*2);
@@ -1529,10 +1520,10 @@ function drawPC(x, y, type, connected) {
 		ctx.fillRect(s*0.02, s*0.54, s*0.96, s*0.025);
 		
 		// --- LED POWER (pic0colo, rosso) ---
-		ctx.fillStyle = connected ? "#22c55e" : "#0d3a0d";
+		ctx.fillStyle = connected ? colors.greenOn : colors.greenOff;
 		if (connected && Math.sin(flowOffset*0.15) > -0.5) {
 			ctx.shadowBlur = 6;
-			ctx.shadowColor = "#22c55e";
+			ctx.shadowColor = colors.greenOn;
 			ctx.beginPath();
 			ctx.arc(s*0.88, s*0.23, s*0.03, 0, Math.PI*2);
 			ctx.fill();
@@ -1614,7 +1605,7 @@ function drawPC(x, y, type, connected) {
 			ctx.stroke();
 			
 			// Indicatore (lineetta)
-			ctx.strokeStyle = i === 2 ? "#ef4444" : "#aaa";  // Rosso per la terza
+			ctx.strokeStyle = i === 2 ? colors.redOn : "#aaa";  // Rosso per la terza
 			ctx.lineWidth = Math.max(1, s*0.008);
 			ctx.lineCap = "round";
 			ctx.beginPath();
@@ -1673,10 +1664,10 @@ function drawPC(x, y, type, connected) {
 	}
 	else if (type.id === 'minipc') {
 		// --- SCOCCA ---
-        let minipcGrad = ctx.createRadialGradient(s*0.5, s*0.5, 0, s*0.5, s*0.5, s);
-        minipcGrad.addColorStop(0, "#273549");
-        minipcGrad.addColorStop(1, "#0f070a");
-        
+		let minipcGrad = ctx.createRadialGradient(s*0.5, s*0.5, 0, s*0.5, s*0.5, s);
+		minipcGrad.addColorStop(0, "#273549");
+		minipcGrad.addColorStop(1, "#0f070a");
+		
 		//base NERA
 		ctx.fillStyle = '#111';
 		ctx.beginPath(); 
@@ -1685,13 +1676,13 @@ function drawPC(x, y, type, connected) {
 		
 		//cerchio di luce
 		if (connected) {
-            let screenGrad = ctx.createRadialGradient(s*0.5, s*0.5, 0, s*0.5, s*0.5, s);
-            screenGrad.addColorStop(0, "#38bdf8");
-            screenGrad.addColorStop(1, "#0369a1");
-            ctx.fillStyle = screenGrad;
-        } else {
-            ctx.fillStyle = minipcGrad;
-        }
+			let screenGrad = ctx.createRadialGradient(s*0.5, s*0.5, 0, s*0.5, s*0.5, s);
+			screenGrad.addColorStop(0, "#38bdf8");
+			screenGrad.addColorStop(1, "#0369a1");
+			ctx.fillStyle = screenGrad;
+		} else {
+			ctx.fillStyle = minipcGrad;
+		}
 		ctx.beginPath(); 
 		ctx.roundRect(s*0.2, s*0.4, s*0.6, s*0.4, s * 0.08); 
 		ctx.fill();
@@ -1746,10 +1737,10 @@ function drawPC(x, y, type, connected) {
 		ctx.stroke();
 		
 		//led
-		ctx.fillStyle = connected ? "#38bdf8" : "#222";
+		ctx.fillStyle = connected ? colors.blueOn : "#222";
 		if (connected && Math.sin(flowOffset*0.95) > -0.5) {
 			ctx.shadowBlur = 5;
-			ctx.shadowColor = "#38bdf8";
+			ctx.shadowColor = colors.blueOn;
 		}
 		ctx.beginPath();
 		ctx.arc(s*0.72, s*0.67, s*0.01, 0, Math.PI*2);
@@ -1854,7 +1845,7 @@ function drawPC(x, y, type, connected) {
 		}
 		
 		// Lancetta indicatore FM (animated se connesso)
-		const dialAngle = connected ? (Math.sin(flowOffset * 0.02) * 0.9) - 1.75 : (Math.PI * 1.75);
+		const dialAngle = connected ? (Math.sin(flowOffset * 0.04) * 0.9) - 1.75 : (Math.PI * 1.75);
 		
 		ctx.strokeStyle = '#333';
 		ctx.lineWidth = s*0.03;
@@ -1873,7 +1864,7 @@ function drawPC(x, y, type, connected) {
 		centerGrad.addColorStop(1, "#8B7355");
 		ctx.fillStyle = centerGrad;
 		ctx.beginPath();
-		ctx.arc(dialX, dialY, s*0.1, 0, Math.PI*2);
+		ctx.arc(dialX, dialY, s*0.09, 0, Math.PI*2);
 		ctx.fill();
 		
 		// Label "FM" sotto quadrante
@@ -1916,7 +1907,7 @@ function drawPC(x, y, type, connected) {
 		ctx.lineCap = 'butt';
 	}
 	else if (type.id === 'nesthub') {
-        //basetta grigia
+		//basetta grigia
 		ctx.fillStyle = '#aaa';
 		ctx.beginPath();
 		ctx.roundRect(s*0.2, s*0.45, s*0.6, s*0.2, s*0.04);
@@ -1927,43 +1918,43 @@ function drawPC(x, y, type, connected) {
 		ctx.fill();
 		
 		// --- SCOCCA ---
-        let tabletGrad = ctx.createRadialGradient(s/2, s/2, 0, s/2, s/2, s);
-        tabletGrad.addColorStop(0, "#fff");//475569");
-        tabletGrad.addColorStop(1, "#ccc");//0f172a");
-        ctx.fillStyle = tabletGrad;
-        ctx.beginPath(); ctx.roundRect(s*0.1, 0, s*0.8, s*0.55, s * 0.08); ctx.fill();
+		let tabletGrad = ctx.createRadialGradient(s/2, s/2, 0, s/2, s/2, s);
+		tabletGrad.addColorStop(0, "#fff");
+		tabletGrad.addColorStop(1, "#ccc");
+		ctx.fillStyle = tabletGrad;
+		ctx.beginPath(); ctx.roundRect(s*0.1, 0, s*0.8, s*0.55, s * 0.08); ctx.fill();
 
-        // Schermo Tutto Vetro
-        if (connected) {
-            let screenGrad = ctx.createLinearGradient(0, 0, s, s * 0.6);
-            screenGrad.addColorStop(0, "#38bdf8");
-            screenGrad.addColorStop(1, "#0369a1");
-            ctx.fillStyle = screenGrad;
-        } else {
-            ctx.fillStyle = "#000";
-        }
-        ctx.beginPath(); 
+		// Schermo Tutto Vetro
+		if (connected) {
+			let screenGrad = ctx.createLinearGradient(0, 0, s, s * 0.6);
+			screenGrad.addColorStop(0, "#38bdf8");
+			screenGrad.addColorStop(1, "#0369a1");
+			ctx.fillStyle = screenGrad;
+		} else {
+			ctx.fillStyle = "#000";
+		}
+		ctx.beginPath(); 
 		ctx.roundRect(s*0.14, s*0.06, s*0.8 - s*0.07, s * 0.5 - s*0.08, s * 0.04); 
 		ctx.fill();
-        
+		
 		// Sensore Webcam tablet
-        ctx.fillStyle = "#111";
-        ctx.beginPath(); ctx.fillRect(s*0.46, s*0.025, s * 0.08, s * 0.02);
+		ctx.fillStyle = "#111";
+		ctx.beginPath(); ctx.fillRect(s*0.46, s*0.025, s * 0.08, s * 0.02);
 		ctx.fillStyle = "#000";
 		ctx.beginPath(); ctx.fillRect(s*0.25, s*0.025, s * 0.04, s * 0.02);
 		ctx.beginPath(); ctx.fillRect(s*0.70, s*0.025, s * 0.04, s * 0.02);
 		
 		
 		// Riflesso "Glossy"
-        ctx.fillStyle = colors.glass;
-        ctx.beginPath();
-        ctx.moveTo(s*0.12, s*0.04); ctx.lineTo(s - s*0.10, s*0.04); ctx.lineTo(s*0.12, s * 0.04);
-        ctx.fill();
+		ctx.fillStyle = colors.glass;
+		ctx.beginPath();
+		ctx.moveTo(s*0.12, s*0.04); ctx.lineTo(s - s*0.10, s*0.04); ctx.lineTo(s*0.12, s * 0.04);
+		ctx.fill();
 		
 		// Riflesso curva
-        ctx.strokeStyle = "rgba(255,255,255,0.1)";
-        ctx.lineWidth = 1;
-        ctx.beginPath(); ctx.arc(s*0.25, s*0.15, s*0.1, Math.PI, Math.PI*1.5); ctx.stroke();
+		ctx.strokeStyle = "rgba(255,255,255,0.1)";
+		ctx.lineWidth = 1;
+		ctx.beginPath(); ctx.arc(s*0.25, s*0.15, s*0.1, Math.PI, Math.PI*1.5); ctx.stroke();
 
 		//connessione G
 		if (connected) {
@@ -1972,8 +1963,8 @@ function drawPC(x, y, type, connected) {
 			ctx.textAlign = "center";
 			ctx.fillText("G", s*0.48, s*0.30);
 		}
-        
-    } 
+		
+	} 
 	else if (type.id === 'yamahathr') {
 		// --- MANIGLIA (Arco superiore) ---
 		ctx.strokeStyle = "#9ca3af";
@@ -2077,7 +2068,6 @@ function drawPC(x, y, type, connected) {
 		ctx.moveTo(s*0.05, s*0.15); ctx.lineTo(s*0.5, s*0.2); ctx.lineTo(s*0.1, s*0.35);
 		ctx.fill();
 	}
-	
 	ctx.restore();
 }
 
