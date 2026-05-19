@@ -160,6 +160,8 @@ const PC_TYPES = [
 	{id:'hplaserjet',    desc:'HP LaserJet 107w'},
 	{id:'atari2600',     desc:'Atari 2600 del 1977'},
 	{id:'hantarex',      desc:'Apple ][ Compatibile del 1983'},
+	{id:'radio',         desc:'Vintage Radio R919 BT-MP3'},
+	{id:'nesthub',       desc:'Google NestHub'},
 	];
 
 let grid = [];
@@ -193,39 +195,6 @@ function initGame() {
     
     // Usa l'altezza disponibile, ma mantieni il massimo della larghezza
     const canvasSize = Math.min(CANVAS_MAX_SIZE, availableHeight);
-											  
- 
-    canvas.width = canvasSize;
-    canvas.height = canvasSize;
-    
-	// Ricalcola CELL_SIZE in base alla canvas effettiva
-    CELL_SIZE = canvasSize / SIZE;
-	
-    grid = [];
-    gameWon = false;
-    statusDiv.innerText = "";
-    
-    for (let y = 0; y < SIZE; y++) {
-        grid[y] = [];
-        for (let x = 0; x < SIZE; x++) {
-            grid[y][x] = { x, y, conns: 0, type: 'cable', subType: '', connected: false };
-        }
-    }
-
-    generateNetwork();
-    assignTypes();
-    shuffleGrid();
-    updateConnectivity();
-}
-
-function initGamexxx() {
-	const container = document.getElementById('game-container');
-	const availableWidth = container.clientWidth;
-	const availableHeight = container.clientHeight;
-	
-	// Calcola la canvas adattandosi allo spazio disponibile
-	const maxCanvasSize = Math.min(availableWidth, availableHeight, CANVAS_MAX_SIZE);
-	const canvasSize = Math.floor(maxCanvasSize);
 	
     canvas.width = canvasSize;
     canvas.height = canvasSize;
@@ -249,6 +218,17 @@ function initGamexxx() {
     shuffleGrid();
     updateConnectivity();
 }
+
+//genera un labirinto perfetto in cui ogni cella è collegata al server e non esistono cicli (loop) o vicoli ciechi isolati
+//0) Viene creata una griglia di tracciamento (visited) per sapere quali celle fanno già parte della rete (all'inizio sono tutte false).
+//1) Viene scelta una posizione casuale server (serverPos) e viene segnata come visited = true.
+//2) Viene chiamata la funzione addWalls sul server. Questa funzione prende i 4 vicini (Nord, Sud, Est, Ovest) e li inserisce in un elenco chiamato walls (che qui funge da "lista dei collegamenti possibili").
+//3) Il Ciclo di Costruzione: Finché ci sono collegamenti disponibili nell'elenco walls:
+//4) Ne viene estratto uno a caso (splice).
+//5) Si controlla la cella di destinazione (wall.x2, wall.y2). Se è già stata visitata, il collegamento viene scartato per evitare di creare dei loop.
+//6) Se non è visitata, il muro viene "abbattuto": viene creato un collegamento bidirezionale tra le due celle usando gli operatori bitwise (|=).
+//7) La nuova cella viene segnata come visitata e i suoi vicini vengono aggiunti alla lista walls.
+//8) Alla fine di questo ciclo, tutte le celle della griglia saranno collegate tra loro in un unico grande "albero" genealogico che ha come radice il server.
 
 function generateNetwork() {
     let visited = Array(SIZE).fill().map(() => Array(SIZE).fill(false));
@@ -296,7 +276,10 @@ function shuffleGrid() {
 
 function rotateBitmask(m) {
     let n = 0;
-    if (m & N) n |= E; if (m & E) n |= S; if (m & S) n |= W; if (m & W) n |= N;
+    if (m & N) n |= E; 
+	if (m & E) n |= S; 
+	if (m & S) n |= W; 
+	if (m & W) n |= N;
     return n;
 }
 
@@ -422,12 +405,11 @@ function drawTileOLD(tile) {
 
     // Disegna icone
     if (tile.type === 'server') {
-        drawServer(x, y, tile.connected);
+		drawServer(x, y, tile.connected);
     } else if (tile.type === 'pc') {
-        drawPC(x, y, tile.subType, tile.connected);
+		drawPC(x, y, tile.subType, tile.connected);
     }
 }
-
 
 
 function drawTileANIMATE(tile) {
@@ -1752,6 +1734,225 @@ function drawPC(x, y, type, connected) {
 		ctx.arc(s*0.72, s*0.67, s*0.01, 0, Math.PI*2);
 		ctx.fill();
 	}
+	else if (type.id === 'radio') {
+		//CORPO IN LEGNO
+		let woodGrad = ctx.createLinearGradient(0, 0, s, s);
+		woodGrad.addColorStop(0, "#8B5A3C");
+		woodGrad.addColorStop(0.3, "#7A4B2F");
+		woodGrad.addColorStop(0.5, "#6B3E1F");
+		woodGrad.addColorStop(0.7, "#7A4B2F");
+		woodGrad.addColorStop(1, "#8B5A3C");
+		ctx.fillStyle = woodGrad;
+		
+		//corpo arrotondato
+		ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+		ctx.lineWidth = s*0.02;
+		ctx.beginPath();
+		ctx.roundRect(s*0.1, s*0.1, s*0.8, s*0.5, [s*0.2,s*0.1,s*0.04,s*0.04]);
+		ctx.closePath();
+		ctx.fill();
+		ctx.stroke();
+		
+		//piedini
+		ctx.fillStyle = '#111';
+		ctx.fillRect(s*0.2,s*0.6,s*0.1,s*0.06);
+		ctx.fillRect(s*0.7,s*0.6,s*0.1,s*0.06);
+		
+		//--- GRIGLIA SPEAKER (SX) ---
+		ctx.fillStyle = '#111';
+		ctx.fillRect(s*0.16,s*0.24,s*0.04,s*0.21);
+		ctx.fillRect(s*0.22,s*0.23,s*0.04,s*0.22);
+		ctx.fillRect(s*0.28,s*0.22,s*0.04,s*0.23);
+		ctx.fillRect(s*0.34,s*0.21,s*0.04,s*0.24);
+		ctx.fillRect(s*0.40,s*0.20,s*0.04,s*0.25);
+		
+		//scritte
+		ctx.fillStyle = "rgba(0,0,0,0.94)";
+		ctx.font = `${s*0.08}px serif`;
+		ctx.textAlign = "left";
+		ctx.fillText("fm radio", s*0.16, s*0.52);
+		
+		
+		// --- QUADRANTE FM (DX) ---
+		const dialX = s*0.7;
+		const dialY = s*0.35;
+		const dialRadius = s*0.18;
+		
+		// Sfondo quadrante (colore arancio/oro)
+		let dialGrad = ctx.createRadialGradient(dialX, dialY, dialRadius*0.3, dialX, dialY, dialRadius);
+		dialGrad.addColorStop(0, connected ? '#4bf' : '#fb5');
+		dialGrad.addColorStop(0.5, connected ? '#4bf' : '#fb5');
+		dialGrad.addColorStop(1, connected ? '#07b' : '#c82');
+		ctx.fillStyle = dialGrad;
+		ctx.beginPath();
+		ctx.arc(dialX, dialY, dialRadius, 0, Math.PI*2);
+		ctx.fill();
+		
+		// Bordo quadrante (metallico)
+		ctx.strokeStyle = "#8B7355";
+		ctx.lineWidth = s*0.02;
+		ctx.beginPath();
+		ctx.arc(dialX, dialY, dialRadius, 0, Math.PI*2);
+		ctx.stroke();
+		
+		// Bordo interno (più scuro)
+		ctx.strokeStyle = "#3D3D3D";
+		ctx.lineWidth = s*0.015;
+		ctx.beginPath();
+		ctx.arc(dialX, dialY, dialRadius - s*0.01, 0, Math.PI*2);
+		ctx.stroke();
+		
+		// Numeri scala FM (90, 94, 98, 102, 106, 110)
+		ctx.fillStyle = "#000";
+		ctx.font = `${Math.max(5, s*0.05)}px serif`;
+		ctx.textAlign = "center";
+		ctx.textBaseline = "middle";
+		const freqs = [90, 94, 98, 102, 106, 110];
+		freqs.forEach((freq, idx) => {
+			const angle = (idx / freqs.length) * Math.PI * 2;
+			const labelRadius = dialRadius * 0.75;
+			const lx = dialX + Math.cos(angle) * labelRadius;
+			const ly = dialY + Math.sin(angle) * labelRadius;
+			ctx.fillText(freq.toString(), lx, ly);
+		});
+		// Ticks scala
+		ctx.strokeStyle = "#000";
+		ctx.lineWidth = s*0.01;
+		for(let i = 0; i < 24; i++) {
+			const angle = (i / 24) * Math.PI * 2;
+			const r1 = dialRadius * 0.95;
+			const r2 = dialRadius * 0.85;
+			const x1 = dialX + Math.cos(angle) * r1;
+			const y1 = dialY + Math.sin(angle) * r1;
+			const x2 = dialX + Math.cos(angle) * r2;
+			const y2 = dialY + Math.sin(angle) * r2;
+			ctx.beginPath();
+			ctx.moveTo(x1, y1);
+			ctx.lineTo(x2, y2);
+			ctx.stroke();
+		}
+		
+		// Lancetta indicatore FM (animated se connesso)
+		const dialAngle = connected ? (Math.sin(flowOffset * 0.02) * 0.9) - 1.75 : (Math.PI * 1.75);
+		
+		ctx.strokeStyle = '#333';
+		ctx.lineWidth = s*0.03;
+		ctx.lineCap = "round";
+		ctx.beginPath();
+		ctx.moveTo(dialX, dialY);
+		ctx.lineTo(
+			dialX + Math.cos(dialAngle) * (dialRadius * 0.7),
+			dialY + Math.sin(dialAngle) * (dialRadius * 0.7)
+		);
+		ctx.stroke();
+		
+		// Centro lancetta (cerchietto)
+		let centerGrad = ctx.createRadialGradient(dialX, dialY, 0, dialX, dialY, s*0.1);
+		centerGrad.addColorStop(0, "#E8D4A2");
+		centerGrad.addColorStop(1, "#8B7355");
+		ctx.fillStyle = centerGrad;
+		ctx.beginPath();
+		ctx.arc(dialX, dialY, s*0.1, 0, Math.PI*2);
+		ctx.fill();
+		
+		// Label "FM" sotto quadrante
+		ctx.fillStyle = "#333";
+		ctx.font = `bold ${Math.max(6, s*0.07)}px serif`;
+		ctx.textAlign = "center";
+		ctx.fillText("R919", dialX, dialY + dialRadius + s*0.04);
+		
+		// --- MANOPOLE BASSE ---
+		const knobY = s*0.54;
+		const knob1X = s*0.56;
+		const knob2X = s*0.84;
+		
+		[knob1X, knob2X].forEach((knobX) => {
+			// Base manopola
+			let knobGrad = ctx.createRadialGradient(knobX, knobY, 0, knobX, knobY, s*0.05);
+			knobGrad.addColorStop(0, "#B0860B");
+			knobGrad.addColorStop(1, "#6B5203");
+			ctx.fillStyle = knobGrad;
+			ctx.beginPath();
+			ctx.arc(knobX, knobY, s*0.05, 0, Math.PI*2);
+			ctx.fill();
+			
+			// Bordo manopola
+			ctx.strokeStyle = "#3D3D3D";
+			ctx.lineWidth = s*0.008;
+			ctx.beginPath();
+			ctx.arc(knobX, knobY, s*0.05, 0, Math.PI*2);
+			ctx.stroke();
+			
+			// Indicatore manopola (lineetta)
+			ctx.strokeStyle = "#2a2a2a";
+			ctx.lineWidth = s*0.015;
+			ctx.lineCap = "round";
+			ctx.beginPath();
+			ctx.moveTo(knobX, knobY);
+			ctx.lineTo(knobX + Math.cos(-1.75) * s*0.04, knobY + Math.sin(-1.75) * s*0.04);
+			ctx.stroke();
+		});
+		ctx.lineCap = 'butt';
+	}
+	else if (type.id === 'nesthub') {
+        //basetta grigia
+		ctx.fillStyle = '#aaa';
+		ctx.beginPath();
+		ctx.roundRect(s*0.2, s*0.45, s*0.6, s*0.2, s*0.04);
+		ctx.fill();
+		ctx.fillStyle = '#bbb';
+		ctx.beginPath();
+		ctx.roundRect(s*0.25, s*0.45, s*0.50, s*0.2, s*0.02);
+		ctx.fill();
+		
+		// --- SCOCCA ---
+        let tabletGrad = ctx.createRadialGradient(s/2, s/2, 0, s/2, s/2, s);
+        tabletGrad.addColorStop(0, "#fff");//475569");
+        tabletGrad.addColorStop(1, "#ccc");//0f172a");
+        ctx.fillStyle = tabletGrad;
+        ctx.beginPath(); ctx.roundRect(s*0.1, 0, s*0.8, s*0.55, s * 0.08); ctx.fill();
+
+        // Schermo Tutto Vetro
+        if (connected) {
+            let screenGrad = ctx.createLinearGradient(0, 0, s, s * 0.6);
+            screenGrad.addColorStop(0, "#38bdf8");
+            screenGrad.addColorStop(1, "#0369a1");
+            ctx.fillStyle = screenGrad;
+        } else {
+            ctx.fillStyle = "#000";
+        }
+        ctx.beginPath(); 
+		ctx.roundRect(s*0.14, s*0.06, s*0.8 - s*0.07, s * 0.5 - s*0.08, s * 0.04); 
+		ctx.fill();
+        
+		// Sensore Webcam tablet
+        ctx.fillStyle = "#111";
+        ctx.beginPath(); ctx.fillRect(s*0.46, s*0.025, s * 0.08, s * 0.02);
+		ctx.fillStyle = "#000";
+		ctx.beginPath(); ctx.fillRect(s*0.25, s*0.025, s * 0.04, s * 0.02);
+		ctx.beginPath(); ctx.fillRect(s*0.70, s*0.025, s * 0.04, s * 0.02);
+		
+		
+		// Riflesso "Glossy"
+        ctx.fillStyle = colors.glass;
+        ctx.beginPath();
+        ctx.moveTo(s*0.12, s*0.04); ctx.lineTo(s - s*0.10, s*0.04); ctx.lineTo(s*0.12, s * 0.04);
+        ctx.fill();
+		
+		// Riflesso curva
+        ctx.strokeStyle = "rgba(255,255,255,0.1)";
+        ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.arc(s*0.25, s*0.15, s*0.1, Math.PI, Math.PI*1.5); ctx.stroke();
+
+		//connessione G
+		if (connected) {
+			ctx.fillStyle = '#fff';
+			ctx.font = `${s*0.1}px serif`;
+			ctx.textAlign = "middle";
+			ctx.fillText("G", s*0.48, s*0.30);
+		}
+        
+    } 
 	ctx.restore();
 }
 
