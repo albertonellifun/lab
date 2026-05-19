@@ -149,7 +149,7 @@ const PC_TYPES = [
 	{id:'notebook',      desc:'Generic Notebook'},
 	{id:'desktop',       desc:'Monitor + MiniPC all-in-one'},
 	{id:'minipc',        desc:'Morefine MiniPC N100'},
-	{id:'tablet',        desc:'Tablet'},
+	{id:'tablet',        desc:'Generic Tablet'},
 	{id:'baraccone',     desc:'Baraccone anni 90'},
 	{id:'router',        desc:'Router Wi-Fi TpLink'},
 	{id:'ipcamera',      desc:'IP Camera TpLink'},
@@ -162,6 +162,7 @@ const PC_TYPES = [
 	{id:'hantarex',      desc:'Apple ][ Compatibile del 1983'},
 	{id:'radio',         desc:'Vintage Radio R919 BT-MP3'},
 	{id:'nesthub',       desc:'Google NestHub'},
+	{id:'yamahathr',     desc:'Ampli Yamaha THR-V2'},
 	];
 
 let grid = [];
@@ -653,6 +654,17 @@ function drawPC(x, y, type, connected) {
         }
         // Touchpad - SCALATO
         ctx.fillRect(s*0.4, s*0.82, s*0.2, s*0.08);
+		
+		//led all'angolino
+		ctx.fillStyle = connected ? (Math.cos(flowOffset*0.92) > 0.2 ? "#fff" : "#0c4a6e") : "#0c4a6e";
+		if (connected && Math.cos(flowOffset*0.92) > 0.2) {
+			ctx.shadowBlur = 6;
+			ctx.shadowColor = "#fff";
+		}
+		ctx.beginPath();
+		ctx.arc(s * 0.87, s * 0.65, s * 0.01, 0, Math.PI*2);
+		ctx.fill();
+		ctx.shadowBlur = 0;
     } 
     else if (type.id === 'tablet') {
         // --- SCOCCA ---
@@ -1212,12 +1224,21 @@ function drawPC(x, y, type, connected) {
 		const buttonSize = s*0.05;
 		
 		// Tasto A (basso)
+		ctx.fillStyle = "#880066";
+		ctx.beginPath();
+		ctx.arc(buttonsX+s*0.01, buttonsY+s*0.01, buttonSize, 0, Math.PI*2);
+		ctx.fill();
 		ctx.fillStyle = "#aa0088";
 		ctx.beginPath();
 		ctx.arc(buttonsX, buttonsY, buttonSize, 0, Math.PI*2);
 		ctx.fill();
 		
+		
 		// Tasto B (alto)
+		ctx.fillStyle = "#880066";
+		ctx.beginPath();
+		ctx.arc(buttonsX + buttonSize * 1.8+s*0.01, buttonsY - buttonSize * 1.5+s*0.01, buttonSize, 0, Math.PI*2);
+		ctx.fill();
 		ctx.fillStyle = "#aa0088";
 		ctx.beginPath();
 		ctx.arc(buttonsX + buttonSize * 1.8, buttonsY - buttonSize * 1.5, buttonSize, 0, Math.PI*2);
@@ -1948,11 +1969,115 @@ function drawPC(x, y, type, connected) {
 		if (connected) {
 			ctx.fillStyle = '#fff';
 			ctx.font = `${s*0.1}px serif`;
-			ctx.textAlign = "middle";
+			ctx.textAlign = "center";
 			ctx.fillText("G", s*0.48, s*0.30);
 		}
         
     } 
+	else if (type.id === 'yamahathr') {
+		// --- MANIGLIA (Arco superiore) ---
+		ctx.strokeStyle = "#9ca3af";
+		ctx.lineWidth = s * 0.03;
+		ctx.beginPath();
+		ctx.roundRect(s*0.1, s*0.02, s*0.8, s*0.2, s*0.04);
+		ctx.stroke();
+		
+		// --- CORPO PRINCIPALE ---
+		let bodyGrad = ctx.createLinearGradient(0, 0, 0, s);
+		bodyGrad.addColorStop(0, "#d4c5a9");
+		bodyGrad.addColorStop(1, "#bfb09a");
+		ctx.fillStyle = bodyGrad;
+		ctx.beginPath(); ctx.roundRect(0, s*0.15, s, s*0.7, s*0.05); ctx.fill();
+
+		// --- GRIGLIA VENTILAZIONE (Chevron pattern) ---
+		ctx.strokeStyle = "#2d2d2d";
+		ctx.lineWidth = Math.max(0.5, s * 0.008);
+		const chevronSpacing = s * 0.1;
+		const chevronStart = s * 0.08;
+		const chevronWidth = s * 0.8;
+		
+		for(let x = chevronStart; x <= chevronStart + chevronWidth; x += chevronSpacing) {
+			for(let y = s*0.35; y < s*0.75; y += s*0.04) {
+				if(y>s*0.3 && y<s*0.5 && x>s*0.3 && x<s*0.6) continue;
+				// Linee oblique a V
+				ctx.beginPath();
+				ctx.moveTo(x, y);
+				ctx.lineTo(x + chevronSpacing*0.5, y + s*0.02);
+				ctx.stroke();
+				ctx.beginPath();
+				ctx.moveTo(x + chevronSpacing*0.5, y + s*0.02);
+				ctx.lineTo(x, y + s*0.04);
+				ctx.stroke();
+			}
+		}
+
+		// --- PULSANTI SUPERIORI ---
+		const knobSize = s * 0.06;
+		const knobStart = s * 0.2;
+		const knobSpacing = s * 0.12;
+		ctx.fillStyle = "#333";
+		for(let i = 0; i < 5; i++) {
+			ctx.beginPath();
+			ctx.roundRect(knobStart + i*knobSpacing, s*0.1, knobSize*1.5, knobSize, s*0.02);
+			ctx.fill();
+		}
+		
+		//4 viti
+		ctx.fillStyle = '#666';
+		ctx.beginPath();
+		ctx.arc(s*0.94, s*0.28, s*0.014, 0, Math.PI*2);
+		ctx.fill();
+		ctx.beginPath();
+		ctx.arc(s*0.94, s*0.78, s*0.014, 0, Math.PI*2);
+		ctx.fill();
+		ctx.beginPath();
+		ctx.arc(s*0.06, s*0.28, s*0.014, 0, Math.PI*2);
+		ctx.fill();
+		ctx.beginPath();
+		ctx.arc(s*0.06, s*0.78, s*0.014, 0, Math.PI*2);
+		ctx.fill();
+
+		// --- LOGO YAMAHA (Tuning fork nel cerchio) ---
+		ctx.fillStyle = connected ? "#f80" : "#2d2d2d";
+		ctx.strokeStyle = connected ? "#f80" : "#2d2d2d";
+		if (connected) {
+			ctx.shadowBlur = 10;
+			ctx.shadowColor = "#f80";
+		}
+		ctx.beginPath();
+		ctx.arc(s*0.5, s*0.4, s*0.05, 0, Math.PI*2);
+		ctx.fill();
+		
+		ctx.beginPath();
+		ctx.lineWidth = s * 0.01;
+		ctx.arc(s*0.5, s*0.4, s*0.07, 0, Math.PI*2);
+		ctx.stroke();
+		ctx.shadowBlur = 0;
+		
+		ctx.fillStyle = connected ? '#d4c5a9' : '#ddd';
+		ctx.textAlign = 'center';
+		ctx.font = `${s*0.1}px sans-serif`;
+		ctx.fillText('Y',s*0.5,s*0.43);
+		
+		
+		// --- LED POWER
+		ctx.fillStyle = connected && Math.cos(flowOffset*0.4) > 0.2 ? "#f80" : "#374151";
+		if (connected && Math.cos(flowOffset*0.4) > 0.2) {
+			ctx.shadowBlur = 5;
+			ctx.shadowColor = "#f80";
+		}
+		ctx.beginPath();
+		ctx.arc(s*0.82, s*0.14, s*0.012, 0, Math.PI*2);
+		ctx.fill();
+		ctx.shadowBlur = 0;
+		
+		// --- RIFLESSO GLOSSY ---
+		ctx.fillStyle = "rgba(255, 255, 255, 0.2)";
+		ctx.beginPath();
+		ctx.moveTo(s*0.05, s*0.15); ctx.lineTo(s*0.5, s*0.2); ctx.lineTo(s*0.1, s*0.35);
+		ctx.fill();
+	}
+	
 	ctx.restore();
 }
 
