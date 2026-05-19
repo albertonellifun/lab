@@ -1418,19 +1418,22 @@ function drawPC(x, y, tile) {
 		ctx.lineWidth = Math.max(1, s*0.015);
 		ctx.strokeRect(s*0.05, s*0.35, s*0.9, s*0.6);
 		
+		//per inserire la mano
+		ctx.fillStyle = '#333';
+		ctx.fillRect(s*0.4,s*0.34,s*0.2,s*0.05);
 		
 		// --- LOGO HP (al centro) ---
 		ctx.fillStyle = connected ? "#0066cc" : "#cccccc";
 		ctx.beginPath();
-		ctx.arc(s*0.5, s*0.5, s*0.1, 0, Math.PI*2);
+		ctx.arc(s*0.5, s*0.6, s*0.1, 0, Math.PI*2);
 		ctx.fill();
 		
-		// H del logo
+		//logo
 		ctx.fillStyle = "#fff";
-		ctx.font = `${Math.max(8, s*0.1)}px sans-serif`;
+		ctx.font = `italic ${Math.max(8, s*0.1)}px sans-serif`;
 		ctx.textAlign = "center";
 		ctx.textBaseline = "middle";
-		ctx.fillText("hp", s*0.5, s*0.5);
+		ctx.fillText("hp", s*0.5, s*0.6);
 		
 		// --- PULSANTI PANNELLO CONTROLLO ---
 		// Pulsante power (verde se acceso)
