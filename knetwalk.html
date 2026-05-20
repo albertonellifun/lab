@@ -284,11 +284,24 @@ function assignTypes() {
             let count = [N, E, S, W].filter(d => cell.conns & d).length;
             if (count === 1) {
                 cell.type = 'pc';
-                cell.subType = PC_TYPES[Math.floor(Math.random() * PC_TYPES.length)];
+				//fix: genera il prossimo DIVERSO dall'attuale!
+                cell.subType = getNextPcType();//PC_TYPES[Math.floor(Math.random() * PC_TYPES.length)];
             }
         }
     }));
 }
+
+
+//fix: genera il prossimo DIVERSO dall'attuale!
+let shuffledTypes = [];
+function getNextPcType() {
+    // Se la lista è vuota, crea una nuova sequenza casuale
+    if (shuffledTypes.length === 0) shuffledTypes = [...PC_TYPES].sort(() => Math.random() - 0.5);
+
+    // Estrae il prossimo tipo unico
+    return shuffledTypes.pop();
+}
+
 
 function shuffleGrid() {
     grid.forEach(row => row.forEach(cell => {
