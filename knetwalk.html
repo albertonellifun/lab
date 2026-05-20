@@ -1387,7 +1387,7 @@ function drawPC(x, y, tile) {
 		ctx.arc(s*0.5, s*0.75, s*0.03, 0, Math.PI*2);
 		ctx.fill();
 		
-		// Etichetta HOME
+		// Etichetta SWITCH
 		ctx.fillStyle = "#999";
 		ctx.font = `${Math.max(5, s*0.05)}px sans-serif`;
 		ctx.textAlign = "center";
@@ -2003,7 +2003,7 @@ function drawPC(x, y, tile) {
 			ctx.fillStyle = '#fff';
 			ctx.font = `${s*0.1}px serif`;
 			ctx.textAlign = "center";
-			ctx.fillText("G", s*0.48, s*0.30);
+			ctx.fillText("G", s*0.5, s*0.3);
 		}
 		
 	} 
@@ -2127,8 +2127,9 @@ function drawPC(x, y, tile) {
 		
 		// Joy-Con sinistro: palla + croce
 		const joyLX = s*0.1;//palla x
-		const joyLY = s*0.3;//palla y
+		const joyLY = s*0.35;//palla y
 		const pallaR = s*0.04;//raggio
+		const deltaY = s*0.15;//spaziatura palla-croce
 		ctx.fillStyle = "#333";
 		
 		//palla sopra
@@ -2137,8 +2138,8 @@ function drawPC(x, y, tile) {
 		ctx.fill();
 		
 		//croce sotto
-		ctx.fillRect(joyLX - s*0.02, joyLY + s*0.2 - s*0.06, s*0.04, s*0.12);
-		ctx.fillRect(joyLX - s*0.06, joyLY + s*0.2 - s*0.02, s*0.12, s*0.04);
+		ctx.fillRect(joyLX - s*0.02, joyLY + deltaY - s*0.06, s*0.04, s*0.12);
+		ctx.fillRect(joyLX - s*0.06, joyLY + deltaY - s*0.02, s*0.12, s*0.04);
 		
 		//select + start
 		ctx.fillStyle = '#444';
@@ -2148,7 +2149,7 @@ function drawPC(x, y, tile) {
 		
 		// Joy-Con destro: palla + pulsanti a croce
 		const joyRX = s*0.9;
-		const joyRY = s*0.3;//palla y
+		const joyRY = s*0.35;//palla y
 		const joyButtonSize = s*0.02;
 		ctx.fillStyle = "#333";
 		
@@ -2161,22 +2162,22 @@ function drawPC(x, y, tile) {
 		//sx
 		ctx.fillStyle = colors.blueOn;
 		ctx.beginPath();
-		ctx.arc(joyRX - s*0.05, joyRY + s*0.2, joyButtonSize, 0, Math.PI * 2);
+		ctx.arc(joyRX - s*0.05, joyRY + deltaY, joyButtonSize, 0, Math.PI * 2);
 		ctx.fill();
 		//dx
 		ctx.fillStyle = colors.redOn;
 		ctx.beginPath();
-		ctx.arc(joyRX + s*0.05, joyRY + s*0.2, joyButtonSize, 0, Math.PI * 2);
+		ctx.arc(joyRX + s*0.05, joyRY + deltaY, joyButtonSize, 0, Math.PI * 2);
 		ctx.fill();
 		//up
 		ctx.fillStyle = colors.greenOn;
 		ctx.beginPath();
-		ctx.arc(joyRX, joyRY + s*0.2 - s*0.05, joyButtonSize, 0, Math.PI * 2);
+		ctx.arc(joyRX, joyRY + deltaY - s*0.05, joyButtonSize, 0, Math.PI * 2);
 		ctx.fill();
 		//down
 		ctx.fillStyle = colors.yellowOn;
 		ctx.beginPath();
-		ctx.arc(joyRX, joyRY + s*0.2 + s*0.05, joyButtonSize, 0, Math.PI * 2);
+		ctx.arc(joyRX, joyRY + deltaY + s*0.05, joyButtonSize, 0, Math.PI * 2);
 		ctx.fill();
 		
 		//select + start
@@ -2204,21 +2205,31 @@ function drawPC(x, y, tile) {
 		if (connected) {
 			ctx.fillStyle = "rgba(255, 255, 255, 0.15)";
 			ctx.beginPath();
-			ctx.ellipse(s*0.4, s*0.4, s*0.08, s*0.06, -0.3, 0, Math.PI*2);
+			ctx.ellipse(s*0.35, s*0.35, s*0.08, s*0.06, -0.3, 0, Math.PI*2);
 			ctx.fill();
 		}
 		
-		//led fisso blue in alto 
+		//led fisso blue in alto a dx
 		ctx.fillStyle = colors.blueOff;
 		if (connected) {
 			ctx.fillStyle = colors.blueOn;
 			ctx.shadowBlur = 8;
 			ctx.shadowColor = colors.blueOn;
 		}
-		ctx.fillRect(s*0.9, s*0.15, s*0.02, s*0.01);
+		ctx.fillRect(s*0.9, s*0.24, s*0.02, s*0.01);
 		ctx.shadowBlur = 0;
 		
-		// Etichetta HOME
+		//led fisso rosso in alto a sx
+		ctx.fillStyle = colors.redOff;
+		if (connected) {
+			ctx.fillStyle = colors.redOn;
+			ctx.shadowBlur = 8;
+			ctx.shadowColor = colors.redOn;
+		}
+		ctx.fillRect(s*0.1, s*0.24, s*0.02, s*0.01);
+		ctx.shadowBlur = 0;
+		
+		// Etichetta PS7000
 		ctx.fillStyle = "#999";
 		ctx.font = `${Math.max(5, s*0.05)}px sans-serif`;
 		ctx.textAlign = "center";
