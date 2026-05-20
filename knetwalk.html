@@ -160,9 +160,10 @@ const PC_TYPES = [
 	{id:'hplaserjet',    desc:'HP LaserJet 107w'},
 	{id:'atari2600',     desc:'Atari 2600 del 1977'},
 	{id:'hantarex',      desc:'Apple ][ Compatibile del 1983'},
-	{id:'radio',         desc:'Vintage Radio R919 BT-MP3'},
+	{id:'radio',         desc:'AliExpress Vintage Radio R919'},
 	{id:'nesthub',       desc:'Google NestHub'},
 	{id:'yamahathr',     desc:'Ampli Yamaha THR-V2'},
+	{id:'ps7000',        desc:'AliExpress PS7000 del 2023'},
 	];
 
 //Palette realistica condivisa
@@ -180,6 +181,10 @@ const colors = {
 	redOff: "#7f1d1d",
 	blueOn: "#38bdf8",
 	blueOff: "#0c4a6e",
+	yellowOn: "#efef44",
+	yellowOff: "#7f7f1d",
+	whiteOn: "#fff",
+	whiteOff: "#666",
 };
 
 let grid = [];
@@ -649,10 +654,10 @@ function drawPC(x, y, tile) {
 		ctx.fillRect(s*0.4, s*0.82, s*0.2, s*0.08);
 		
 		//led all'angolino
-		ctx.fillStyle = connected ? (Math.cos(flowOffset*0.92) > 0.2 ? "#fff" : colors.blueOff) : colors.blueOff;
+		ctx.fillStyle = connected ? (Math.cos(flowOffset*0.92) > 0.2 ? colors.whiteOn : colors.whiteOff) : colors.whiteOff;
 		if (connected && Math.cos(flowOffset*0.92) > 0.2) {
 			ctx.shadowBlur = 6;
-			ctx.shadowColor = "#fff";
+			ctx.shadowColor = colors.whiteOn;
 		}
 		ctx.beginPath();
 		ctx.arc(s * 0.87, s * 0.65, s * 0.01, 0, Math.PI*2);
@@ -1374,7 +1379,7 @@ function drawPC(x, y, tile) {
 		ctx.font = `${Math.max(5, s*0.05)}px sans-serif`;
 		ctx.textAlign = "center";
 		ctx.textBaseline = "middle";
-		ctx.fillText("HOME", s*0.5, s*0.75);
+		ctx.fillText("SWITCH", s*0.5, s*0.75);
 	}
 	else if (type.id === 'hplaserjet') {
 		// --- HP LASERJET 107w
@@ -1392,8 +1397,8 @@ function drawPC(x, y, tile) {
 		ctx.strokeRect(s*0.05, s*0.05, s*0.9, s*0.3);
 		
 		// Slot input/output (nero)
-		ctx.fillStyle = "#0a0a0a";
-		ctx.fillRect(s*0.1, s*0.07, s*0.8, s*0.2);
+		ctx.fillStyle = "#111";
+		ctx.fillRect(s*0.1, s*0.07, s*0.74, s*0.22);
 		
 		// Linee del tray
 		ctx.strokeStyle = "#555";
@@ -1401,7 +1406,7 @@ function drawPC(x, y, tile) {
 		for(let i = 0; i < 3; i++) {
 			ctx.beginPath();
 			ctx.moveTo(s*0.12, s*0.085 + (i*s*0.02));
-			ctx.lineTo(s*0.88, s*0.085 + (i*s*0.02));
+			ctx.lineTo(s*0.84, s*0.085 + (i*s*0.02));
 			ctx.stroke();
 		}
 		
@@ -1422,6 +1427,19 @@ function drawPC(x, y, tile) {
 		ctx.fillStyle = '#333';
 		ctx.fillRect(s*0.4,s*0.34,s*0.2,s*0.05);
 		
+		//righe verticali appena accennate
+		ctx.strokeStyle = '#ddd';
+		ctx.lineWidth = s*0.01;
+		ctx.beginPath();
+		ctx.moveTo(s*0.15,s*0.35);
+		ctx.lineTo(s*0.15,s*0.95);
+		ctx.stroke();
+		ctx.beginPath();
+		ctx.moveTo(s*0.85,s*0.35);
+		ctx.lineTo(s*0.85,s*0.95);
+		ctx.stroke();
+		
+		
 		// --- LOGO HP (al centro) ---
 		ctx.fillStyle = connected ? "#0066cc" : "#cccccc";
 		ctx.beginPath();
@@ -1436,15 +1454,26 @@ function drawPC(x, y, tile) {
 		ctx.fillText("hp", s*0.5, s*0.6);
 		
 		// --- PULSANTI PANNELLO CONTROLLO ---
-		// Pulsante power (verde se acceso)
-		ctx.fillStyle = connected ? "#333333" : "#c5225e";
-		if (connected && Math.cos(flowOffset*0.15) > -0.5) {
-			ctx.fillStyle = colors.greenOn;
+		// Pulsante power (blu fisso se acceso)
+		ctx.fillStyle = colors.blueOff;
+		if (connected) {
+			ctx.fillStyle = colors.blueOn;
 			ctx.shadowBlur = 8;
-			ctx.shadowColor = colors.greenOn;
+			ctx.shadowColor = colors.blueOn;
 		}
 		ctx.beginPath();
-		ctx.arc(s*0.85, s*0.15, s*0.025, 0, Math.PI*2);
+		ctx.arc(s*0.9, s*0.15, s*0.02, 0, Math.PI*2);
+		ctx.fill();
+		ctx.shadowBlur = 0;
+		
+		// pulsante connessione dati (bianco)
+		ctx.fillStyle = connected && Math.cos(flowOffset*0.25) > 0.5 ? colors.whiteOn : colors.whiteOff;
+		if (connected && Math.cos(flowOffset*0.15) > -0.5) {
+			ctx.shadowBlur = 8;
+			ctx.shadowColor = colors.whiteOn;
+		}
+		ctx.beginPath();
+		ctx.arc(s*0.9, s*0.25, s*0.02, 0, Math.PI*2);
 		ctx.fill();
 		ctx.shadowBlur = 0;
 	}
@@ -1542,8 +1571,11 @@ function drawPC(x, y, tile) {
 		caseGrad.addColorStop(1, "#c4b4a0");
 		ctx.fillStyle = caseGrad;
 		ctx.beginPath();
-		ctx.roundRect(s*0.05, 0, s*0.9, s*0.7, s*0.02);
+		ctx.roundRect(s*0.05, 0, s*0.9, s*0.71, s*0.02);
 		ctx.fill();
+		//base monitor molto scura/nera, aggiunta altrimenti si intravede il cavo blu illuminato da sotto
+		ctx.fillStyle = '#443420';
+		ctx.fillRect(s*0.1, s*0.71, s*0.8, s*0.02);
 		
 		//contorno schermo marroncino
 		ctx.fillStyle = "#645440";
@@ -1585,7 +1617,7 @@ function drawPC(x, y, tile) {
 		
 		// --- PANNELLO CONTROLLI (inferiore monitor) ---
 		ctx.fillStyle = "#645440";
-		ctx.fillRect(s*0.05, s*0.6, s*0.9, s*0.08);
+		ctx.fillRect(s*0.05, s*0.6, s*0.9, s*0.09);
 		
 		// --- 4 MANOPOLE CONTROLLO (DESTRA) ---
 		const knobY = s*0.65;
@@ -1608,19 +1640,13 @@ function drawPC(x, y, tile) {
 			ctx.stroke();
 			
 			// Indicatore (lineetta)
-			ctx.strokeStyle = i === 2 ? colors.redOn : "#aaa";  // Rosso per la terza
+			ctx.strokeStyle = i === 2 ? colors.redOff : "#aaa";  // Rosso per la terza
 			ctx.lineWidth = Math.max(1, s*0.008);
 			ctx.lineCap = "round";
 			ctx.beginPath();
 			ctx.moveTo(knobX, knobY - s*0.018);
 			ctx.lineTo(knobX, knobY - s*0.026);
 			ctx.stroke();
-			
-			// Etichetta piccola
-			ctx.fillStyle = "#999";
-			ctx.font = `${Math.max(3, s*0.03)}px sans-serif`;
-			ctx.textAlign = "center";
-			ctx.fillText("●", knobX, knobY + s*0.05);
 		}
 		
 		//CASE alluminio
@@ -2071,6 +2097,122 @@ function drawPC(x, y, tile) {
 		ctx.moveTo(s*0.05, s*0.15); ctx.lineTo(s*0.5, s*0.2); ctx.lineTo(s*0.1, s*0.35);
 		ctx.fill();
 	}
+	else if (type.id === 'ps7000') {
+		//ps7000 nintendo switch clone with mame emulator		
+		// Body nero principale
+		let psGrad = ctx.createLinearGradient(0, 0, s, s);
+		psGrad.addColorStop(0, "#1a1a1a");
+		psGrad.addColorStop(0.5, "#0f0f0f");
+		psGrad.addColorStop(1, "#000");
+		ctx.fillStyle = psGrad;
+		ctx.strokeStyle = "#222";
+		ctx.lineWidth = Math.max(1, s*0.015);
+		ctx.beginPath();
+		ctx.roundRect(0,s*0.2,s,s*0.5,s*0.08);
+		ctx.fill();
+		ctx.stroke();// Bordo metallico
+		
+		// Joy-Con sinistro: palla + croce
+		const joyLX = s*0.1;//palla x
+		const joyLY = s*0.3;//palla y
+		const pallaR = s*0.04;//raggio
+		ctx.fillStyle = "#333";
+		
+		//palla sopra
+		ctx.beginPath();
+		ctx.arc(joyLX, joyLY, pallaR, 0, Math.PI * 2);
+		ctx.fill();
+		
+		//croce sotto
+		ctx.fillRect(joyLX - s*0.02, joyLY + s*0.2 - s*0.06, s*0.04, s*0.12);
+		ctx.fillRect(joyLX - s*0.06, joyLY + s*0.2 - s*0.02, s*0.12, s*0.04);
+		
+		//select + start
+		ctx.fillStyle = '#444';
+		ctx.fillRect(joyLX - s*0.02, s*0.65, s*0.02, s*0.01);
+		ctx.fillRect(joyLX + s*0.02, s*0.65, s*0.02, s*0.01);
+		
+		
+		// Joy-Con destro: palla + pulsanti a croce
+		const joyRX = s*0.9;
+		const joyRY = s*0.3;//palla y
+		const joyButtonSize = s*0.02;
+		ctx.fillStyle = "#333";
+		
+		//palla sopra
+		ctx.beginPath();
+		ctx.arc(joyRX, joyRY, pallaR, 0, Math.PI * 2);
+		ctx.fill();
+		
+		//pulsanti sotto
+		//sx
+		ctx.fillStyle = colors.blueOn;
+		ctx.beginPath();
+		ctx.arc(joyRX - s*0.05, joyRY + s*0.2, joyButtonSize, 0, Math.PI * 2);
+		ctx.fill();
+		//dx
+		ctx.fillStyle = colors.redOn;
+		ctx.beginPath();
+		ctx.arc(joyRX + s*0.05, joyRY + s*0.2, joyButtonSize, 0, Math.PI * 2);
+		ctx.fill();
+		//up
+		ctx.fillStyle = colors.greenOn;
+		ctx.beginPath();
+		ctx.arc(joyRX, joyRY + s*0.2 - s*0.05, joyButtonSize, 0, Math.PI * 2);
+		ctx.fill();
+		//down
+		ctx.fillStyle = colors.yellowOn;
+		ctx.beginPath();
+		ctx.arc(joyRX, joyRY + s*0.2 + s*0.05, joyButtonSize, 0, Math.PI * 2);
+		ctx.fill();
+		
+		//select + start
+		ctx.fillStyle = '#444';
+		ctx.fillRect(joyRX - s*0.02, s*0.65, s*0.02, s*0.01);
+		ctx.fillRect(joyRX + s*0.02, s*0.65, s*0.02, s*0.01);
+		
+		// --- SCHERMO CENTRALE ---
+		ctx.fillStyle = "#000";
+		ctx.fillRect(s*0.2, s*0.22, s*0.6, s*0.4);
+		
+		// Schermo LCD (blu se connesso)
+		if (connected) {
+			let screenGrad = ctx.createLinearGradient(0, s*0.4, 0, s*0.6);
+			screenGrad.addColorStop(0, "#1e5a96");
+			screenGrad.addColorStop(0.5, "#2b7fb8");
+			screenGrad.addColorStop(1, "#1e5a96");
+			ctx.fillStyle = screenGrad;
+		} else {
+			ctx.fillStyle = "#0a0a0a";
+		}
+		ctx.fillRect(s*0.22, s*0.25, s*0.56, s*0.35);
+		
+		// Luci riflesse
+		if (connected) {
+			ctx.fillStyle = "rgba(255, 255, 255, 0.15)";
+			ctx.beginPath();
+			ctx.ellipse(s*0.4, s*0.4, s*0.08, s*0.06, -0.3, 0, Math.PI*2);
+			ctx.fill();
+		}
+		
+		//led fisso blue in alto 
+		ctx.fillStyle = colors.blueOff;
+		if (connected) {
+			ctx.fillStyle = colors.blueOn;
+			ctx.shadowBlur = 8;
+			ctx.shadowColor = colors.blueOn;
+		}
+		ctx.fillRect(s*0.9, s*0.15, s*0.02, s*0.01);
+		ctx.shadowBlur = 0;
+		
+		// Etichetta HOME
+		ctx.fillStyle = "#999";
+		ctx.font = `${Math.max(5, s*0.05)}px sans-serif`;
+		ctx.textAlign = "center";
+		ctx.textBaseline = "middle";
+		ctx.fillText("PS7000", s*0.5, s*0.65);
+	}
+	
 	ctx.restore();
 }
 
