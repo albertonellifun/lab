@@ -155,7 +155,9 @@ const PC_TYPES = [
 	{id:'ipcamera',      desc:'IP Camera TpLink'},
 	{id:'macintosh',     desc:'Macintosh 128K del 1984'},
 	{id:'imac',          desc:'iMac G4 del 2002'},
-	{id:'gameboy',       desc:'GameBoy classic del 1989'},
+	{id:'gameboy',       desc:'GameBoy White classic del 1989'},
+	{id:'gameboyred',    desc:'GameBoy Red classic del 1990'},
+	{id:'gameboyblue',   desc:'GameBoy Blue classic del 1990'},
 	{id:'nintendoswitch',desc:'Nintendo Switch 2017'},
 	{id:'hplaserjet',    desc:'HP LaserJet 107w'},
 	{id:'atari2600',     desc:'Atari 2600 del 1977'},
@@ -1151,20 +1153,21 @@ function drawPC(x, y, tile) {
 		ctx.fill();
 		ctx.shadowBlur = 0;
 	}	
-	else if (type.id === 'gameboy') {
+	else if (type.id === 'gameboy' || type.id === 'gameboyred' || type.id === 'gameboyblue') {
 		// --- GAME BOY CLASSICO (1989) ---
-		
 		// Body grigio-beige
+		const isRed = type.id === 'gameboyred';
+		const isBlue = type.id === 'gameboyblue';
 		let gbGrad = ctx.createLinearGradient(0, 0, s, s);
-		gbGrad.addColorStop(0, "#f0f0f0");
-		gbGrad.addColorStop(1, "#b0b0b0");
+		gbGrad.addColorStop(0, isRed ? "#d20" : isBlue ? "#03d" : "#f0f0f0");
+		gbGrad.addColorStop(1, isRed ? "#b10" : isBlue ? "#02b" : "#b0b0b0");
 		ctx.fillStyle = gbGrad;
 		ctx.beginPath();
 		ctx.roundRect(s*0.1, s*0.05, s*0.75, s*0.9, s*0.04);
 		ctx.fill();
 		
 		// Bordo nero
-		ctx.strokeStyle = "#333";
+		ctx.strokeStyle = isRed ? "#300" : isBlue ? "#003" : "#333";
 		ctx.lineWidth = Math.max(1, s*0.015);
 		ctx.beginPath();
 		ctx.roundRect(s*0.1, s*0.05, s*0.75, s*0.9, s*0.04);
@@ -1175,6 +1178,13 @@ function drawPC(x, y, tile) {
 		ctx.beginPath();
 		ctx.roundRect(s*0.16, s*0.12, s*0.64, s*0.35, s*0.02);
 		ctx.fill();
+		
+		// Etichetta GAMEBOY
+		ctx.fillStyle = "#999";
+		ctx.font = `${s*0.04}px sans-serif`;
+		ctx.textAlign = "left";
+		ctx.textBaseline = "middle";
+		ctx.fillText("GAME BOY", s*0.16, s*0.5);
 		
 		// Bezel schermo
 		ctx.fillStyle = "#222";
@@ -1235,22 +1245,22 @@ function drawPC(x, y, tile) {
 		const buttonSize = s*0.05;
 		
 		// Tasto A (basso)
-		ctx.fillStyle = "#880066";
+		ctx.fillStyle = isRed || isBlue ? "#000" : "#880066";
 		ctx.beginPath();
 		ctx.arc(buttonsX+s*0.01, buttonsY+s*0.01, buttonSize, 0, Math.PI*2);
 		ctx.fill();
-		ctx.fillStyle = "#aa0088";
+		ctx.fillStyle = isRed || isBlue ? "#222" : "#aa0088";
 		ctx.beginPath();
 		ctx.arc(buttonsX, buttonsY, buttonSize, 0, Math.PI*2);
 		ctx.fill();
 		
 		
 		// Tasto B (alto)
-		ctx.fillStyle = "#880066";
+		ctx.fillStyle = isRed || isBlue ? "#000" : "#880066";
 		ctx.beginPath();
 		ctx.arc(buttonsX + buttonSize * 1.8+s*0.01, buttonsY - buttonSize * 1.5+s*0.01, buttonSize, 0, Math.PI*2);
 		ctx.fill();
-		ctx.fillStyle = "#aa0088";
+		ctx.fillStyle = isRed || isBlue ? "#222" : "#aa0088";
 		ctx.beginPath();
 		ctx.arc(buttonsX + buttonSize * 1.8, buttonsY - buttonSize * 1.5, buttonSize, 0, Math.PI*2);
 		ctx.fill();
