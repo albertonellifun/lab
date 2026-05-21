@@ -164,6 +164,8 @@ const PC_TYPES = [
 	{id:'nesthub',       desc:'Google NestHub'},
 	{id:'yamahathr',     desc:'Ampli Yamaha THR-V2'},
 	{id:'ps7000',        desc:'AliExpress PS7000 del 2023'},
+	{id:'ps4',           desc:'Sony PS4 Black del 2014'},
+	{id:'ps4white',      desc:'Sony PS4 White del 2014'},
 	];
 
 //Palette realistica condivisa
@@ -1192,7 +1194,7 @@ function drawPC(x, y, tile) {
 		if (connected) {
 			ctx.strokeStyle = "rgba(0, 0, 0, 0.2)";
 			ctx.lineWidth = 0.4;
-			for(let i = 0; i < s*0.27; i += 1) {
+			for(let i = 0; i < s*0.32; i += 1) {
 				ctx.beginPath();
 				ctx.moveTo(s*0.22, s*0.14 + i);
 				ctx.lineTo(s*0.78, s*0.14 + i);
@@ -2235,6 +2237,76 @@ function drawPC(x, y, tile) {
 		ctx.textAlign = "center";
 		ctx.textBaseline = "middle";
 		ctx.fillText("PS7000", s*0.5, s*0.65);
+	}
+	
+	else if (type.id === 'ps4' || type.id === 'ps4white') {
+		const isWhite = type.id === 'ps4white';
+		// --- PLAYSTATION 4 2014
+		// CORPO PRINCIPALE INFERIORE (più scuro)
+		let baseGrad = ctx.createLinearGradient(0, s*0.3, 0, s*0.7);
+		baseGrad.addColorStop(0, isWhite ? "#eee" : "#222");
+		baseGrad.addColorStop(1, isWhite ? "#ccc" : "#111");
+		ctx.fillStyle = baseGrad;
+		
+		//base alta + bassa
+		ctx.fillRect(0, s*0.30, s, s*0.16);
+		ctx.fillRect(0, s*0.54, s, s*0.16);
+		//divisore in mezzo orizzontale
+		ctx.fillStyle = '#000';
+		ctx.fillRect(s*0.05, s*0.46,s*0.9,s*0.08);
+		//parte alta sx piu scura
+		ctx.fillStyle = isWhite ? '#fff' : '#111';
+		ctx.fillRect(0, s*0.30, s*0.35, s*0.16);
+		//riga nera verticale
+		ctx.fillStyle = '#000';
+		ctx.fillRect(s*0.35, s*0.3,s*0.03,s*0.4);
+		//usb x 2
+		ctx.strokeStyle = '#444';
+		ctx.lineWidth = s*0.01;
+		ctx.strokeRect(s*0.60, s*0.49, s*0.06, s*0.03);
+		ctx.strokeRect(s*0.72, s*0.49, s*0.06, s*0.03);
+		ctx.fillStyle = '#555';
+		ctx.fillRect(s*0.60, s*0.50, s*0.06, s*0.01);
+		ctx.fillRect(s*0.72, s*0.50, s*0.06, s*0.01);
+				
+		// LOGO PS4
+		ctx.fillStyle = isWhite ? '#ddd' : '#000';
+		ctx.font = `${s*0.08}px sans-serif`;
+		ctx.textAlign = "right";
+		ctx.textBaseline = "middle";
+		ctx.fillText("PS4", s*0.99, s*0.39);
+		// LOGO SONY
+		ctx.font = `${s*0.06}px sans-serif`;
+		ctx.textAlign = "left";
+		ctx.textBaseline = "middle";
+		ctx.fillText("SONY", s*0.02, s*0.38);
+		
+		// LED power (blu fisso se connesso)
+		ctx.fillStyle = connected ? (isWhite ? colors.blueOn : colors.blueOff) : (isWhite ? '#ddd' : '#000');
+		ctx.beginPath();
+		ctx.arc(s*0.12, s*0.6, s*0.015, 0, Math.PI*2);
+		ctx.fill();
+		ctx.shadowBlur = 0;
+		
+		ctx.fillStyle = isWhite ? '#ddd' : '#000';
+		if (connected && Math.sin(flowOffset*0.15) > -0.3) {
+			ctx.fillStyle = (isWhite ? colors.blueOn : colors.blueOff)
+			ctx.shadowBlur = 10;
+			ctx.shadowColor = (isWhite ? colors.blueOn : colors.blueOff)
+		}
+		ctx.fillRect(s*0.35, s*0.31,s*0.03,s*0.16);
+		ctx.fillRect(s*0.35, s*0.54,s*0.03,s*0.15);
+		ctx.shadowBlur = 0;
+		
+		// PULSANTE EJECT (piccolo, in basso a destra)
+		ctx.fillStyle = isWhite ? '#ccc' : '#222';
+		ctx.beginPath();
+		ctx.arc(s*0.95, s*0.62, s*0.035, 0, Math.PI*2);
+		ctx.fill();
+		ctx.fillStyle = isWhite ? '#ddd' : '#000';
+		ctx.beginPath();
+		ctx.arc(s*0.95, s*0.62, s*0.02, 0, Math.PI*2);
+		ctx.fill();
 	}
 	
 	ctx.restore();
