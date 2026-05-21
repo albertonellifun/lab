@@ -168,6 +168,12 @@ const PC_TYPES = [
 	{id:'ps7000',        desc:'AliExpress PS7000 del 2023'},
 	{id:'ps4',           desc:'Sony PS4 Black del 2014'},
 	{id:'ps4white',      desc:'Sony PS4 White del 2014'},
+	{id:'imacg3cyan',    desc:'iMac G3 Blueberry Cyan del 1998'},
+	{id:'imacg3orange',  desc:'iMac G3 Tangerine Orange del 1999'},
+	{id:'imacg3red',     desc:'iMac G3 Strawberry Red del 1999'},
+	{id:'imacg3green',   desc:'iMac G3 Lime Green del 1999'},
+	{id:'imacg3gray',    desc:'iMac G3 Graphite Gray del 2000'},
+	{id:'imacg3blue',    desc:'iMac G3 Indigo Blue del 2000'},
 	];
 
 //Palette realistica condivisa
@@ -1156,18 +1162,20 @@ function drawPC(x, y, tile) {
 	else if (type.id === 'gameboy' || type.id === 'gameboyred' || type.id === 'gameboyblue') {
 		// --- GAME BOY CLASSICO (1989) ---
 		// Body grigio-beige
-		const isRed = type.id === 'gameboyred';
-		const isBlue = type.id === 'gameboyblue';
+		//grad1->grad2 + bordo + tasti outer->inner
+		const gbcols = { 	gameboyred:  '#d20|#b10|#300|#000|#222',
+							gameboyblue: '#03d|#02b|#003|#000|#222',
+							gameboy:     '#f0f0f0|#b0b0b0|#333|#806|#a08'};
 		let gbGrad = ctx.createLinearGradient(0, 0, s, s);
-		gbGrad.addColorStop(0, isRed ? "#d20" : isBlue ? "#03d" : "#f0f0f0");
-		gbGrad.addColorStop(1, isRed ? "#b10" : isBlue ? "#02b" : "#b0b0b0");
+		gbGrad.addColorStop(0, gbcols[type.id].split('|')[0]);
+		gbGrad.addColorStop(1, gbcols[type.id].split('|')[1]);
 		ctx.fillStyle = gbGrad;
 		ctx.beginPath();
 		ctx.roundRect(s*0.1, s*0.05, s*0.75, s*0.9, s*0.04);
 		ctx.fill();
 		
 		// Bordo nero
-		ctx.strokeStyle = isRed ? "#300" : isBlue ? "#003" : "#333";
+		ctx.strokeStyle = gbcols[type.id].split('|')[2]
 		ctx.lineWidth = Math.max(1, s*0.015);
 		ctx.beginPath();
 		ctx.roundRect(s*0.1, s*0.05, s*0.75, s*0.9, s*0.04);
@@ -1244,26 +1252,23 @@ function drawPC(x, y, tile) {
 		const buttonsY = s*0.7;
 		const buttonSize = s*0.05;
 		
-		// Tasto A (basso)
-		ctx.fillStyle = isRed || isBlue ? "#000" : "#880066";
+		// Tasto A basso + B alto outer
+		ctx.fillStyle = gbcols[type.id].split('|')[3];
 		ctx.beginPath();
 		ctx.arc(buttonsX+s*0.01, buttonsY+s*0.01, buttonSize, 0, Math.PI*2);
 		ctx.fill();
-		ctx.fillStyle = isRed || isBlue ? "#222" : "#aa0088";
-		ctx.beginPath();
-		ctx.arc(buttonsX, buttonsY, buttonSize, 0, Math.PI*2);
-		ctx.fill();
-		
-		
-		// Tasto B (alto)
-		ctx.fillStyle = isRed || isBlue ? "#000" : "#880066";
 		ctx.beginPath();
 		ctx.arc(buttonsX + buttonSize * 1.8+s*0.01, buttonsY - buttonSize * 1.5+s*0.01, buttonSize, 0, Math.PI*2);
 		ctx.fill();
-		ctx.fillStyle = isRed || isBlue ? "#222" : "#aa0088";
+		// Tasto A basso + B alto inner
+		ctx.fillStyle = gbcols[type.id].split('|')[4];
+		ctx.beginPath();
+		ctx.arc(buttonsX, buttonsY, buttonSize, 0, Math.PI*2);
+		ctx.fill();
 		ctx.beginPath();
 		ctx.arc(buttonsX + buttonSize * 1.8, buttonsY - buttonSize * 1.5, buttonSize, 0, Math.PI*2);
 		ctx.fill();
+		
 		
 		//select+start
 		ctx.fillStyle = "#444";
@@ -1302,8 +1307,6 @@ function drawPC(x, y, tile) {
 		ctx.moveTo(s*0.74,s*0.76);
 		ctx.lineTo(s*0.80,s*0.82);
 		ctx.stroke();
-		
-		
 	}	
 	else if (type.id === 'nintendoswitch') {
 		// --- NINTENDO SWITCH ---
@@ -2248,7 +2251,6 @@ function drawPC(x, y, tile) {
 		ctx.textBaseline = "middle";
 		ctx.fillText("PS7000", s*0.5, s*0.65);
 	}
-	
 	else if (type.id === 'ps4' || type.id === 'ps4white') {
 		const isWhite = type.id === 'ps4white';
 		// --- PLAYSTATION 4 2014
@@ -2318,7 +2320,126 @@ function drawPC(x, y, tile) {
 		ctx.arc(s*0.95, s*0.62, s*0.02, 0, Math.PI*2);
 		ctx.fill();
 	}
-	
+	else if (type.id === 'imacg3blue' || type.id === 'imacg3red' || type.id === 'imacg3orange' || type.id === 'imacg3cyan' || type.id === 'imacg3green' || type.id === 'imacg3gray') {
+		// --- IMAC G3 BIANCO E BLU?
+		const g3cols = {
+		  imacg3blue:   '#00a|#006',
+		  imacg3red:    '#f36|#b12',
+		  imacg3orange: '#f90|#c60',
+		  imacg3cyan:   '#09b|#079',
+		  imacg3green:  '#0f0|#0b0',
+		  imacg3gray:	'#889|#556'
+		};
+		
+		let bodyGrad = ctx.createLinearGradient(0, 0, s*0.1, s*0.8);
+		bodyGrad.addColorStop(0.0, "#eee");
+		bodyGrad.addColorStop(0.2, "#fff");
+		bodyGrad.addColorStop(0.6, "#eee");
+		bodyGrad.addColorStop(1.0, "#ccc");
+		ctx.fillStyle = bodyGrad;
+		
+		//body
+		ctx.beginPath();
+		ctx.roundRect(s*0.05, s*0.05, s*0.9, s*0.78, [s*0.14,s*0.14,s*0.08,s*0.08]);
+		ctx.fill();
+		
+		//palla sinistra
+		let handleGrad = ctx.createLinearGradient(0, 0, s*0.1, 0);
+		handleGrad.addColorStop(0, g3cols[type.id].split('|')[0]);
+		handleGrad.addColorStop(1, g3cols[type.id].split('|')[1]);
+		ctx.fillStyle = handleGrad;
+		ctx.beginPath();
+		ctx.ellipse(s*0.15, s*0.74, s*0.08, s*0.06, 0, 0, Math.PI*2);
+		ctx.fill();
+		
+		//palla destra
+		ctx.beginPath();
+		ctx.ellipse(s*0.85, s*0.74, s*0.08, s*0.06, 0, 0, Math.PI*2);
+		ctx.fill();
+		
+		//maniglie laterali
+		ctx.beginPath();
+		ctx.roundRect(s*0.05, s*0.15, s*0.04, s*0.45, [0,s*0.08,s*0.08,0]);
+		ctx.fill();
+		ctx.beginPath();
+		ctx.roundRect(s*0.91, s*0.15, s*0.04, s*0.45, [s*0.08,0,0,s*0.08]);
+		ctx.fill();
+		//maniglia sotto
+		ctx.beginPath();
+		ctx.roundRect(s*0.15, s*0.85, s*0.70, s*0.04, [0,0,s*0.08,s*0.08]);
+		ctx.fill();
+		
+		
+		//riga dritta orizzontale
+		ctx.strokeStyle = "rgba(0, 0, 0, 0.1)";
+		ctx.lineWidth = s*0.01;
+		ctx.beginPath();
+		ctx.moveTo(s*0.05, s*0.65);
+		ctx.lineTo(s*0.95, s*0.65);
+		ctx.stroke();
+		
+		//cdrom
+		ctx.beginPath();
+		ctx.roundRect(s*0.35, s*0.68, s*0.3, s*0.05, s*0.08);
+		ctx.fill();
+		//taglio cdrom
+		ctx.fillStyle = '#eee';
+		ctx.fillRect(s*0.37, s*0.70, s*0.26, s*0.01);
+		
+		//etichetta imac
+		ctx.fillStyle = "#999";
+		ctx.font = `${s*0.05}px sans-serif`;
+		ctx.textAlign = "center";
+		ctx.textBaseline = "middle";
+		ctx.fillText("iMac", s*0.5, s*0.63);
+		
+		//bordo schermo quasi nero
+		ctx.fillStyle = "#222";
+		ctx.beginPath();
+		ctx.roundRect(s*0.16, s*0.15, s*0.68, s*0.45, s*0.08);
+		ctx.fill();
+		
+		//schermo quasi nero
+		if (connected) {
+			let screenGrad = ctx.createLinearGradient(0, s*0.19, 0, s*0.37);
+			screenGrad.addColorStop(0, "#1e5a96");
+			screenGrad.addColorStop(0.5, "#2b7fb8");
+			screenGrad.addColorStop(1, "#1e5a96");
+			ctx.fillStyle = screenGrad;
+		} else {
+			ctx.fillStyle = "#111";
+		}
+		ctx.beginPath();
+		ctx.roundRect(s*0.2, s*0.19, s*0.6, s*0.37, s*0.04);
+		ctx.fill();
+		
+		
+		//2 palline a sx
+		ctx.fillStyle = colors.whiteOff;
+		ctx.strokeStyle = "#ddd";
+		ctx.lineWidth = s*0.01;
+		ctx.beginPath();
+		ctx.arc(s*0.26, s*0.74, s*0.03, 0, Math.PI*2);
+		ctx.fill();
+		ctx.stroke();
+		ctx.beginPath();
+		ctx.arc(s*0.32, s*0.74, s*0.03, 0, Math.PI*2);
+		ctx.fill();
+		ctx.stroke();
+		//accensione a dx, led fisso
+		ctx.fillStyle = colors.whiteOff;
+		if (connected) {
+			ctx.fillStyle = colors.whiteOn;
+			ctx.shadowBlur = 6;
+			ctx.shadowColor = colors.whiteOn;
+		}
+		ctx.beginPath();
+		ctx.arc(s * 0.73, s * 0.74, s * 0.03, 0, Math.PI*2);
+		ctx.fill();
+		ctx.strokeStyle = "#ddd";
+		ctx.stroke();
+		ctx.shadowBlur = 0;
+	}
 	ctx.restore();
 }
 
