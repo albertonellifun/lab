@@ -253,7 +253,7 @@ function applicaTexturePuntiricchiata(startPos) {
     ctx.globalCompositeOperation = 'overlay';
     ctx.fillStyle = asphaltPattern;
 
-    for (let n = startPos; n < startPos + drawDistance; n++) {
+    for (let n = startPos; n < startPos + drawDistance; n+=2) {
         const s  = segments[n % segments.length];
         const s2 = segments[(n + 1) % segments.length];
 
@@ -1307,7 +1307,8 @@ function drawSegment(x1, y1, w1, x2, y2, w2, idx) {
     }
 
 
-
+	if (fpsDisplay < 50) return;
+	
 	// PISTA CICLABILE A DESTRA
     let laneW1 = w1 * 0.5; // Larghezza rispetto strada originale
     let laneW2 = w2 * 0.5;
@@ -2563,10 +2564,10 @@ function render() {
         fpsCount = 0;
         fpsTime = now;
 		//drawdistance fix n100 
-		if (fpsDisplay < 15) drawDistance = 80;
-		else if (fpsDisplay < 30) drawDistance = 100;
-		else if (fpsDisplay < 45) drawDistance = 120;
-		else if (fpsDisplay < 55) drawDistance = 150;
+		if (fpsDisplay < 15) drawDistance = 60;
+		else if (fpsDisplay < 30) drawDistance = 80;
+		else if (fpsDisplay < 40) drawDistance = 100;
+		else if (fpsDisplay < 50) drawDistance = 150;
 		else if (fpsDisplay > 120) drawDistance = 400;
 		else if (fpsDisplay > 90) drawDistance = 300;
 		else drawDistance = 200;
@@ -2602,7 +2603,7 @@ function render() {
         }
     }
 	
-	applicaTexturePuntiricchiata(startPos);
+	if (fpsDisplay > 50) applicaTexturePuntiricchiata(startPos);
 	
 	
     //Sprites & Collision - prima gli oggetti lontani (che vengono coperti da quelli vicini)
