@@ -9,8 +9,8 @@
         
         body {
             background-color: #020617;
-            color: #f8fafc;
-            font-family: 'Segoe UI', system-ui, sans-serif;
+            color: #38bdf8;
+			font-family: 'Segoe UI', system-ui, sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -51,7 +51,7 @@
         
         button {
             padding: clamp(6px, 2vw, 10px) clamp(8px, 2vw, 16px);
-            font-size: clamp(10px, 2.5vw, 14px);
+            font-size: clamp(6px, 2vw, 10px);
             cursor: pointer;
             background: #1e293b;
             border: 1px solid #334155;
@@ -114,17 +114,36 @@
 			font-size: 12px;
 			z-index: 100;
 		}
+		
+		label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: clamp(10px, 2vw, 14px);
+            color: #94a3b8;
+            flex-shrink: 0;
+            white-space: nowrap;
+        }
+        
+        input[type="range"] {
+            width: 180px;
+            cursor: pointer;
+            accent-color: #0ea5e9;
+        }
     </style>
 </head>
 <body>
 
     <div class="controls">
 		<h1>KNetWalk</h1>
-		<button onclick="changeDifficulty(3, this)" class="active">3x3</button>
-        <button onclick="changeDifficulty(5, this)">5x5</button>
-        <button onclick="changeDifficulty(7, this)">7x7</button>
-        <button onclick="changeDifficulty(10, this)">10x10</button>
-		<button onclick="changeAnimateFlag(this)">Animate</button>
+		
+		<label>WIDTH:  <input type="range" id="widthSlider"  min="3" max="12" value="5" onchange="changeSliderDifficulty()" list="values"></label>
+		<label>HEIGHT: <input type="range" id="heightSlider" min="3" max="12" value="3" onchange="changeSliderDifficulty()" list="values"></label>
+		
+		<button id="animateBtn"    onclick="changeAnimateFlag(this)">🪢 Animate</button>
+		<button id="wiresColorBtn" onclick="changeWiresColorFlag(this)">🌈 Wires Color</button>
+		<button id="variantsBtn"   onclick="changeVariantsFlag(this)">🎨 Hw Variants</button>
+		<button id="restart"       onclick="initGame()">↻ Restart</button>
     </div>
 
 	<div id="game-container">
@@ -134,51 +153,69 @@
 	<div id="status"></div>
 	
 	<div id="tooltip"></div>
+	
+	<datalist id="values">
+	  <option value="3"  label="3"></option>
+	  <option value="4"  label="4"></option>
+	  <option value="5"  label="5"></option>
+	  <option value="6"  label="6"></option>
+	  <option value="7"  label="7"></option>
+	  <option value="8"  label="8"></option>
+	  <option value="9"  label="9"></option>
+	  <option value="10" label="10"></option>
+	</datalist>
 
 <script>
-let SIZE = 3;
-const CANVAS_MAX_SIZE = 660;
-let CELL_SIZE = CANVAS_MAX_SIZE / SIZE;
+let WIDTH = 5;
+let HEIGHT = 3;
+const CANVAS_MAX_SIZE = 1440;
+let CELL_SIZE = CANVAS_MAX_SIZE / Math.max(WIDTH, HEIGHT);
 
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 const statusDiv = document.getElementById('status');
 
 const N = 1, E = 2, S = 4, W = 8;
-const PC_TYPES = [ 
-	{id:'notebook',      desc:'Generic Notebook'},
-	{id:'desktop',       desc:'Monitor + MiniPC all-in-one'},
-	{id:'minipc',        desc:'Morefine MiniPC N100'},
-	{id:'tablet',        desc:'Generic Tablet'},
-	{id:'baraccone',     desc:'Baraccone anni 90'},
-	{id:'router',        desc:'Router Wi-Fi TpLink'},
-	{id:'ipcamera',      desc:'IP Camera TpLink'},
-	{id:'macintosh',     desc:'Macintosh 128K del 1984'},
-	{id:'imac',          desc:'iMac G4 del 2002'},
-	{id:'gameboy',       desc:'GameBoy White classic del 1989'},
-	{id:'gameboyred',    desc:'GameBoy Red classic del 1990'},
-	{id:'gameboyblue',   desc:'GameBoy Blue classic del 1990'},
-	{id:'nintendoswitch',desc:'Nintendo Switch 2017'},
-	{id:'hplaserjet',    desc:'HP LaserJet 107w'},
-	{id:'atari2600',     desc:'Atari 2600 del 1977'},
-	{id:'hantarex',      desc:'Apple ][ Compatibile del 1983'},
-	{id:'radio',         desc:'AliExpress Vintage Radio R919'},
-	{id:'nesthub',       desc:'Google NestHub'},
-	{id:'yamahathr',     desc:'Ampli Yamaha THR-V2'},
-	{id:'ps7000',        desc:'AliExpress PS7000 del 2023'},
-	{id:'ps4',           desc:'Sony PS4 Black del 2014'},
-	{id:'ps4white',      desc:'Sony PS4 White del 2014'},
-	{id:'imacg3cyan',    desc:'iMac G3 Blueberry Cyan del 1998'},
-	{id:'imacg3orange',  desc:'iMac G3 Tangerine Orange del 1999'},
-	{id:'imacg3red',     desc:'iMac G3 Strawberry Red del 1999'},
-	{id:'imacg3green',   desc:'iMac G3 Lime Green del 1999'},
-	{id:'imacg3gray',    desc:'iMac G3 Graphite Gray del 2000'},
-	{id:'imacg3blue',    desc:'iMac G3 Indigo Blue del 2000'},
+const HW_TYPES = [ 
+	{id:'notebook',			variant:'notebook',      desc:'Generic Notebook'},
+	{id:'desktop',			variant:'desktop',       desc:'Monitor + MiniPC all-in-one'},
+	{id:'minipc',			variant:'minipc',        desc:'Morefine MiniPC N100'},
+	{id:'tablet',			variant:'tablet',        desc:'Generic Tablet'},
+	{id:'baraccone',		variant:'baraccone',     desc:'Baraccone anni 90'},
+	{id:'router',			variant:'router',        desc:'Router Wi-Fi TpLink'},
+	{id:'ipcamera',			variant:'ipcamera',      desc:'IP Camera TpLink'},
+	{id:'macintosh',		variant:'macintosh',     desc:'Macintosh 128K del 1984'},
+	{id:'imac',				variant:'imac',          desc:'iMac G4 del 2002'},
+	{id:'gameboy',			variant:'gameboy',       desc:'GameBoy White classic del 1989'},
+	{id:'nintendoswitch',	variant:'nintendoswitch',desc:'Nintendo Switch 2017'},
+	{id:'hplaserjet',		variant:'hplaserjet',    desc:'HP LaserJet 107w'},
+	{id:'atari2600',		variant:'atari2600',     desc:'Atari 2600 del 1977'},
+	{id:'hantarex',			variant:'hantarex',      desc:'Apple ][ Compatibile del 1983'},
+	{id:'radio',			variant:'radio',         desc:'AliExpress Vintage Radio R919'},
+	{id:'nesthub',			variant:'nesthub',       desc:'Google NestHub del 2018'},
+	{id:'yamahathr',		variant:'yamahathr',     desc:'Ampli Yamaha THR5-V2'},
+	{id:'ps7000',			variant:'ps7000',        desc:'AliExpress PS7000 del 2023'},
+	{id:'ps4',				variant:'ps4',      	 desc:'Sony PS4 Black del 2014'},
+	{id:'imacg3',			variant:'imacg3',        desc:'iMac G3 Blueberry Cyan del 1998'},
+	
+	{id:'notebook',			variant:'notebookwhite', desc:'Generic White Notebook'},
+	{id:'router',			variant:'routerwhite',   desc:'Router Wi-Fi TpLink White'},
+	{id:'gameboy',			variant:'gameboyred',    desc:'GameBoy Red classic del 1990'},
+	{id:'gameboy',			variant:'gameboyblue',   desc:'GameBoy Blue classic del 1990'},
+	{id:'radio',			variant:'radiodark',     desc:'AliExpress Vintage Radio R919'},
+	{id:'nesthub',			variant:'nesthubgray',   desc:'Google NestHub Charcoal Gray del 2021'},
+	{id:'yamahathr',		variant:'yamahathrgreen',desc:'Ampli Yamaha THR10X'},
+	{id:'ps4',				variant:'ps4white',      desc:'Sony PS4 White del 2014'},
+	{id:'imacg3',			variant:'imacg3orange',  desc:'iMac G3 Tangerine Orange del 1999'},
+	{id:'imacg3',			variant:'imacg3red',     desc:'iMac G3 Strawberry Red del 1999'},
+	{id:'imacg3',			variant:'imacg3green',   desc:'iMac G3 Lime Green del 1999'},
+	{id:'imacg3',			variant:'imacg3gray',    desc:'iMac G3 Graphite Gray del 2000'},
+	{id:'imacg3',			variant:'imacg3blue',    desc:'iMac G3 Indigo Blue del 2000'},
 	];
 
 //Palette realistica condivisa
 const colors = {
-    bezel: "#1e293b",
+    midGray: "#1e293b",
     silver: "#94a3b8",
     darkSilver: "#475569",
     screenOff: "#0f172a",
@@ -195,14 +232,31 @@ const colors = {
 	yellowOff: "#7f7f1d",
 	whiteOn: "#fff",
 	whiteOff: "#666",
+	activeColor: "#0ea5e9",
+    inactiveColor: "#334155",
 };
 
+const wireColors = [
+	'#0ea5e9',//cyan default
+	'#ff3300',//rosso
+	'#0033ff',//blu
+	'#ffff00',//giallo
+	'#ff8800',//arancione
+	];
+	
 let grid = [];
 let serverPos = {x: 0, y: 0};
 let gameWon = false;
 let flowOffset = 0; //Per l'animazione dei dati
 let animateFlag = false;//animazione flag
+let variantsFlag = false;//abilita cambi colore
+let shuffledTypes = [];//per evitare duplicati
 
+function changeSliderDifficulty() {
+	const w = parseInt(document.getElementById('widthSlider').value);
+	const h = parseInt(document.getElementById('heightSlider').value);
+	changeDifficulty(w, h, null);
+}
 function changeAnimateFlag(btn) {
 	animateFlag = !animateFlag;
 	if(btn) {
@@ -211,37 +265,89 @@ function changeAnimateFlag(btn) {
 	}
 }
 
-function changeDifficulty(newSize, btn) {
-    SIZE = newSize;
-    CELL_SIZE = CANVAS_MAX_SIZE / SIZE;
+function changeVariantsFlag(btn) {
+	variantsFlag = !variantsFlag;
+	if(btn) {
+		if(variantsFlag) btn.classList.add('active');
+		else btn.classList.remove('active');
+	}
+	changeDifficulty(WIDTH, HEIGHT, document.getElementById(WIDTH+'x'+HEIGHT+'btn'));
+}
+
+function changeWiresColorFlag(btn) {
+	let curr = colors.activeColor;
+	let currentIndex = wireColors.indexOf(curr);
+	let nextColor;
+	if (currentIndex === -1) nextColor = wireColors[0]; // fallback
+	else nextColor = wireColors[(currentIndex + 1) % wireColors.length];
+	colors.activeColor = nextColor;
+	
+	const colorsBtn = document.getElementById('wiresColorBtn')
+	if(colors.activeColor !== wireColors[0]) colorsBtn.classList.add('active');
+	else colorsBtn.classList.remove('active');
+}
+
+function changeDifficulty(newSizeX, newSizeY, btn) {
+	WIDTH = newSizeX;
+	HEIGHT = newSizeY;
+	
+	// Aggiorna slider
+	document.getElementById('widthSlider').value = WIDTH;
+	document.getElementById('heightSlider').value = HEIGHT;
+    CELL_SIZE = CANVAS_MAX_SIZE / Math.max(WIDTH, HEIGHT);//CANVAS_MAX_SIZE / SIZE;
     document.querySelectorAll('button').forEach(b => b.classList.remove('active'));
     if(btn) btn.classList.add('active');
+	
+	const animateBtn = document.getElementById('animateBtn')
+	if(animateFlag) animateBtn.classList.add('active');
+	else animateBtn.classList.remove('active');
+	
+	const variantsBtn = document.getElementById('variantsBtn')
+	if(variantsFlag) variantsBtn.classList.add('active');
+	else variantsBtn.classList.remove('active');
+	
+	const colorsBtn = document.getElementById('wiresColorBtn')
+	if(colors.activeColor !== wireColors[0]) colorsBtn.classList.add('active');
+	else colorsBtn.classList.remove('active');
+	
     initGame();
 }
 
 function initGame() {
-	// Calcola lo spazio disponibile
+    // 1. Calcola lo spazio reale disponibile nello schermo (sia larghezza che altezza)
     const headerHeight = document.querySelector('.controls').offsetHeight;
     const statusHeight = statusDiv.offsetHeight;
-    const padding = 60; // Padding container + margini
-    const availableHeight = window.innerHeight - headerHeight - statusHeight - padding;
     
-    // Usa l'altezza disponibile, ma mantieni il massimo della larghezza
-    const canvasSize = Math.min(CANVAS_MAX_SIZE, availableHeight);
-	
-    canvas.width = canvasSize;
-    canvas.height = canvasSize;
+    const paddingX = 40; // Margine di sicurezza laterale
+    const paddingY = 60; // Margine di sicurezza verticale
     
-	// Ricalcola CELL_SIZE in base alla canvas effettiva
-    CELL_SIZE = canvasSize / SIZE;
-	
+    const availableWidth = window.innerWidth - paddingX;
+    const availableHeight = window.innerHeight - headerHeight - statusHeight - paddingY;
+    
+    // 2. Determina i vincoli massimi applicando il tetto di CANVAS_MAX_SIZE
+    const maxAllowedWidth = Math.min(CANVAS_MAX_SIZE, availableWidth);
+    const maxAllowedHeight = Math.min(CANVAS_MAX_SIZE, availableHeight);
+    
+    // 3. Calcola la dimensione massima della cella per entrambe le direzioni
+    const cellSizeByWidth = maxAllowedWidth / WIDTH;
+    const cellSizeByHeight = maxAllowedHeight / HEIGHT;
+    
+    // Il CELL_SIZE definitivo sarà il minore dei due: garantisce la massima grandezza
+    // senza mai far uscire la griglia dai bordi (né in orizzontale né in verticale)
+    CELL_SIZE = Math.min(cellSizeByWidth, cellSizeByHeight);
+    
+    // 4. Assegna le dimensioni reali al canvas basandoti sul numero di celle
+    canvas.width = WIDTH * CELL_SIZE;
+    canvas.height = HEIGHT * CELL_SIZE;
+    
+    // --- DA QUI IN POI IL CODICE RIMANE INVARIATO ---
     grid = [];
     gameWon = false;
     statusDiv.innerText = "";
     
-    for (let y = 0; y < SIZE; y++) {
+    for (let y = 0; y < HEIGHT; y++) {
         grid[y] = [];
-        for (let x = 0; x < SIZE; x++) {
+        for (let x = 0; x < WIDTH; x++) {
             grid[y][x] = { x, y, conns: 0, type: 'cable', subType: '', connected: false };
         }
     }
@@ -264,9 +370,9 @@ function initGame() {
 //8) Alla fine di questo ciclo, tutte le celle della griglia saranno collegate tra loro in un unico grande "albero" genealogico che ha come radice il server.
 
 function generateNetwork() {
-    let visited = Array(SIZE).fill().map(() => Array(SIZE).fill(false));
+	let visited = Array(HEIGHT).fill().map(() => Array(WIDTH).fill(false));//SIZE
     let walls = [];
-    serverPos = { x: Math.floor(Math.random()*SIZE), y: Math.floor(Math.random()*SIZE) };
+    serverPos = { x: Math.floor(Math.random()*WIDTH), y: Math.floor(Math.random()*HEIGHT) };//SIZE
     visited[serverPos.y][serverPos.x] = true;
     addWalls(serverPos.x, serverPos.y, walls, visited);
 
@@ -282,12 +388,13 @@ function generateNetwork() {
 
 function addWalls(x, y, walls, visited) {
     if (y > 0) walls.push({x1:x, y1:y, x2:x, y2:y-1, dir1:N, dir2:S});
-    if (y < SIZE-1) walls.push({x1:x, y1:y, x2:x, y2:y+1, dir1:S, dir2:N});
+    if (y < HEIGHT-1) walls.push({x1:x, y1:y, x2:x, y2:y+1, dir1:S, dir2:N});//SIZE-1
     if (x > 0) walls.push({x1:x, y1:y, x2:x-1, y2:y, dir1:W, dir2:E});
-    if (x < SIZE-1) walls.push({x1:x, y1:y, x2:x+1, y2:y, dir1:E, dir2:W});
+    if (x < WIDTH-1) walls.push({x1:x, y1:y, x2:x+1, y2:y, dir1:E, dir2:W});//SIZE-1
 }
 
 function assignTypes() {
+	shuffledTypes = [];
     grid.forEach((row, y) => row.forEach((cell, x) => {
         if (x === serverPos.x && y === serverPos.y) cell.type = 'server';
         else {
@@ -295,7 +402,7 @@ function assignTypes() {
             if (count === 1) {
                 cell.type = 'pc';
 				//fix: genera il prossimo DIVERSO dall'attuale!
-                cell.subType = getNextPcType();//PC_TYPES[Math.floor(Math.random() * PC_TYPES.length)];
+                cell.subType = getNextHwType();
             }
         }
     }));
@@ -303,13 +410,15 @@ function assignTypes() {
 
 
 //fix: genera il prossimo DIVERSO dall'attuale!
-let shuffledTypes = [];
-function getNextPcType() {
+function getNextHwType() {
     // Se la lista è vuota, crea una nuova sequenza casuale
-    if (shuffledTypes.length === 0) shuffledTypes = [...PC_TYPES].sort(() => Math.random() - 0.5);
+    if (shuffledTypes.length === 0) shuffledTypes = [...HW_TYPES].filter((e) => variantsFlag || e.variant === e.id).sort(() => Math.random() - 0.5);
+	//console.log('shuffledTypes',shuffledTypes);
 
     // Estrae il prossimo tipo unico
-    return shuffledTypes.pop();
+	const piece = shuffledTypes.pop();
+	//console.log('piece',piece.variant);
+	return piece;
 }
 
 
@@ -339,7 +448,7 @@ function updateConnectivity() {
         [[N,0,-1,S],[E,1,0,W],[S,0,1,N],[W,-1,0,E]].forEach(d => {
             if (curr.conns & d[0]) {
                 let nx = curr.x+d[1], ny = curr.y+d[2];
-                if (nx>=0 && nx<SIZE && ny>=0 && ny<SIZE) {
+                if (nx>=0 && nx<WIDTH && ny>=0 && ny<HEIGHT) {//SIZE
                     let nb = grid[ny][nx];
                     if (!nb.connected && (nb.conns & d[3])) {
                         nb.connected = true;
@@ -367,12 +476,15 @@ function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
     // Griglia
-    ctx.strokeStyle = "#1e293b";
+    ctx.strokeStyle = colors.inactiveColor;
     ctx.lineWidth = 1;
-    for(let i=0; i<=SIZE; i++) {
-        ctx.beginPath(); ctx.moveTo(i*CELL_SIZE,0); ctx.lineTo(i*CELL_SIZE,canvas.height); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(0,i*CELL_SIZE); ctx.lineTo(canvas.width,i*CELL_SIZE); ctx.stroke();
-    }
+    
+	for(let i=0; i<=WIDTH; i++) {
+		ctx.beginPath(); ctx.moveTo(i*CELL_SIZE,0); ctx.lineTo(i*CELL_SIZE,canvas.height); ctx.stroke();
+	}
+	for(let i=0; i<=HEIGHT; i++) {
+		ctx.beginPath(); ctx.moveTo(0,i*CELL_SIZE); ctx.lineTo(canvas.width,i*CELL_SIZE); ctx.stroke();
+	}
 
 	//drawLake();
 
@@ -400,8 +512,8 @@ function drawLake() {
     for(let w = 0; w < waveCount; w++) {
         const waveRadius = (flowOffset * 2 + w * 20) % (Math.max(canvas.width, canvas.height));
         const opacity = Math.max(0, 1 - (waveRadius / (Math.max(canvas.width, canvas.height))));
-        
-        ctx.strokeStyle = `rgba(34, 94, 197, ${0.3 * opacity})`;
+        const op100 = (opacity * 100)|0;
+        ctx.strokeStyle = colors.activeColor+op100;//`rgba(34, 94, 197, ${0.3 * opacity})`;
         ctx.beginPath();
         ctx.arc(serverX, serverY, waveRadius, 0, Math.PI * 2);
         ctx.stroke();
@@ -418,18 +530,16 @@ function drawTileOLD(tile) {
     let x = tile.x * CELL_SIZE;
     let y = tile.y * CELL_SIZE;
     let mid = CELL_SIZE / 2;
-    let activeColor = "#0ea5e9";
-    let inactiveColor = "#334155";
-
+    
     // Disegna cavi
-    ctx.strokeStyle = tile.connected ? activeColor : inactiveColor;
-    ctx.lineWidth = CELL_SIZE * 0.08;//Math.max(3, CELL_SIZE / 10);
+    ctx.strokeStyle = tile.connected ? colors.activeColor : colors.inactiveColor;
+    ctx.lineWidth = CELL_SIZE * 0.08;
     ctx.lineCap = "butt";//"round";
     
     // Effetto bagliore se connesso
     if(tile.connected) {
         ctx.shadowBlur = 20;
-        ctx.shadowColor = activeColor;
+        ctx.shadowColor = colors.activeColor;
     } else {
         ctx.shadowBlur = 0;
     }
@@ -437,7 +547,7 @@ function drawTileOLD(tile) {
 	//fix round / butt con una palla al centro della tile
 	ctx.beginPath();
 	ctx.arc(x+mid, y+mid, CELL_SIZE * 0.04, 0, Math.PI*2);
-	ctx.fillStyle = tile.connected ? activeColor : inactiveColor;
+	ctx.fillStyle = tile.connected ? colors.activeColor : colors.inactiveColor;
 	ctx.fill();
 	
     ctx.beginPath();
@@ -459,14 +569,14 @@ function drawTileANIMATE(tile) {
 	
     // Cavo Base (Sfondo spento)
     ctx.setLineDash([]);
-    ctx.strokeStyle = "#1e293b";
+    ctx.strokeStyle = colors.inactiveColor;//"#1e293b";
     ctx.lineWidth = CELL_SIZE * 0.08;
     ctx.lineCap = "butt";//"round";
 	
 	//fix round / butt con una palla al centro della tile
 	ctx.beginPath();
 	ctx.arc(x+mid, y+mid, CELL_SIZE * 0.04, 0, Math.PI*2);
-	ctx.fillStyle = "#1e293b";
+	ctx.fillStyle = colors.inactiveColor;//"#1e293b";
 	ctx.fill();
 	
     ctx.beginPath();
@@ -479,7 +589,7 @@ function drawTileANIMATE(tile) {
     // Flusso Dati (Animato)
     if (tile.connected) {
 		ctx.lineCap = "butt";//default
-		ctx.strokeStyle = "#0ea5e9";
+		ctx.strokeStyle = colors.activeColor;//"#0ea5e9";
         ctx.lineWidth = CELL_SIZE * 0.02;
         ctx.setLineDash([CELL_SIZE*0.025, CELL_SIZE*0.025]); // Tratteggio
         ctx.lineDashOffset = -flowOffset;
@@ -489,6 +599,7 @@ function drawTileANIMATE(tile) {
         ctx.shadowBlur = 0;
 		ctx.setLineDash([]);
     }
+	ctx.lineWidth = 1;
 
     // Icone
     drawPC(x, y, tile);
@@ -499,7 +610,9 @@ function drawPC(x, y, tile) {
 	const isServer = tile.type === 'server';
 	const type = tile.subType;
 	const connected = tile.connected;
-    const s = CELL_SIZE * (isServer ? 0.75 : 0.65);//Leggermente più grande per i dettagli
+    const s = CELL_SIZE * (	isServer ? 0.75 : 
+							connected && animateFlag ? 0.75 :
+							0.65 );//Leggermente più grande per i dettagli
     const p = (CELL_SIZE - s) * 0.5;
     
     ctx.save();
@@ -508,7 +621,7 @@ function drawPC(x, y, tile) {
 	if (isServer) {
 		// --- CASE ESTERNO (RACK) ---
 		// Effetto metallo spazzolato scuro
-		let caseGrad = ctx.createLinearGradient(0, 0, s, s);
+		let caseGrad = ctx.createLinearGradient(0 - s*0.08, 0, s + s*0.08, s);
 		caseGrad.addColorStop(0, "#334155");
 		caseGrad.addColorStop(0.5, "#1e293b");
 		caseGrad.addColorStop(1, "#0f172a");
@@ -518,37 +631,55 @@ function drawPC(x, y, tile) {
 		ctx.roundRect(0, 0, s, s, s * 0.02);
 		ctx.fill();
 
-		// Bordi laterali del rack (le "orecchie" per il montaggio)
-		ctx.fillStyle = "#111827";
-		ctx.fillRect(0, 0, 4, s);
-		ctx.fillRect(s - 4, 0, 4, s);
+		// Maniglie frontali (dettaglio di classe)
+		ctx.fillStyle = '#000';//colors.darkSilver;
+		//sx
+		ctx.beginPath();
+		ctx.roundRect(s*0.02, s*0.05, s*0.02, s*0.88, s*0.04);
+		ctx.fill();
+		//dx
+		ctx.beginPath();
+		ctx.roundRect(s*0.96, s*0.05, s*0.02, s*0.88, s*0.04);
+		ctx.fill();
 
 		// --- UNITÀ SERVER (Blade) ---
 		const units = 4;
-		const unitHeight = (s - 10) / units;
+		const unitHeight = (s - s*0.10) / units;
+		
+		
+		//righe ventilazione
+		let sizeRighe = Math.max(0.6, s*0.01);//larghezza righe
+		let deltaRighe = sizeRighe * 2.5;//spazio tra righe
+		ctx.lineWidth = sizeRighe;
+		
+		//led di stato
+		const ledRadius = Math.max(1, s * 0.02); // Scala i LED con la scocca
+		const ledSpacing = s * 0.1;
+		
+		const unitsToShutdown = [];
+		const currentCycle = flowOffset * 0.0001;
+		unitsToShutdown[0] = Math.floor(currentCycle * 73.1 + 1 ) % 10;
+		unitsToShutdown[1] = Math.floor(currentCycle * 73.1 + 42.3 ) % 10;
+		
 		
 		for (let i = 0; i < units; i++) {
-			let uy = 5 + (i * unitHeight);
+		
+			let uy = s*0.05 + (i * unitHeight);
 			
 			// Slot dell'unità
 			ctx.fillStyle = "#020617";
-			ctx.fillRect(6, uy, s - 12, unitHeight - 2);
+			ctx.fillRect(s*0.06, uy, s - s*0.12, unitHeight - s*0.02);
 			
-			// Griglia di ventilazione (linee sottili)
-			ctx.strokeStyle = "#1e293b";
-			ctx.lineWidth = 0.5;
-			for(let gx = 10; gx < s - 25; gx += 3) {
+			// Griglia di ventilazione (30 righe)
+			ctx.strokeStyle = colors.midGray;
+			for(let gx = s*0.08; gx < s * 0.94; gx += deltaRighe) {
 				ctx.beginPath();
-				ctx.moveTo(gx, uy + 2);
-				ctx.lineTo(gx, uy + unitHeight - 4);
+				ctx.moveTo(gx, uy + s*0.02);
+				ctx.lineTo(gx, uy + unitHeight - s*0.04);
 				ctx.stroke();
 			}
-
-			// --- LED DI STATO PER OGNI UNITÀ ---
-			const ledRadius = Math.max(1, s * 0.02); // Scala i LED con la scocca
-			const ledSpacing = s * 0.1;
 			
-			if (connected) {
+			if (connected && unitsToShutdown.indexOf(i) === -1) {
 				// LED Verde (Power/Link) - Fisso o lampeggio lento
 				ctx.fillStyle = (Math.sin(flowOffset * 0.1 + i) > -0.8) ? colors.greenOn : colors.greenOff;
 				ctx.shadowBlur = 5; ctx.shadowColor = colors.greenOn;
@@ -572,15 +703,6 @@ function drawPC(x, y, tile) {
 				ctx.beginPath(); ctx.arc(s - ledSpacing * 4, uy + unitHeight/2, ledRadius, 0, Math.PI*2); ctx.fill();
 			}
 		}
-
-		// Maniglie frontali (dettaglio di classe)
-		ctx.strokeStyle = colors.darkSilver;
-		ctx.lineWidth = Math.max(1, s * 0.015);
-		ctx.lineCap = "round";
-		// Maniglia SX
-		ctx.beginPath(); ctx.moveTo(2, 10); ctx.lineTo(2, s-10); ctx.stroke();
-		// Maniglia DX
-		ctx.beginPath(); ctx.moveTo(s-2, 10); ctx.lineTo(s-2, s-10); ctx.stroke();
 	} else if (type.id === 'desktop') {
 		// --- MONITOR ---
 		// Scocca posteriore/ombra
@@ -627,6 +749,7 @@ function drawPC(x, y, tile) {
 	} 
 	else if (type.id === 'notebook') {
 		// --- SCHERMO APERTO ---
+		const isWhite = type.variant === 'notebookwhite';
 		ctx.fillStyle = "#111";
 		ctx.beginPath(); ctx.roundRect(s * 0.05, 0, s * 0.9, s * 0.6, s * 0.03); ctx.fill(); // Cornice
 		
@@ -651,8 +774,8 @@ function drawPC(x, y, tile) {
 
 		// --- BASE TASTIERA (Prospettiva) ---
 		let baseGrad = ctx.createLinearGradient(0, s * 0.6, 0, s);
-		baseGrad.addColorStop(0, colors.silver);
-		baseGrad.addColorStop(1, colors.darkSilver);
+		baseGrad.addColorStop(0, isWhite ? '#fff' : colors.silver);
+		baseGrad.addColorStop(1, isWhite ? '#ddd' : colors.darkSilver);
 		ctx.fillStyle = baseGrad;
 
 		ctx.beginPath();
@@ -664,7 +787,7 @@ function drawPC(x, y, tile) {
 		ctx.fill();
 
 		// Dettaglio tastiera (puntini) - SCALATI
-		const keySize = Math.max(1, s * 0.03);
+		const keySize = s * 0.035;
 		const keySpacing = s * 0.1;
 		const keyRowSpacing = s * 0.04;
 		ctx.fillStyle = "rgba(0,0,0,0.2)";
@@ -722,7 +845,7 @@ function drawPC(x, y, tile) {
 		ctx.beginPath(); ctx.arc(s*0.25, s*0.15, s*0.1, Math.PI, Math.PI*1.5); ctx.stroke();
 
 		// Sensore Webcam tablet
-		ctx.fillStyle = "#1e293b";
+		ctx.fillStyle = colors.midGray;
 		ctx.beginPath(); ctx.arc(s*0.5, s*0.08, Math.max(0.8, s * 0.015), 0, Math.PI*2); ctx.fill();
 	} 
 	else if (type.id === 'baraccone') {
@@ -785,10 +908,12 @@ function drawPC(x, y, tile) {
 	}
 	else if (type.id === 'router') {
 		// --- ROUTER WiFi ---
+		const isWhite = type.variant === 'routerwhite';
+		
 		let routerGrad = ctx.createLinearGradient(0, 0, s, s);
-		routerGrad.addColorStop(0, "#334155");
-		routerGrad.addColorStop(0.5, "#1e293b");
-		routerGrad.addColorStop(1, "#0f172a");
+		routerGrad.addColorStop(0.0, isWhite ? '#fff' : "#334155");
+		routerGrad.addColorStop(0.5, isWhite ? '#eee' : "#1e293b");
+		routerGrad.addColorStop(1.0, isWhite ? '#bbb' : "#0f172a");
 		ctx.fillStyle = routerGrad;
 		ctx.beginPath();
 		ctx.roundRect(s*0.05, s*0.3, s*0.9, s*0.4, s * 0.04);
@@ -796,7 +921,7 @@ function drawPC(x, y, tile) {
 		
 		// Griglia ventilazione frontale
 		ctx.strokeStyle = colors.darkSilver;
-		ctx.lineWidth = 0.5;
+		ctx.lineWidth = s * 0.01;
 		const ventRows = 3;
 		const ventSpacing = s * 0.08;
 		for(let i = 0; i < ventRows; i++) {
@@ -823,7 +948,7 @@ function drawPC(x, y, tile) {
 			ctx.rotate(pos.angle);
 			
 			ctx.strokeStyle = colors.darkSilver;
-			ctx.lineWidth = Math.max(2, s*0.06);
+			ctx.lineWidth = s*0.06;
 			ctx.lineCap = "round";
 			ctx.beginPath();
 			ctx.moveTo(0, 0);
@@ -919,7 +1044,7 @@ function drawPC(x, y, tile) {
 		
 		// Bordo base (scuro)
 		ctx.strokeStyle = "#1a1a1a";
-		ctx.lineWidth = Math.max(1, s*0.02);
+		ctx.lineWidth = s*0.02;
 		ctx.beginPath();
 		ctx.ellipse(s*0.5, s*0.75, s*0.35, s*0.15, 0, 0, Math.PI*2);
 		ctx.stroke();
@@ -981,7 +1106,7 @@ function drawPC(x, y, tile) {
 		ctx.shadowBlur = 0;
 		
 		// Ombra/sfumatura laterale per effetto 3D
-		ctx.fillStyle = "rgba(0, 0, 0, 0.1)";
+		ctx.fillStyle = "rgba(0,0,0,0.1)";
 		ctx.beginPath();
 		ctx.ellipse(s*0.3, s*0.45, s*0.15, s*0.2, 0, 0, Math.PI*2);
 		ctx.fill();
@@ -1001,7 +1126,7 @@ function drawPC(x, y, tile) {
 		
 		// Bordo case (scuro)
 		ctx.strokeStyle = "#333";
-		ctx.lineWidth = Math.max(1, s*0.02);
+		ctx.lineWidth = s*0.02;
 		ctx.beginPath();
 		ctx.roundRect(s*0.05, s*0.08, s*0.9, s*0.9, s*0.04);
 		ctx.stroke();
@@ -1091,7 +1216,7 @@ function drawPC(x, y, tile) {
 		
 		// Bordo grigio scuro
 		ctx.strokeStyle = "#999";
-		ctx.lineWidth = Math.max(1, s*0.015);
+		ctx.lineWidth = s*0.015;
 		ctx.beginPath();
 		ctx.roundRect(s*0.08, s*0.05, s*0.84, s*0.63, s*0.08);
 		ctx.stroke();
@@ -1110,7 +1235,7 @@ function drawPC(x, y, tile) {
 		
 		// Luci riflesse sullo schermo (se connesso)
 		if (connected) {
-			ctx.fillStyle = "rgba(255, 255, 255, 0.1)";
+			ctx.fillStyle = "rgba(255,255,255,0.1)";
 			ctx.beginPath();
 			ctx.ellipse(s*0.25, s*0.2, s*0.1, s*0.08, -0.3, 0, Math.PI*2);
 			ctx.fill();
@@ -1159,7 +1284,7 @@ function drawPC(x, y, tile) {
 		ctx.fill();
 		ctx.shadowBlur = 0;
 	}	
-	else if (type.id === 'gameboy' || type.id === 'gameboyred' || type.id === 'gameboyblue') {
+	else if (type.id === 'gameboy') {
 		// --- GAME BOY CLASSICO (1989) ---
 		// Body grigio-beige
 		//grad1->grad2 + bordo + tasti outer->inner
@@ -1167,16 +1292,16 @@ function drawPC(x, y, tile) {
 							gameboyblue: '#03d|#02b|#003|#000|#222',
 							gameboy:     '#f0f0f0|#b0b0b0|#333|#806|#a08'};
 		let gbGrad = ctx.createLinearGradient(0, 0, s, s);
-		gbGrad.addColorStop(0, gbcols[type.id].split('|')[0]);
-		gbGrad.addColorStop(1, gbcols[type.id].split('|')[1]);
+		gbGrad.addColorStop(0, gbcols[type.variant].split('|')[0]);
+		gbGrad.addColorStop(1, gbcols[type.variant].split('|')[1]);
 		ctx.fillStyle = gbGrad;
 		ctx.beginPath();
 		ctx.roundRect(s*0.1, s*0.05, s*0.75, s*0.9, s*0.04);
 		ctx.fill();
 		
 		// Bordo nero
-		ctx.strokeStyle = gbcols[type.id].split('|')[2]
-		ctx.lineWidth = Math.max(1, s*0.015);
+		ctx.strokeStyle = gbcols[type.variant].split('|')[2]
+		ctx.lineWidth = s*0.015;
 		ctx.beginPath();
 		ctx.roundRect(s*0.1, s*0.05, s*0.75, s*0.9, s*0.04);
 		ctx.stroke();
@@ -1253,7 +1378,7 @@ function drawPC(x, y, tile) {
 		const buttonSize = s*0.05;
 		
 		// Tasto A basso + B alto outer
-		ctx.fillStyle = gbcols[type.id].split('|')[3];
+		ctx.fillStyle = gbcols[type.variant].split('|')[3];
 		ctx.beginPath();
 		ctx.arc(buttonsX+s*0.01, buttonsY+s*0.01, buttonSize, 0, Math.PI*2);
 		ctx.fill();
@@ -1261,7 +1386,7 @@ function drawPC(x, y, tile) {
 		ctx.arc(buttonsX + buttonSize * 1.8+s*0.01, buttonsY - buttonSize * 1.5+s*0.01, buttonSize, 0, Math.PI*2);
 		ctx.fill();
 		// Tasto A basso + B alto inner
-		ctx.fillStyle = gbcols[type.id].split('|')[4];
+		ctx.fillStyle = gbcols[type.variant].split('|')[4];
 		ctx.beginPath();
 		ctx.arc(buttonsX, buttonsY, buttonSize, 0, Math.PI*2);
 		ctx.fill();
@@ -1321,7 +1446,7 @@ function drawPC(x, y, tile) {
 		
 		// Bordo metallico
 		ctx.strokeStyle = "#444";
-		ctx.lineWidth = Math.max(1, s*0.015);
+		ctx.lineWidth = s*0.01;
 		ctx.strokeRect(s*0.08, s*0.15, s*0.84, s*0.7);
 		
 		// --- JOY-CON SINISTRO (grigio) ---
@@ -1404,7 +1529,7 @@ function drawPC(x, y, tile) {
 		
 		// Etichetta SWITCH
 		ctx.fillStyle = "#999";
-		ctx.font = `${Math.max(5, s*0.05)}px sans-serif`;
+		ctx.font = `${s*0.05}px sans-serif`;
 		ctx.textAlign = "center";
 		ctx.textBaseline = "middle";
 		ctx.fillText("SWITCH", s*0.5, s*0.75);
@@ -1421,7 +1546,7 @@ function drawPC(x, y, tile) {
 		
 		// Bordo top
 		ctx.strokeStyle = "#000";
-		ctx.lineWidth = Math.max(1, s*0.02);
+		ctx.lineWidth = s*0.02;
 		ctx.strokeRect(s*0.05, s*0.05, s*0.9, s*0.3);
 		
 		// Slot input/output (nero)
@@ -1448,7 +1573,7 @@ function drawPC(x, y, tile) {
 		
 		// Bordo corpo
 		ctx.strokeStyle = "#ccc";
-		ctx.lineWidth = Math.max(1, s*0.015);
+		ctx.lineWidth = s*0.01;
 		ctx.strokeRect(s*0.05, s*0.35, s*0.9, s*0.6);
 		
 		//per inserire la mano
@@ -1476,7 +1601,7 @@ function drawPC(x, y, tile) {
 		
 		//logo
 		ctx.fillStyle = "#fff";
-		ctx.font = `italic ${Math.max(8, s*0.1)}px sans-serif`;
+		ctx.font = `italic ${s*0.1}px sans-serif`;
 		ctx.textAlign = "center";
 		ctx.textBaseline = "middle";
 		ctx.fillText("hp", s*0.5, s*0.6);
@@ -1531,7 +1656,7 @@ function drawPC(x, y, tile) {
 		ctx.fill();
 		
 		ctx.fillStyle = "#fff";
-		ctx.font = `bold ${Math.max(6, s*0.07)}px sans-serif`;
+		ctx.font = `bold ${s*0.07}px sans-serif`;
 		ctx.textAlign = "center";
 		ctx.textBaseline = "middle";
 		ctx.fillText("A", s*0.9, s*0.6);
@@ -1607,7 +1732,7 @@ function drawPC(x, y, tile) {
 		
 		//contorno schermo marroncino
 		ctx.fillStyle = "#645440";
-		ctx.lineWidth = Math.max(1, s*0.015);
+		ctx.lineWidth = s*0.015;
 		ctx.beginPath();
 		ctx.roundRect(s*0.07, s*0.03, s*0.86, s*0.55, s*0.02);
 		ctx.fill();
@@ -1631,7 +1756,7 @@ function drawPC(x, y, tile) {
 		
 		if (connected) {
 			ctx.fillStyle = "#bfb";
-			ctx.font = `${Math.max(3, s*0.03)}px sans-serif`;
+			ctx.font = `${s*0.03}px sans-serif`;
 			ctx.textAlign = "center";
 			ctx.fillText("APPLE ][", s*0.5, s*0.15);
 			ctx.textAlign = "left";
@@ -1669,12 +1794,13 @@ function drawPC(x, y, tile) {
 			
 			// Indicatore (lineetta)
 			ctx.strokeStyle = i === 2 ? colors.redOff : "#aaa";  // Rosso per la terza
-			ctx.lineWidth = Math.max(1, s*0.008);
+			ctx.lineWidth = s*0.01;
 			ctx.lineCap = "round";
 			ctx.beginPath();
 			ctx.moveTo(knobX, knobY - s*0.018);
 			ctx.lineTo(knobX, knobY - s*0.026);
 			ctx.stroke();
+			ctx.lineCap = "butt";
 		}
 		
 		//CASE alluminio
@@ -1771,13 +1897,13 @@ function drawPC(x, y, tile) {
 		ctx.fill();
 		ctx.stroke();
 		ctx.fillStyle = "#eee";
-		ctx.font = `${Math.max(0, s*0.08)}px sans-serif`;
+		ctx.font = `${s*0.08}px sans-serif`;
 		ctx.textAlign = "left";
 		ctx.fillText("QC", s*0.33, s*0.33);
 		
 		//Etichetta
 		ctx.fillStyle = "#999";
-		ctx.font = `${Math.max(0, s*0.11)}px sans-serif`;
+		ctx.font = `${s*0.11}px sans-serif`;
 		ctx.textAlign = "left";
 		ctx.fillText("MOREFINE", s*0.22, s*0.55);
 		
@@ -1805,12 +1931,13 @@ function drawPC(x, y, tile) {
 	}
 	else if (type.id === 'radio') {
 		//CORPO IN LEGNO
+		const isDark = type.variant === 'radiodark';
 		let woodGrad = ctx.createLinearGradient(0, 0, s, s);
-		woodGrad.addColorStop(0, "#8B5A3C");
-		woodGrad.addColorStop(0.3, "#7A4B2F");
-		woodGrad.addColorStop(0.5, "#6B3E1F");
-		woodGrad.addColorStop(0.7, "#7A4B2F");
-		woodGrad.addColorStop(1, "#8B5A3C");
+		woodGrad.addColorStop(0.0, isDark ? "#531" : "#a53");
+		woodGrad.addColorStop(0.3, isDark ? "#420" : "#842");
+		woodGrad.addColorStop(0.5, isDark ? "#310" : "#631");
+		woodGrad.addColorStop(0.7, isDark ? "#420" : "#842");
+		woodGrad.addColorStop(1.0, isDark ? "#531" : "#a53");
 		ctx.fillStyle = woodGrad;
 		
 		//corpo arrotondato
@@ -1873,7 +2000,7 @@ function drawPC(x, y, tile) {
 		
 		// Numeri scala FM (90, 94, 98, 102, 106, 110)
 		ctx.fillStyle = "#000";
-		ctx.font = `${Math.max(5, s*0.05)}px serif`;
+		ctx.font = `${s*0.05}px serif`;
 		ctx.textAlign = "center";
 		ctx.textBaseline = "middle";
 		const freqs = [90, 94, 98, 102, 106, 110];
@@ -1926,7 +2053,7 @@ function drawPC(x, y, tile) {
 		
 		// Label "FM" sotto quadrante
 		ctx.fillStyle = "#333";
-		ctx.font = `bold ${Math.max(6, s*0.07)}px serif`;
+		ctx.font = `bold ${s*0.07}px serif`;
 		ctx.textAlign = "center";
 		ctx.fillText("R919", dialX, dialY + dialRadius + s*0.04);
 		
@@ -1964,12 +2091,13 @@ function drawPC(x, y, tile) {
 		ctx.lineCap = 'butt';
 	}
 	else if (type.id === 'nesthub') {
+		const isGray = type.variant === 'nesthubgray';
 		//basetta grigia
-		ctx.fillStyle = '#aaa';
+		ctx.fillStyle = isGray ? '#222' : '#aaa';
 		ctx.beginPath();
 		ctx.roundRect(s*0.2, s*0.45, s*0.6, s*0.2, s*0.04);
 		ctx.fill();
-		ctx.fillStyle = '#bbb';
+		ctx.fillStyle = isGray ? '#333' : '#bbb';
 		ctx.beginPath();
 		ctx.roundRect(s*0.25, s*0.45, s*0.50, s*0.2, s*0.02);
 		ctx.fill();
@@ -2016,7 +2144,7 @@ function drawPC(x, y, tile) {
 		//connessione G
 		if (connected) {
 			ctx.fillStyle = '#fff';
-			ctx.font = `${s*0.1}px serif`;
+			ctx.font = `${s*0.2}px serif`;
 			ctx.textAlign = "center";
 			ctx.fillText("G", s*0.5, s*0.3);
 		}
@@ -2024,6 +2152,7 @@ function drawPC(x, y, tile) {
 	} 
 	else if (type.id === 'yamahathr') {
 		// --- MANIGLIA (Arco superiore) ---
+		const isGreen = type.variant === 'yamahathrgreen';
 		ctx.strokeStyle = "#9ca3af";
 		ctx.lineWidth = s * 0.03;
 		ctx.beginPath();
@@ -2032,8 +2161,8 @@ function drawPC(x, y, tile) {
 		
 		// --- CORPO PRINCIPALE ---
 		let bodyGrad = ctx.createLinearGradient(0, 0, 0, s);
-		bodyGrad.addColorStop(0, "#d4c5a9");
-		bodyGrad.addColorStop(1, "#bfb09a");
+		bodyGrad.addColorStop(0, isGreen ? "#564" : "#dca");
+		bodyGrad.addColorStop(1, isGreen ? "#242" : "#bb9");
 		ctx.fillStyle = bodyGrad;
 		ctx.beginPath(); ctx.roundRect(0, s*0.15, s, s*0.7, s*0.05); ctx.fill();
 
@@ -2071,7 +2200,7 @@ function drawPC(x, y, tile) {
 		}
 		
 		//4 viti
-		ctx.fillStyle = '#666';
+		ctx.fillStyle = isGreen ? '#444' : '#666';
 		ctx.beginPath();
 		ctx.arc(s*0.94, s*0.28, s*0.014, 0, Math.PI*2);
 		ctx.fill();
@@ -2120,7 +2249,7 @@ function drawPC(x, y, tile) {
 		ctx.shadowBlur = 0;
 		
 		// --- RIFLESSO GLOSSY ---
-		ctx.fillStyle = "rgba(255, 255, 255, 0.2)";
+		ctx.fillStyle = "rgba(255,255,255,0.1)";
 		ctx.beginPath();
 		ctx.moveTo(s*0.05, s*0.15); ctx.lineTo(s*0.5, s*0.2); ctx.lineTo(s*0.1, s*0.35);
 		ctx.fill();
@@ -2246,13 +2375,13 @@ function drawPC(x, y, tile) {
 		
 		// Etichetta PS7000
 		ctx.fillStyle = "#999";
-		ctx.font = `${Math.max(5, s*0.05)}px sans-serif`;
+		ctx.font = `${s*0.05}px sans-serif`;
 		ctx.textAlign = "center";
 		ctx.textBaseline = "middle";
 		ctx.fillText("PS7000", s*0.5, s*0.65);
 	}
-	else if (type.id === 'ps4' || type.id === 'ps4white') {
-		const isWhite = type.id === 'ps4white';
+	else if (type.id === 'ps4') {
+		const isWhite = type.variant === 'ps4white';
 		// --- PLAYSTATION 4 2014
 		// CORPO PRINCIPALE INFERIORE (più scuro)
 		let baseGrad = ctx.createLinearGradient(0, s*0.3, 0, s*0.7);
@@ -2320,9 +2449,10 @@ function drawPC(x, y, tile) {
 		ctx.arc(s*0.95, s*0.62, s*0.02, 0, Math.PI*2);
 		ctx.fill();
 	}
-	else if (type.id === 'imacg3blue' || type.id === 'imacg3red' || type.id === 'imacg3orange' || type.id === 'imacg3cyan' || type.id === 'imacg3green' || type.id === 'imacg3gray') {
+	else if (type.id === 'imacg3') {
 		// --- IMAC G3 BIANCO E BLU?
 		const g3cols = {
+		  imacg3:       '#09b|#079',//default
 		  imacg3blue:   '#00a|#006',
 		  imacg3red:    '#f36|#b12',
 		  imacg3orange: '#f90|#c60',
@@ -2345,8 +2475,8 @@ function drawPC(x, y, tile) {
 		
 		//palla sinistra
 		let handleGrad = ctx.createLinearGradient(0, 0, s*0.1, 0);
-		handleGrad.addColorStop(0, g3cols[type.id].split('|')[0]);
-		handleGrad.addColorStop(1, g3cols[type.id].split('|')[1]);
+		handleGrad.addColorStop(0, g3cols[type.variant].split('|')[0]);
+		handleGrad.addColorStop(1, g3cols[type.variant].split('|')[1]);
 		ctx.fillStyle = handleGrad;
 		ctx.beginPath();
 		ctx.ellipse(s*0.15, s*0.74, s*0.08, s*0.06, 0, 0, Math.PI*2);
@@ -2371,7 +2501,7 @@ function drawPC(x, y, tile) {
 		
 		
 		//riga dritta orizzontale
-		ctx.strokeStyle = "rgba(0, 0, 0, 0.1)";
+		ctx.strokeStyle = "rgba(0,0,0,0.1)";
 		ctx.lineWidth = s*0.01;
 		ctx.beginPath();
 		ctx.moveTo(s*0.05, s*0.65);
@@ -2413,6 +2543,15 @@ function drawPC(x, y, tile) {
 		ctx.roundRect(s*0.2, s*0.19, s*0.6, s*0.37, s*0.04);
 		ctx.fill();
 		
+		//riflesso curvo alto + basso
+		ctx.strokeStyle = "rgba(255,255,255,0.1)";
+		ctx.lineWidth = s*0.03;
+		ctx.beginPath(); ctx.ellipse(s*0.3, s*0.25, s*0.1, s*0.06, 0, Math.PI, Math.PI*1.5); 
+		ctx.stroke();
+		ctx.strokeStyle = "rgba(0,0,0,0.1)";
+		ctx.lineWidth = s*0.03;
+		ctx.beginPath(); ctx.ellipse(s*0.7, s*0.5, s*0.1, s*0.06, 0, Math.PI * 2, Math.PI*2.5); 
+		ctx.stroke();
 		
 		//2 palline a sx
 		ctx.fillStyle = colors.whiteOff;
