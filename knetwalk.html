@@ -184,6 +184,7 @@ const HW_TYPES = [
 	{id:'baraccone',		variant:'baraccone',     desc:'Baraccone anni 90'},
 	{id:'dx40',				variant:'dx40',     	 desc:'Baraccone Intel 386DX-40 del 1990'},
 	{id:'pentium75',		variant:'pentium75',   	 desc:'Baraccone Intel Pentium-75 del 1996'},
+	{id:'pentium2',		    variant:'pentium2',   	 desc:'Baraccone Intel Pentium2-300 del 2000'},
 	{id:'router',			variant:'router',        desc:'Router Wi-Fi TpLink'},
 	{id:'ipcamera',			variant:'ipcamera',      desc:'IP Camera TpLink'},
 	{id:'macintosh',		variant:'macintosh',     desc:'Macintosh 128K del 1984'},
@@ -883,7 +884,7 @@ function drawPC(x, y, tile) {
 		const blinkRed = Math.sin(flowOffset * 0.07 + 3) > -0.8;
 		
 		// LED VERDE A DX
-		ctx.fillStyle = connected ? (blinkGreen ? colors.greenOn : colors.greenOff) : colors.greenOff;
+		ctx.fillStyle = connected && blinkGreen ? colors.greenOn : colors.greenOff;
 		if (connected && blinkGreen) {
 			ctx.shadowBlur = 8; 
 			ctx.shadowColor = colors.greenOn;
@@ -894,7 +895,7 @@ function drawPC(x, y, tile) {
 		ctx.shadowBlur = 0;
 		
 		// LED ARANCIO A CX
-		ctx.fillStyle = connected ? (blinkOrange ? colors.orangeOn : colors.orangeOff) : colors.orangeOff;
+		ctx.fillStyle = connected && blinkOrange ? colors.orangeOn : colors.orangeOff;
 		if (connected && blinkOrange) {
 			ctx.shadowBlur = 8; 
 			ctx.shadowColor = colors.orangeOn;
@@ -905,7 +906,7 @@ function drawPC(x, y, tile) {
 		ctx.shadowBlur = 0;
 		
 		// LED ROSSO A SX
-		ctx.fillStyle = connected ? (blinkRed ? colors.redOn : colors.redOff) : colors.redOff;
+		ctx.fillStyle = connected && blinkRed ? colors.redOn : colors.redOff;
 		if (connected && blinkRed) {
 			ctx.shadowBlur = 8; 
 			ctx.shadowColor = colors.redOn;
@@ -958,7 +959,7 @@ function drawPC(x, y, tile) {
 		ctx.fill();
 		ctx.stroke();
 		// LED ROSSO
-		ctx.fillStyle = connected ? (blinkRed ? colors.redOn : colors.redOff) : colors.redOff;
+		ctx.fillStyle = connected && blinkRed ? colors.redOn : colors.redOff;
 		if (connected && blinkRed) {
 			ctx.shadowBlur = 8; 
 			ctx.shadowColor = colors.redOn;
@@ -1003,7 +1004,7 @@ function drawPC(x, y, tile) {
 		ctx.stroke();
 		
 		// LED VERDE
-		ctx.fillStyle = connected ? (blinkGreen ? colors.greenOn : colors.greenOff) : colors.greenOff;
+		ctx.fillStyle = connected && blinkGreen ? colors.greenOn : colors.greenOff;
 		if (connected && blinkGreen) {
 			ctx.shadowBlur = 8; 
 			ctx.shadowColor = colors.greenOn;
@@ -1011,7 +1012,7 @@ function drawPC(x, y, tile) {
 		ctx.fillRect(s*0.26,s*0.40,s*0.05,s*0.03); 
 		ctx.shadowBlur = 0;
 		// LED ARANCIO
-		ctx.fillStyle = connected ? (blinkOrange ? colors.orangeOn : colors.orangeOff) : colors.orangeOff;
+		ctx.fillStyle = connected && blinkOrange ? colors.orangeOn : colors.orangeOff;
 		if (connected && blinkOrange) {
 			ctx.shadowBlur = 8; 
 			ctx.shadowColor = colors.orangeOn;
@@ -1094,7 +1095,7 @@ function drawPC(x, y, tile) {
 		ctx.strokeRect(s*0.38,s*0.27,s*0.51,s*0.06);
 		ctx.strokeRect(s*0.38, s*0.35, s*0.06, s*0.03); //eject
 		// LED VERDE CD
-		ctx.fillStyle = connected ? (blinkCD ? colors.greenOn : colors.greenOff) : colors.greenOff;
+		ctx.fillStyle = connected && blinkCD ? colors.greenOn : colors.greenOff;
 		if (connected && blinkCD) {
 			ctx.shadowBlur = 8; 
 			ctx.shadowColor = colors.greenOn;
@@ -1107,8 +1108,8 @@ function drawPC(x, y, tile) {
 		ctx.strokeRect(s*0.98, s*0.3, s*0.02, s*0.24);
 		ctx.strokeRect(s*0.95, s*0.3, s*0.02, s*0.04); //eject
 		// LED VERDE FD
-		ctx.fillStyle = connected ? (blinkFD ? colors.blinkOrange : colors.orangeOff) : colors.orangeOff;
-		if (connected && blinkCD) {
+		ctx.fillStyle = connected && blinkFD ? colors.blinkOrange : colors.orangeOff;
+		if (connected && blinkFD) {
 			ctx.shadowBlur = 8; 
 			ctx.shadowColor = colors.blinkOrange;
 		}
@@ -1117,7 +1118,7 @@ function drawPC(x, y, tile) {
 		
 	
 		// LED VERDE
-		ctx.fillStyle = connected ? (blinkGreen ? colors.greenOn : colors.greenOff) : colors.greenOff;
+		ctx.fillStyle = connected && blinkGreen ? colors.greenOn : colors.greenOff;
 		if (connected && blinkGreen) {
 			ctx.shadowBlur = 8; 
 			ctx.shadowColor = colors.greenOn;
@@ -1125,7 +1126,7 @@ function drawPC(x, y, tile) {
 		ctx.fillRect(s*0.26,s*0.40,s*0.05,s*0.03); 
 		ctx.shadowBlur = 0;
 		// LED ARANCIO
-		ctx.fillStyle = connected ? (blinkOrange ? colors.orangeOn : colors.orangeOff) : colors.orangeOff;
+		ctx.fillStyle = connected && blinkOrange ? colors.orangeOn : colors.orangeOff;
 		if (connected && blinkOrange) {
 			ctx.shadowBlur = 8; 
 			ctx.shadowColor = colors.orangeOn;
@@ -1161,6 +1162,123 @@ function drawPC(x, y, tile) {
 		ctx.fillRect(s*0.50,s*0.64,s*0.13,s*0.04);
 		ctx.fillRect(s*0.65,s*0.64,s*0.13,s*0.04);
 		ctx.fillRect(s*0.80,s*0.64,s*0.13,s*0.04);
+	}
+	
+	else if (type.id === 'pentium2') {
+		// Case tower
+		let grad = ctx.createLinearGradient(-s*0.05, 0, s*1.1, s);
+		grad.addColorStop(0, "#ffe"); 
+		grad.addColorStop(1, "#ccb");
+		//corpo
+		ctx.fillStyle = grad;
+		ctx.beginPath();
+		ctx.roundRect(s*0.2, 0, s*0.6, s, s*0.02);
+		ctx.fill();
+		//bordo
+		ctx.lineWidth = s*0.01;
+		ctx.strokeStyle = '#999';
+		ctx.beginPath();
+		ctx.roundRect(s*0.2, 0, s*0.6, s, s*0.02);
+		ctx.stroke();
+		
+		//2 slot grandi
+		ctx.strokeStyle = '#444';
+		ctx.strokeRect(s*0.22,s*0.05,s*0.55,s*0.15);//CD
+		ctx.strokeRect(s*0.22,s*0.20,s*0.55,s*0.15);//vuoto
+		ctx.strokeRect(s*0.22,s*0.35,s*0.35,s*0.15);//vuoto
+		ctx.strokeRect(s*0.22,s*0.50,s*0.35,s*0.15);//floppy
+		
+		//LOGO
+		ctx.fillStyle = '#225';
+		ctx.fillRect(s*0.62,s*0.4,s*0.1,s*0.1);
+		
+		//cdrom
+		ctx.strokeRect(s*0.24, s*0.07,s*0.51,s*0.06);
+		ctx.strokeRect(s*0.24, s*0.15, s*0.06, s*0.03); //eject
+		
+		//FLOPPY
+		ctx.strokeRect(s*0.26, s*0.54, s*0.26, s*0.02);
+		ctx.strokeRect(s*0.34, s*0.53, s*0.1, s*0.04);//quadrato al centro
+		ctx.strokeRect(s*0.26, s*0.59, s*0.06, s*0.02); //tasto eject
+		
+		const blinkGreen = Math.sin(flowOffset * 0.05) > -0.8;
+		const blinkOrange = Math.sin(flowOffset * 0.06 + 1.5) > -0.8;
+		const blinkRed = Math.sin(flowOffset * 0.08 + 1) > -0.8;
+		const blinkYellow = Math.sin(flowOffset * 0.09 - 1.2) > -0.8;
+		const blinkCD = Math.sin(flowOffset * 0.07 + 3) > -0.8;
+		const blinkFD = Math.cos(flowOffset * 0.07) > -0.8;
+		
+		// LED VERDE CD
+		ctx.fillStyle = connected && blinkCD ? colors.greenOn : colors.greenOff;
+		if (connected && blinkCD) {
+			ctx.shadowBlur = 8; 
+			ctx.shadowColor = colors.greenOn;
+		}
+		ctx.fillRect(s*0.36, s*0.15, s*0.06, s*0.03); 
+		ctx.shadowBlur = 0;
+		
+		// LED ARANCIO FD
+		ctx.fillStyle = connected && blinkFD ? colors.orangeOn : colors.orangeOff;
+		if (connected && blinkFD) {
+			ctx.shadowBlur = 8; 
+			ctx.shadowColor = colors.orangeOn;
+		}
+		ctx.fillRect(s*0.46, s*0.59, s*0.06, s*0.02); 
+		ctx.shadowBlur = 0;
+		
+		//LED DI SOTTO
+		// LED ROSSO
+		ctx.fillStyle = connected && blinkRed ? colors.redOn : colors.redOff;
+		if (connected && blinkRed) {
+			ctx.shadowBlur = 8; 
+			ctx.shadowColor = colors.redOn;
+		}
+		ctx.fillRect(s*0.56,s*0.75,s*0.04,s*0.04); 
+		ctx.shadowBlur = 0;
+		
+		// LED VERDE
+		ctx.fillStyle = connected && blinkGreen ? colors.greenOn : colors.greenOff;
+		if (connected && blinkGreen) {
+			ctx.shadowBlur = 8; 
+			ctx.shadowColor = colors.greenOn;
+		}
+		ctx.fillRect(s*0.56,s*0.83,s*0.04,s*0.04); 
+		ctx.shadowBlur = 0;
+		
+		// LED GIALLO
+		ctx.fillStyle = connected && blinkYellow ? colors.yellowOn : colors.yellowOff;
+		if (connected && blinkYellow) {
+			ctx.shadowBlur = 8; 
+			ctx.shadowColor = colors.yellowOn;
+		}
+		ctx.fillRect(s*0.56,s*0.91,s*0.04,s*0.04); 
+		ctx.shadowBlur = 0;
+		
+		//schermo verde 75 a SX
+		ctx.fillStyle = '#000';
+		ctx.fillRect(s*0.62,s*0.54,s*0.15,s*0.1);
+		ctx.fillStyle='#363';
+		ctx.fillRect(s*0.63,s*0.55,s*0.13,s*0.08);
+		ctx.fillStyle='#3f3';
+		ctx.font = `${s*0.08}px sans-serif`;
+		ctx.fillText(connected ? "300" : " 50",s*0.63,s*0.62);
+		
+		//shutdown
+		ctx.strokeStyle = '#666';
+		ctx.beginPath();
+		ctx.arc(s*0.7,s*0.77,s*0.03,0,Math.PI*2);
+		ctx.stroke();
+		ctx.strokeRect(s*0.64,s*0.76,s*0.1,s*0.02);
+		//turbo
+		ctx.beginPath();
+		ctx.arc(s*0.7,s*0.85,s*0.03,0,Math.PI*2);
+		ctx.stroke();
+		ctx.strokeRect(s*0.64,s*0.84,s*0.1,s*0.02);
+		//reset
+		ctx.beginPath();
+		ctx.arc(s*0.7,s*0.93,s*0.03,0,Math.PI*2);
+		ctx.stroke();
+		ctx.strokeRect(s*0.64,s*0.92,s*0.1,s*0.02);
 	}
 	
 	else if (type.id === 'router') {
