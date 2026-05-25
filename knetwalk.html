@@ -246,6 +246,7 @@ const wireColors = [
 	'#0033ff',//blu
 	'#ffff00',//giallo
 	'#ff8800',//arancione
+	'#00ff66',//verdazzo
 	];
 	
 let grid = [];
@@ -547,7 +548,7 @@ function drawTileOLD(tile) {
     // Effetto bagliore se connesso
     if(tile.connected) {
         ctx.shadowBlur = 20;
-		ctx.shadowColor = colors.activeColor //dynamicColor
+		ctx.shadowColor = colors.activeColor; //dynamicColor
     } else {
         ctx.shadowBlur = 0;
     }
