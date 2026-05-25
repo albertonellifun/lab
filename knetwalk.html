@@ -205,6 +205,7 @@ const HW_TYPES = [
 	{id:'ipcamera',			variant:'ipcamerablack', desc:'IP Camera TpLink Black'},
 	{id:'gameboy',			variant:'gameboyred',    desc:'GameBoy Red classic del 1990'},
 	{id:'gameboy',			variant:'gameboyblue',   desc:'GameBoy Blue classic del 1990'},
+	{id:'hplaserjet',		variant:'hplaserjetblack',desc:'HP LaserJet 107w Black'},
 	{id:'radio',			variant:'radiodark',     desc:'AliExpress Vintage Radio R919'},
 	{id:'nesthub',			variant:'nesthubgray',   desc:'Google NestHub Charcoal Gray del 2021'},
 	{id:'yamahathr',		variant:'yamahathrgreen',desc:'Ampli Yamaha THR10X'},
@@ -535,14 +536,18 @@ function drawTileOLD(tile) {
     let mid = CELL_SIZE / 2;
     
     // Disegna cavi
-    ctx.strokeStyle = tile.connected ? colors.activeColor : colors.inactiveColor;
+	let hue = (flowOffset * 2 + 240) % 360; // --- CALCOLO DEL COLORE DINAMICO ---
+    let dynamicColor = `hsl(${hue}, 100%, 50%)`;
+    
+    ctx.strokeStyle = tile.connected ? colors.activeColor //dynamicColor
+										: colors.inactiveColor;
     ctx.lineWidth = CELL_SIZE * 0.08;
     ctx.lineCap = "butt";//"round";
     
     // Effetto bagliore se connesso
     if(tile.connected) {
         ctx.shadowBlur = 20;
-        ctx.shadowColor = colors.activeColor;
+		ctx.shadowColor = colors.activeColor //dynamicColor
     } else {
         ctx.shadowBlur = 0;
     }
@@ -550,7 +555,8 @@ function drawTileOLD(tile) {
 	//fix round / butt con una palla al centro della tile
 	ctx.beginPath();
 	ctx.arc(x+mid, y+mid, CELL_SIZE * 0.04, 0, Math.PI*2);
-	ctx.fillStyle = tile.connected ? colors.activeColor : colors.inactiveColor;
+	ctx.fillStyle = tile.connected ? colors.activeColor //dynamicColor
+									: colors.inactiveColor;
 	ctx.fill();
 	
     ctx.beginPath();
@@ -565,7 +571,6 @@ function drawTileOLD(tile) {
 	// Disegna icone
     drawPC(x, y, tile);
 }
-
 
 function drawTileANIMATE(tile) {
     let x = tile.x * CELL_SIZE, y = tile.y * CELL_SIZE, mid = CELL_SIZE/2;
@@ -595,7 +600,7 @@ function drawTileANIMATE(tile) {
 		ctx.strokeStyle = colors.activeColor;//"#0ea5e9";
         ctx.lineWidth = CELL_SIZE * 0.02;
         ctx.setLineDash([CELL_SIZE*0.025, CELL_SIZE*0.025]); // Tratteggio
-        ctx.lineDashOffset = -flowOffset;
+        ctx.lineDashOffset = -(flowOffset * (CELL_SIZE * 0.005))
 		ctx.shadowBlur = 20;
         ctx.shadowColor = colors.blueOn;
 		ctx.stroke();
@@ -1787,6 +1792,7 @@ function drawPC(x, y, tile) {
 	}
 	else if (type.id === 'hplaserjet') {
 		// --- HP LASERJET 107w
+		let isDark = type.variant === 'hplaserjetblack';
 		
 		// Top grigio/nero
 		let topGrad = ctx.createLinearGradient(0, 0, s, s*0.3);
@@ -1816,14 +1822,14 @@ function drawPC(x, y, tile) {
 		
 		// --- CORPO PRINCIPALE (bianco) ---
 		let bodyGrad = ctx.createLinearGradient(0, s*0.2, 0, s);
-		bodyGrad.addColorStop(0, "#ffffff");
-		bodyGrad.addColorStop(0.5, "#f5f5f5");
-		bodyGrad.addColorStop(1, "#e8e8e8");
+		bodyGrad.addColorStop(0, isDark ? '#333' : "#ffffff");
+		bodyGrad.addColorStop(0.5, isDark ? '#222' : "#f5f5f5");
+		bodyGrad.addColorStop(1, isDark ? '#111' : "#e8e8e8");
 		ctx.fillStyle = bodyGrad;
 		ctx.fillRect(s*0.05, s*0.35, s*0.9, s*0.6);
 		
 		// Bordo corpo
-		ctx.strokeStyle = "#ccc";
+		ctx.strokeStyle = isDark ? '#000' : "#ccc";
 		ctx.lineWidth = s*0.01;
 		ctx.strokeRect(s*0.05, s*0.35, s*0.9, s*0.6);
 		
@@ -1832,7 +1838,7 @@ function drawPC(x, y, tile) {
 		ctx.fillRect(s*0.4,s*0.34,s*0.2,s*0.05);
 		
 		//righe verticali appena accennate
-		ctx.strokeStyle = '#ddd';
+		ctx.strokeStyle = isDark ? '#000' : '#ddd';
 		ctx.lineWidth = s*0.01;
 		ctx.beginPath();
 		ctx.moveTo(s*0.15,s*0.35);
@@ -1845,9 +1851,9 @@ function drawPC(x, y, tile) {
 		
 		
 		// --- LOGO HP (al centro) ---
-		ctx.fillStyle = connected ? "#0066cc" : "#cccccc";
+		ctx.fillStyle = connected ? "#0066cc" : isDark ? '#666' : '#ccc';
 		ctx.beginPath();
-		ctx.arc(s*0.5, s*0.6, s*0.1, 0, Math.PI*2);
+		ctx.arc(s*0.5, s*0.6, s*0.08, 0, Math.PI*2);
 		ctx.fill();
 		
 		//logo
