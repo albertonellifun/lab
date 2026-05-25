@@ -183,6 +183,7 @@ const HW_TYPES = [
 	{id:'tablet',			variant:'tablet',        desc:'Generic Tablet'},
 	{id:'baraccone',		variant:'baraccone',     desc:'Baraccone anni 90'},
 	{id:'dx40',				variant:'dx40',     	 desc:'Baraccone Intel 386DX-40 del 1990'},
+	{id:'pentium75',		variant:'pentium75',   	 desc:'Baraccone Intel Pentium-75 del 1996'},
 	{id:'router',			variant:'router',        desc:'Router Wi-Fi TpLink'},
 	{id:'ipcamera',			variant:'ipcamera',      desc:'IP Camera TpLink'},
 	{id:'macintosh',		variant:'macintosh',     desc:'Macintosh 128K del 1984'},
@@ -201,7 +202,7 @@ const HW_TYPES = [
 	//color variants
 	{id:'notebook',			variant:'notebookwhite', desc:'Generic White Notebook'},
 	{id:'router',			variant:'routerwhite',   desc:'Router Wi-Fi TpLink White'},
-	{id:'ipcamera',			variant:'ipcamerablack',      desc:'IP Camera TpLink Black'},
+	{id:'ipcamera',			variant:'ipcamerablack', desc:'IP Camera TpLink Black'},
 	{id:'gameboy',			variant:'gameboyred',    desc:'GameBoy Red classic del 1990'},
 	{id:'gameboy',			variant:'gameboyblue',   desc:'GameBoy Blue classic del 1990'},
 	{id:'radio',			variant:'radiodark',     desc:'AliExpress Vintage Radio R919'},
@@ -963,15 +964,11 @@ function drawPC(x, y, tile) {
 		
 		
 		//floppy 3.5
-		ctx.fillStyle = '#bbb';
-		ctx.fillRect(s*0.41,s*0.40,s*0.53,s*0.15);
-		ctx.fillStyle = '#ddd';
-		ctx.fillRect(s*0.45,s*0.42,s*0.45,s*0.11);//bordo interno
-		ctx.fillStyle = '#222';
-		ctx.fillRect(s*0.53,s*0.48,s*0.28,s*0.03);//eject
-		ctx.strokeStyle = '#999';
-		ctx.fillStyle = '#aaa';
-		ctx.strokeRect(s*0.54,s*0.44, s*0.06,s*0.04);//pulsante
+		ctx.lineWidth = s*0.01;
+		ctx.strokeRect(s*0.41,s*0.40,s*0.53,s*0.15);
+		ctx.strokeRect(s*0.45,s*0.42,s*0.45,s*0.11);//bordo interno
+		ctx.strokeRect(s*0.53,s*0.48,s*0.28,s*0.03);//fessura
+		ctx.strokeRect(s*0.53,s*0.44, s*0.05,s*0.03);//pulsante eject
 		// LED VERDE
 		ctx.fillStyle = connected ? (blinkGreen ? colors.greenOn : colors.greenOff) : colors.greenOff;
 		if (connected && blinkGreen) {
@@ -992,11 +989,11 @@ function drawPC(x, y, tile) {
 		ctx.lineWidth = s*0.01
 		ctx.fillStyle = '#666';
 		ctx.beginPath();
-		ctx.arc(s*0.28,s*0.35,s*0.05,0,Math.PI*2);
+		ctx.arc(s*0.29,s*0.35,s*0.05,0,Math.PI*2);
 		ctx.strokeStyle = '#000';
 		ctx.fill();
 		ctx.beginPath();
-		ctx.arc(s*0.28,s*0.35,s*0.02,0,Math.PI*2);
+		ctx.arc(s*0.29,s*0.35,s*0.02,0,Math.PI*2);
 		ctx.stroke();
 		
 		// LED VERDE
@@ -1055,6 +1052,111 @@ function drawPC(x, y, tile) {
 		ctx.fillRect(s*0.80,s*0.84,s*0.13,s*0.04);
 		
 	}
+	else if (type.id === 'pentium75') {
+		// Case
+		let grad = ctx.createLinearGradient(-s*0.05, 0, s*1.1, s);
+		grad.addColorStop(0, "#ffe"); 
+		grad.addColorStop(1, "#ccb");
+		//corpo
+		ctx.fillStyle = grad;
+		ctx.beginPath();
+		ctx.roundRect(-s*0.05, s*0.2, s*1.1, s*0.5, s*0.02);
+		ctx.fill();
+		//bordo
+		ctx.lineWidth = s*0.01;
+		ctx.strokeStyle = '#999';
+		ctx.beginPath();
+		ctx.roundRect(-s*0.05, s*0.2, s*1.1, s*0.5, s*0.02);
+		ctx.stroke();
+		//LOGO
+		ctx.fillStyle = '#88f';
+		ctx.fillRect(s*0.0,s*0.25,s*0.1,s*0.1);
+		
+		//2 slot - CD + HDD
+		const blinkGreen = Math.sin(flowOffset * 0.05) > -0.8;
+		const blinkOrange = Math.sin(flowOffset * 0.06 + 1.5) > -0.8;
+		const blinkCD = Math.sin(flowOffset * 0.07 + 3) > -0.8;
+		const blinkFD = Math.cos(flowOffset * 0.07) > -0.8;
+		
+		
+		//2 slot
+		ctx.strokeStyle = '#444';
+		ctx.strokeRect(s*0.36,s*0.25,s*0.55,s*0.15);//CD
+		ctx.strokeRect(s*0.36,s*0.40,s*0.55,s*0.15);//HDD
+		
+		//cdrom
+		ctx.strokeRect(s*0.38,s*0.27,s*0.51,s*0.06);
+		ctx.strokeRect(s*0.38, s*0.35, s*0.06, s*0.03); //eject
+		// LED VERDE CD
+		ctx.fillStyle = connected ? (blinkCD ? colors.greenOn : colors.greenOff) : colors.greenOff;
+		if (connected && blinkCD) {
+			ctx.shadowBlur = 8; 
+			ctx.shadowColor = colors.greenOn;
+		}
+		ctx.fillRect(s*0.46, s*0.35, s*0.06, s*0.03); 
+		ctx.shadowBlur = 0;
+		
+		//floppy in verticale
+		ctx.strokeRect(s*0.94, s*0.28, s*0.08, s*0.28);
+		ctx.strokeRect(s*0.98, s*0.3, s*0.02, s*0.24);
+		ctx.strokeRect(s*0.95, s*0.3, s*0.02, s*0.04); //eject
+		// LED VERDE FD
+		ctx.fillStyle = connected ? (blinkFD ? colors.blinkOrange : colors.orangeOff) : colors.orangeOff;
+		if (connected && blinkCD) {
+			ctx.shadowBlur = 8; 
+			ctx.shadowColor = colors.blinkOrange;
+		}
+		ctx.fillRect(s*0.95, s*0.36, s*0.02, s*0.04); 
+		ctx.shadowBlur = 0;
+		
+	
+		// LED VERDE
+		ctx.fillStyle = connected ? (blinkGreen ? colors.greenOn : colors.greenOff) : colors.greenOff;
+		if (connected && blinkGreen) {
+			ctx.shadowBlur = 8; 
+			ctx.shadowColor = colors.greenOn;
+		}
+		ctx.fillRect(s*0.26,s*0.40,s*0.05,s*0.03); 
+		ctx.shadowBlur = 0;
+		// LED ARANCIO
+		ctx.fillStyle = connected ? (blinkOrange ? colors.orangeOn : colors.orangeOff) : colors.orangeOff;
+		if (connected && blinkOrange) {
+			ctx.shadowBlur = 8; 
+			ctx.shadowColor = colors.orangeOn;
+		}
+		ctx.fillRect(s*0.26,s*0.45,s*0.05,s*0.03); 
+		ctx.shadowBlur = 0;
+		
+		
+		//schermo verde 75 a SX
+		ctx.fillStyle = '#000';
+		ctx.fillRect(s*0.1,s*0.4,s*0.14,s*0.1);
+		ctx.fillStyle='#363';
+		ctx.fillRect(s*0.11,s*0.41,s*0.11,s*0.08);
+		ctx.fillStyle='#3f3';
+		ctx.font = `${s*0.1}px sans-serif`;
+		ctx.fillText(connected ? "75" : "25",s*0.11,s*0.48);
+		
+		//reset
+		ctx.strokeStyle = '#666';
+		ctx.strokeRect(s*0.11,s*0.51,s*0.09,s*0.04);
+		//turbo
+		ctx.beginPath();
+		ctx.strokeRect(s*0.22,s*0.51,s*0.09,s*0.04);
+		ctx.stroke();
+		
+		//sotto areato
+		ctx.fillStyle = '#ccb';
+		ctx.fillRect(-s*0.05,s*0.60,s*1.1,s*0.1);
+		ctx.fillStyle = '#111';
+		ctx.fillRect(s*0.05,s*0.64,s*0.13,s*0.04);
+		ctx.fillRect(s*0.20,s*0.64,s*0.13,s*0.04);
+		ctx.fillRect(s*0.35,s*0.64,s*0.13,s*0.04);
+		ctx.fillRect(s*0.50,s*0.64,s*0.13,s*0.04);
+		ctx.fillRect(s*0.65,s*0.64,s*0.13,s*0.04);
+		ctx.fillRect(s*0.80,s*0.64,s*0.13,s*0.04);
+	}
+	
 	else if (type.id === 'router') {
 		// --- ROUTER WiFi ---
 		const isWhite = type.variant === 'routerwhite';
