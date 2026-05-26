@@ -334,7 +334,7 @@ function changeDifficulty(newSizeX, newSizeY, btn) {
 	else colorsBtn.classList.remove('active');
 	
 	const motherboardBtn = document.getElementById('motherboardBtn')
-	if(motherboardBtn) motherboardBtn.classList.add('active');
+	if(motherboardFlag) motherboardBtn.classList.add('active');
 	else motherboardBtn.classList.remove('active');
 	
     initGame();
