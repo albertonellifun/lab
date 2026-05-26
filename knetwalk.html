@@ -140,10 +140,11 @@
 		<label>WIDTH:  <input type="range" id="widthSlider"  min="3" max="12" value="5" onchange="changeSliderDifficulty()" list="values"></label>
 		<label>HEIGHT: <input type="range" id="heightSlider" min="3" max="12" value="3" onchange="changeSliderDifficulty()" list="values"></label>
 		
-		<button id="animateBtn"    onclick="changeAnimateFlag(this)">🪢 Animate</button>
-		<button id="wiresColorBtn" onclick="changeWiresColorFlag(this)">🌈 Wires Color</button>
-		<button id="variantsBtn"   onclick="changeVariantsFlag(this)">🎨 Hw Variants</button>
-		<button id="restart"       onclick="initGame()">↻ Restart</button>
+		<button id="animateBtn"     onclick="changeAnimateFlag(this)">🪢 Animate</button>
+		<button id="wiresColorBtn"  onclick="changeWiresColorFlag(this)">🌈 Wires Color</button>
+		<button id="variantsBtn"    onclick="changeVariantsFlag(this)">🎨 Hw Variants</button>
+		<button id="motherboardBtn" onclick="changeMotherboardFlag(this)">🔋 Motherboard</button>
+		<button id="restart"        onclick="initGame()">↻ Restart</button>
     </div>
 
 	<div id="game-container">
@@ -240,13 +241,15 @@ const colors = {
 	whiteOff: "#666",
 	activeColor: "#0ea5e9",
     inactiveColor: "#334155",
+	tileBackground: "#0f172a",
+	motherBoardBackground: "#2b8956",
 };
 
 const wireColors = [
 	'#0ea5e9',//cyan default
+	'#ffee55',//giallo
 	'#ff3300',//rosso
 	'#0033ff',//blu
-	'#ffff00',//giallo
 	'#ff8800',//arancione
 	'#00ff66',//verdazzo
 	];
@@ -257,19 +260,32 @@ let gameWon = false;
 let flowOffset = 0; //Per l'animazione dei dati
 let animateFlag = false;//animazione flag
 let variantsFlag = false;//abilita cambi colore
+let motherboardFlag = false;//
 let shuffledTypes = [];//per evitare duplicati
+let motherboardBackgroundLines = [];//griglia Motherboard
 
 function changeSliderDifficulty() {
 	const w = parseInt(document.getElementById('widthSlider').value);
 	const h = parseInt(document.getElementById('heightSlider').value);
 	changeDifficulty(w, h, null);
 }
+
 function changeAnimateFlag(btn) {
 	animateFlag = !animateFlag;
 	if(btn) {
 		if(animateFlag) btn.classList.add('active');
 		else btn.classList.remove('active');
 	}
+}
+
+function changeMotherboardFlag(btn) {
+	motherboardFlag = !motherboardFlag;
+	if(btn) {
+		if(motherboardFlag) btn.classList.add('active');
+		else btn.classList.remove('active');
+	}
+	colors.activeColor = wireColors[0];
+	changeWiresColorFlag();
 }
 
 function changeVariantsFlag(btn) {
@@ -317,6 +333,10 @@ function changeDifficulty(newSizeX, newSizeY, btn) {
 	if(colors.activeColor !== wireColors[0]) colorsBtn.classList.add('active');
 	else colorsBtn.classList.remove('active');
 	
+	const motherboardBtn = document.getElementById('motherboardBtn')
+	if(motherboardBtn) motherboardBtn.classList.add('active');
+	else motherboardBtn.classList.remove('active');
+	
     initGame();
 }
 
@@ -363,6 +383,9 @@ function initGame() {
     assignTypes();
     shuffleGrid();
     updateConnectivity();
+	
+	//solo per la modalita Motherboard
+	generateMotherboardBackground();
 }
 
 //genera un labirinto perfetto in cui ogni cella è collegata al server e non esistono cicli (loop) o vicoli ciechi isolati
@@ -479,25 +502,181 @@ function animate() {
     requestAnimationFrame(animate);
 }
 
-function draw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
-    // Griglia
-    ctx.strokeStyle = colors.inactiveColor;
-    ctx.lineWidth = 1;
-    
-	for(let i=0; i<=WIDTH; i++) {
-		ctx.beginPath(); ctx.moveTo(i*CELL_SIZE,0); ctx.lineTo(i*CELL_SIZE,canvas.height); ctx.stroke();
-	}
-	for(let i=0; i<=HEIGHT; i++) {
-		ctx.beginPath(); ctx.moveTo(0,i*CELL_SIZE); ctx.lineTo(canvas.width,i*CELL_SIZE); ctx.stroke();
+
+function generateMotherboardBackground() {
+
+	motherboardBackgroundLines = [];
+
+	const occupied = [];
+
+	function intersects(a, b) {
+		return !(
+			a.x + a.w < b.x ||
+			b.x + b.w < a.x ||
+			a.y + a.h < b.y ||
+			b.y + b.h < a.y
+		);
 	}
 
+	const groups = 10 + Math.floor(Math.random() * 8);
+
+	for (let g = 0; g < groups; g++) {
+
+		const vertical = Math.random() > 0.45;
+
+		const count = 4 + Math.floor(Math.random() * 8);
+
+		const spacing = CELL_SIZE * (0.02 + Math.random() * 0.015);
+
+		const thickness = count * spacing;
+
+		let placed = false;
+
+		for (let attempt = 0; attempt < 100 && !placed; attempt++) {
+
+			let startX, startY, length;
+
+			if (vertical) {
+
+				length =
+					canvas.height *
+					(0.25 + Math.random() * 0.55);
+
+				startX =
+					Math.random() *
+					(canvas.width - thickness);
+
+				startY =
+					Math.random() *
+					(canvas.height - length);
+
+			} else {
+
+				length =
+					canvas.width *
+					(0.25 + Math.random() * 0.55);
+
+				startX =
+					Math.random() *
+					(canvas.width - length);
+
+				startY =
+					Math.random() *
+					(canvas.height - thickness);
+			}
+
+			const bounds = vertical
+				? {
+					x: startX - 10,
+					y: startY - 10,
+					w: thickness + 20,
+					h: length + 20
+				}
+				: {
+					x: startX - 10,
+					y: startY - 10,
+					w: length + 20,
+					h: thickness + 20
+				};
+
+			let collision = false;
+
+			for (const o of occupied) {
+				if (intersects(bounds, o)) {
+					collision = true;
+					break;
+				}
+			}
+
+			if (collision) continue;
+
+			occupied.push(bounds);
+
+			const diagonal =
+				Math.random() > 0.6;
+
+			const diagonalOffset =
+				CELL_SIZE *
+				(0.08 + Math.random() * 0.12);
+
+			motherboardBackgroundLines.push({
+				vertical,
+				count,
+				spacing,
+				startX,
+				startY,
+				length,
+				diagonal,
+				diagonalOffset
+			});
+
+			placed = true;
+		}
+	}
+}
+
+function draw() {
+    //ctx.clearRect(0, 0, canvas.width, canvas.height);
+	
+	ctx.fillStyle = motherboardFlag ? colors.motherBoardBackground : colors.tileBackground;
+	ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+	if (motherboardFlag) {
+		// piste fini bianche
+		ctx.strokeStyle = "rgba(255,255,255,0.10)";
+		ctx.lineWidth = CELL_SIZE * 0.01;
+		ctx.lineCap = "round";
+
+		for (const g of motherboardBackgroundLines) {
+			for (let i = 0; i < g.count; i++) {
+				const offset = i * g.spacing;
+				ctx.beginPath();			
+				if (g.vertical) {
+					const x = g.startX + offset;
+					ctx.moveTo(x, g.startY);
+					if (g.diagonal) {
+						const split = g.startY + g.length * 0.5;
+						ctx.lineTo(x, split);
+						ctx.lineTo( x + g.diagonalOffset, split + g.diagonalOffset );
+						ctx.lineTo(	x + g.diagonalOffset, g.startY + g.length );
+					} else {
+						ctx.lineTo( x, g.startY + g.length );
+					}
+
+				} else {
+					const y = g.startY + offset;
+					ctx.moveTo(g.startX, y);
+					if (g.diagonal) {
+						const split = g.startX + g.length * 0.5;
+						ctx.lineTo(split, y);
+						ctx.lineTo( split + g.diagonalOffset, y + g.diagonalOffset );
+						ctx.lineTo( g.startX + g.length, y + g.diagonalOffset );
+					} else {
+						ctx.lineTo( g.startX + g.length, y );
+					}
+				}
+				ctx.stroke();
+			}
+		}
+		ctx.lineCap = "butt";
+	}
+	
+	else {
+		//griglia standard
+		ctx.strokeStyle = colors.inactiveColor;
+		ctx.lineWidth = 1;
+    
+		for(let i=0; i<=WIDTH; i++) {
+			ctx.beginPath(); ctx.moveTo(i*CELL_SIZE,0); ctx.lineTo(i*CELL_SIZE,canvas.height); ctx.stroke();
+		}
+		for(let i=0; i<=HEIGHT; i++) {
+			ctx.beginPath(); ctx.moveTo(0,i*CELL_SIZE); ctx.lineTo(canvas.width,i*CELL_SIZE); ctx.stroke();
+		}
+	}
+	
 	//drawLake();
 
     grid.forEach(row => row.forEach(tile => drawTile(tile)));
-	
-	
 }
 
 function drawLake() {
@@ -529,9 +708,158 @@ function drawLake() {
 
 
 function drawTile(tile) {
-	if (animateFlag) drawTileANIMATE(tile);
+	if(motherboardFlag) drawTileMotherboard(tile);
+	else if (animateFlag) drawTileANIMATE(tile);
 	else drawTileOLD(tile);
 }
+
+function drawTileMotherboard(tile) {
+	let x = tile.x * CELL_SIZE;
+    let y = tile.y * CELL_SIZE;
+    let mid = CELL_SIZE / 2;
+	
+    ctx.strokeStyle = tile.connected ? colors.activeColor : colors.inactiveColor;
+    ctx.lineWidth = CELL_SIZE * 0.08;
+    ctx.lineCap = "butt";
+    
+    ctx.beginPath();
+    if (tile.conns & N) { ctx.moveTo(x + mid, y + mid); ctx.lineTo(x + mid, y); }
+    if (tile.conns & E) { ctx.moveTo(x + mid, y + mid); ctx.lineTo(x + CELL_SIZE, y + mid); }
+    if (tile.conns & S) { ctx.moveTo(x + mid, y + mid); ctx.lineTo(x + mid, y + CELL_SIZE); }
+    if (tile.conns & W) { ctx.moveTo(x + mid, y + mid); ctx.lineTo(x, y + mid); }
+    ctx.stroke();
+	
+	//fix round / butt con una palla al centro della tile
+	ctx.beginPath();
+	ctx.arc(x+mid, y+mid, CELL_SIZE * 0.05, 0, Math.PI*2);
+	ctx.fillStyle = tile.connected ? colors.activeColor : colors.inactiveColor;
+	ctx.fill();
+	ctx.beginPath();
+	ctx.arc(x+mid, y+mid, CELL_SIZE * 0.02, 0, Math.PI*2);
+	ctx.fillStyle = colors.motherBoardBackground;
+	ctx.fill();
+	
+	// Disegna icone
+    drawMotherboardPC(x, y, tile);
+}
+
+function drawMotherboardPC(x, y, tile) {
+	const isServer = tile.type === 'server';
+	const type = tile.subType;
+	const connected = tile.connected;
+    const s = CELL_SIZE * (	isServer ? 0.75 : 
+							connected && animateFlag ? 0.75 :
+							type.id && type.id.length % 3 === 0 ? 0.25 : 
+							type.id && type.id.length % 3 === 1 ? 0.45 : 
+							0.65 );//Leggermente più grande per i dettagli
+    const p = (CELL_SIZE - s) * 0.5;
+    
+    ctx.save();
+    ctx.translate(x + p, y + p);
+	
+	if (isServer) {
+		//batteria
+		let caseGrad = ctx.createLinearGradient(0, 0, s, s);
+		caseGrad.addColorStop(0.0, "#456");
+		caseGrad.addColorStop(0.5, "#234");
+		caseGrad.addColorStop(1.0, "#223");
+		
+		//bordo nero
+		ctx.fillStyle = '#222';
+		ctx.beginPath();
+		ctx.arc(s*0.5, s*0.5, s*0.5, 0, Math.PI * 2);
+		ctx.fill();
+		ctx.fillStyle = '#000';
+		ctx.beginPath();
+		ctx.arc(s*0.5, s*0.5, s*0.5, Math.PI * 0.25, Math.PI * 1.75);
+		ctx.fill();
+		
+		ctx.fillStyle = caseGrad;
+		ctx.beginPath();
+		ctx.arc(s*0.5, s*0.5, s*0.4, 0, Math.PI * 2);
+		ctx.fill();
+		
+		ctx.strokeStyle = colors.darkSilver;
+		ctx.lineWidth = s * 0.02;
+		ctx.beginPath();
+		ctx.arc(s*0.5, s*0.5, s*0.4, 0, Math.PI * 2);
+		ctx.stroke();
+		
+		//scritta al centro
+		ctx.fillStyle = colors.darkSilver;
+		ctx.font = `${s*0.1}px sans-serif`;
+		ctx.fillText("CR2032", s*0.32,s*0.30);
+		ctx.font = `${s*0.2}px sans-serif`;
+		ctx.fillText("3V",     s*0.38,s*0.48);
+		ctx.font = `${s*0.3}px sans-serif`;
+		ctx.fillText("+",      s*0.42,s*0.70);
+		
+		//scritta tonda sul bordo
+		ctx.lineWidth = s*0.03;
+		ctx.setLineDash([s*0.04,s*0.012]);
+		ctx.strokeStyle = colors.darkSilver;
+		ctx.beginPath();
+		ctx.arc(s*0.5, s*0.5, s*0.35, Math.PI*0.2, Math.PI*0.8);
+		ctx.stroke();
+		//uhauhauha barbatrucco
+		ctx.strokeStyle = '#223';
+		ctx.setLineDash([s*0.01,s*0.028]);
+		ctx.beginPath();
+		ctx.arc(s*0.5, s*0.5, s*0.35, Math.PI*0.2, Math.PI*0.8);
+		ctx.stroke();
+		ctx.setLineDash([]);
+	} else if(type.id) {
+		//cpu
+		ctx.fillStyle = "#222";
+		ctx.beginPath(); 
+		ctx.roundRect(0, 0, s, s, s * 0.04);
+		ctx.fill();
+		
+		//4 palle agli angoli
+		ctx.fillStyle = "#111";
+		ctx.beginPath();
+		ctx.arc(s*0.15,s*0.15,s*0.05,0,Math.PI*2);
+		ctx.fill();
+		ctx.beginPath();
+		ctx.arc(s*0.85,s*0.85,s*0.05,0,Math.PI*2);
+		ctx.fill();
+		ctx.beginPath();
+		ctx.arc(s*0.15,s*0.85,s*0.05,0,Math.PI*2);
+		ctx.fill();
+		ctx.beginPath();
+		ctx.arc(s*0.85,s*0.15,s*0.05,0,Math.PI*2);
+		ctx.fill();
+		
+		//zampette
+		ctx.fillStyle = colors.silver;
+		for(let i=2;i<18;i++) {
+			ctx.fillRect(s*i*0.05, -s*0.05, s*0.02, s*0.08);
+			ctx.fillRect(s*i*0.05, s*0.98, s*0.02, s*0.08);
+		}
+		for(let i=2;i<18;i++) {
+			ctx.fillRect(-s*0.05, s*i*0.05, s*0.08, s*0.02);
+			ctx.fillRect(s*0.98, s*i*0.05,  s*0.08, s*0.02);
+		}
+		
+		//scritta cpu
+		ctx.fillStyle = '#444';
+		ctx.font = `${s*0.1}px sans-serif`;
+		ctx.fillText(type.id, s*(0.5 - (type.id.length * 0.025)),s*0.30);
+		ctx.fillText("© Alberto Nelli 2026",s*0.05,s*0.76);
+		ctx.fillText("KNetWalk", s*0.3,s*0.87);
+		
+		if(connected) {
+			// Riflesso "Glossy"
+			ctx.fillStyle = colors.glass;
+			ctx.beginPath();
+			ctx.moveTo(s*0.06, s*0.06); ctx.lineTo(s - s*0.06, s*0.06); ctx.lineTo(s*0.06, s * 0.6);
+			ctx.fill();
+		}
+		
+	} 
+	ctx.restore();
+}
+
 
 function drawTileOLD(tile) {
     let x = tile.x * CELL_SIZE;
