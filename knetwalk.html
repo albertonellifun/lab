@@ -284,7 +284,9 @@ function changeMotherboardFlag(btn) {
 		if(motherboardFlag) btn.classList.add('active');
 		else btn.classList.remove('active');
 	}
-	colors.activeColor = wireColors[0];
+	if (motherboardFlag) colors.activeColor = wireColors[0];
+	else colors.activeColor = wireColors[wireColors.length-1];
+	
 	changeWiresColorFlag();
 }
 
@@ -504,7 +506,6 @@ function animate() {
 
 
 function generateMotherboardBackground() {
-
 	motherboardBackgroundLines = [];
 
 	const occupied = [];
@@ -523,13 +524,9 @@ function generateMotherboardBackground() {
 	for (let g = 0; g < groups; g++) {
 
 		const vertical = Math.random() > 0.45;
-
 		const count = 4 + Math.floor(Math.random() * 8);
-
 		const spacing = CELL_SIZE * (0.02 + Math.random() * 0.015);
-
 		const thickness = count * spacing;
-
 		let placed = false;
 
 		for (let attempt = 0; attempt < 100 && !placed; attempt++) {
@@ -537,32 +534,13 @@ function generateMotherboardBackground() {
 			let startX, startY, length;
 
 			if (vertical) {
-
-				length =
-					canvas.height *
-					(0.25 + Math.random() * 0.55);
-
-				startX =
-					Math.random() *
-					(canvas.width - thickness);
-
-				startY =
-					Math.random() *
-					(canvas.height - length);
-
+				length = canvas.height * (0.25 + Math.random() * 0.55);
+				startX = Math.random() * (canvas.width - thickness);
+				startY = Math.random() * (canvas.height - length);
 			} else {
-
-				length =
-					canvas.width *
-					(0.25 + Math.random() * 0.55);
-
-				startX =
-					Math.random() *
-					(canvas.width - length);
-
-				startY =
-					Math.random() *
-					(canvas.height - thickness);
+				length = canvas.width * (0.25 + Math.random() * 0.55);
+				startX = Math.random() * (canvas.width - length);
+				startY = Math.random() * (canvas.height - thickness);
 			}
 
 			const bounds = vertical
@@ -592,12 +570,9 @@ function generateMotherboardBackground() {
 
 			occupied.push(bounds);
 
-			const diagonal =
-				Math.random() > 0.6;
+			const diagonal = Math.random() > 0.6;
 
-			const diagonalOffset =
-				CELL_SIZE *
-				(0.08 + Math.random() * 0.12);
+			const diagonalOffset = CELL_SIZE * (0.08 + Math.random() * 0.12);
 
 			motherboardBackgroundLines.push({
 				vertical,
@@ -747,11 +722,13 @@ function drawMotherboardPC(x, y, tile) {
 	const isServer = tile.type === 'server';
 	const type = tile.subType;
 	const connected = tile.connected;
+	const baseSize = type.id && type.id.length % 3 === 0 ? 0.25 : 
+					 type.id && type.id.length % 3 === 1 ? 0.45 : 
+					 0.65;
     const s = CELL_SIZE * (	isServer ? 0.75 : 
-							connected && animateFlag ? 0.75 :
-							type.id && type.id.length % 3 === 0 ? 0.25 : 
-							type.id && type.id.length % 3 === 1 ? 0.45 : 
-							0.65 );//Leggermente più grande per i dettagli
+							connected && animateFlag ? Math.abs(Math.sin(flowOffset*0.1)*0.05) + baseSize :
+							baseSize
+							);//Leggermente più grande per i dettagli
     const p = (CELL_SIZE - s) * 0.5;
     
     ctx.save();
@@ -950,7 +927,7 @@ function drawPC(x, y, tile) {
 	const type = tile.subType;
 	const connected = tile.connected;
     const s = CELL_SIZE * (	isServer ? 0.75 : 
-							connected && animateFlag ? 0.75 :
+							connected && animateFlag ? Math.abs(Math.sin(flowOffset*0.1)*0.05) + 0.75 :
 							0.65 );//Leggermente più grande per i dettagli
     const p = (CELL_SIZE - s) * 0.5;
     
