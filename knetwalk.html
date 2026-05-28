@@ -362,9 +362,7 @@ function calculateGridSizeRatio() {
 }
 
 function initGame() {
-	calculateGridSizeRatio();//fix per cercare di adattare subito la griglia 
-	
-    // 1. Calcola lo spazio reale disponibile nello schermo (sia larghezza che altezza)
+	// 1. Calcola lo spazio reale disponibile nello schermo (sia larghezza che altezza)
     const headerHeight = document.querySelector('.controls').offsetHeight;
     const statusHeight = statusDiv.offsetHeight;
     
@@ -3657,6 +3655,7 @@ canvas.addEventListener('pointerdown', e => {
     }
 }, { passive: false });
 
+calculateGridSizeRatio();//fix per cercare di adattare subito la griglia 
 initGame();
 animate(); // Avvia l'animazione
 </script>
