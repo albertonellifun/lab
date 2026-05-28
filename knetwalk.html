@@ -702,6 +702,187 @@ function drawLake() {
     }
 }
 
+function drawIcons(x, y, size, rows, cols, bwColor = null) {
+	const icons = [
+		{ name: 'phone',    color: bwColor ? bwColor : '#4af' },
+		{ name: 'message',  color: bwColor ? bwColor : '#2f2' },
+		{ name: 'camera',   color: bwColor ? bwColor : '#f4a' },
+		{ name: 'mail',     color: bwColor ? bwColor : '#f84' },
+		{ name: 'settings', color: bwColor ? bwColor : '#aaa' },
+		{ name: 'calendar', color: bwColor ? bwColor : '#f44' },
+		{ name: 'maps',     color: bwColor ? bwColor : '#4f4' },
+		{ name: 'music',    color: bwColor ? bwColor : '#a4f' },
+		{ name: 'photo',    color: bwColor ? bwColor : '#fa4' },
+		{ name: 'browser',  color: bwColor ? bwColor : '#4af' },
+		{ name: 'store',    color: bwColor ? bwColor : '#48f' },
+		{ name: 'clock',    color: bwColor ? bwColor : '#4af' }
+	];
+	
+	let iconIndex = 0;
+	const spacing = size * 1.4;
+	
+	for (let r = 0; r < rows; r++) {
+		for (let c = 0; c < cols; c++) {
+			//if (iconIndex >= icons.length) return;
+			
+			const ix = x + (c * spacing);
+			const iy = y + (r * spacing);
+			const icon = icons[iconIndex % icons.length];
+			
+			ctx.save();
+			ctx.translate(ix, iy);
+			
+			// Sfondo icona (quadrato arrotondato)
+			ctx.fillStyle = icon.color;
+			ctx.beginPath();
+			ctx.roundRect(0, 0, size, size, size * 0.2);
+			ctx.fill();
+			
+			// Ombra leggera
+			ctx.fillStyle = 'rgba(0,0,0,0.2)';
+			ctx.beginPath();
+			ctx.roundRect(0, 0, size, size, size * 0.2);
+			ctx.fill();
+			
+			// Disegno icona in base al tipo
+			ctx.fillStyle = '#fff';
+			ctx.strokeStyle = '#fff';
+			ctx.lineWidth = size * 0.08;
+			ctx.lineCap = 'round';
+			ctx.lineJoin = 'round';
+			
+			const padding = size * 0.25;
+			const inner = size - (padding * 2);
+			
+			switch(icon.name) {
+				case 'phone':
+					ctx.beginPath();
+					ctx.roundRect(padding, padding, inner, inner * 1.4, size * 0.15);
+					ctx.stroke();
+					ctx.beginPath();
+					ctx.arc(size/2, size - padding*1.2, size * 0.08, 0, Math.PI*2);
+					ctx.fill();
+					break;
+				case 'message':
+					ctx.beginPath();
+					ctx.moveTo(padding, padding + inner*0.3);
+					ctx.lineTo(size/2, padding + inner*0.6);
+					ctx.lineTo(size - padding, padding + inner*0.3);
+					ctx.stroke();
+					ctx.beginPath();
+					ctx.roundRect(padding, padding, inner, inner, size * 0.15);
+					ctx.stroke();
+					break;
+				case 'camera':
+					ctx.beginPath();
+					ctx.arc(size/2, size/2, inner*0.3, 0, Math.PI*2);
+					ctx.stroke();
+					ctx.beginPath();
+					ctx.arc(size/2, size/2, inner*0.15, 0, Math.PI*2);
+					ctx.fill();
+					break;
+				case 'mail':
+					ctx.beginPath();
+					ctx.moveTo(padding, padding);
+					ctx.lineTo(size/2, padding + inner*0.4);
+					ctx.lineTo(size - padding, padding);
+					ctx.moveTo(padding, padding);
+					ctx.lineTo(size - padding, padding + inner*0.8);
+					ctx.lineTo(size - padding, padding);
+					ctx.stroke();
+					break;
+				case 'settings':
+					ctx.beginPath();
+					ctx.arc(size/2, size/2, inner*0.25, 0, Math.PI*2);
+					ctx.stroke();
+					for(let a = 0; a < Math.PI*2; a += Math.PI/3) {
+						const r = inner*0.4;
+						ctx.fillRect(size/2 + Math.cos(a)*r - size*0.04, size/2 + Math.sin(a)*r - size*0.04, size*0.08, size*0.08);
+					}
+					break;
+				case 'calendar':
+					ctx.beginPath();
+					ctx.roundRect(padding, padding, inner, inner, size * 0.1);
+					ctx.stroke();
+					ctx.beginPath();
+					ctx.moveTo(padding + inner*0.2, padding + inner*0.25);
+					ctx.lineTo(padding + inner*0.2, padding + inner*0.5);
+					ctx.moveTo(padding + inner*0.8, padding + inner*0.25);
+					ctx.lineTo(padding + inner*0.8, padding + inner*0.5);
+					ctx.stroke();
+					ctx.beginPath();
+					ctx.moveTo(padding, padding + inner*0.5);
+					ctx.lineTo(size - padding, padding + inner*0.5);
+					ctx.stroke();
+					break;
+				case 'maps':
+					ctx.beginPath();
+					ctx.arc(size/2, size/2 - inner*0.1, inner*0.2, 0, Math.PI*2);
+					ctx.fill();
+					ctx.beginPath();
+					ctx.moveTo(size/2 - inner*0.15, size/2 + inner*0.2);
+					ctx.lineTo(size/2, size/2 - inner*0.15);
+					ctx.lineTo(size/2 + inner*0.15, size/2 + inner*0.2);
+					ctx.fill();
+					break;
+				case 'music':
+					ctx.beginPath();
+					ctx.arc(padding + inner*0.25, size/2, inner*0.25, 0, Math.PI*2);
+					ctx.fill();
+					ctx.beginPath();
+					ctx.moveTo(padding + inner*0.5, padding);
+					ctx.lineTo(padding + inner*0.5, size - padding);
+					ctx.stroke();
+					break;
+				case 'photo':
+					ctx.beginPath();
+					ctx.arc(padding + inner*0.3, padding + inner*0.35, inner*0.15, 0, Math.PI*2);
+					ctx.fill();
+					ctx.beginPath();
+					ctx.moveTo(padding, size - padding);
+					ctx.lineTo(padding + inner*0.4, padding + inner*0.5);
+					ctx.lineTo(size - padding, padding);
+					ctx.stroke();
+					break;
+				case 'browser':
+					ctx.beginPath();
+					ctx.roundRect(padding, padding, inner, inner, size * 0.1);
+					ctx.stroke();
+					ctx.beginPath();
+					ctx.moveTo(padding, padding + inner*0.25);
+					ctx.lineTo(size - padding, padding + inner*0.25);
+					ctx.stroke();
+					break;
+				case 'store':
+					ctx.beginPath();
+					ctx.moveTo(padding, size - padding);
+					ctx.lineTo(padding + inner*0.25, padding);
+					ctx.lineTo(padding + inner*0.75, padding);
+					ctx.lineTo(size - padding, size - padding);
+					ctx.closePath();
+					ctx.stroke();
+					break;
+				case 'clock':
+					ctx.beginPath();
+					ctx.arc(size/2, size/2, inner*0.3, 0, Math.PI*2);
+					ctx.stroke();
+					ctx.beginPath();
+					ctx.moveTo(size/2, size/2);
+					ctx.lineTo(size/2, padding + inner*0.15);
+					ctx.stroke();
+					ctx.beginPath();
+					ctx.moveTo(size/2, size/2);
+					ctx.lineTo(size/2 + inner*0.15, size/2);
+					ctx.stroke();
+					break;
+			}
+			
+			ctx.restore();
+			iconIndex++;
+		}
+	}
+}
+
 function drawTile(tile) {
 	if(motherboardFlag) drawTileMotherboard(tile);
 	else if (animateFlag) drawTileANIMATE(tile);
@@ -1063,6 +1244,18 @@ function drawPC(x, y, tile) {
 		}
 		ctx.fillRect(s*0.04, s*0.04, s - s*0.08, s * 0.65 - s*0.10);
 
+		//icone!!!
+		if (connected) {
+			// Menu bar
+			ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
+			ctx.fillRect(s*0.04, s*0.55, s*0.92, s*0.04);
+			ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
+			for(let i = 0; i < 6; i++) {
+				ctx.fillRect(s*0.06 + (i*s*0.11), s*0.55, s*0.04, s*0.02);
+			}
+			drawIcons(s*0.1, s*0.08, s*0.06, 4, 3);
+		}
+
 		// Riflesso "Glossy"
 		ctx.fillStyle = colors.glass;
 		ctx.beginPath();
@@ -1125,10 +1318,8 @@ function drawPC(x, y, tile) {
 			ctx.beginPath();
 			ctx.roundRect(s*0.2, s*0.53, s*0.6, s*0.06, s*0.04);
 			ctx.fill();
-			ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
-			for(let i = 0; i < 7; i++) {
-				ctx.fillRect(s*0.24 + (i*s*0.08), s*0.545, s*0.025, s*0.03);
-			}
+			// Icone dock
+			drawIcons(s*0.24, s*0.48, s*0.08, 1, 5);
 		}
 		
 
@@ -1201,7 +1392,17 @@ function drawPC(x, y, tile) {
 		ctx.moveTo(s*0.08, s*0.04); ctx.lineTo(s - s*0.08, s*0.04); ctx.lineTo(s*0.08, s * 0.4);
 		ctx.fill();
 		
-		//ctx.shadowBlur = 0;
+		//icone!!!
+		if (connected) {
+			// Menu bar
+			ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
+			ctx.fillRect(s*0.08, s*0.53, s*0.84, s*0.04);
+			ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
+			for(let i = 0; i < 6; i++) {
+				ctx.fillRect(s*0.1 + (i*s*0.11), s*0.53, s*0.04, s*0.02);
+			}
+			drawIcons(s*0.1, s*0.08, s*0.06, 5, 3);
+		}
 
 		// --- BASE TASTIERA (Prospettiva) ---
 		let baseGrad = ctx.createLinearGradient(0, s * 0.6, 0, s);
@@ -1261,6 +1462,11 @@ function drawPC(x, y, tile) {
 		ctx.beginPath(); 
 		ctx.roundRect(s*0.1 + s*0.03, s*0.03, s*0.8 - s*0.06, s - s*0.06, s * 0.08); 
 		ctx.fill();
+		
+		//icone!!!
+		if (connected) {
+			drawIcons(s*0.18, s*0.1, s*0.1, 6, 5);
+		}
 		
 		// Riflesso "Glossy"
 		ctx.fillStyle = colors.glass;
@@ -1583,8 +1789,7 @@ function drawPC(x, y, tile) {
 		ctx.fillRect(s*0.50,s*0.64,s*0.13,s*0.04);
 		ctx.fillRect(s*0.65,s*0.64,s*0.13,s*0.04);
 		ctx.fillRect(s*0.80,s*0.64,s*0.13,s*0.04);
-	}
-	
+	}	
 	else if (type.id === 'pentium2') {
 		// Case tower
 		let grad = ctx.createLinearGradient(-s*0.05, 0, s*1.1, s);
@@ -1701,7 +1906,6 @@ function drawPC(x, y, tile) {
 		ctx.stroke();
 		ctx.strokeRect(s*0.64,s*0.92,s*0.1,s*0.02);
 	}
-	
 	else if (type.id === 'router') {
 		// --- ROUTER WiFi ---
 		const isWhite = type.variant === 'routerwhite';
@@ -1945,6 +2149,14 @@ function drawPC(x, y, tile) {
 		}
 		ctx.fillRect(s*0.22, s*0.19, s*0.56, s*0.4);
 		
+		//icone!!!
+		if (connected) {
+			// Menu bar
+			ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
+			ctx.fillRect(s*0.24, s*0.20, s*0.52, s*0.04);
+			drawIcons(s*0.25, s*0.3, s*0.06, 3, 4, 'rgba(0,0,0,0.3)');
+		}
+		
 		// --- SLOT FLOPPY (sotto lo schermo) ---
 		ctx.fillStyle = "#444";
 		ctx.fillRect(s*0.3, s*0.75, s*0.5, s*0.04);
@@ -2037,30 +2249,24 @@ function drawPC(x, y, tile) {
 			ctx.fill();
 		}
 		
-		// Menu bar (imitazione macOS)
-		ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
-		ctx.fillRect(s*0.12, s*0.08, s*0.76, s*0.05);
+		if (connected ) {
+			// Menu bar (imitazione macOS)
+			ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
+			ctx.fillRect(s*0.12, s*0.08, s*0.76, s*0.05);
 		
-		// Icone menu bar (piccoli quadratini)
-		if (connected) {
+			// Icone menu bar (piccoli quadratini)
 			ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
 			for(let i = 0; i < 8; i++) {
 				ctx.fillRect(s*0.14 + (i*s*0.09), s*0.095, s*0.02, s*0.03);
 			}
-		}
-		
-		// Dock (imitazione macOS in basso)
-		ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
-		ctx.beginPath();
-		ctx.roundRect(s*0.2, s*0.57, s*0.6, s*0.06, s*0.04);
-		ctx.fill();
-		
-		// Icone dock
-		if (connected) {
-			ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
-			for(let i = 0; i < 7; i++) {
-				ctx.fillRect(s*0.24 + (i*s*0.08), s*0.585, s*0.025, s*0.03);
-			}
+			
+			// Dock (imitazione macOS in basso)
+			ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
+			ctx.beginPath();
+			ctx.roundRect(s*0.2, s*0.57, s*0.6, s*0.06, s*0.04);
+			ctx.fill();		
+			// Icone dock
+			drawIcons(s*0.24, s*0.53, s*0.08, 1, 5);
 		}
 		
 		// --- CAMERA FRONTALE (piccolo puntino) ---
@@ -2139,6 +2345,16 @@ function drawPC(x, y, tile) {
 				ctx.lineTo(s*0.78, s*0.14 + i);
 				ctx.stroke();
 			}
+			//scritta nintendo
+			ctx.fillStyle = "#444";
+			ctx.font = `${s*0.07}px sans-serif`;
+			ctx.textAlign = "left";
+			ctx.textBaseline = "middle";
+			ctx.fillText("Nintendo", s*0.35, s*0.3);
+			ctx.strokeStyle = '#444';
+			ctx.beginPath();
+			ctx.roundRect(s*0.3,s*0.25,s*0.4,s*0.1,s*0.04);
+			ctx.stroke();
 		}
 		
 		// Speaker (griglia in alto)
@@ -3339,6 +3555,14 @@ function drawPC(x, y, tile) {
 		ctx.beginPath();
 		ctx.roundRect(s*0.2, s*0.19, s*0.6, s*0.37, s*0.04);
 		ctx.fill();
+		
+		if (connected) {
+			// Menu bar
+			ctx.fillStyle = "rgba(255, 255, 255, 0.3)";
+			ctx.fillRect(s*0.21, s*0.2, s*0.58, s*0.03);
+			
+			drawIcons(s*0.72, s*0.26, s*0.06, 3, 1, 'rgba(0,0,0,0.3)');
+		}
 		
 		//riflesso curvo alto + basso
 		ctx.strokeStyle = "rgba(255,255,255,0.1)";
