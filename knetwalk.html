@@ -169,7 +169,7 @@
 <script>
 let WIDTH = 5;
 let HEIGHT = 3;
-const CANVAS_MAX_SIZE = 1440;
+const CANVAS_MAX_SIZE = 4096;
 let CELL_SIZE = CANVAS_MAX_SIZE / Math.max(WIDTH, HEIGHT);
 
 const canvas = document.getElementById('gameCanvas');
@@ -202,6 +202,7 @@ const HW_TYPES = [
 	{id:'ps4',				variant:'ps4',      	 desc:'Sony PS4 Black from 2014'},
 	{id:'imacg3',			variant:'imacg3',        desc:'iMac G3 Blueberry Cyan from 1998'},
 	{id:'imacintel',		variant:'imacintel',     desc:'iMac Intel from 2020'},
+	{id:'starlc10',         variant:'starlc10',      desc:'Star Lc-10 Multifont from 1988'},
 	//color variants
 	{id:'notebook',			variant:'notebookwhite', desc:'Generic White Notebook'},
 	{id:'router',			variant:'routerwhite',   desc:'Router Wi-Fi TpLink White'},
@@ -515,13 +516,18 @@ function updateConnectivity() {
     }
 }
 
-/** * RENDERING AVANZATO
- */
+/** RENDERING AVANZATO */
+animate.lastTime = 0;
 function animate() {
-    flowOffset += 0.2; // Velocità del flusso
-    draw();
+    const now = performance.now();
+    if (animateFlag || now - animate.lastTime >= 40) { // 40ms = 25 fps al massimo
+        flowOffset += 0.2;
+        draw();
+        animate.lastTime = now;
+    }
     requestAnimationFrame(animate);
 }
+
 
 
 function generateMotherboardBackground() {
@@ -758,13 +764,13 @@ function drawIcons(x, y, size, rows, cols, bwColor = null) {
 					ctx.roundRect(padding, padding, inner, inner * 1.4, size * 0.15);
 					ctx.stroke();
 					ctx.beginPath();
-					ctx.arc(size/2, size - padding*1.2, size * 0.08, 0, Math.PI*2);
+					ctx.arc(size*0.5, size - padding*1.2, size * 0.08, 0, Math.PI*2);
 					ctx.fill();
 					break;
 				case 'message':
 					ctx.beginPath();
 					ctx.moveTo(padding, padding + inner*0.3);
-					ctx.lineTo(size/2, padding + inner*0.6);
+					ctx.lineTo(size*0.5, padding + inner*0.6);
 					ctx.lineTo(size - padding, padding + inner*0.3);
 					ctx.stroke();
 					ctx.beginPath();
@@ -773,16 +779,16 @@ function drawIcons(x, y, size, rows, cols, bwColor = null) {
 					break;
 				case 'camera':
 					ctx.beginPath();
-					ctx.arc(size/2, size/2, inner*0.3, 0, Math.PI*2);
+					ctx.arc(size*0.5, size*0.5, inner*0.3, 0, Math.PI*2);
 					ctx.stroke();
 					ctx.beginPath();
-					ctx.arc(size/2, size/2, inner*0.15, 0, Math.PI*2);
+					ctx.arc(size*0.5, size*0.5, inner*0.15, 0, Math.PI*2);
 					ctx.fill();
 					break;
 				case 'mail':
 					ctx.beginPath();
 					ctx.moveTo(padding, padding);
-					ctx.lineTo(size/2, padding + inner*0.4);
+					ctx.lineTo(size*0.5, padding + inner*0.4);
 					ctx.lineTo(size - padding, padding);
 					ctx.moveTo(padding, padding);
 					ctx.lineTo(size - padding, padding + inner*0.8);
@@ -791,11 +797,11 @@ function drawIcons(x, y, size, rows, cols, bwColor = null) {
 					break;
 				case 'settings':
 					ctx.beginPath();
-					ctx.arc(size/2, size/2, inner*0.25, 0, Math.PI*2);
+					ctx.arc(size*0.5, size*0.5, inner*0.25, 0, Math.PI*2);
 					ctx.stroke();
-					for(let a = 0; a < Math.PI*2; a += Math.PI/3) {
+					for(let a = 0; a < Math.PI*2; a += Math.PI*0.33) {
 						const r = inner*0.4;
-						ctx.fillRect(size/2 + Math.cos(a)*r - size*0.04, size/2 + Math.sin(a)*r - size*0.04, size*0.08, size*0.08);
+						ctx.fillRect(size*0.5 + Math.cos(a)*r - size*0.04, size*0.5 + Math.sin(a)*r - size*0.04, size*0.08, size*0.08);
 					}
 					break;
 				case 'calendar':
@@ -815,17 +821,17 @@ function drawIcons(x, y, size, rows, cols, bwColor = null) {
 					break;
 				case 'maps':
 					ctx.beginPath();
-					ctx.arc(size/2, size/2 - inner*0.1, inner*0.2, 0, Math.PI*2);
+					ctx.arc(size*0.5, size*0.5 - inner*0.1, inner*0.2, 0, Math.PI*2);
 					ctx.fill();
 					ctx.beginPath();
-					ctx.moveTo(size/2 - inner*0.15, size/2 + inner*0.2);
-					ctx.lineTo(size/2, size/2 - inner*0.15);
-					ctx.lineTo(size/2 + inner*0.15, size/2 + inner*0.2);
+					ctx.moveTo(size*0.5 - inner*0.15, size*0.5 + inner*0.2);
+					ctx.lineTo(size*0.5, size*0.5 - inner*0.15);
+					ctx.lineTo(size*0.5 + inner*0.15, size*0.5 + inner*0.2);
 					ctx.fill();
 					break;
 				case 'music':
 					ctx.beginPath();
-					ctx.arc(padding + inner*0.25, size/2, inner*0.25, 0, Math.PI*2);
+					ctx.arc(padding + inner*0.25, size*0.5, inner*0.25, 0, Math.PI*2);
 					ctx.fill();
 					ctx.beginPath();
 					ctx.moveTo(padding + inner*0.5, padding);
@@ -862,15 +868,15 @@ function drawIcons(x, y, size, rows, cols, bwColor = null) {
 					break;
 				case 'clock':
 					ctx.beginPath();
-					ctx.arc(size/2, size/2, inner*0.3, 0, Math.PI*2);
+					ctx.arc(size*0.5, size*0.5, inner*0.3, 0, Math.PI*2);
 					ctx.stroke();
 					ctx.beginPath();
-					ctx.moveTo(size/2, size/2);
-					ctx.lineTo(size/2, padding + inner*0.15);
+					ctx.moveTo(size*0.5, size*0.5);
+					ctx.lineTo(size*0.5, padding + inner*0.15);
 					ctx.stroke();
 					ctx.beginPath();
-					ctx.moveTo(size/2, size/2);
-					ctx.lineTo(size/2 + inner*0.15, size/2);
+					ctx.moveTo(size*0.5, size*0.5);
+					ctx.lineTo(size*0.5 + inner*0.15, size*0.5);
 					ctx.stroke();
 					break;
 			}
@@ -1080,7 +1086,7 @@ function drawTileOLD(tile) {
 }
 
 function drawTileANIMATE(tile) {
-    let x = tile.x * CELL_SIZE, y = tile.y * CELL_SIZE, mid = CELL_SIZE/2;
+    let x = tile.x * CELL_SIZE, y = tile.y * CELL_SIZE, mid = CELL_SIZE*0.5;
 	
     // Cavo Base (Sfondo spento)
     ctx.setLineDash([]);
@@ -1198,24 +1204,24 @@ function drawPC(x, y, tile) {
 				// LED Verde (Power/Link) - Fisso o lampeggio lento
 				ctx.fillStyle = (Math.sin(flowOffset * 0.1 + i) > -0.8) ? colors.greenOn : colors.greenOff;
 				ctx.shadowBlur = 5; ctx.shadowColor = colors.greenOn;
-				ctx.beginPath(); ctx.arc(s - ledSpacing * 4, uy + unitHeight/2, ledRadius, 0, Math.PI*2); ctx.fill();
+				ctx.beginPath(); ctx.arc(s - ledSpacing * 4, uy + unitHeight*0.5, ledRadius, 0, Math.PI*2); ctx.fill();
 
 				// LED Arancione (Disk Activity) - Lampeggio frenetico
 				ctx.fillStyle = (Math.sin(flowOffset * 0.8 + i*2) > 0) ? colors.orangeOn : colors.orangeOff;
 				ctx.shadowColor = colors.orangeOn;
-				ctx.beginPath(); ctx.arc(s - ledSpacing * 3, uy + unitHeight/2, ledRadius, 0, Math.PI*2); ctx.fill();
+				ctx.beginPath(); ctx.arc(s - ledSpacing * 3, uy + unitHeight*0.5, ledRadius, 0, Math.PI*2); ctx.fill();
 				
 				// LED Blu/Azzurro (Network Dati) - Lampeggio randomico
 				ctx.fillStyle = (Math.cos(flowOffset * 1.2 + i) > 0.3) ? colors.blueOn : colors.blueOff;
 				ctx.shadowColor = colors.blueOn;
-				ctx.beginPath(); ctx.arc(s - ledSpacing * 2, uy + unitHeight/2, ledRadius, 0, Math.PI*2); ctx.fill();
+				ctx.beginPath(); ctx.arc(s - ledSpacing * 2, uy + unitHeight*0.5, ledRadius, 0, Math.PI*2); ctx.fill();
 				
 				ctx.shadowBlur = 0;
 			} else {
 				// Server Spento: solo un piccolo LED rosso di standby
 				ctx.fillStyle = colors.redOff; // Rosso spento
 				if (i === 0) ctx.fillStyle = colors.redOn; // Solo il primo ha il power standby
-				ctx.beginPath(); ctx.arc(s - ledSpacing * 4, uy + unitHeight/2, ledRadius, 0, Math.PI*2); ctx.fill();
+				ctx.beginPath(); ctx.arc(s - ledSpacing * 4, uy + unitHeight*0.5, ledRadius, 0, Math.PI*2); ctx.fill();
 			}
 		}
 	} else if (type.id === 'desktop') {
@@ -1442,7 +1448,7 @@ function drawPC(x, y, tile) {
 	} 
 	else if (type.id === 'tablet') {
 		// --- SCOCCA ---
-		let tabletGrad = ctx.createRadialGradient(s/2, s/2, 0, s/2, s/2, s);
+		let tabletGrad = ctx.createRadialGradient(s*0.5, s*0.5, 0, s*0.5, s*0.5, s);
 		tabletGrad.addColorStop(0, "#475569");
 		tabletGrad.addColorStop(1, "#0f172a");
 		ctx.fillStyle = tabletGrad;
@@ -3114,7 +3120,7 @@ function drawPC(x, y, tile) {
 		ctx.fill();
 		
 		// --- SCOCCA ---
-		let tabletGrad = ctx.createRadialGradient(s/2, s/2, 0, s/2, s/2, s);
+		let tabletGrad = ctx.createRadialGradient(s*0.5, s*0.5, 0, s*0.5, s*0.5, s);
 		tabletGrad.addColorStop(0, "#fff");
 		tabletGrad.addColorStop(1, "#ccc");
 		ctx.fillStyle = tabletGrad;
@@ -3598,6 +3604,122 @@ function drawPC(x, y, tile) {
 		ctx.stroke();
 		ctx.shadowBlur = 0;
 	}
+	else if (type.id === 'starlc10') {
+		// Case
+		let grad = ctx.createLinearGradient(0, 0, s, s);
+		grad.addColorStop(0, "#ffe"); 
+		grad.addColorStop(1, "#ccb");
+		//corpo con bordo
+		ctx.lineWidth = s*0.01;
+		ctx.strokeStyle = '#999';
+		ctx.fillStyle = grad;
+		ctx.beginPath();
+		ctx.roundRect(0, s*0.2, s, s*0.5, [s*0.16,s*0.16,s*0.04,s*0.04]);
+		ctx.fill();
+		ctx.stroke();
+		
+		//rotella carta a dx
+		ctx.fillRect(s,s*0.35,s*0.05,s*0.12);
+		
+		//guide carta al cx
+		ctx.fillRect(s*0.3,s*0.05,s*0.4,s*0.15);
+		ctx.fillRect(s*0.2,s*0.02,s*0.1,s*0.18);
+		ctx.fillRect(s*0.7,s*0.02,s*0.1,s*0.18);
+				
+		//coperchio nero semitrasparente
+		ctx.fillStyle = '#666';
+		ctx.beginPath();
+		ctx.roundRect(s*0.05, s*0.2, s*0.9, s*0.2, [s*0.16,s*0.16,s*0.04,s*0.04]);
+		ctx.fill();
+		
+		//riga sotto
+		ctx.fillStyle = '#aaa';
+		ctx.fillRect(s*0,s*0.52,s,s*0.005);
+		
+		//pannello di CONTROLLO con pulsantoni e led con i font
+		ctx.strokeStyle = '#555';
+		ctx.fillRect(s*0.5,s*0.41,s*0.45,s*0.1);
+		ctx.strokeRect(s*0.5,s*0.41,s*0.45,s*0.1);
+		ctx.fillStyle = '#444';
+		ctx.fillRect(s*0.52,s*0.42,s*0.07,s*0.07);
+		ctx.fillRect(s*0.72,s*0.42,s*0.07,s*0.07);
+		ctx.fillRect(s*0.87,s*0.42,s*0.06,s*0.07);
+		
+		//scritta incomprensibile a sx del pannello
+		ctx.strokeStyle = '#666';
+		ctx.strokeRect(s*0.15,s*0.41,s*0.25,s*0.08);
+		ctx.fillStyle = '#111';
+		ctx.font = `${s*0.04}px sans-serif`;
+		ctx.textAlign = "left";
+		ctx.textBaseline = "middle";
+		ctx.fillText("4l3er70N31L1", s*0.15, s*0.45);
+		ctx.fillText("KN37W41kxxx", s*0.15, s*0.47);
+		
+		//tasto nero accensione a sx
+		ctx.fillStyle = '#111';
+		ctx.fillRect(s*0.05,s*0.62,s*0.1,s*0.05);
+		
+		//logo
+		ctx.fillStyle = '#111';
+		ctx.font = `${s*0.05}px sans-serif`;
+		ctx.textAlign = "left";
+		ctx.textBaseline = "middle";
+		ctx.fillText("star LC-10", s*0.05, s*0.56);
+		
+		//setup blinking
+		const blinkGreen = Math.sin(flowOffset * 0.05) > -0.8;
+		const blinkOrange = Math.sin(flowOffset * 0.06 + 1.5) > -0.8;
+		const blinkYellow = Math.sin(flowOffset * 0.07 + 3) > -0.8;
+		const blinkWhite = Math.cos(flowOffset * 0.07) > -0.8;
+		const blinkBlue = Math.sin(flowOffset * 0.02) > -0.8;
+		
+		// LED 1
+		ctx.fillStyle = connected && blinkGreen ? colors.greenOn : colors.greenOff;
+		if (connected && blinkGreen) {
+			ctx.shadowBlur = 8; 
+			ctx.shadowColor = colors.greenOn;
+		}
+		ctx.fillRect(s*0.6, s*0.42, s*0.06, s*0.03); 
+		ctx.shadowBlur = 0;
+		
+		// LED 2
+		ctx.fillStyle = connected && blinkOrange ? colors.orangeOn : colors.orangeOff;
+		if (connected && blinkOrange) {
+			ctx.shadowBlur = 8; 
+			ctx.shadowColor = colors.orangeOn;
+		}
+		ctx.fillRect(s*0.6, s*0.46, s*0.06, s*0.03); 
+		ctx.shadowBlur = 0;
+		
+	
+		// LED 3
+		ctx.fillStyle = connected && blinkYellow ? colors.yellowOn : colors.yellowOff;
+		if (connected && blinkYellow) {
+			ctx.shadowBlur = 8; 
+			ctx.shadowColor = colors.yellowOn;
+		}
+		ctx.fillRect(s*0.8, s*0.42, s*0.06, s*0.03); 
+		ctx.shadowBlur = 0;
+		
+		// LED 4
+		ctx.fillStyle = connected && blinkWhite ? colors.whiteOn : colors.whiteOff;
+		if (connected && blinkOrange) {
+			ctx.shadowBlur = 8; 
+			ctx.shadowColor = colors.whiteOn;
+		}
+		ctx.fillRect(s*0.8, s*0.46, s*0.06, s*0.03); 
+		ctx.shadowBlur = 0;
+		
+		// LED 5
+		ctx.fillStyle = connected && blinkBlue ? colors.blueOn : colors.blueOff;
+		if (connected && blinkBlue) {
+			ctx.shadowBlur = 8; 
+			ctx.shadowColor = colors.blueOn;
+		}
+		ctx.fillRect(s*0.88, s*0.43, s*0.04, s*0.05); 
+		ctx.shadowBlur = 0;
+	}	
+	
 	ctx.restore();
 }
 
