@@ -1695,16 +1695,13 @@ function drawPC(x, y, tile) {
 		let grad = ctx.createLinearGradient(-s*0.05, 0, s*1.1, s);
 		grad.addColorStop(0, "#ffe"); 
 		grad.addColorStop(1, "#ccb");
-		//corpo
+		//corpo e bordo
+		ctx.lineWidth = s*0.01;
+		ctx.strokeStyle = '#999';
 		ctx.fillStyle = grad;
 		ctx.beginPath();
 		ctx.roundRect(-s*0.05, s*0.2, s*1.1, s*0.5, s*0.02);
 		ctx.fill();
-		//bordo
-		ctx.lineWidth = s*0.01;
-		ctx.strokeStyle = '#999';
-		ctx.beginPath();
-		ctx.roundRect(-s*0.05, s*0.2, s*1.1, s*0.5, s*0.02);
 		ctx.stroke();
 		//LOGO
 		ctx.fillStyle = '#88f';
@@ -1739,10 +1736,10 @@ function drawPC(x, y, tile) {
 		ctx.strokeRect(s*0.98, s*0.3, s*0.02, s*0.24);
 		ctx.strokeRect(s*0.95, s*0.3, s*0.02, s*0.04); //eject
 		// LED VERDE FD
-		ctx.fillStyle = connected && blinkFD ? colors.blinkOrange : colors.orangeOff;
+		ctx.fillStyle = connected && blinkFD ? colors.orangeOn : colors.orangeOff;
 		if (connected && blinkFD) {
 			ctx.shadowBlur = 8; 
-			ctx.shadowColor = colors.blinkOrange;
+			ctx.shadowColor = colors.orangeOn;
 		}
 		ctx.fillRect(s*0.95, s*0.36, s*0.02, s*0.04); 
 		ctx.shadowBlur = 0;
