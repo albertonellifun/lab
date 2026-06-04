@@ -25,10 +25,23 @@
             user-select: none;
             -webkit-user-select: none;
             -webkit-touch-callout: none;
+			-webkit-tap-highlight-color: transparent;
+        }
+		
+		.controls { 
+            width: 100%;
+            padding: clamp(2px, 1vw, 6px) clamp(6px, 3vw, 18px);
+            display: flex;
+            gap: clamp(2px, 2vw, 24px) clamp(4px, 2vw, 48px);
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            min-height: 3vh;
+            min-height: fit-content;
         }
         
         h1 { 
-            font-size: clamp(16px, 5vw, 28px);
+            font-size: clamp(16px, 12px + 3vw, 80px);
             font-weight: bold; 
             margin: 0;
             color: #38bdf8; 
@@ -36,22 +49,9 @@
             white-space: nowrap;
         }
         
-        .controls { 
-            width: 100%;
-            padding: clamp(4px, 2vw, 8px) clamp(4px, 2vw, 12px);
-            display: flex;
-            gap: clamp(4px, 2vw, 12px);
-            align-items: center;
-            justify-content: center;
-            flex-wrap: wrap;
-            background: rgba(30, 41, 59, 0.5);
-            border-bottom: 1px solid #334155;
-            min-height: fit-content;
-        }
-        
         button {
-            padding: clamp(6px, 2vw, 10px) clamp(8px, 2vw, 16px);
-            font-size: clamp(6px, 2vw, 10px);
+            padding: clamp(6px, 2vw, 12px) clamp(8px, 3vw, 24px);
+            font-size: clamp(10px, 6px + 2vw, 48px);
             cursor: pointer;
             background: #1e293b;
             border: 1px solid #334155;
@@ -72,7 +72,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: clamp(4px, 2vw, 12px);
+            padding: clamp(2px, 2vw, 6px) clamp(4px, 2vw, 12px);
             min-width: 0;
             min-height: 0;
         }
@@ -89,18 +89,21 @@
         }
         
         #status { 
-            width: 100%;
-            padding: clamp(4px, 2vw, 8px);
+            padding: clamp(4px, 2vw, 48px) clamp(4px, 2vw, 8px);
             height: auto;
             min-height: fit-content;
-            font-size: clamp(12px, 2vw, 20px);
+			font-size: clamp(16px, 12px + 3vw, 80px);
             font-weight: bold; 
-            color: #22c55e; 
+			color: #22c55e;
             text-shadow: 0 0 16px rgba(34, 197, 94, 0.3);
             text-align: center;
-            background: rgba(30, 41, 59, 0.5);
-            border-top: 1px solid #334155;
+            background: rgba(30, 41, 59, 0.9);
+            border: 1px solid #334155;
             word-break: break-word;
+			position: absolute;
+			top: 35%;
+			display: none;
+			line-height: 2;
         }
 		
 		#tooltip {
@@ -111,7 +114,7 @@
 			color: white; 
 			padding: 5px 10px; 
 			border-radius: 4px; 
-			font-size: 12px;
+			font-size: clamp(12px, 8px + 2vw, 36px);
 			z-index: 100;
 		}
 		
@@ -119,7 +122,7 @@
             display: flex;
             align-items: center;
             gap: 6px;
-            font-size: clamp(10px, 2vw, 14px);
+            font-size: clamp(10px, 6px + 2vw, 36px);
             color: #94a3b8;
             flex-shrink: 0;
             white-space: nowrap;
@@ -181,6 +184,7 @@ const HW_TYPES = [
 	{id:'notebook',			variant:'notebook',      desc:'Generic Notebook'},
 	{id:'desktop',			variant:'desktop',       desc:'Monitor + MiniPC all-in-one'},
 	{id:'minipc',			variant:'minipc',        desc:'Morefine MiniPC N100'},
+	{id:'imacmini',			variant:'imacmini',      desc:'iMac Mini M4 from 2026'},
 	{id:'tablet',			variant:'tablet',        desc:'Generic Tablet'},
 	{id:'baraccone',		variant:'baraccone',     desc:'An old clunker from 90s'},
 	{id:'dx40',				variant:'dx40',     	 desc:'A clunky Intel 386DX-40 machine from 1990'},
@@ -369,17 +373,16 @@ function calculateGridSizeRatio() {
 function initGame() {
 	// 1. Calcola lo spazio reale disponibile nello schermo (sia larghezza che altezza)
     const headerHeight = document.querySelector('.controls').offsetHeight;
-    const statusHeight = statusDiv.offsetHeight;
     
     const paddingX = 40; // Margine di sicurezza laterale
     const paddingY = 60; // Margine di sicurezza verticale
     
     const availableWidth = window.innerWidth - paddingX;
-    const availableHeight = window.innerHeight - headerHeight - statusHeight - paddingY;
+    const availableHeight = window.innerHeight - headerHeight - paddingY;
     
     // 2. Determina i vincoli massimi applicando il tetto di CANVAS_MAX_SIZE
-    const maxAllowedWidth = Math.min(CANVAS_MAX_SIZE, availableWidth);
-    const maxAllowedHeight = Math.min(CANVAS_MAX_SIZE, availableHeight);
+    const maxAllowedWidth = Math.max(32, Math.min(CANVAS_MAX_SIZE, availableWidth));
+    const maxAllowedHeight = Math.max(32, Math.min(CANVAS_MAX_SIZE, availableHeight));
     
     // 3. Calcola la dimensione massima della cella per entrambe le direzioni
     const cellSizeByWidth = maxAllowedWidth / WIDTH;
@@ -396,12 +399,13 @@ function initGame() {
     // --- DA QUI IN POI IL CODICE RIMANE INVARIATO ---
     grid = [];
     gameWon = false;
-    statusDiv.innerText = "";
+    statusDiv.innerText = '';
+	statusDiv.style.display = 'none';
     
     for (let y = 0; y < HEIGHT; y++) {
         grid[y] = [];
         for (let x = 0; x < WIDTH; x++) {
-            grid[y][x] = { x, y, conns: 0, type: 'cable', subType: '', connected: false };
+            grid[y][x] = { x, y, conns: 0, type: 'cable', subType: '', connected: false, rotation:0, currentRotation:0 };//rotazione link
         }
     }
 
@@ -481,7 +485,12 @@ function getNextHwType() {
 function shuffleGrid() {
     grid.forEach(row => row.forEach(cell => {
         let r = Math.floor(Math.random()*4);
-        for(let i=0; i<r; i++) cell.conns = rotateBitmask(cell.conns);
+        for(let i=0; i<r; i++) {
+			cell.conns = rotateBitmask(cell.conns);
+			//rotazione link
+			cell.rotation = cell.rotation - Math.PI * 0.5;
+			cell.currentRotation = cell.rotation;
+		}
     }));
 }
 
@@ -517,6 +526,7 @@ function updateConnectivity() {
     if (grid.every(r => r.every(c => c.connected)) && !gameWon) {
         gameWon = true;
         statusDiv.innerText = "SYSTEM ONLINE — NETWORK CONFIGURED!";
+		statusDiv.style.display = 'block';
     }
 }
 
@@ -524,8 +534,23 @@ function updateConnectivity() {
 animate.lastTime = 0;
 function animate() {
     const now = performance.now();
-    if (animateFlag || now - animate.lastTime >= 40) { // 40ms = 25 fps al massimo
+    if (animateFlag || (now - animate.lastTime >= 40)) { // 40ms = 25 fps al massimo
         flowOffset += 0.2;
+		
+		//rotazione link
+		grid.forEach(row => row.forEach(cell => {
+			if (cell.currentRotation !== cell.rotation) {
+				let step = Math.PI * 0.2; 
+				if (cell.currentRotation > cell.rotation) {
+					cell.currentRotation -= step;
+					if (cell.currentRotation < cell.rotation) cell.currentRotation = cell.rotation;
+				} else {
+					cell.currentRotation += step;
+					if (cell.currentRotation > cell.rotation) cell.currentRotation = cell.rotation;
+				}
+			}
+		}));
+		
         draw();
         animate.lastTime = now;
     }
@@ -897,12 +922,24 @@ function drawTile(tile) {
 	else drawTileOLD(tile);
 }
 
+//rotazione link
+function manageCellRotation(x,y,tile){
+	ctx.save();
+	ctx.translate(x, y);
+	ctx.rotate(tile.currentRotation);
+}
+
+function manageCellRotationEnd() {
+	ctx.restore();
+}
+
+
 function drawTileMotherboard(tile) {
 	let x = tile.x * CELL_SIZE;
     let y = tile.y * CELL_SIZE;
     let mid = CELL_SIZE / 2;
 	
-    ctx.strokeStyle = tile.connected ? colors.activeColor : colors.inactiveColor;
+	ctx.strokeStyle = tile.connected ? colors.activeColor : colors.inactiveColor;
     ctx.lineWidth = CELL_SIZE * 0.08;
     ctx.lineCap = "butt";
     
@@ -1050,9 +1087,9 @@ function drawMotherboardPC(x, y, tile) {
 function drawTileOLD(tile) {
     let x = tile.x * CELL_SIZE;
     let y = tile.y * CELL_SIZE;
-    let mid = CELL_SIZE / 2;
+    let mid = CELL_SIZE * 0.5;
     
-    // Disegna cavi
+	// Disegna cavi
 	let hue = (flowOffset * 2 + 240) % 360; // --- CALCOLO DEL COLORE DINAMICO ---
     let dynamicColor = `hsl(${hue}, 100%, 50%)`;
     
@@ -1076,15 +1113,37 @@ function drawTileOLD(tile) {
 									: colors.inactiveColor;
 	ctx.fill();
 	
+	
+	
+	//rotazione link
+	ctx.save(); 
+    ctx.translate(x + mid, y + mid);
+	let angle = tile.rotation - tile.currentRotation;
+	ctx.rotate(angle);
+	
+	
     ctx.beginPath();
-    if (tile.conns & N) { ctx.moveTo(x + mid, y + mid); ctx.lineTo(x + mid, y); }
+    /*
+	if (tile.conns & N) { ctx.moveTo(x + mid, y + mid); ctx.lineTo(x + mid, y); }
     if (tile.conns & E) { ctx.moveTo(x + mid, y + mid); ctx.lineTo(x + CELL_SIZE, y + mid); }
     if (tile.conns & S) { ctx.moveTo(x + mid, y + mid); ctx.lineTo(x + mid, y + CELL_SIZE); }
     if (tile.conns & W) { ctx.moveTo(x + mid, y + mid); ctx.lineTo(x, y + mid); }
-    ctx.stroke();
+	*/
+	
+	if (tile.conns & N) { ctx.moveTo(0, 0); ctx.lineTo(0, -mid); }
+    if (tile.conns & E) { ctx.moveTo(0, 0); ctx.lineTo(mid, 0); }
+    if (tile.conns & S) { ctx.moveTo(0, 0); ctx.lineTo(0, mid); }
+    if (tile.conns & W) { ctx.moveTo(0, 0); ctx.lineTo(-mid, 0); }
+    
+	ctx.stroke();
+	
+	//rotazione link
+    ctx.restore();
+    
 	
     ctx.shadowBlur = 0;
-		
+	
+	
 	// Disegna icone
     drawPC(x, y, tile);
 }
@@ -1366,7 +1425,7 @@ function drawPC(x, y, tile) {
 		ctx.roundRect(s*0.01,s*0.625,s*0.98,s*0.12,[0,0,s*0.03,s*0.03]);
 		ctx.fill();
 		
-		//LOGO
+		//apple LOGO
 		ctx.lineWidth = s*0.01
 		ctx.fillStyle = '#000';
 		ctx.beginPath();
@@ -2947,6 +3006,78 @@ function drawPC(x, y, tile) {
 		ctx.arc(s*0.72, s*0.67, s*0.01, 0, Math.PI*2);
 		ctx.fill();
 	}
+	else if (type.id === 'imacmini') {
+		// --- SCOCCA ---
+		let minipcGrad = ctx.createRadialGradient(s*0.5, s*0.5, 0, s*0.5, s*0.5, s);
+		minipcGrad.addColorStop(0, colors.darkSilver);
+		minipcGrad.addColorStop(0.75, colors.silver);
+		minipcGrad.addColorStop(1, colors.darkSilver);
+		
+		//base NERA
+		ctx.fillStyle = '#111';
+		ctx.beginPath(); 
+		ctx.roundRect(s*0.25, s*0.43, s*0.5, s*0.4, s * 0.08); 
+		ctx.fill();
+		
+		//mezzo grigio
+		ctx.fillStyle = minipcGrad;
+		ctx.beginPath(); 
+		ctx.roundRect(s*0.2, s*0.40, s*0.6, s*0.4, s * 0.08); 
+		ctx.fill();
+		
+		//top chiaro
+		minipcGrad = ctx.createRadialGradient(s*0.5, s*0.5, 0, s*0.5, s*0.5, s);
+		minipcGrad.addColorStop(0, colors.darkSilver);
+		minipcGrad.addColorStop(0.5, colors.silver);
+		minipcGrad.addColorStop(1, colors.darkSilver);
+		ctx.fillStyle = minipcGrad;//'#111';
+		ctx.beginPath(); 
+		ctx.roundRect(s*0.2, s*0.20, s*0.6, s*0.40, s * 0.08); 
+		ctx.fill();
+		
+		//apple LOGO
+		ctx.lineWidth = s*0.01
+		ctx.fillStyle = '#000';
+		ctx.beginPath();
+		ctx.ellipse(s*0.5,s*0.40,s*0.09,s*0.06,0,0,Math.PI * 2);
+		ctx.fill();		
+		//foglietta
+		ctx.beginPath();
+		ctx.ellipse(s*0.52,s*0.32,s*0.01,s*0.03,1,0,Math.PI * 2);
+		ctx.fill();		
+		//morso		
+		ctx.fillStyle = minipcGrad;
+		ctx.beginPath();
+		ctx.arc(s*0.57,s*0.40,s*0.03,0,Math.PI * 2);
+		ctx.fill();	
+		
+		
+		//usb + pulsantone
+		ctx.fillStyle = '#000';
+		ctx.beginPath();
+		ctx.roundRect(s*0.32, s*0.68, s*0.03, s*0.08, s*0.04);
+		ctx.fill();
+		ctx.beginPath();
+		ctx.roundRect(s*0.40, s*0.68, s*0.03, s*0.08, s*0.04);
+		ctx.fill();
+		
+		//led
+		ctx.fillStyle = connected ? colors.whiteOn : "#222";
+		if (connected && Math.sin(flowOffset*0.95) > -0.5) {
+			ctx.shadowBlur = 5;
+			ctx.shadowColor = colors.whiteOn;
+		}
+		ctx.beginPath();
+		ctx.arc(s*0.6, s*0.70, s*0.015, 0, Math.PI*2);
+		ctx.fill();
+		ctx.shadowBlur = 0;
+		
+		ctx.fillStyle = '#000';
+		ctx.beginPath();
+		ctx.arc(s*0.70, s*0.70, s*0.02, 0, Math.PI*2);
+		ctx.fill();
+		
+	}
 	else if (type.id === 'radio') {
 		//CORPO IN LEGNO
 		const isDark = type.variant === 'radiodark';
@@ -3186,22 +3317,34 @@ function drawPC(x, y, tile) {
 
 		// --- GRIGLIA VENTILAZIONE (Chevron pattern) ---
 		ctx.strokeStyle = "#2d2d2d";
-		ctx.lineWidth = Math.max(0.5, s * 0.008);
-		const chevronSpacing = s * 0.1;
-		const chevronStart = s * 0.08;
-		const chevronWidth = s * 0.8;
+		ctx.lineWidth = s * 0.008;
+		const chevronStartX = s * 0.1;
+		const chevronEndX = s * 0.88;
+		const chevronSpacingX = s * 0.1;
 		
-		for(let x = chevronStart; x <= chevronStart + chevronWidth; x += chevronSpacing) {
-			for(let y = s*0.35; y < s*0.75; y += s*0.04) {
-				if(y>s*0.3 && y<s*0.5 && x>s*0.3 && x<s*0.6) continue;
+		const chevronStartY = s * 0.32;
+		const chevronEndY = s * 0.75;
+		const chevronSpacingY = s * 0.05;
+		
+		const chevronWidth = chevronSpacingX * 0.75;//lunghezza orizzontale riga
+		const chevronHeight = s * 0.05;//lunghezza verticale riga
+		
+		let ingiu = false;
+		for(let x = chevronStartX; x <= chevronEndX; x += chevronSpacingX) {
+			ingiu = !ingiu;
+			for(let y = chevronStartY; y < chevronEndY; y += chevronSpacingY) {
+				if(y>s*0.3 && y<s*0.5 && x>s*0.32 && x<s*0.6) continue;//buco sul logo
+				
 				// Linee oblique a V
 				ctx.beginPath();
-				ctx.moveTo(x, y);
-				ctx.lineTo(x + chevronSpacing*0.5, y + s*0.02);
-				ctx.stroke();
-				ctx.beginPath();
-				ctx.moveTo(x + chevronSpacing*0.5, y + s*0.02);
-				ctx.lineTo(x, y + s*0.04);
+				
+				if(ingiu) {
+					ctx.moveTo(x, y);
+					ctx.lineTo(x + chevronWidth, y + chevronHeight);
+				} else {
+					ctx.moveTo(x, y + chevronHeight);
+					ctx.lineTo(x + chevronWidth, y);
+				}				
 				ctx.stroke();
 			}
 		}
@@ -3782,6 +3925,11 @@ canvas.addEventListener('pointerdown', e => {
     
     if (grid[gy] && grid[gy][gx]) {
         grid[gy][gx].conns = rotateBitmask(grid[gy][gx].conns);
+		
+		//rotazione link
+		grid[gy][gx].currentRotation = grid[gy][gx].rotation;
+		grid[gy][gx].rotation = grid[gy][gx].rotation - (Math.PI * 0.5);
+		
         updateConnectivity();
     }
 }, { passive: false });
