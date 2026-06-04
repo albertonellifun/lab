@@ -30,9 +30,9 @@
 		
 		.controls { 
             width: 100%;
-            padding: clamp(2px, 1vw, 6px) clamp(6px, 3vw, 18px);
+            padding: clamp(2px, 1vw, 6px) clamp(6px, 2vw, 18px);
             display: flex;
-            gap: clamp(2px, 2vw, 24px) clamp(4px, 2vw, 48px);
+            gap: clamp(2px, 1vw, 24px) clamp(4px, 2vw, 48px);
             align-items: center;
             justify-content: center;
             flex-wrap: wrap;
@@ -41,8 +41,8 @@
         }
         
         h1 { 
-            font-size: clamp(16px, 12px + 3vw, 80px);
-            font-weight: bold; 
+            font-size: clamp(16px, 12px + 1vw, 80px);
+			font-weight: bold; 
             margin: 0;
             color: #38bdf8; 
             text-shadow: 0 0 16px rgba(56, 189, 248, 0.5);
@@ -50,8 +50,8 @@
         }
         
         button {
-            padding: clamp(6px, 2vw, 12px) clamp(8px, 3vw, 24px);
-            font-size: clamp(10px, 6px + 2vw, 48px);
+            padding: clamp(6px, 1vw, 12px) clamp(8px, 2vw, 24px);
+            font-size: clamp(10px, 6px + 1vw, 48px);
             cursor: pointer;
             background: #1e293b;
             border: 1px solid #334155;
@@ -72,7 +72,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: clamp(2px, 2vw, 6px) clamp(4px, 2vw, 12px);
+            padding: clamp(2px, 1vw, 6px) clamp(4px, 1vw, 12px);
             min-width: 0;
             min-height: 0;
         }
@@ -89,10 +89,10 @@
         }
         
         #status { 
-            padding: clamp(4px, 2vw, 48px) clamp(4px, 2vw, 8px);
+            padding: clamp(4px, 2vw, 48px) clamp(4px, 1vw, 8px);
             height: auto;
             min-height: fit-content;
-			font-size: clamp(16px, 12px + 3vw, 80px);
+			font-size: clamp(16px, 12px + 1vw, 80px);
             font-weight: bold; 
 			color: #22c55e;
             text-shadow: 0 0 16px rgba(34, 197, 94, 0.3);
@@ -122,7 +122,7 @@
             display: flex;
             align-items: center;
             gap: 6px;
-            font-size: clamp(10px, 6px + 2vw, 36px);
+            font-size: clamp(10px, 6px + 1vw, 36px);
             color: #94a3b8;
             flex-shrink: 0;
             white-space: nowrap;
@@ -693,7 +693,7 @@ function draw() {
 	else {
 		//griglia standard
 		ctx.strokeStyle = colors.inactiveColor;
-		ctx.lineWidth = 1;
+		ctx.lineWidth = CELL_SIZE * 0.01;
     
 		for(let i=0; i<=WIDTH; i++) {
 			ctx.beginPath(); ctx.moveTo(i*CELL_SIZE,0); ctx.lineTo(i*CELL_SIZE,canvas.height); ctx.stroke();
