@@ -2175,7 +2175,9 @@ function drawPC(x, y, tile) {
 		ctx.shadowBlur = 0;
 		
 		// SIMBOLO WiFi STILIZZATO
-		ctx.strokeStyle = connected ? colors.blueOn : colors.blueOff;
+		let coss = Math.cos(flowOffset*0.2);
+		let blink = [connected, connected && coss > -0.5, connected && coss > -0.2, connected && coss > 0.1];
+		
 		ctx.lineWidth = Math.max(0.5, s*0.01);
 			
 		const wifiX = s*0.8;
@@ -2183,12 +2185,13 @@ function drawPC(x, y, tile) {
 		const wifiSize = s*0.07;
 			
 		[1, 2, 3].forEach((ring, i) => {
+			ctx.strokeStyle = blink[i] ? colors.blueOn : colors.blueOff;
 			ctx.beginPath();
 			ctx.arc(wifiX, wifiY, wifiSize*(i+1)*0.33, 1.15 * Math.PI, 1.85 * Math.PI, false);
 			ctx.stroke();
 		});
 			
-		ctx.fillStyle = connected ? colors.blueOn : colors.blueOff;
+		ctx.fillStyle = blink[0] ? colors.blueOn : colors.blueOff;
 		ctx.beginPath();
 		ctx.arc(wifiX, wifiY, Math.max(0.8, s*0.01), 0, Math.PI*2);
 		ctx.fill();
