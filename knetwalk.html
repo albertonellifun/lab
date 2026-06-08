@@ -416,6 +416,7 @@ function initGame() {
 	
 	//solo per la modalita Motherboard
 	generateMotherboardBackground();
+	generateMotherboardDecorations();
 }
 
 //genera un labirinto perfetto in cui ogni cella è collegata al server e non esistono cicli (loop) o vicoli ciechi isolati
@@ -559,6 +560,49 @@ function animate(now) {
 
 
 
+
+
+//
+let motherboardDecorations = []; // scritte e resistenze precalcolate
+
+function generateMotherboardDecorations() { 
+    // genera le scritte
+    motherboardDecorations = [];
+    const labels = ['R1','R2','C1','C2','U1','UX','R3','C3','R4','D1','Q1','L1','C5','SX','DX'];
+    let idx = 0;
+    for (let row = 0; row < HEIGHT; row++) {
+        for (let col = 0; col < WIDTH; col++) {
+            const angolo = idx % 4;
+            const fx = angolo < 2 ? CELL_SIZE * 0.04 : CELL_SIZE * 0.65;
+            const fy = angolo % 2 === 0 ? CELL_SIZE * 0.12 : CELL_SIZE * 0.95;
+            motherboardDecorations.push({ type:'label', x: col*CELL_SIZE+fx, y: row*CELL_SIZE+fy, text: labels[idx % labels.length] });
+            idx++;
+        }
+    }
+    
+    // genera le resistenze
+    const resColors = ['#c8a','#fa8','#8af','#8fa','#ff8','#aaa'];
+    const cs = CELL_SIZE;
+    let ridx = 0;
+    for (let row = 0; row < HEIGHT; row++) {
+        for (let col = 0; col < WIDTH; col++) {
+            if ((ridx + WIDTH + HEIGHT) % 5 !== 0) { ridx++; continue; }
+            const angolo = ridx % 4;
+            const horiz = ridx % 2 === 0;
+            const fx = angolo < 2 ? cs * 0.05 : cs * 0.70;
+            const fy = angolo % 2 === 0 ? cs * 0.88 : cs * 0.75;
+            motherboardDecorations.push({ type:'res', x: col*cs+fx, y: row*cs+fy, horiz, c1: resColors[ridx % resColors.length], c2: resColors[(ridx+2) % resColors.length] });
+            ridx++;
+        }
+    }
+	
+	//genera i buchi agli angoli per fissarla
+	motherboardDecorations.push({ type:'buco', x:CELL_SIZE * 0.05, y:CELL_SIZE * 0.05, rad:CELL_SIZE * 0.02});
+	motherboardDecorations.push({ type:'buco', x:WIDTH * CELL_SIZE - CELL_SIZE * 0.05, y:CELL_SIZE * 0.05, rad:CELL_SIZE * 0.02});
+	motherboardDecorations.push({ type:'buco', x:WIDTH * CELL_SIZE - CELL_SIZE * 0.05, y:HEIGHT * CELL_SIZE - CELL_SIZE * 0.05, rad:CELL_SIZE * 0.02});
+	motherboardDecorations.push({ type:'buco', x:CELL_SIZE * 0.05, y:HEIGHT * CELL_SIZE - CELL_SIZE * 0.05, rad:CELL_SIZE * 0.02});
+}
+
 function generateMotherboardBackground() {
 	motherboardBackgroundLines = [];
 
@@ -688,6 +732,42 @@ function draw() {
 			}
 		}
 		ctx.lineCap = "butt";
+		
+		// SCRITTE E RESISTENZE
+		ctx.fillStyle = 'rgba(255,255,255,0.25)';
+		ctx.font = `${CELL_SIZE * 0.05}px monospace`;
+		ctx.textAlign = 'left';
+		const cs = CELL_SIZE, rw = cs*0.1, rh = cs*0.05, wire = cs*0.07;
+		const resColors = ['#c8a','#fa8','#8af','#8fa','#ff8','#aaa'];
+
+		for (const d of motherboardDecorations) {
+			if (d.type === 'buco') {
+				ctx.fillStyle = '#000';
+				ctx.beginPath();
+				ctx.arc(d.x, d.y, d.rad, 0, Math.PI * 2);
+				ctx.fill();
+			}
+			else if (d.type === 'label') {
+				ctx.fillStyle = 'rgba(255,255,255,0.25)';
+				ctx.fillText(d.text, d.x, d.y);
+			} else {
+				// piedini
+				ctx.strokeStyle = colors.silver; ctx.lineWidth = cs*0.008;
+				if (d.horiz) {
+					ctx.beginPath(); ctx.moveTo(d.x-wire, d.y+rh*.5); ctx.lineTo(d.x, d.y+rh*.5); ctx.stroke();
+					ctx.beginPath(); ctx.moveTo(d.x+rw, d.y+rh*.5); ctx.lineTo(d.x+rw+wire, d.y+rh*.5); ctx.stroke();
+				} else {
+					ctx.beginPath(); ctx.moveTo(d.x+rh*.5, d.y-wire); ctx.lineTo(d.x+rh*.5, d.y); ctx.stroke();
+					ctx.beginPath(); ctx.moveTo(d.x+rh*.5, d.y+rw); ctx.lineTo(d.x+rh*.5, d.y+rw+wire); ctx.stroke();
+				}
+				ctx.fillStyle = '#c8b89a';
+				d.horiz ? ctx.fillRect(d.x, d.y, rw, rh) : ctx.fillRect(d.x, d.y, rh, rw);
+				ctx.fillStyle = d.c1;
+				d.horiz ? ctx.fillRect(d.x+rw*.25, d.y, rw*.12, rh) : ctx.fillRect(d.x, d.y+rw*.25, rh, rw*.12);
+				ctx.fillStyle = d.c2;
+				d.horiz ? ctx.fillRect(d.x+rw*.50, d.y, rw*.12, rh) : ctx.fillRect(d.x, d.y+rw*.50, rh, rw*.12);
+			}
+		}
 	}
 	
 	else {
