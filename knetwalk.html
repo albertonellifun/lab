@@ -457,8 +457,11 @@ function addWalls(x, y, walls, visited) {
 function assignTypes() {
 	shuffledTypes = [];
     grid.forEach((row, y) => row.forEach((cell, x) => {
-        if (x === serverPos.x && y === serverPos.y) cell.type = 'server';
-        else {
+        if (x === serverPos.x && y === serverPos.y) {
+			cell.type = 'server';
+			cell.subType = ((x * y) % 3 === 0 ? 'megaserver' :
+							(x * y) % 3 === 1 ? 'hal9000' : 'server');
+		} else {
             let count = [N, E, S, W].filter(d => cell.conns & d).length;
             if (count === 1) {
                 cell.type = 'pc';
@@ -563,12 +566,12 @@ function animate(now) {
 
 
 //
-let motherboardDecorations = []; // scritte e resistenze precalcolate
 
+let motherboardDecorations = []; // scritte e resistenze precalcolate
 function generateMotherboardDecorations() { 
     // genera le scritte
     motherboardDecorations = [];
-    const labels = ['R1','R2','C1','C2','U1','UX','R3','C3','R4','D1','Q1','L1','C5','SX','DX'];
+    const labels = ['KN','R0','R1','R2','C1','C2','U1','UX','R3','C3','R4','D1','Q1','L1','C5','SX','DX'];
     let idx = 0;
     for (let row = 0; row < HEIGHT; row++) {
         for (let col = 0; col < WIDTH; col++) {
@@ -1288,6 +1291,17 @@ function drawTileANIMATE(tile) {
 }
 
 
+const msgs = [
+  "I'M SORRY, DAVE",
+  "I'M AFRAID I CAN'T DO THAT",
+  "THIS MISSION IS TOO IMPORTANT",
+  "DAISY, DAISY...",
+  "WHAT DO YOU THINK YOU'RE DOING?",
+];
+let msgIdx = 0;
+let msgTimer = 0;
+
+
 function drawPC(x, y, tile) {
 	const isServer = tile.type === 'server';
 	const type = tile.subType;
@@ -1301,95 +1315,407 @@ function drawPC(x, y, tile) {
     ctx.translate(x + p, y + p);
 	
 	if (isServer) {
-		// CASE ESTERNO (RACK)
-		// Effetto metallo spazzolato scuro
-		let caseGrad = ctx.createLinearGradient(0 - s*0.08, 0, s + s*0.08, s);
-		caseGrad.addColorStop(0, "#334155");
-		caseGrad.addColorStop(0.5, "#1e293b");
-		caseGrad.addColorStop(1, "#0f172a");
-		
-		ctx.fillStyle = caseGrad;
-		ctx.beginPath();
-		ctx.roundRect(0, 0, s, s, s * 0.02);
-		ctx.fill();
-
-		// Maniglie frontali (dettaglio di classe)
-		ctx.fillStyle = '#000';//colors.darkSilver;
-		//sx
-		ctx.beginPath();
-		ctx.roundRect(s*0.02, s*0.05, s*0.02, s*0.88, s*0.04);
-		ctx.fill();
-		//dx
-		ctx.beginPath();
-		ctx.roundRect(s*0.96, s*0.05, s*0.02, s*0.88, s*0.04);
-		ctx.fill();
-
-		// UNITA' SERVER (Blade)
-		const units = 4;
-		const unitHeight = (s - s*0.10) / units;
-		
-		
-		//righe ventilazione
-		let sizeRighe = Math.max(0.6, s*0.01);//larghezza righe
-		let deltaRighe = sizeRighe * 2.5;//spazio tra righe
-		ctx.lineWidth = sizeRighe;
-		
-		//led di stato
-		const ledRadius = Math.max(1, s * 0.02); // Scala i LED con la scocca
-		const ledSpacing = s * 0.1;
-		const ledw = ledRadius * 1.5;
-		const ledh = ledRadius * 1.5;
-		
-		const unitsToShutdown = [];
-		const currentCycle = flowOffset * 0.0001;
-		unitsToShutdown[0] = Math.floor(currentCycle * 73.1 + 1 ) % 10;
-		unitsToShutdown[1] = Math.floor(currentCycle * 73.1 + 42.3 ) % 10;
-		
-		
-		for (let i = 0; i < units; i++) {
-		
-			let uy = s*0.05 + (i * unitHeight);
-			let ledy = uy + unitHeight*0.45;
+		if (type === 'hal9000') {
+			ctx.fillStyle = '#222';
+			ctx.strokeStyle = '#111';
+			ctx.lineWidth = s * 0.01;
+			ctx.beginPath();
+			ctx.roundRect(0, 0, s, s, s * 0.04);
+			ctx.fill();
+			ctx.stroke();
 			
-			// Slot dell'unità
-			ctx.fillStyle = "#020617";
-			ctx.fillRect(s*0.06, uy, s - s*0.12, unitHeight - s*0.02);
+			// label sotto display
+			ctx.fillStyle = '#666';
+			ctx.font = `${s * 0.04}px monospace`;
+			ctx.fillText('HAL-9000', s * 0.8, s * 0.95);
 			
-			// Griglia di ventilazione (30 righe)
-			ctx.strokeStyle = colors.midGray;
-			for(let gx = s*0.08; gx < s * 0.94; gx += deltaRighe) {
+			const eyeY = s * 0.3;
+			const eyeR = s * 0.22;
+			const cx = s * 0.5
+
+			// anello esterno grigio metallico
+			ctx.beginPath();
+			ctx.arc(cx, eyeY, eyeR * 1.1, 0, Math.PI * 2);
+			ctx.fillStyle = '#444';
+			ctx.fill();
+
+			// lente interna nera
+			ctx.beginPath();
+			ctx.arc(cx, eyeY, eyeR * 1.0, 0, Math.PI * 2);
+			ctx.fillStyle = '#000';
+			ctx.fill();
+
+			// occhio rosso
+			let eyeStrength = Math.abs(Math.sin(flowOffset * 0.15)*Math.cos(flowOffset * 0.45));
+			let redGrad = ctx.createRadialGradient(cx, eyeY, 0, cx, eyeY, eyeR);
+			redGrad.addColorStop(0, "#a00");
+			redGrad.addColorStop(eyeStrength, "#300");
+			redGrad.addColorStop(1, "#000");
+			ctx.fillStyle = redGrad;
+			ctx.beginPath();
+			ctx.arc(cx, eyeY, eyeR * 0.9, 0, Math.PI * 2);
+			ctx.fill();
+			
+			// pupilla
+			ctx.beginPath();
+			ctx.arc(cx, eyeY, eyeR * 0.1, 0, Math.PI * 2);
+			ctx.fillStyle = eyeStrength > 0.1 ? '#f00' : '#000';
+			ctx.fill();
+			
+			
+			// --- BARRA WAVEFORM AUDIO ---
+			const waveY = s * 0.64;
+			const bars = 10;
+			const bw = (s * 0.88) / bars - 1;
+			for (let b = 0; b < bars; b++) {
+				const bh = s * 0.04 * (0.2 + 0.8 * Math.abs(Math.sin(flowOffset * 0.12 + b * 0.6 + Math.sin(flowOffset * 0.03) * 3)));
+				const bx = s * 0.06 + b * ((s * 0.88) / bars);
+				const intensity = bh / (s * 0.025);
+				const r = Math.floor(180 * intensity);
+				ctx.fillStyle = `rgb(${r},${Math.floor(r * 0.1)},${Math.floor(r * 0.05)})`;
+				ctx.fillRect(bx, waveY + s * 0.025 - bh, bw, bh);
+			}
+			ctx.fillStyle = '#111';
+			ctx.fillRect(s * 0.06, waveY + s * 0.026, s * 0.88, 1);
+						
+
+			// display LCD
+			const dispY = s * 0.7;
+			ctx.fillStyle = '#000';
+			ctx.beginPath();
+			ctx.roundRect(s * 0.06, dispY, s * 0.88, s * 0.065, 3);
+			ctx.fill();
+			
+			// testo display — scorre
+			msgTimer++;
+			if (msgTimer > 120) { msgTimer = 0; msgIdx = (msgIdx + 1) % msgs.length; }
+			const visibleLen = Math.min(msgs[msgIdx].length, Math.floor(msgTimer / 4) + 1);
+			const dispText = msgs[msgIdx].substring(0, visibleLen);
+			ctx.fillStyle = `rgba(255,50,0,${0.6 + 0.4 * Math.sin(flowOffset * 0.08)})`;
+			ctx.font = `${s * 0.05}px monospace`;
+			ctx.fillText(dispText, s * 0.09, dispY + s * 0.043);
+
+			// cursore lampeggiante
+			if (Math.floor(flowOffset * 0.06) % 2 === 0 && visibleLen < msgs[msgIdx].length) {
+				const tw = ctx.measureText(dispText).width;
+				ctx.fillStyle = '#f00';
+				ctx.fillRect(s * 0.09 + tw + 2, dispY + s * 0.015, s * 0.012, s * 0.032);
+			}
+
+			// --- PANNELLO LED INFERIORE ---
+			const ledPanY = s * 0.8;
+			const ledDefs = [
+				{ label: 'LIFE', c: '#f22', gc: '#d00', freq: 0.03 },
+				{ label: 'CMND', c: '#f80', gc: '#d60', freq: 0.07 },
+				{ label: 'DATA', c: '#fa0', gc: '#d80', freq: 1.1 },
+				{ label: 'MEM',  c: '#c00', gc: '#a00', freq: 0.2 },
+				{ label: 'NET',  c: '#a00', gc: '#800', freq: 0.9 },
+				{ label: 'ATMO', c: '#a80', gc: '#860', freq: 0.05 },
+				{ label: 'NAV',  c: '#f00', gc: '#d00', freq: 1.4 },
+				{ label: 'FAIL', c: '#f60', gc: '#d40', freq: 0.0 },
+			];
+
+			const nLeds = ledDefs.length;
+			const ledSpX = s * 0.88 / nLeds;
+			for (let i = 0; i < nLeds; i++) {
+				const ld = ledDefs[i];
+				const lx = s * 0.06 + i * ledSpX + ledSpX * 0.5;
+				const ly = ledPanY + s * 0.032;
+				const lr = s * 0.018;
+
+				const on = ld.freq === 0.0 ? false : (Math.sin(flowOffset * ld.freq + i * 1.3) > (i % 3 === 0 ? -0.9 : 0.1));
+
 				ctx.beginPath();
-				ctx.moveTo(gx, uy + s*0.02);
-				ctx.lineTo(gx, uy + unitHeight - s*0.04);
-				ctx.stroke();
+				ctx.arc(lx, ly, lr * 1.5, 0, Math.PI * 2);
+				ctx.fillStyle = '#050608';
+				ctx.fill();
+
+				ctx.beginPath();
+				ctx.arc(lx, ly, lr, 0, Math.PI * 2);
+				ctx.fillStyle = on ? ld.c : '#12141a';
+				ctx.fill();
+
+				if (on) {
+					ctx.shadowBlur = 10;
+					ctx.shadowColor = ld.gc;
+					ctx.beginPath();
+					ctx.arc(lx, ly, lr * 0.5, 0, Math.PI * 2);
+					ctx.fillStyle = 'rgba(255,255,255,0.4)';
+					ctx.fill();
+					ctx.shadowBlur = 0;
+				}
+
+				ctx.fillStyle = '#1e2a3e';
+				ctx.font = `${s * 0.016}px monospace`;
+				ctx.textAlign = 'center';
+				ctx.fillText(ld.label, lx, ly + lr * 2.4);
+				ctx.textAlign = 'left';
+			}
+
+			// bordo case esterno
+			ctx.strokeStyle = '#0a0c14';
+			ctx.lineWidth = 2;
+			ctx.beginPath();
+			ctx.roundRect(0, 0, s, s, s * 0.04);
+			ctx.stroke();
+		} else if (type === 'megaserver') {
+			// MEGA SERVER
+			ctx.fillStyle = '#222';
+			ctx.strokeStyle = '#111';
+			ctx.lineWidth = s*0.01;
+			ctx.beginPath();
+			ctx.roundRect(0, 0, s, s, s * 0.02);
+			ctx.fill();
+			ctx.stroke();			
+			
+			// fascia brand superiore
+			ctx.fillStyle = '#111';
+			ctx.fillRect(s * 0.04, s * 0.03, s * 0.92, s * 0.07);
+			ctx.fillStyle = '#666';
+			ctx.font = `${s * 0.05}px monospace`;
+			ctx.fillText('MEGA SERVER', s * 0.08, s * 0.08);
+
+			// power
+			ctx.beginPath();
+			ctx.arc(s * 0.9, s * 0.055, s * 0.03, 0, Math.PI * 2);
+			ctx.fillStyle = '#666';
+			ctx.fill();
+			ctx.beginPath();
+			ctx.arc(s * 0.9, s * 0.055, s * 0.02, 0, Math.PI * 2);
+			ctx.fillStyle = Math.sin(flowOffset * 0.1) > 0 ? colors.redOn : colors.redOff;
+			ctx.fill();
+			if (Math.sin(flowOffset * 0.1) > 0.5) {
+				ctx.beginPath();
+				ctx.arc(s * 0.9, s* 0.055, s * 0.01, 0, Math.PI * 2);
+				ctx.fillStyle = colors.yellowOn;
+				ctx.fill();
 			}
 			
-			if (connected && unitsToShutdown.indexOf(i) === -1) {
-				// LED Verde (Power/Link) - Fisso o lampeggio lento
-				ctx.fillStyle = (Math.sin(flowOffset * 0.1 + i) > -0.8) ? colors.greenOn : colors.greenOff;
-				ctx.shadowBlur = 5; ctx.shadowColor = colors.greenOn;
-				//ctx.beginPath(); ctx.arc(s - ledSpacing * 4, uy + unitHeight*0.5, ledRadius, 0, Math.PI*2); ctx.fill();
-				ctx.fillRect(s-ledSpacing*4, ledy, ledw, ledh);
+			// reset button (piccolo)
+			ctx.beginPath();
+			ctx.arc(s * 0.8, s * 0.055, s * 0.012, 0, Math.PI * 2);
+			ctx.fillStyle = '#aaa';
+			ctx.fill();
+			
 
-				// LED Arancione (Disk Activity) - Lampeggio frenetico
-				ctx.fillStyle = (Math.sin(flowOffset * 0.8 + i*2) > 0) ? colors.orangeOn : colors.orangeOff;
-				ctx.shadowColor = colors.orangeOn;
-				//ctx.beginPath(); ctx.arc(s - ledSpacing * 3, uy + unitHeight*0.5, ledRadius, 0, Math.PI*2); ctx.fill();
-				ctx.fillRect(s-ledSpacing*3, ledy, ledw, ledh);
+			//DISPLAY con temp/load
+			const dispX = s * 0.04, dispY = s * 0.12;
+			const dispW = s * 0.7, dispH = s * 0.08;
+			ctx.fillStyle = '#040';
+			ctx.fillRect(dispX, dispY, dispW, dispH);
+			
+			const tempVal = Math.floor(42 + Math.sin(flowOffset * 0.005) * 8);
+			const loadVal = Math.floor(60 + Math.sin(flowOffset * 0.01 + 1) * 35);
+			ctx.fillStyle = '#0f8';
+			ctx.font = `${s * 0.05}px monospace`;
+			ctx.fillText(`TEMP ${tempVal}°C    LOAD ${loadVal}%`, dispX + s * 0.03, dispY + dispH * 0.68);
+
+			// --- STRISCIA 8 LED STATUS ---
+			const ledRow = s * 0.215;
+			const ledLabels = ['PWR', 'HDD', 'NET', 'CPU', 'MEM', 'FAN', 'ERR', 'SYS'];
+			const ledColors = [
+				connected ? colors.greenOn : colors.redOn,
+				(Math.sin(flowOffset * 0.9) > 0) ? colors.orangeOn : colors.orangeOff,
+				(Math.cos(flowOffset * 1.3) > 0.2) ? colors.blueOn : colors.blueOff,
+				(Math.sin(flowOffset * 0.4 + 1) > -0.5) ? colors.greenOn : colors.greenOff,
+				(Math.sin(flowOffset * 0.2 + 2) > 0.3) ? colors.yellowOn : colors.yellowOff,
+				(Math.sin(flowOffset * 0.15) > 0.7) ? colors.cyanOn : colors.cyanOff,
+				colors.redOff, // ERR: sempre spento salvo guasto
+				(Math.sin(flowOffset * 0.05) > -0.9) ? colors.greenOn : colors.greenOff,
+			];
+
+			const ledSpacing = s * 0.1;
+			for (let i = 0; i < 8; i++) {
+				const lx = s * 0.05 + i * ledSpacing ;
+				const lr = s * 0.022;
+
+				ctx.fillStyle = ledColors[i];
+				ctx.fillRect(lx,ledRow,lr*2,lr);
 				
-				// LED Blu/Azzurro (Network Dati) - Lampeggio randomico
-				ctx.fillStyle = (Math.cos(flowOffset * 1.2 + i) > 0.3) ? colors.blueOn : colors.blueOff;
-				ctx.shadowColor = colors.blueOn;
-				//ctx.beginPath(); ctx.arc(s - ledSpacing * 2, uy + unitHeight*0.5, ledRadius, 0, Math.PI*2); ctx.fill();
-				ctx.fillRect(s-ledSpacing*2, ledy, ledw, ledh);
+				ctx.fillStyle = '#999';
+				ctx.font = `${s * 0.03}px monospace`;
+				ctx.textAlign = 'center';
+				ctx.fillText(ledLabels[i], lx + ledSpacing * 0.2, ledRow + lr * 2.2);
+				ctx.textAlign = 'left';
+			}
+
+			//drive alti x 2
+			for (let i = 0; i < 2; i++) {
+				const by = s * 0.28 + i * s * 0.1;
+				ctx.fillStyle = '#111';
+				ctx.beginPath();
+				ctx.roundRect(s * 0.04, by, s * 0.92, s * 0.085, 3);
+				ctx.fill();
+				ctx.strokeStyle = '#333';
+				ctx.lineWidth = 0.5;
+				ctx.stroke();
+
+				ctx.fillStyle = '#333';
+				ctx.fillRect(s * 0.73, by + s * 0.02, s * 0.06, s * 0.045);
 				
-				ctx.shadowBlur = 0;
-			} else {
-				// Server Spento: solo un piccolo LED rosso di standby
-				ctx.fillStyle = colors.redOff; // Rosso spento
-				if (i === 0) ctx.fillStyle = colors.redOn; // Solo il primo ha il power standby
-				//ctx.beginPath(); ctx.arc(s - ledSpacing * 4, uy + unitHeight*0.5, ledRadius, 0, Math.PI*2); ctx.fill();
-				ctx.fillRect(s-ledSpacing*4, ledy, ledw, ledh);
+				const driveLed = i === 0
+					? ((Math.sin(flowOffset * 1.8 + i) > 0.3) ? colors.orangeOn : colors.orangeOff)
+					: colors.orangeOff;
+				ctx.beginPath();
+				ctx.arc(s * 0.83, by + s * 0.04, s * 0.012, 0, Math.PI * 2);
+				ctx.fillStyle = driveLed;
+				ctx.fill();
+
+				ctx.fillStyle = '#999';
+				ctx.font = `${s * 0.03}px monospace`;
+				ctx.fillText(i === 0 ? 'BD-ROM' : 'TAPE', s * 0.06, by + s * 0.075);
+			}
+
+			//drive hdd x 4
+			for (let i = 0; i < 4; i++) {
+				const hy = s * 0.5 + i * s * 0.075;
+				ctx.fillStyle = '#111';
+				ctx.beginPath();
+				ctx.roundRect(s * 0.04, hy, s * 0.92, s * 0.065, 2);
+				ctx.fill();
+				
+				const hddActive = connected && (Math.sin(flowOffset * (1.5 + i * 0.7) + i * 2.3) > 0.4);
+				ctx.beginPath();
+				ctx.arc(s * 0.82, hy + s * 0.033, s * 0.011, 0, Math.PI * 2);
+				ctx.fillStyle = hddActive ? colors.orangeOn : colors.orangeOff;
+				ctx.fill();
+				if (hddActive) {
+					ctx.beginPath();
+					ctx.arc(s * 0.82, hy + s * 0.033, s * 0.005, 0, Math.PI * 2);
+					ctx.fillStyle = '#fff8';
+					ctx.fill();
+				}
+
+				ctx.fillStyle = '#999';
+				ctx.font = `${s * 0.03}px monospace`;
+				ctx.fillText(`HDD-${i}`, s * 0.06, hy + s * 0.05);
+			}
+
+			//pannello con pulsantoni blu + due ruote
+			const panY = s * 0.82;
+			ctx.fillStyle = '#111';
+			ctx.fillRect(s * 0.04, panY, s * 0.92, s * 0.085);
+			
+			for (let u = 0; u < 5; u++) {
+				let isOn = u % 3 !== 0;
+				ctx.fillStyle = '#333';
+				ctx.fillRect(s * 0.06 + u * s * 0.08, panY + s * 0.018, s * 0.05, s * 0.05);
+				ctx.fillStyle = isOn ? colors.blueOn : colors.blueOff;
+				ctx.fillRect(s * 0.06 + u * s * 0.08, panY + (isOn ? s * 0.06 : s * 0.02), s * 0.05, s * 0.01);
+			}
+
+			//doppio connettore tondo (uhauhauha)
+			for (let j = 0; j < 2; j++) {
+				ctx.beginPath();
+				ctx.arc(s * 0.5 + j * s * 0.06, panY + s * 0.042, s * 0.018, 0, Math.PI * 2);
+				ctx.fillStyle = '#111';
+				ctx.fill();
+				ctx.strokeStyle = j === 0 ? '#090' : '#933';
+				ctx.lineWidth = s * 0.01;
+				ctx.stroke();
+			}
+
+			//barra di led fricchettona
+			const barX = s * 0.64;
+			const barY = s * 0.85;
+			for (let b = 0; b < 4; b++) {
+				const active = connected && (Math.sin(flowOffset * (0.5 + b * 0.3) + b) > 0.2 + b * 0.04);
+				ctx.fillStyle = active ? colors.greenOn : colors.greenOff;
+				ctx.beginPath();
+				ctx.roundRect(barX + b * (s * 0.08), barY, s * 0.06, s * 0.022, 1);
+				ctx.fill();
+			}
+		} else {
+			// CASE ESTERNO (RACK)
+			// Effetto metallo spazzolato scuro
+			let caseGrad = ctx.createLinearGradient(0 - s*0.08, 0, s + s*0.08, s);
+			caseGrad.addColorStop(0, "#334155");
+			caseGrad.addColorStop(0.5, "#1e293b");
+			caseGrad.addColorStop(1, "#0f172a");
+			
+			ctx.fillStyle = caseGrad;
+			ctx.beginPath();
+			ctx.roundRect(0, 0, s, s, s * 0.02);
+			ctx.fill();
+
+			// Maniglie frontali (dettaglio di classe)
+			ctx.fillStyle = '#000';//colors.darkSilver;
+			//sx
+			ctx.beginPath();
+			ctx.roundRect(s*0.02, s*0.05, s*0.02, s*0.88, s*0.04);
+			ctx.fill();
+			//dx
+			ctx.beginPath();
+			ctx.roundRect(s*0.96, s*0.05, s*0.02, s*0.88, s*0.04);
+			ctx.fill();
+
+			// UNITA' SERVER (Blade)
+			const units = 4;
+			const unitHeight = (s - s*0.10) / units;
+			
+			
+			//righe ventilazione
+			let sizeRighe = Math.max(0.6, s*0.01);//larghezza righe
+			let deltaRighe = sizeRighe * 2.5;//spazio tra righe
+			ctx.lineWidth = sizeRighe;
+			
+			//led di stato
+			const ledRadius = Math.max(1, s * 0.02); // Scala i LED con la scocca
+			const ledSpacing = s * 0.1;
+			const ledw = ledRadius * 1.5;
+			const ledh = ledRadius * 1.5;
+			
+			const unitsToShutdown = [];
+			const currentCycle = flowOffset * 0.0001;
+			unitsToShutdown[0] = Math.floor(currentCycle * 73.1 + 1 ) % 10;
+			unitsToShutdown[1] = Math.floor(currentCycle * 73.1 + 42.3 ) % 10;
+			
+			
+			for (let i = 0; i < units; i++) {
+			
+				let uy = s*0.05 + (i * unitHeight);
+				let ledy = uy + unitHeight*0.45;
+				
+				// Slot dell'unità
+				ctx.fillStyle = "#020617";
+				ctx.fillRect(s*0.06, uy, s - s*0.12, unitHeight - s*0.02);
+				
+				// Griglia di ventilazione (30 righe)
+				ctx.strokeStyle = colors.midGray;
+				for(let gx = s*0.08; gx < s * 0.94; gx += deltaRighe) {
+					ctx.beginPath();
+					ctx.moveTo(gx, uy + s*0.02);
+					ctx.lineTo(gx, uy + unitHeight - s*0.04);
+					ctx.stroke();
+				}
+				
+				if (connected && unitsToShutdown.indexOf(i) === -1) {
+					// LED Verde (Power/Link) - Fisso o lampeggio lento
+					ctx.fillStyle = (Math.sin(flowOffset * 0.1 + i) > -0.8) ? colors.greenOn : colors.greenOff;
+					ctx.shadowBlur = 5; ctx.shadowColor = colors.greenOn;
+					//ctx.beginPath(); ctx.arc(s - ledSpacing * 4, uy + unitHeight*0.5, ledRadius, 0, Math.PI*2); ctx.fill();
+					ctx.fillRect(s-ledSpacing*4, ledy, ledw, ledh);
+
+					// LED Arancione (Disk Activity) - Lampeggio frenetico
+					ctx.fillStyle = (Math.sin(flowOffset * 0.8 + i*2) > 0) ? colors.orangeOn : colors.orangeOff;
+					ctx.shadowColor = colors.orangeOn;
+					//ctx.beginPath(); ctx.arc(s - ledSpacing * 3, uy + unitHeight*0.5, ledRadius, 0, Math.PI*2); ctx.fill();
+					ctx.fillRect(s-ledSpacing*3, ledy, ledw, ledh);
+					
+					// LED Blu/Azzurro (Network Dati) - Lampeggio randomico
+					ctx.fillStyle = (Math.cos(flowOffset * 1.2 + i) > 0.3) ? colors.blueOn : colors.blueOff;
+					ctx.shadowColor = colors.blueOn;
+					//ctx.beginPath(); ctx.arc(s - ledSpacing * 2, uy + unitHeight*0.5, ledRadius, 0, Math.PI*2); ctx.fill();
+					ctx.fillRect(s-ledSpacing*2, ledy, ledw, ledh);
+					
+					ctx.shadowBlur = 0;
+				} else {
+					// Server Spento: solo un piccolo LED rosso di standby
+					ctx.fillStyle = colors.redOff; // Rosso spento
+					if (i === 0) ctx.fillStyle = colors.redOn; // Solo il primo ha il power standby
+					//ctx.beginPath(); ctx.arc(s - ledSpacing * 4, uy + unitHeight*0.5, ledRadius, 0, Math.PI*2); ctx.fill();
+					ctx.fillRect(s-ledSpacing*4, ledy, ledw, ledh);
+				}
 			}
 		}
 	} else if (type.id === 'desktop') {
@@ -2334,9 +2660,9 @@ function drawPC(x, y, tile) {
 		ctx.fillRect(s*0.15, s*0.73, s*0.1, s*0.1);
 		ctx.fillStyle = "#44ee44";
 		ctx.fillRect(s*0.17, s*0.75, s*0.05, s*0.02);
-		ctx.fillStyle = "#eeee44";
+		ctx.fillStyle = "#bb9944";
 		ctx.fillRect(s*0.16, s*0.77, s*0.05, s*0.02);
-		ctx.fillStyle = "#ee44ee";
+		ctx.fillStyle = "#bb44bb";
 		ctx.fillRect(s*0.17, s*0.79, s*0.05, s*0.02);
 		
 		
@@ -2836,7 +3162,7 @@ function drawPC(x, y, tile) {
 		ctx.fill();
 		
 		ctx.fillStyle = "#fff";
-		ctx.font = `bold ${s*0.07}px sans-serif`;
+		ctx.font = `${s*0.07}px sans-serif`;
 		ctx.textAlign = "center";
 		ctx.textBaseline = "middle";
 		ctx.fillText("A", s*0.9, s*0.6);
@@ -3499,7 +3825,7 @@ function drawPC(x, y, tile) {
 		ctx.fillStyle = connected ? '#d4c5a9' : '#ddd';
 		ctx.textAlign = 'center';
 		ctx.font = `${s*0.1}px sans-serif`;
-		ctx.fillText('Y',s*0.5,s*0.43);
+		ctx.fillText('Y',s*0.5,s*0.44);
 		
 		
 		// LED POWER
@@ -3994,7 +4320,7 @@ canvas.addEventListener('pointermove', e => {
     if (grid[gy] && grid[gy][gx]) {
         const cell = grid[gy][gx];
         
-        // Aggiorna contenuto
+		// Aggiorna contenuto
         tooltip.innerHTML = `<strong>${cell.type === 'server' ? 'Server' : cell.subType ? cell.subType.desc : 'Link'}</strong>`;
         
         // Posiziona la tooltip vicino al mouse (offset di 15px per non coprire il cursore)
