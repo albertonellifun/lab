@@ -3269,6 +3269,13 @@ function drawPC(x, y, tile) {
 			ctx.lineCap = "butt";
 		}
 		
+		//scritta hantarex
+		ctx.fillStyle = '#543';
+		ctx.fillRect(s*0.1, s*0.63, s*0.23, s*0.04);
+		ctx.fillStyle = '#987';
+		ctx.font = `${s*0.04}px sans-serif`;
+		ctx.fillText('HANTAREX',s*0.11,s*0.66);
+		
 		//CASE alluminio
 		ctx.beginPath();
 		ctx.fillStyle = "#e8d7c3";
@@ -3291,9 +3298,13 @@ function drawPC(x, y, tile) {
 		ctx.roundRect(-s*0.06,s*0.92,s*1.12,s*0.08,[0,0,s*0.04,s*0.04]);
 		ctx.fill();
 		
-		//scritta logata shuttle [-
-		ctx.fillStyle = "#444";
-		ctx.fillRect(s*0.15, s*0.81, s*0.1, s*0.05);
+		//scritta logata shuttle
+		ctx.fillStyle = '#333';
+		ctx.fillRect(s*0.15, s*0.81, s*0.14, s*0.04);
+		ctx.fillStyle = '#666';
+		ctx.font = `${s*0.04}px sans-serif`;
+		ctx.fillText('shuttle',s*0.16,s*0.84);
+		
 		
 		// LED INDICATORE (angolo inferiore destro)
 		ctx.fillStyle = connected ? "#ff5e22" : "#0d3a0d";
@@ -3302,11 +3313,12 @@ function drawPC(x, y, tile) {
 		ctx.fill();
 		if (connected && Math.sin(flowOffset*0.15) > -0.5) drawLedAloneCircle(s*0.1, s*0.83, s*0.018, '#ff5e22');
 		
-		
+		//led fisso monitor
+		ctx.fillStyle = connected ? "#ff5e22" : "#0d3a0d";
 		ctx.beginPath();
 		ctx.arc(s*0.8, s*0.65, s*0.02, 0, Math.PI*2);
 		ctx.fill();
-		if (connected && Math.sin(flowOffset*0.15) > -0.5) drawLedAloneCircle(s*0.8, s*0.65, s*0.02, '#ff5e22');
+		if (connected) drawLedAloneCircle(s*0.8, s*0.65, s*0.02, '#ff5e22');
 	}
 	else if (type.id === 'minipc') {
 		// SCOCCA
