@@ -207,6 +207,7 @@ const HW_TYPES = [
 	{id:'imacg3',			variant:'imacg3',        desc:'iMac G3 Blueberry Cyan from 1998'},
 	{id:'imacintel',		variant:'imacintel',     desc:'iMac Intel from 2020'},
 	{id:'starlc10',         variant:'starlc10',      desc:'Star Lc-10 Multifont from 1988'},
+	{id:'c64',				variant:'c64',           desc:'Commodore C-64 from 1984'},
 	//color variants
 	{id:'notebook',			variant:'notebookwhite', desc:'Generic White Notebook'},
 	{id:'router',			variant:'routerwhite',   desc:'Router Wi-Fi TpLink White'},
@@ -1961,14 +1962,16 @@ function drawPC(x, y, tile) {
 		ctx.closePath();
 		ctx.fill();
 
-		// Dettaglio tastiera (puntini) - SCALATI
-		const keySize = s * 0.035;
-		const keySpacing = s * 0.1;
-		const keyRowSpacing = s * 0.04;
+		// Dettaglio tastiera (prova prospettiva)
+		const keySizeX = s * 0.075;
+		const keySizeY = s * 0.035;
+		const keySpacing = s * 0.12;
+		const keyRowSpacing = s * 0.05;
 		ctx.fillStyle = "rgba(0,0,0,0.2)";
-		for(let i=0; i<8; i++) {
-			for(let j=0; j<4; j++) {
-				ctx.fillRect(s*0.15 + (i*keySpacing), s*0.65 + (j*keyRowSpacing), keySize, keySize);
+		for(let j=0; j<3; j++) {
+			for(let i=0; i<7; i++) {						
+				const perspective = j * s * 0.008;
+				ctx.fillRect(s*0.12 + (i*keySpacing) - perspective, s*0.65 + (j*keyRowSpacing), keySizeX + perspective * 2, keySizeY);
 			}
 		}
 		// Touchpad - SCALATO
@@ -1977,11 +1980,9 @@ function drawPC(x, y, tile) {
 		//led all'angolino
 		const led1On = connected && Math.cos(flowOffset*0.52) > 0.2;
 		ctx.fillStyle = led1On ? colors.whiteOn : colors.whiteOff;
-		ctx.beginPath();
-		ctx.arc(s * 0.87, s * 0.65, s * 0.012, 0, Math.PI*2);
-		ctx.fill();
+		ctx.fillRect(s*0.12 + (6*keySpacing), s*0.65, keySizeX, keySizeY);
 		//prova blur semplificato
-		if(led1On) drawLedAloneCircle(s * 0.87, s * 0.65, s * 0.012, colors.whiteOn);
+		if(led1On) drawLedAloneRect(s*0.12 + (6*keySpacing), s*0.65, keySizeX, keySizeY, colors.whiteOn);
 	} 
 	else if (type.id === 'tablet') {
 		// SCOCCA
@@ -4260,6 +4261,94 @@ function drawPC(x, y, tile) {
 		//prova blur semplificato
 		if (connected && blinkBlue) drawLedAloneRect(s*0.88, s*0.43, s*0.04, s*0.05, colors.blueOn);
 		
+	}
+	else if (type.id === 'c64') {
+		// Case
+		let grad = ctx.createLinearGradient(0, 0, s, s);
+		grad.addColorStop(0, "#eec"); 
+		grad.addColorStop(1, "#bba");
+		//corpo con bordo
+		ctx.lineWidth = s*0.01;
+		ctx.strokeStyle = '#999';
+		ctx.fillStyle = grad;
+		ctx.beginPath();
+		ctx.roundRect(0, s*0.18, s, s*0.55, s*0.02);
+		ctx.fill();
+		ctx.stroke();
+		
+		//righe sotto il logo
+		ctx.fillStyle = '#aaa';
+		ctx.fillRect(s*0,s*0.21,s,s*0.02);
+		ctx.fillRect(s*0,s*0.24,s,s*0.02);
+		ctx.fillRect(s*0,s*0.27,s,s*0.02);
+		ctx.fillRect(s*0,s*0.30,s,s*0.02);
+		
+		//bg scritta c + 64
+		ctx.fillStyle = '#333';
+		ctx.beginPath();
+		ctx.roundRect(s*0.05,s*0.22,s*0.60,s*0.08,s*0.08);
+		ctx.fill();
+		//bg power
+		ctx.beginPath();
+		ctx.roundRect(s*0.72,s*0.22,s*0.25,s*0.08,s*0.08);
+		ctx.fill();
+		//arcobaleno
+		ctx.fillStyle = '#f00';
+		ctx.fillRect(s*0.44,s*0.23,s*0.1,s*0.015);
+		ctx.fillStyle = '#fc8';
+		ctx.fillRect(s*0.44,s*0.245,s*0.1,s*0.015);
+		ctx.fillStyle = '#0f0';
+		ctx.fillRect(s*0.44,s*0.260,s*0.1,s*0.015);
+		ctx.fillStyle = '#06f';
+		ctx.fillRect(s*0.44,s*0.275,s*0.1,s*0.015);
+				
+		//scritta c + 64
+		ctx.fillStyle = '#fff';
+		ctx.font = `${s*0.05}px sans-serif`;
+		ctx.textAlign = "left";
+		ctx.textBaseline = "middle";
+		ctx.fillText("C= commodore          64", s*0.08, s*0.26);
+		//power
+		ctx.font = `${s*0.03}px sans-serif`;
+		ctx.fillText("POWER", s*0.75, s*0.26);
+		
+		//setup blinking
+		const blinkRed = Math.sin(flowOffset * 0.05) > -0.8;
+		
+		// LED 1
+		ctx.fillStyle = connected && blinkRed ? colors.redOn : colors.redOff;
+		ctx.beginPath();
+		ctx.arc(s*0.92, s*0.26, s*0.025, 0, Math.PI * 2); 
+		ctx.fill();
+		//prova blur semplificato
+		if (connected && blinkRed) drawLedAloneCircle(s*0.92, s*0.26, s*0.025, colors.redOn);
+		
+		//bordo TASTIERA
+		ctx.strokeStyle = '#aaa';
+		ctx.lineWidth = s * 0.01;
+		ctx.beginPath();
+		ctx.roundRect(s*0.03,s*0.36,s*0.94,s*0.33, s*0.04);
+		ctx.stroke();
+		
+		//TASTIERA MARRO' A SX
+		ctx.fillStyle = '#320';
+		// Dettaglio tastiera
+		const keySizeX = s * 0.08;
+		const keySizeY = s * 0.05;
+		const keySpacing = s * 0.085;
+		const keyRowSpacing = s * 0.055;
+		for(let j=0; j<4; j++) {
+			for(let i=0; i<8; i++) {						
+				ctx.fillRect(s*0.08 + (i*keySpacing), s*0.4 + (j*keyRowSpacing), keySizeX, keySizeY);
+			}
+		}
+		//BARRA SPAZIATRICE
+		ctx.fillRect(s*0.22,s*0.62,s*0.4,keySizeY);
+		//TASTIERA GRIGIO' A DX
+		ctx.fillStyle = '#666';
+		for(let j=0; j<4; j++) {
+			ctx.fillRect(s*0.84, s*0.4 + (j*keyRowSpacing), keySizeX, keySizeY);
+		}
 	}	
 	
 	ctx.restore();
