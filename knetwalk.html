@@ -1214,15 +1214,20 @@ function drawTileOLD(tile) {
 	let hue = (flowOffset * 2 + 240) % 360; // CALCOLO DEL COLORE DINAMICO RIMOSSO - TODO!
     let dynamicColor = `hsl(${hue}, 100%, 50%)`;
     
-    ctx.strokeStyle = tile.connected ? colors.activeColor //dynamicColor
-										: colors.inactiveColor;
+    ctx.strokeStyle = tile.connected ? 
+		colors.activeColor 
+		//dynamicColor
+		: colors.inactiveColor;
+		
     ctx.lineWidth = CELL_SIZE * 0.08;
     ctx.lineCap = "butt";//"round";
     
     // Effetto bagliore se connesso
     if(tile.connected) {
         ctx.shadowBlur = 20;
-		ctx.shadowColor = colors.activeColor; //dynamicColor
+		ctx.shadowColor = 
+			colors.activeColor; 
+			//dynamicColor;
     } else {
         ctx.shadowBlur = 0;
     }
@@ -1230,8 +1235,10 @@ function drawTileOLD(tile) {
 	//fix round / butt con una palla al centro della tile
 	ctx.beginPath();
 	ctx.arc(x+mid, y+mid, CELL_SIZE * 0.04, 0, Math.PI*2);
-	ctx.fillStyle = tile.connected ? colors.activeColor //dynamicColor
-									: colors.inactiveColor;
+	ctx.fillStyle = tile.connected ? 
+						colors.activeColor 
+						//dynamicColor
+						: colors.inactiveColor;
 	ctx.fill();
 	
 	
@@ -4318,16 +4325,13 @@ function drawPC(x, y, tile) {
 		ctx.font = `${s*0.03}px sans-serif`;
 		ctx.fillText("POWER", s*0.75, s*0.26);
 		
-		//setup blinking
-		const blinkRed = Math.sin(flowOffset * 0.05) > -0.8;
-		
 		// LED 1
-		ctx.fillStyle = connected && blinkRed ? colors.redOn : colors.redOff;
+		ctx.fillStyle = connected ? colors.redOn : colors.redOff;
 		ctx.beginPath();
 		ctx.arc(s*0.92, s*0.26, s*0.025, 0, Math.PI * 2); 
 		ctx.fill();
 		//prova blur semplificato
-		if (connected && blinkRed) drawLedAloneCircle(s*0.92, s*0.26, s*0.025, colors.redOn);
+		if (connected) drawLedAloneCircle(s*0.92, s*0.26, s*0.025, colors.redOn);
 		
 		//bordo TASTIERA
 		ctx.strokeStyle = '#aaa';
@@ -4526,7 +4530,7 @@ function drawPC(x, y, tile) {
 		//usbone di lato alta
 		ctx.fillStyle = '#999';
 		ctx.fillRect(s*0.80, s*0.40, s*0.18, s*0.20);
-		ctx.fillStyle = '#26f';
+		ctx.fillStyle = '#18f';
 		//C sopra
 		ctx.fillRect(s*0.92, s*0.42, s*0.03, s*0.02);
 		ctx.fillRect(s*0.92, s*0.47, s*0.03, s*0.02);
@@ -4539,7 +4543,7 @@ function drawPC(x, y, tile) {
 		//usbona di lato bassa
 		ctx.fillStyle = '#999';
 		ctx.fillRect(s*0.80, s*0.70, s*0.18, s*0.20);
-		ctx.fillStyle = '#26f';
+		ctx.fillStyle = '#18f';
 		//C sopra
 		ctx.fillRect(s*0.92, s*0.72, s*0.03, s*0.02);
 		ctx.fillRect(s*0.92, s*0.77, s*0.03, s*0.02);
