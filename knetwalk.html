@@ -209,6 +209,7 @@ const HW_TYPES = [
 	{id:'starlc10',         variant:'starlc10',      desc:'Star Lc-10 Multifont from 1988'},
 	{id:'c64',				variant:'c64',           desc:'Commodore C-64 from 1984'},
 	{id:'raspberrypi',		variant:'raspberrypi',   desc:'Raspberry Pi 4 Model B from 2020'},
+	{id:'zxspectrum',		variant:'zxspectrum',	 desc:'Sinclair ZX Spectrum from 1983'},
 	//color variants
 	{id:'notebook',			variant:'notebookwhite', desc:'Generic White Notebook'},
 	{id:'router',			variant:'routerwhite',   desc:'Router Wi-Fi TpLink White'},
@@ -225,6 +226,8 @@ const HW_TYPES = [
 	{id:'imacg3',			variant:'imacg3green',   desc:'iMac G3 Lime Green from 1999'},
 	{id:'imacg3',			variant:'imacg3gray',    desc:'iMac G3 Graphite Gray from 2000'},
 	{id:'imacg3',			variant:'imacg3blue',    desc:'iMac G3 Indigo Blue from 2000'},
+	
+	
 	];
 
 //Palette realistica condivisa
@@ -1395,7 +1398,7 @@ function drawPC(x, y, tile) {
 			ctx.fill();
 			
 			
-			// --- BARRA WAVEFORM AUDIO ---
+			// BARRA WAVEFORM AUDIO
 			const waveY = s * 0.64;
 			const bars = 10;
 			const bw = (s * 0.88) / bars - 1;
@@ -1434,7 +1437,7 @@ function drawPC(x, y, tile) {
 				ctx.fillRect(s * 0.09 + tw + 2, dispY + s * 0.015, s * 0.012, s * 0.032);
 			}
 
-			// --- PANNELLO LED INFERIORE ---
+			// PANNELLO LED INFERIORE
 			const ledPanY = s * 0.8;
 			const ledDefs = [
 				{ label: 'LIFE', c: '#ff2222', freq: 0.03 },
@@ -1539,7 +1542,7 @@ function drawPC(x, y, tile) {
 			ctx.font = `${s * 0.05}px monospace`;
 			ctx.fillText(`TEMP ${tempVal}°C    LOAD ${loadVal}%`, dispX + s * 0.03, dispY + dispH * 0.68);
 
-			// --- STRISCIA 8 LED STATUS ---
+			// STRISCIA 8 LED STATUS
 			const ledRow = s * 0.215;
 			const ledLabels = ['PWR', 'HDD', 'NET', 'CPU', 'MEM', 'FAN', 'ERR', 'SYS'];
 			const pwrOn = true;
@@ -4583,6 +4586,117 @@ function drawPC(x, y, tile) {
 		ctx.fillText("PWR", s * 0.725, s * 0.63);
 		ctx.fillText("ACT", s * 0.725, s * 0.7);
 	}	
+	
+	else if (type.id === 'zxspectrum') {
+		//case nero
+		const caseGrad = ctx.createLinearGradient(0, 0, 0, s);
+		caseGrad.addColorStop(0, "#2a2a2a");
+		caseGrad.addColorStop(1, "#111");
+		ctx.fillStyle = caseGrad;
+		ctx.lineWidth = s * 0.012;
+		ctx.strokeStyle = '#000';
+		ctx.beginPath();
+		ctx.roundRect(s * 0.03, s * 0.08, s * 0.94, s * 0.84, s * 0.06);
+		ctx.fill();
+		ctx.stroke();
+
+		//arcobaleno
+		const rainbow = ['#cc0000','#ff6600','#ffcc00','#339933','#3399ff','#6633cc','#cc0099'];
+		const bandX = s * 0.75;
+		const bandY = s * 0.85;
+		const bandW = s * 0.22;
+		ctx.lineWidth = s*0.01;
+		for (let i = 0; i < rainbow.length; i++) {
+			ctx.strokeStyle = rainbow[i];
+			ctx.beginPath();
+			ctx.moveTo(bandX + s * i * 0.01, bandY);
+			ctx.lineTo(bandX+bandW, bandY+  s * i * 0.01 - s*0.3);
+			ctx.stroke();
+		}
+		// bordo destro del case che "taglia" la banda
+		ctx.fillStyle = '#111';
+		ctx.beginPath();
+		ctx.roundRect(s * 0.03, s * 0.08, s * 0.94, s * 0.84, s * 0.06);
+		// clip trick: ridisegno solo gli angoli arrotondati sopra la banda
+		// Maschera angoli su banda: rettangolo nero sopra bordo arrotondato dx
+		// (gli angoli del roundRect coprono già la banda oltre il bordo)
+
+		//logo
+		ctx.textAlign = "left";
+		ctx.textBaseline = "middle";
+		ctx.fillStyle = '#000';
+		ctx.font = `bold ${s * 0.12}px sans-serif`;
+		ctx.fillText("sinciair", s * 0.04, s * 0.14);
+		
+		ctx.fillStyle = '#ccc';
+		ctx.font = `${s * 0.04}px sans-serif`;
+		ctx.fillText("ZX Spectrum", s * 0.06, s * 0.2);
+		
+		//tasti in gomma (5 righe)
+		const rows = [
+			{ keys: 10, y: 0.42, labels: ['1','2','3','4','5','6','7','8','9','0'] },
+			{ keys: 10, y: 0.53, labels: ['Q','W','E','R','T','Y','U','I','O','P'] },
+			{ keys: 10, y: 0.64, labels: ['A','S','D','F','G','H','J','K','L','\u23CE'] },
+			{ keys: 9,  y: 0.75, labels: ['Z','X','C','V','B','N','M','.','SPC'] },
+		];
+
+		const keyW = s * 0.073;
+		const keyH = s * 0.075;
+		
+		for (const row of rows) {
+			const totalW = row.keys * keyW + (row.keys - 1) * s * 0.008;
+			const startX = (s - totalW) * 0.5;
+			for (let i = 0; i < row.keys; i++) {
+				const kx = startX + i * (keyW + s * 0.008);
+				const ky = s * row.y;
+
+				// corpo tasto (sfumato, effetto gomma)
+				ctx.fillStyle = '#333';
+				ctx.strokeStyle = '#555';
+				ctx.lineWidth = s * 0.005;
+				ctx.fillRect(kx, ky, keyW, keyH);
+				ctx.strokeRect(kx, ky, keyW, keyH);
+				
+				// etichetta tasto
+				const lbl = row.labels[i] || '';
+				ctx.fillStyle = '#eeeeee';
+				ctx.font = `${s * 0.035}px monospace`;
+				ctx.fillText(lbl, kx + keyW * 0.5, ky + keyH * 0.5);
+
+				// keyword colorata sotto (effetto Spectrum: BASIC keywords sui tasti)
+				const keywords = ['NEW','SAVE','LOAD','RUN','RND','RETURN','IF','INPUT','POKE','PRINT'];
+				if (i < keywords.length && row.y === 0.42) {
+					ctx.fillStyle = '#ff4444';
+					ctx.font = `${s * 0.018}px monospace`;
+					ctx.fillText(keywords[i], kx + keyW * 0.4, ky + keyH * 0.82);
+				}
+			}
+		}
+
+		//Tasto CAPS SHIFT (largo, sinistra riga Z)
+		const shiftW = keyW * 1.2;
+		const shiftX = (s - (9 * keyW + 8 * s * 0.008)) * 0.5 - shiftW - s * 0.008;
+		const shiftY = s * 0.75;
+		
+		ctx.fillStyle = '#333';
+		ctx.strokeStyle = '#555';
+		ctx.lineWidth = s * 0.005;
+		ctx.fillRect(shiftX, shiftY, shiftW, keyH);
+		ctx.strokeRect(shiftX, shiftY, shiftW, keyH);
+		
+		ctx.fillStyle = '#eee';
+		ctx.font = `${s * 0.025}px monospace`;
+		ctx.fillText("CAPS", shiftX + shiftW * 0.4, shiftY + keyH * 0.38);
+		ctx.fillText("SHIFT", shiftX + shiftW * 0.4, shiftY + keyH * 0.68);
+
+		//LED (verde, in alto vicino al logo)
+		const blinkGreen = Math.sin(flowOffset * 0.05) > -0.8;
+		ctx.fillStyle = connected ? colors.greenOn : colors.greenOff;
+		ctx.beginPath();
+		ctx.arc(s * 0.35, s * 0.2, s * 0.018, 0, Math.PI * 2);
+		ctx.fill();
+		if (connected) drawLedAloneCircle(s * 0.35, s * 0.2, s * 0.018, colors.greenOn);
+	}
 	
 	ctx.restore();
 }
