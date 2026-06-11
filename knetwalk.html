@@ -3514,34 +3514,34 @@ function drawPC(x, y, tile) {
 		ctx.strokeStyle = 'rgba(0,0,0,0.5)';
 		ctx.lineWidth = s*0.02;
 		ctx.beginPath();
-		ctx.roundRect(s*0.1, s*0.1, s*0.8, s*0.5, [s*0.2,s*0.1,s*0.04,s*0.04]);
+		ctx.roundRect(s*0.1, s*0.1, s*0.8, s*0.5, [s*0.15,s*0.15,s*0.08,s*0.08]);
 		ctx.closePath();
 		ctx.fill();
 		ctx.stroke();
 		
 		//piedini
-		ctx.fillStyle = '#111';
-		ctx.fillRect(s*0.2,s*0.6,s*0.1,s*0.06);
-		ctx.fillRect(s*0.7,s*0.6,s*0.1,s*0.06);
+		ctx.fillStyle = '#222';
+		ctx.fillRect(s*0.2,s*0.6,s*0.1,s*0.05);
+		ctx.fillRect(s*0.7,s*0.6,s*0.1,s*0.05);
 		
 		//GRIGLIA SPEAKER (SX)
 		ctx.fillStyle = '#111';
-		ctx.fillRect(s*0.16,s*0.24,s*0.04,s*0.21);
-		ctx.fillRect(s*0.22,s*0.23,s*0.04,s*0.22);
-		ctx.fillRect(s*0.28,s*0.22,s*0.04,s*0.23);
-		ctx.fillRect(s*0.34,s*0.21,s*0.04,s*0.24);
-		ctx.fillRect(s*0.40,s*0.20,s*0.04,s*0.25);
+		ctx.fillRect(s*0.16,s*0.22,s*0.04,s*0.26);
+		ctx.fillRect(s*0.22,s*0.18,s*0.04,s*0.30);
+		ctx.fillRect(s*0.28,s*0.16,s*0.04,s*0.32);
+		ctx.fillRect(s*0.34,s*0.15,s*0.04,s*0.33);
+		ctx.fillRect(s*0.40,s*0.15,s*0.04,s*0.33);
 		
 		//scritte
-		ctx.fillStyle = "rgba(0,0,0,0.94)";
+		ctx.fillStyle = "#111";
 		ctx.font = `${s*0.08}px serif`;
 		ctx.textAlign = "left";
-		ctx.fillText("fm radio", s*0.16, s*0.52);
+		ctx.fillText("fm radio", s*0.16, s*0.55);
 		
 		
 		// QUADRANTE FM (DX)
 		const dialX = s*0.7;
-		const dialY = s*0.35;
+		const dialY = s*0.32;
 		const dialRadius = s*0.18;
 		
 		// Sfondo quadrante (colore arancio/oro)
@@ -3573,10 +3573,10 @@ function drawPC(x, y, tile) {
 		ctx.font = `${s*0.05}px serif`;
 		ctx.textAlign = "center";
 		ctx.textBaseline = "middle";
-		const freqs = [90, 94, 98, 102, 106, 110];
+		const freqs = [88, 92, 96, 100, 104, 108];
 		freqs.forEach((freq, idx) => {
-			const angle = (idx / freqs.length) * Math.PI * 2;
-			const labelRadius = dialRadius * 0.75;
+			const angle = (idx / freqs.length) * Math.PI * 2 + Math.PI * 0.66;
+			const labelRadius = dialRadius * 0.7;
 			const lx = dialX + Math.cos(angle) * labelRadius;
 			const ly = dialY + Math.sin(angle) * labelRadius;
 			ctx.fillText(freq.toString(), lx, ly);
@@ -3587,7 +3587,7 @@ function drawPC(x, y, tile) {
 		for(let i = 0; i < 24; i++) {
 			const angle = (i / 24) * Math.PI * 2;
 			const r1 = dialRadius * 0.95;
-			const r2 = dialRadius * 0.85;
+			const r2 = dialRadius * (i%4 === 0 ? 0.80 : 0.85);
 			const x1 = dialX + Math.cos(angle) * r1;
 			const y1 = dialY + Math.sin(angle) * r1;
 			const x2 = dialX + Math.cos(angle) * r2;
@@ -3622,15 +3622,15 @@ function drawPC(x, y, tile) {
 		ctx.fill();
 		
 		// Label "FM" sotto quadrante
-		ctx.fillStyle = "#333";
-		ctx.font = `bold ${s*0.07}px serif`;
-		ctx.textAlign = "center";
-		ctx.fillText("R919", dialX, dialY + dialRadius + s*0.04);
+		ctx.fillStyle = "#111";
+		ctx.font = `${s*0.06}px serif`;
+		ctx.textAlign = "left";
+		ctx.fillText("R919", dialX - s * 0.06, dialY + dialRadius + s*0.04);
 		
 		// MANOPOLE BASSE
-		const knobY = s*0.54;
-		const knob1X = s*0.56;
-		const knob2X = s*0.84;
+		const knobY = s*0.52;
+		const knob1X = s*0.57;
+		const knob2X = s*0.83;
 		
 		[knob1X, knob2X].forEach((knobX) => {
 			// Base manopola
@@ -3639,23 +3639,23 @@ function drawPC(x, y, tile) {
 			knobGrad.addColorStop(1, "#6B5203");
 			ctx.fillStyle = knobGrad;
 			ctx.beginPath();
-			ctx.arc(knobX, knobY, s*0.05, 0, Math.PI*2);
+			ctx.arc(knobX, knobY, s*0.04, 0, Math.PI*2);
 			ctx.fill();
 			
 			// Bordo manopola
-			ctx.strokeStyle = "#3D3D3D";
+			ctx.strokeStyle = "#432";
 			ctx.lineWidth = s*0.008;
 			ctx.beginPath();
-			ctx.arc(knobX, knobY, s*0.05, 0, Math.PI*2);
+			ctx.arc(knobX, knobY, s*0.04, 0, Math.PI*2);
 			ctx.stroke();
 			
 			// Indicatore manopola (lineetta)
-			ctx.strokeStyle = "#2a2a2a";
+			ctx.strokeStyle = "#333";
 			ctx.lineWidth = s*0.015;
 			ctx.lineCap = "round";
 			ctx.beginPath();
 			ctx.moveTo(knobX, knobY);
-			ctx.lineTo(knobX + Math.cos(-1.75) * s*0.04, knobY + Math.sin(-1.75) * s*0.04);
+			ctx.lineTo(knobX + Math.cos(-1.75) * s*0.03, knobY + Math.sin(-1.75) * s*0.03);
 			ctx.stroke();
 		});
 		ctx.lineCap = 'butt';
