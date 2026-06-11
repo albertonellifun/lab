@@ -2761,6 +2761,7 @@ function drawPC(x, y, tile) {
 		const gbcols = { 	gameboyred:  '#d20|#b10|#300|#000|#222',
 							gameboyblue: '#03d|#02b|#003|#000|#222',
 							gameboy:     '#f0f0f0|#b0b0b0|#333|#806|#a08'};
+		let isWhite = type.variant === 'gameboy';
 		let gbGrad = ctx.createLinearGradient(0, 0, s, s);
 		gbGrad.addColorStop(0, gbcols[type.variant].split('|')[0]);
 		gbGrad.addColorStop(1, gbcols[type.variant].split('|')[1]);
@@ -2783,7 +2784,7 @@ function drawPC(x, y, tile) {
 		ctx.fill();
 		
 		// Etichetta GAMEBOY
-		ctx.fillStyle = "#999";
+		ctx.fillStyle = isWhite ? '#999' : '#333';
 		ctx.font = `${s*0.04}px sans-serif`;
 		ctx.textAlign = "left";
 		ctx.textBaseline = "middle";
@@ -2820,6 +2821,7 @@ function drawPC(x, y, tile) {
 			ctx.textBaseline = "middle";
 			ctx.fillText("Nintendo", s*0.35, s*0.3);
 			ctx.strokeStyle = '#444';
+			ctx.lineWidth = s * 0.008;
 			ctx.beginPath();
 			ctx.roundRect(s*0.3,s*0.25,s*0.4,s*0.1,s*0.04);
 			ctx.stroke();
