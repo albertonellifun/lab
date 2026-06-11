@@ -1082,7 +1082,7 @@ function drawTileMotherboard(tile) {
 	ctx.fill();
 	
 	// Disegna icone
-    drawMotherboardPC(x, y, tile);
+    if(tile.type) drawMotherboardPC(x, y, tile);
 }
 
 function drawMotherboardPC(x, y, tile) {
@@ -1266,7 +1266,7 @@ function drawTileOLD(tile) {
 	
 	
 	// Disegna icone
-    drawPC(x, y, tile);
+    if(tile.type) drawPC(x, y, tile);
 }
 
 function drawTileANIMATE(tile) {
@@ -4592,8 +4592,9 @@ function drawPC(x, y, tile) {
 	else if (type.id === 'zxspectrum') {
 		//case nero
 		const caseGrad = ctx.createLinearGradient(0, 0, 0, s);
-		caseGrad.addColorStop(0, "#2a2a2a");
-		caseGrad.addColorStop(1, "#111");
+		caseGrad.addColorStop(0.0, "#333");
+		caseGrad.addColorStop(0.3, "#111");
+		caseGrad.addColorStop(1.0, "#111");
 		ctx.fillStyle = caseGrad;
 		ctx.lineWidth = s * 0.012;
 		ctx.strokeStyle = '#000';
