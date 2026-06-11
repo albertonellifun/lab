@@ -208,6 +208,7 @@ const HW_TYPES = [
 	{id:'imacintel',		variant:'imacintel',     desc:'iMac Intel from 2020'},
 	{id:'starlc10',         variant:'starlc10',      desc:'Star Lc-10 Multifont from 1988'},
 	{id:'c64',				variant:'c64',           desc:'Commodore C-64 from 1984'},
+	{id:'raspberrypi',		variant:'raspberrypi',   desc:'Raspberry Pi 4 Model B from 2020'},
 	//color variants
 	{id:'notebook',			variant:'notebookwhite', desc:'Generic White Notebook'},
 	{id:'router',			variant:'routerwhite',   desc:'Router Wi-Fi TpLink White'},
@@ -4349,6 +4350,238 @@ function drawPC(x, y, tile) {
 		for(let j=0; j<4; j++) {
 			ctx.fillRect(s*0.84, s*0.4 + (j*keyRowSpacing), keySizeX, keySizeY);
 		}
+	}
+	else if (type.id === 'raspberrypi') {
+		// scheda madre verdona
+		const boardGrad = ctx.createLinearGradient(0, 0, s, s);
+		boardGrad.addColorStop(0, "#373");
+		boardGrad.addColorStop(1, "#252");
+		ctx.fillStyle = boardGrad;
+		ctx.lineWidth = s * 0.015;
+		ctx.strokeStyle = '#242';
+		ctx.beginPath();
+		ctx.roundRect(s * 0.05, s * 0.05, s * 0.9, s * 0.9, s * 0.05);
+		ctx.fill();
+		ctx.stroke();
+		
+		// tracce pcb decorative
+		ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+		ctx.lineWidth = s * 0.004;
+		const traces = [
+			[0.12, 0.32, 0.77, 0.32], 
+			[0.12, 0.34, 0.77, 0.34],
+			
+			[0.12, 0.52, 0.37, 0.52], 
+			[0.12, 0.54, 0.37, 0.54],
+			
+			[0.37, 0.52, 0.47, 0.55], 
+			[0.37, 0.54, 0.47, 0.57],
+			
+			[0.47, 0.55, 0.77, 0.55], 
+			[0.47, 0.57, 0.77, 0.57],
+			
+			[0.35, 0.63, 0.35, 0.75], 
+			[0.40, 0.63, 0.40, 0.75],
+		];
+		for (const [x1,y1,x2,y2] of traces) {
+			ctx.beginPath();
+			ctx.moveTo(s*x1, s*y1);
+			ctx.lineTo(s*x2, s*y2);
+			ctx.stroke();
+		}
+
+
+		// GPIO
+		ctx.fillStyle = '#ca4';//dorato
+		const pinCols = 10;
+		const pinRows = 2;
+		const pinW = s * 0.015;
+		const pinH = s * 0.030;
+		const pinStartX = s * 0.18;
+		const pinStartY = s * 0.09;
+		const pinGapX = s * 0.05;
+		for (let r = 0; r < pinRows; r++) {
+			for (let c = 0; c < pinCols; c++) {
+				ctx.fillRect(pinStartX + c * pinGapX, pinStartY + r * (pinH + s * 0.01), pinW, pinH);
+			}
+		}
+		
+		//buchi MOBO
+		ctx.fillStyle = '#ca4';//dorati
+		ctx.beginPath();
+		ctx.arc(s*0.12,s*0.12,s*0.04,0,Math.PI*2);
+		ctx.fill();
+		ctx.beginPath();
+		ctx.arc(s*0.72,s*0.12,s*0.04,0,Math.PI*2);
+		ctx.fill();
+		ctx.beginPath();
+		ctx.arc(s*0.12,s*0.88,s*0.04,0,Math.PI*2);
+		ctx.fill();
+		ctx.beginPath();
+		ctx.arc(s*0.72,s*0.88,s*0.04,0,Math.PI*2);
+		ctx.fill();
+		
+		ctx.fillStyle = '#111';
+		ctx.beginPath();
+		ctx.arc(s*0.12,s*0.12,s*0.02,0,Math.PI*2);
+		ctx.fill();
+		ctx.beginPath();
+		ctx.arc(s*0.72,s*0.12,s*0.02,0,Math.PI*2);
+		ctx.fill();
+		ctx.beginPath();
+		ctx.arc(s*0.12,s*0.88,s*0.02,0,Math.PI*2);
+		ctx.fill();
+		ctx.beginPath();
+		ctx.arc(s*0.72,s*0.88,s*0.02,0,Math.PI*2);
+		ctx.fill();
+		
+		
+		// Raspberry Pi (testo)
+		ctx.fillStyle = '#beb';
+		ctx.font = `${s * 0.04}px sans-serif`;
+		ctx.textAlign = "center";
+		ctx.textBaseline = "middle";
+		ctx.fillText("Raspberry Pi 4 Model B", s * 0.45, s * 0.2);
+		
+		// CPU al centro
+		const chipGrad = ctx.createLinearGradient(s*0.25, s*0.35, s*0.55, s*0.65);
+		chipGrad.addColorStop(0, "#ccc");
+		chipGrad.addColorStop(1, "#888");
+		ctx.fillStyle = chipGrad;
+		ctx.strokeStyle = '#555';
+		ctx.lineWidth = s * 0.01;
+		ctx.beginPath();
+		ctx.roundRect(s * 0.17, s * 0.25, s * 0.27, s * 0.27, s * 0.04);
+		ctx.fill();
+		ctx.stroke();
+		// logo testo sul chip
+		ctx.fillStyle = '#888';
+		ctx.font = `bold ${s * 0.04}px sans-serif`;
+		ctx.textAlign = "center";
+		ctx.textBaseline = "middle";
+		ctx.fillText("BCOM", s * 0.3, s * 0.35);
+		ctx.font = `${s * 0.03}px sans-serif`;
+		ctx.fillText("2711", s * 0.3, s * 0.40);
+
+		// RAM a destra
+		ctx.fillStyle = '#222';
+		ctx.strokeStyle = '#555';
+		ctx.lineWidth = s * 0.01;
+		ctx.fillRect(s * 0.47, s * 0.25, s * 0.15, s * 0.27);
+		ctx.strokeRect(s * 0.47, s * 0.25, s * 0.15, s * 0.27);
+		//quadrozzo a sx spostato in basso per riempire
+		ctx.fillRect(s * 0.08, s * 0.66, s * 0.12, s * 0.12);
+		ctx.strokeRect(s * 0.08, s * 0.66, s * 0.12, s * 0.12);
+		
+		// chip wifi e bt ancora piu a destra
+		ctx.fillStyle = '#222';
+		ctx.strokeStyle = '#333';
+		ctx.lineWidth = s * 0.005;
+		ctx.fillRect(s * 0.66, s * 0.45, s * 0.1, s * 0.1);
+		ctx.strokeRect(s * 0.66, s * 0.45, s * 0.1, s * 0.1);
+		
+		ctx.fillStyle = '#222';
+		ctx.strokeStyle = '#444';
+		ctx.lineWidth = s * 0.005;
+		ctx.fillRect(s * 0.67, s * 0.22, s * 0.08, s * 0.12);
+		ctx.strokeRect(s * 0.67, s * 0.22, s * 0.08, s * 0.12);
+		
+		//HDMI sotto 
+		ctx.fillStyle = '#beb';
+		ctx.font = `${s * 0.05}px sans-serif`;
+		ctx.textAlign = "center";
+		ctx.textBaseline = "middle";
+		ctx.fillText("HDMI", s * 0.4, s * 0.8);
+		ctx.fillText("FC", s * 0.25, s * 0.7);
+		ctx.fillText("CC", s * 0.50, s * 0.6);
+		ctx.font = `${s * 0.15}px sans-serif`;
+		ctx.fillText("❀", s * 0.32, s*0.6);
+		
+		//hdmi prese
+		ctx.fillStyle = '#999';
+		ctx.fillRect(s*0.30, s*0.85, s*0.1, s*0.13);
+		ctx.fillRect(s*0.42, s*0.85, s*0.1, s*0.13);
+		ctx.fillStyle = '#111';
+		ctx.fillRect(s*0.32, s*0.88, s*0.02, s*0.06);
+		ctx.fillRect(s*0.36, s*0.88, s*0.02, s*0.06);
+		ctx.fillRect(s*0.44, s*0.88, s*0.02, s*0.06);
+		ctx.fillRect(s*0.48, s*0.88, s*0.02, s*0.06);
+		
+		//usbona presa sotto
+		ctx.fillStyle = '#999';
+		ctx.fillRect(s*0.17, s*0.85, s*0.1, s*0.13);
+		ctx.fillStyle = '#111';
+		ctx.fillRect(s*0.18, s*0.88, s*0.03, s*0.02);
+		ctx.fillRect(s*0.23, s*0.88, s*0.03, s*0.02);
+		
+		//ethernet di lato
+		ctx.fillStyle = '#999';
+		ctx.fillRect(s*0.78, s*0.10, s*0.20, s*0.22);
+		
+		//usbone di lato alta
+		ctx.fillStyle = '#999';
+		ctx.fillRect(s*0.80, s*0.40, s*0.18, s*0.20);
+		ctx.fillStyle = '#26f';
+		//C sopra
+		ctx.fillRect(s*0.92, s*0.42, s*0.03, s*0.02);
+		ctx.fillRect(s*0.92, s*0.47, s*0.03, s*0.02);
+		ctx.fillRect(s*0.94, s*0.42, s*0.02, s*0.07);
+		//C sotto
+		ctx.fillRect(s*0.92, s*0.51, s*0.03, s*0.02);
+		ctx.fillRect(s*0.92, s*0.56, s*0.03, s*0.02);
+		ctx.fillRect(s*0.94, s*0.51, s*0.02, s*0.07);
+		
+		//usbona di lato bassa
+		ctx.fillStyle = '#999';
+		ctx.fillRect(s*0.80, s*0.70, s*0.18, s*0.20);
+		ctx.fillStyle = '#26f';
+		//C sopra
+		ctx.fillRect(s*0.92, s*0.72, s*0.03, s*0.02);
+		ctx.fillRect(s*0.92, s*0.77, s*0.03, s*0.02);
+		ctx.fillRect(s*0.94, s*0.72, s*0.02, s*0.07);
+		//C sotto
+		ctx.fillRect(s*0.92, s*0.81, s*0.03, s*0.02);
+		ctx.fillRect(s*0.92, s*0.86, s*0.03, s*0.02);
+		ctx.fillRect(s*0.94, s*0.81, s*0.02, s*0.07);
+		
+		//cazzimbocchi tutto a sx
+		ctx.fillStyle = '#222';
+		ctx.strokeStyle = '#555';
+		ctx.lineWidth = s * 0.01;
+		ctx.fillRect(s * 0.05, s * 0.25, s * 0.08, s * 0.35);
+		ctx.strokeRect(s * 0.05, s * 0.25, s * 0.08, s * 0.35);
+		//cazzimbocchio sotto 
+		ctx.fillRect(s * 0.53, s * 0.6, s * 0.05, s * 0.35);
+		ctx.strokeRect(s * 0.53, s * 0.6, s * 0.05, s * 0.35);
+		
+		//connettore sotto accanto
+		ctx.fillRect(s * 0.60, s * 0.74, s * 0.06, s * 0.25);
+		ctx.strokeRect(s * 0.60, s * 0.74, s * 0.06, s * 0.25);
+		
+		//LEDs
+		const blinkRed = Math.sin(flowOffset) > 0; // activity, più rapido
+
+		// LED PWR (verde fisso)
+		ctx.fillStyle = connected ? colors.greenOn : colors.greenOff;
+		ctx.beginPath();
+		ctx.arc(s * 0.7, s * 0.63, s * 0.018, 0, Math.PI * 2);
+		ctx.fill();
+		if (connected) drawLedAloneCircle(s * 0.7, s * 0.63, s * 0.018, colors.greenOn);
+
+		// LED ACT (rosso lampeggiante)
+		ctx.fillStyle = connected && blinkRed ? colors.redOn : colors.redOff;
+		ctx.beginPath();
+		ctx.arc(s * 0.7, s * 0.7, s * 0.018, 0, Math.PI * 2);
+		ctx.fill();
+		if (connected && blinkRed) drawLedAloneCircle(s * 0.7, s * 0.7, s * 0.018, colors.redOn);
+
+		// Label LED
+		ctx.fillStyle = '#beb';
+		ctx.font = `${s * 0.022}px sans-serif`;
+		ctx.textAlign = "left";
+		ctx.textBaseline = "middle";
+		ctx.fillText("PWR", s * 0.725, s * 0.63);
+		ctx.fillText("ACT", s * 0.725, s * 0.7);
 	}	
 	
 	ctx.restore();
