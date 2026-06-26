@@ -186,54 +186,54 @@ const statusDiv = document.getElementById('status');
 const N = 1, E = 2, S = 4, W = 8;
 
 const HW_TYPES = [ 
-	{id:'notebook',			variant:'notebook',      desc:'Generic Notebook'},
-	{id:'desktop',			variant:'desktop',       desc:'Monitor + MiniPC all-in-one'},
-	{id:'minipc',			variant:'minipc',        desc:'Morefine MiniPC N100'},
-	{id:'imacmini',			variant:'imacmini',      desc:'iMac Mini M4 from 2026'},
-	{id:'tablet',			variant:'tablet',        desc:'Generic Tablet'},
-	{id:'baraccone',		variant:'baraccone',     desc:'An old clunker from 90s'},
-	{id:'dx40',				variant:'dx40',     	 desc:'A clunky Intel 386DX-40 machine from 1990'},
-	{id:'pentium75',		variant:'pentium75',   	 desc:'A clunky Intel Pentium-75 machine from 1996'},
-	{id:'pentium2',		    variant:'pentium2',   	 desc:'A clunky Intel Pentium2-300 machine from 2000'},
-	{id:'router',			variant:'router',        desc:'Router Wi-Fi TpLink'},
-	{id:'ipcamera',			variant:'ipcamera',      desc:'IP Camera TpLink'},
-	{id:'macintosh',		variant:'macintosh',     desc:'Macintosh 128K from 1984'},
-	{id:'imac',				variant:'imac',          desc:'iMac G4 from 2002'},
-	{id:'gameboy',			variant:'gameboy',       desc:'GameBoy White classic from 1989'},
-	{id:'nintendoswitch',	variant:'nintendoswitch',desc:'Nintendo Switch from 2017'},
-	{id:'hplaserjet',		variant:'hplaserjet',    desc:'HP LaserJet 107w'},
-	{id:'atari2600',		variant:'atari2600',     desc:'Atari 2600 from 1977'},
-	{id:'hantarex',			variant:'hantarex',      desc:'Apple ][ Compatibile from 1983'},
-	{id:'radio',			variant:'radio',         desc:'AliExpress Vintage Radio R919'},
-	{id:'nesthub',			variant:'nesthub',       desc:'Google NestHub from 2018'},
-	{id:'yamahathr',		variant:'yamahathr',     desc:'Ampli Yamaha THR5-V2'},
-	{id:'ps7000',			variant:'ps7000',        desc:'AliExpress PS7000 from 2023'},
-	{id:'ps4',				variant:'ps4',      	 desc:'Sony PS4 Black from 2014'},
-	{id:'imacg3',			variant:'imacg3',        desc:'iMac G3 Blueberry Cyan from 1998'},
-	{id:'imacintel',		variant:'imacintel',     desc:'iMac Intel from 2020'},
-	{id:'starlc10',         variant:'starlc10',      desc:'Star Lc-10 Multifont from 1988'},
-	{id:'c64',				variant:'c64',           desc:'Commodore C-64 from 1984'},
-	{id:'raspberrypi',		variant:'raspberrypi',   desc:'Raspberry Pi 4 Model B from 2020'},
-	{id:'zxspectrum',		variant:'zxspectrum',	 desc:'Sinclair ZX Spectrum from 1983'},
-	{id:'banfi',            variant:'banfi',         desc:'Le più sofisticate elaborazioni della cibernetica'},	
-	{id:'sip70',            variant:'sip70',         desc:'Il dottor Tomas non è in sede!'},
-	{id:'sip2123',          variant:'sip2123',       desc:'Sip ARE VT2123 modem from 1980'},	
+	{id:'notebook',			variant:'notebook',       group:'modern',  desc:'Generic Notebook'},
+	{id:'desktop',			variant:'desktop',        group:'modern',  desc:'Monitor + MiniPC all-in-one'},
+	{id:'minipc',			variant:'minipc',         group:'modern',  desc:'Morefine MiniPC N100'},
+	{id:'imacmini',			variant:'imacmini',       group:'modern',  desc:'iMac Mini M4 from 2026'},
+	{id:'tablet',			variant:'tablet',         group:'modern',  desc:'Generic Tablet'},
+	{id:'baraccone',		variant:'baraccone',      group:'classic', desc:'An old clunker from 90s'},
+	{id:'dx40',				variant:'dx40',     	  group:'classic', desc:'A clunky Intel 386DX-40 machine from 1990'},
+	{id:'pentium75',		variant:'pentium75',   	  group:'classic', desc:'A clunky Intel Pentium-75 machine from 1996'},
+	{id:'pentium2',		    variant:'pentium2',   	  group:'classic', desc:'A clunky Intel Pentium2-300 machine from 2000'},
+	{id:'router',			variant:'router',         group:'modern',  desc:'Router Wi-Fi TpLink'},
+	{id:'ipcamera',			variant:'ipcamera',       group:'modern',  desc:'IP Camera TpLink'},
+	{id:'macintosh',		variant:'macintosh',      group:'vintage', desc:'Macintosh 128K from 1984'},
+	{id:'imac',				variant:'imac',           group:'modern',  desc:'iMac G4 from 2002'},
+	{id:'gameboy',			variant:'gameboy',        group:'classic', desc:'GameBoy White classic from 1989'},
+	{id:'nintendoswitch',	variant:'nintendoswitch', group:'modern',  desc:'Nintendo Switch from 2017'},
+	{id:'hplaserjet',		variant:'hplaserjet',     group:'modern',  desc:'HP LaserJet 107w'},
+	{id:'atari2600',		variant:'atari2600',      group:'vintage', desc:'Atari 2600 from 1977'},
+	{id:'hantarex',			variant:'hantarex',       group:'vintage', desc:'Apple ][ Compatibile from 1983'},
+	{id:'radio',			variant:'radio',          group:'modern',  desc:'AliExpress Vintage Radio R919'},
+	{id:'nesthub',			variant:'nesthub',        group:'modern',  desc:'Google NestHub from 2018'},
+	{id:'yamahathr',		variant:'yamahathr',      group:'modern',  desc:'Ampli Yamaha THR5-V2'},
+	{id:'ps7000',			variant:'ps7000',         group:'modern',  desc:'AliExpress PS7000 from 2023'},
+	{id:'ps4',				variant:'ps4',      	  group:'modern',  desc:'Sony PS4 Black from 2014'},
+	{id:'imacg3',			variant:'imacg3',         group:'classic', desc:'iMac G3 Blueberry Cyan from 1998'},
+	{id:'imacintel',		variant:'imacintel',      group:'modern',  desc:'iMac Intel from 2020'},
+	{id:'starlc10',         variant:'starlc10',       group:'vintage', desc:'Star Lc-10 Multifont from 1988'},
+	{id:'c64',				variant:'c64',            group:'vintage', desc:'Commodore C-64 from 1984'},
+	{id:'raspberrypi',		variant:'raspberrypi',    group:'modern',  desc:'Raspberry Pi 4 Model B from 2020'},
+	{id:'zxspectrum',		variant:'zxspectrum',	  group:'vintage', desc:'Sinclair ZX Spectrum from 1983'},
+	{id:'banfi',            variant:'banfi',          group:'vintage', desc:'Le più sofisticate elaborazioni della cibernetica'},	
+	{id:'sip70',            variant:'sip70',          group:'vintage', desc:'Il dottor Tomas non è in sede!'},
+	{id:'sip2123',          variant:'sip2123',        group:'vintage', desc:'Sip ARE VT2123 modem from 1980'},	
 	//color variants
-	{id:'notebook',			variant:'notebookwhite', desc:'Generic White Notebook'},
-	{id:'router',			variant:'routerwhite',   desc:'Router Wi-Fi TpLink White'},
-	{id:'ipcamera',			variant:'ipcamerablack', desc:'IP Camera TpLink Black'},
-	{id:'gameboy',			variant:'gameboyred',    desc:'GameBoy Red classic from 1990'},
-	{id:'gameboy',			variant:'gameboyblue',   desc:'GameBoy Blue classic from 1990'},
-	{id:'hplaserjet',		variant:'hplaserjetblack',desc:'HP LaserJet 107w Black'},
-	{id:'radio',			variant:'radiodark',     desc:'AliExpress Vintage Radio R919'},
-	{id:'nesthub',			variant:'nesthubgray',   desc:'Google NestHub Charcoal Gray from 2021'},
-	{id:'yamahathr',		variant:'yamahathrgreen',desc:'Ampli Yamaha THR10X'},
-	{id:'ps4',				variant:'ps4white',      desc:'Sony PS4 White from 2014'},
-	{id:'imacg3',			variant:'imacg3orange',  desc:'iMac G3 Tangerine Orange from 1999'},
-	{id:'imacg3',			variant:'imacg3red',     desc:'iMac G3 Strawberry Red from 1999'},
-	{id:'imacg3',			variant:'imacg3green',   desc:'iMac G3 Lime Green from 1999'},
-	{id:'imacg3',			variant:'imacg3gray',    desc:'iMac G3 Graphite Gray from 2000'},
-	{id:'imacg3',			variant:'imacg3blue',    desc:'iMac G3 Indigo Blue from 2000'},
+	{id:'notebook',			variant:'notebookwhite',  group:'modern',  desc:'Generic White Notebook'},
+	{id:'router',			variant:'routerwhite',    group:'modern',  desc:'Router Wi-Fi TpLink White'},
+	{id:'ipcamera',			variant:'ipcamerablack',  group:'modern',  desc:'IP Camera TpLink Black'},
+	{id:'gameboy',			variant:'gameboyred',     group:'classic', desc:'GameBoy Red classic from 1990'},
+	{id:'gameboy',			variant:'gameboyblue',    group:'classic', desc:'GameBoy Blue classic from 1990'},
+	{id:'hplaserjet',		variant:'hplaserjetblack',group:'modern',  desc:'HP LaserJet 107w Black'},
+	{id:'radio',			variant:'radiodark',      group:'modern',  desc:'AliExpress Vintage Radio R919'},
+	{id:'nesthub',			variant:'nesthubgray',    group:'modern',  desc:'Google NestHub Charcoal Gray from 2021'},
+	{id:'yamahathr',		variant:'yamahathrgreen', group:'modern',  desc:'Ampli Yamaha THR10X'},
+	{id:'ps4',				variant:'ps4white',       group:'modern',  desc:'Sony PS4 White from 2014'},
+	{id:'imacg3',			variant:'imacg3orange',   group:'classic', desc:'iMac G3 Tangerine Orange from 1999'},
+	{id:'imacg3',			variant:'imacg3red',      group:'classic', desc:'iMac G3 Strawberry Red from 1999'},
+	{id:'imacg3',			variant:'imacg3green',    group:'classic', desc:'iMac G3 Lime Green from 1999'},
+	{id:'imacg3',			variant:'imacg3gray',     group:'classic', desc:'iMac G3 Graphite Gray from 2000'},
+	{id:'imacg3',			variant:'imacg3blue',     group:'classic', desc:'iMac G3 Indigo Blue from 2000'},
 	];
 
 //Palette realistica condivisa
@@ -1098,15 +1098,21 @@ function drawMotherboardPC(x, y, tile) {
 	const isServer = tile.type === 'server';
 	const type = tile.subType;
 	const connected = tile.connected;
-	const baseSize = type.id && type.id.length % 3 === 0 ? 0.25 : 
-					 type.id && type.id.length % 3 === 1 ? 0.45 : 
-					 0.65;
+	
+	const isRectangular = type.id && type.group === 'vintage';//i vintage sono rettangolari
+	
+	const baseSize = isRectangular && type.id.length % 2 === 0 ? 0.70 : //rettangolo grande
+					 isRectangular && type.id.length % 2 === 1 ? 0.50 : //rettangolo piccolo
+					 type.id && type.id.length % 3 === 0 ? 0.35 : //chip piccolo
+					 type.id && type.id.length % 3 === 1 ? 0.50 : //chip medio
+					 0.65;//chip grande
+	
     const s = CELL_SIZE * (	isServer ? 0.75 : 
 							connected && animateFlag ? Math.abs(Math.sin(flowOffset*0.5)*0.05) + baseSize :
 							baseSize
 							);//Leggermente più grande per i dettagli
     const p = (CELL_SIZE - s) * 0.5;
-    
+	
     ctx.save();
     ctx.translate(x + p, y + p);
 	
@@ -1161,7 +1167,7 @@ function drawMotherboardPC(x, y, tile) {
 		ctx.arc(s*0.5, s*0.5, s*0.35, Math.PI*0.2, Math.PI*0.8);
 		ctx.stroke();
 		ctx.setLineDash([]);
-	} else if(type.id) {
+	} else if(type.id && !isRectangular) {
 		//cpu
 		ctx.fillStyle = "#222";
 		ctx.beginPath(); 
@@ -1208,8 +1214,36 @@ function drawMotherboardPC(x, y, tile) {
 			ctx.moveTo(s*0.06, s*0.06); ctx.lineTo(s - s*0.06, s*0.06); ctx.lineTo(s*0.06, s * 0.6);
 			ctx.fill();
 		}
+	} else if (type.id && isRectangular) {
+		//cpu
+		ctx.fillStyle = "#222";
+		ctx.beginPath(); 
+		ctx.roundRect(0, s*0.25, s, s*0.5, s * 0.02);
+		ctx.fill();
 		
-	} 
+		//zampette sopra e sotto
+		ctx.fillStyle = colors.silver;
+		for(let i=1;i<20;i++) {
+			ctx.fillRect(s*i*0.05, s*0.18, s*0.02, s*0.08);
+			ctx.fillRect(s*i*0.05, s*0.74, s*0.02, s*0.08);
+		}
+		
+		//scritta cpu
+		ctx.fillStyle = '#444';
+		ctx.font = `${s*0.1}px sans-serif`;
+		ctx.fillText(type.id, s*(0.5 - (type.id.length * 0.025)),s*0.40);
+		ctx.fillText("KNetWalk", s*0.3,s*0.56);
+		ctx.fillText("© Alberto Nelli 2026",s*0.05,s*0.67);
+		
+		if(connected) {
+			// Riflesso "Glossy"
+			ctx.fillStyle = colors.glass;
+			ctx.beginPath();
+			ctx.moveTo(s*0.04, s*0.29); ctx.lineTo(s - s*0.04, s*0.29); ctx.lineTo(s*0.04, s * 0.55);
+			ctx.fill();
+		}
+	}
+	
 	ctx.restore();
 }
 
@@ -3694,9 +3728,13 @@ function drawPC(x, y, tile) {
 		//connessione G
 		if (connected) {
 			ctx.fillStyle = '#fff';
-			ctx.font = `${s*0.15}px serif`;
+			ctx.font = `${s*0.18}px serif`;
 			ctx.textAlign = "center";
-			ctx.fillText("G", s*0.5, s*0.31);
+			const ora = new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit', hour12: false });
+			ctx.fillText(ora, s*0.5, s*0.31);//"G"
+			
+			ctx.font = `${s*0.05}px serif`;
+			ctx.fillText('23° Sunny', s*0.5, s*0.38)
 		}
 		
 	} 
