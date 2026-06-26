@@ -184,6 +184,7 @@ const ctx = canvas.getContext('2d');
 const statusDiv = document.getElementById('status');
 
 const N = 1, E = 2, S = 4, W = 8;
+
 const HW_TYPES = [ 
 	{id:'notebook',			variant:'notebook',      desc:'Generic Notebook'},
 	{id:'desktop',			variant:'desktop',       desc:'Monitor + MiniPC all-in-one'},
@@ -215,7 +216,8 @@ const HW_TYPES = [
 	{id:'raspberrypi',		variant:'raspberrypi',   desc:'Raspberry Pi 4 Model B from 2020'},
 	{id:'zxspectrum',		variant:'zxspectrum',	 desc:'Sinclair ZX Spectrum from 1983'},
 	{id:'banfi',            variant:'banfi',         desc:'Le più sofisticate elaborazioni della cibernetica'},	
-	{id:'sip70',            variant:'sip70',         desc:'Il dottor Tomas non è in sede!'},	
+	{id:'sip70',            variant:'sip70',         desc:'Il dottor Tomas non è in sede!'},
+	{id:'sip2123',          variant:'sip2123',       desc:'Sip ARE VT2123 modem from 1980'},	
 	//color variants
 	{id:'notebook',			variant:'notebookwhite', desc:'Generic White Notebook'},
 	{id:'router',			variant:'routerwhite',   desc:'Router Wi-Fi TpLink White'},
@@ -4739,8 +4741,8 @@ function drawPC(x, y, tile) {
 		// LEDDONI ROSSO+VERDE
 		const blinkGreen = Math.sin(flowOffset * 0.2) > 0;
 		const blinkRed   = Math.cos(flowOffset * 0.2) > 0;
-		const blinkGreenLever = Math.sin(flowOffset * 0.2) > 0.25;
-		const blinkRedLever   = Math.cos(flowOffset * 0.2) > 0.25;
+		const blinkGreenLever = Math.sin(flowOffset * 0.2 - 0.75) > 0.25;//la perfezione è di questo mondo... grazie di esistere alberto nelli!!!
+		const blinkRedLever   = Math.cos(flowOffset * 0.2 - 0.75) > 0.25;//sto magheggio perchè le leve si devono muovere appena dopo il cambio led
 		ctx.fillStyle = connected && blinkRed ? colors.redOn : colors.redOff;
 		ctx.beginPath();
 		ctx.roundRect(s * 0.22, s*0.08, s * 0.16, s * 0.08, [s*0.02,s*0.02,0,0]);
@@ -4978,6 +4980,105 @@ function drawPC(x, y, tile) {
 		ctx.moveTo(dialCx + dialR*0.75, dialCy + dialR*0.75);
 		ctx.lineTo(dialCx + dialR*0.45, dialCy + dialR*0.45);
 		ctx.stroke();
+	}
+	else if (type.id === 'sip2123') {
+		// modem sip 300-1200 bps
+		
+		//corpo grigione
+		ctx.fillStyle = '#444';
+		ctx.beginPath();
+		ctx.roundRect(s*0,s*0.3,s*1,s*0.5,s*0.02);
+		ctx.fill();
+		ctx.fillStyle = '#666';
+		ctx.beginPath();
+		ctx.roundRect(s*0,s*0.45,s*1,s*0.35,[0,0,s*0.02,s*0.02]);
+		ctx.fill();
+		ctx.fillStyle = '#333';
+		//scassi sul grigione
+		for(let i=0;i<9;i++){
+			ctx.fillRect(s*0.08+s*i*0.1,s*0.32,s*0.06,s*0.1);//orizzontali
+			if (i<4) {
+				ctx.fillRect(s*0,s*0.32+s*i*0.03,s*0.02,s*0.02);//vert sx
+				ctx.fillRect(s*0.98,s*0.32+s*i*0.03,s*0.02,s*0.02);//vert dx
+			}
+		}
+		
+		//frontalino chiaro
+		let modemGrad = ctx.createLinearGradient(0, 0, 0, s);
+		modemGrad.addColorStop(0.0, '#ffe');
+		modemGrad.addColorStop(0.5, '#eed');
+		modemGrad.addColorStop(1.0, '#bba');
+		ctx.fillStyle = modemGrad;
+		ctx.beginPath();
+		ctx.fillRect(s*0.04, s*0.5, s*0.92, s*0.28);
+		ctx.fill();
+		
+		
+		//scasso di sx coi led v+rrrr
+		ctx.fillStyle = '#ccb';
+		ctx.fillRect(s*0.07,s*0.5,s*0.4,s*0.15);
+		//scasso di dx coi pulsanti nnnn+rr
+		ctx.fillRect(s*0.52,s*0.5,s*0.41,s*0.25);
+		
+		//pulsantoni neri x 4
+		ctx.fillStyle = '#111';
+		ctx.fillRect(s*0.53, s*0.6, s*0.04, s*0.08);
+		ctx.fillRect(s*0.60, s*0.6, s*0.04, s*0.08);
+		ctx.fillRect(s*0.67, s*0.6, s*0.04, s*0.08);
+		ctx.fillRect(s*0.74, s*0.6, s*0.04, s*0.08);
+		//pulsantoni rossi x 2
+		ctx.fillStyle = '#800';
+		ctx.fillRect(s*0.81, s*0.6, s*0.04, s*0.08);
+		ctx.fillRect(s*0.88, s*0.6, s*0.04, s*0.08);
+		
+		// LED INDICATORI (1 verde + 4 rossi a sx)
+		const blinkRed1 = Math.sin(flowOffset*0.1) > 0.5;
+		const blinkRed2 = Math.cos(flowOffset*0.2) > 0.6;
+		const blinkRed3 = Math.sin(flowOffset*0.3) > 0.7;
+		const blinkRed4 = Math.cos(flowOffset*0.4) > 0.8;
+		
+		// LED Power (Verde) - BLINK
+		ctx.fillStyle = connected ? colors.greenOn : colors.greenOff;
+		ctx.fillRect(s * 0.08, s * 0.6, s*0.06, s*0.03);
+		//prova blur semplificato
+		if (connected) drawLedAloneRect(s * 0.08, s * 0.6, s*0.06, s*0.03, colors.greenOn);
+		
+		ctx.fillStyle = connected && blinkRed1 ? colors.redOn : colors.redOff;
+		ctx.fillRect(s * 0.16, s * 0.6, s*0.06, s*0.03);
+		//prova blur semplificato
+		if (connected && blinkRed1) drawLedAloneRect(s * 0.16, s * 0.6, s*0.06, s*0.03, colors.redOn);
+		
+		ctx.fillStyle = connected && blinkRed2 ? colors.redOn : colors.redOff;
+		ctx.fillRect(s * 0.24, s * 0.6, s*0.06, s*0.03);
+		//prova blur semplificato
+		if (connected && blinkRed1) drawLedAloneRect(s * 0.24, s * 0.6, s*0.06, s*0.03, colors.redOn);
+		
+		ctx.fillStyle = connected && blinkRed3 ? colors.redOn : colors.redOff;
+		ctx.fillRect(s * 0.32, s * 0.6, s*0.06, s*0.03);
+		//prova blur semplificato
+		if (connected && blinkRed1) drawLedAloneRect(s * 0.32, s * 0.6, s*0.06, s*0.03, colors.redOn);
+		
+		ctx.fillStyle = connected && blinkRed4 ? colors.redOn : colors.redOff;
+		ctx.fillRect(s * 0.40, s * 0.6, s*0.06, s*0.03);
+		
+		//scritte come se non ci fosse un domani
+		ctx.fillStyle = '#333';
+		ctx.font = `${s*0.035}px monospace`;
+		ctx.fillText('ALIM 103 104 107 109',s*0.07,s*0.68);
+		
+		ctx.font = `${s*0.029}px monospace`;
+		ctx.fillText('VDT V23  V21 V21 AUTO DATI', s*0.52,s*0.71);
+		ctx.fillText('         ORIG ANS MAN  TEL', s*0.51,s*0.74);
+		
+		ctx.font = `${s*0.03}px monospace`;
+		ctx.fillText('ARE VT2123',   s*0.3,s*0.74);
+		
+		//logo sip
+		ctx.font = `bold ${s*0.05}px monospace`;
+		ctx.fillText('Sip',s*0.12,s*0.74);
+		ctx.fillStyle = '#800';
+		ctx.fillText('==',s*0.07,s*0.74);
+		
 	}
 	
 	ctx.restore();
