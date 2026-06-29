@@ -220,6 +220,7 @@ const HW_TYPES = [
 	{id:'sip70',            variant:'sip70',          group:'vintage', desc:'Il dottor Tomas non è in sede!'},
 	{id:'sip2123',          variant:'sip2123',        group:'vintage', desc:'Sip ARE VT2123 modem from 1980'},	
 	{id:'apple1',           variant:'apple1',         group:'vintage', desc:'Apple I Computer kit from 1976'},
+	{id:'ibmpc',            variant:'ibmpc',          group:'vintage', desc:'IBM Personal Computer from 1984'},
 	//color variants
 	{id:'notebook',			variant:'notebookwhite',  group:'modern',  desc:'Generic White Notebook'},
 	{id:'router',			variant:'routerwhite',    group:'modern',  desc:'Router Wi-Fi TpLink White'},
@@ -5276,6 +5277,174 @@ function drawPC(x, y, tile) {
 			ctx.fill();
 			ctx.stroke();
 		});
+	}
+	else if (type.id === 'ibmpc') {
+		// IBM PC - case beige con monitor CRT verde fosforo separato + tower con 2 floppy + 1 slot
+
+		// MONITOR (in alto, leggermente arretrato)
+		let monGrad = ctx.createLinearGradient(0, 0, s, s*0.42);
+		monGrad.addColorStop(0, "#edc");
+		monGrad.addColorStop(1, "#cba");
+		ctx.fillStyle = monGrad;
+		ctx.strokeStyle = "#888";
+		ctx.lineWidth = s*0.01;
+		ctx.beginPath();
+		ctx.roundRect(s*0.12, 0, s*0.74, s*0.49, s*0.03);
+		ctx.fill();
+		ctx.stroke();
+
+		// Schermo CRT verde fosforo
+		ctx.fillStyle = "#111";
+		ctx.beginPath();
+		ctx.roundRect(s*0.17, s*0.04, s*0.5, s*0.42, s*0.02);
+		ctx.fill();
+
+		if (connected) {
+			ctx.fillStyle = "#0a2a10";
+		} else {
+			ctx.fillStyle = "#080808";
+		}
+		ctx.beginPath();
+		ctx.roundRect(s*0.20, s*0.07, s*0.44, s*0.36, s*0.01);
+		ctx.fill();
+
+		if (connected) {
+			// scritta IBM verde fosforo, lampeggio leggero del cursore
+			ctx.fillStyle = "#3f3";
+			ctx.font = `bold ${s*0.25}px monospace`;
+			ctx.textAlign = "left";
+			ctx.textBaseline = "middle";
+			ctx.fillText("IBM", s*0.20, s*0.2);
+			ctx.font = `${s*0.03}px monospace`;
+			ctx.fillText("A:\>", s*0.20, s*0.40);
+
+			if (Math.sin(flowOffset*0.6) > 0) {
+				ctx.fillRect(s*0.25, s*0.39, s*0.014, s*0.025);
+			}
+			
+			//righe nere sul Logo
+			ctx.fillStyle = '#0a2a10';
+			for (let i=0; i<3; i++) {
+				ctx.fillRect(s*0.20,s*0.13+s*0.04*i,s*0.44,s*0.02);
+			}
+		}
+
+		// logo ibm anche sul monitor
+		ctx.fillStyle = "#444";
+		ctx.beginPath();
+		ctx.roundRect(s*0.7, s*0.05, s*0.12, s*0.07, s*0.005);
+		ctx.fill();
+		ctx.fillStyle = "#fff";
+		ctx.font = `bold ${s*0.04}px monospace`;
+		ctx.textAlign = "left";
+		ctx.textBaseline = "middle";
+		ctx.fillText("IBM", s*0.72, s*0.085);
+
+		// manopole luminosità/contrasto sotto al logo
+		ctx.fillStyle = "#222";
+		const blinkPwr = Math.sin(flowOffset*0.12) > -0.5;
+		ctx.beginPath();
+		ctx.arc(s*0.75, s*0.27, s*0.018, 0, Math.PI*2);
+		ctx.fill();
+		ctx.fillStyle = connected && blinkPwr ? colors.greenOn : colors.greenOff;
+		ctx.beginPath();
+		ctx.arc(s*0.75, s*0.27, s*0.01, 0, Math.PI*2);
+		ctx.fill();
+		if (connected && blinkPwr) drawLedAloneCircle(s*0.75, s*0.27, s*0.01, colors.greenOn);
+
+		//luminosita + contrasto
+		ctx.strokeStyle = "#888";
+		ctx.lineWidth = s*0.01;
+		ctx.beginPath();
+		ctx.arc(s*0.75, s*0.35, s*0.025, 0, Math.PI*2);
+		ctx.stroke();
+		ctx.beginPath();
+		ctx.arc(s*0.75, s*0.43, s*0.025, 0, Math.PI*2);
+		ctx.stroke();
+
+		// CASE ORIZZONTALE (case principale sotto il monitor)
+		let towerGrad = ctx.createLinearGradient(0, s*0.5, 0, s*0.78);
+		towerGrad.addColorStop(0, "#edc");
+		towerGrad.addColorStop(1, "#cba");
+		ctx.fillStyle = towerGrad;
+		ctx.strokeStyle = "#888";
+		ctx.lineWidth = s*0.01;
+		ctx.beginPath();
+		ctx.roundRect(s*0.05, s*0.5, s*0.9, s*0.28, s*0.02);
+		ctx.fill();
+		ctx.stroke();
+		
+		// targhetta IBM sul tower a sinistra
+		ctx.fillStyle = "#444";
+		ctx.beginPath();
+		ctx.roundRect(s*0.08, s*0.54, s*0.16, s*0.06, s*0.005);
+		ctx.fill();
+		ctx.fillStyle = "#fff";
+		ctx.font = `bold ${s*0.04}px monospace`;
+		ctx.fillText("IBM", s*0.12, s*0.57);
+
+		// griglia di ventilazione (righe verticali)
+		ctx.fillStyle = "#333";
+		for(let i = 0; i < 10; i++) {
+			const gx = s*0.08 + i * s*0.035;
+			ctx.fillRect(gx, s*0.62, s*0.017, s*0.12);
+		}
+
+		// 2 SLOT FLOPPY (impilati)
+		const blinkFD1 = Math.sin(flowOffset*0.07) > -0.7;
+		const blinkFD2 = Math.cos(flowOffset*0.09 + 1) > -0.7;
+
+		ctx.fillStyle = "#111";
+		ctx.beginPath();
+		ctx.roundRect(s*0.5, s*0.53, s*0.38, s*0.10, s*0.005);
+		ctx.fill();
+		ctx.beginPath();
+		ctx.roundRect(s*0.5, s*0.65, s*0.38, s*0.10, s*0.005);
+		ctx.fill();
+
+		// floppy
+		[0.53, 0.65].forEach((fy, idx) => {
+			ctx.fillStyle = "#333";
+			ctx.fillRect(s*0.54, s*(fy+0.025), s*0.30, s*0.012);
+			// LED rosso piccolo
+			const on = idx === 0 ? blinkFD1 : blinkFD2;
+			ctx.fillStyle = connected && on ? colors.redOn : colors.redOff;
+			ctx.beginPath();
+			ctx.arc(s*0.54, s*(fy+0.075), s*0.012, 0, Math.PI*2);
+			ctx.fill();
+			if (connected && on) drawLedAloneCircle(s*0.54, s*(fy+0.075), s*0.012, colors.redOn);
+		});
+
+		// TASTIERA (in basso, leggermente in prospettiva)
+		let kbGrad = ctx.createLinearGradient(0, s*0.82, 0, s);
+		kbGrad.addColorStop(0, "#edc");
+		kbGrad.addColorStop(1, "#cba");
+		ctx.fillStyle = kbGrad;
+		ctx.strokeStyle = "#666";
+		ctx.lineWidth = s*0.01;
+		ctx.beginPath();
+		ctx.moveTo(s*0.02, s*0.82);
+		ctx.lineTo(s*0.98, s*0.82);
+		ctx.lineTo(s*1.0, s*1.0);
+		ctx.lineTo(0, s*1.0);
+		ctx.closePath();
+		ctx.fill();		
+		ctx.stroke();
+
+		// righe di tasti
+		ctx.fillStyle = "#fff";
+		ctx.strokeStyle = "#aaa";
+		ctx.lineWidth = s*0.003;
+		const kbRows = 3, kbCols = 12;
+		const tkw = (s*0.9)/kbCols, tkh = (s*0.15)/kbRows;
+		for(let r = 0; r < kbRows; r++) {
+			for(let c = 0; c < kbCols; c++) {
+				const kx = s*0.05 + c*tkw + r*s*0.005;
+				const ky = s*0.84 + r*tkh;
+				ctx.fillRect(kx, ky, tkw*0.8, tkh*0.7);
+				ctx.strokeRect(kx, ky, tkw*0.8, tkh*0.7);
+			}
+		}
 	}
 	
 	ctx.restore();
