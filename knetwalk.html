@@ -151,6 +151,7 @@
 		<button id="animateBtn"     onclick="changeAnimateFlag(this)">🔍</button>
 		<button id="wiresColorBtn"  onclick="changeWiresColorFlag(this)">🌈</button>
 		<button id="motherboardBtn" onclick="changeMotherboardFlag(this)">🔋</button>
+		<button id="groupBtn"       onclick="changeGroup(this)">🖥️ All</button>
 		<button id="restart"        onclick="initGame()">↻ Restart</button>
     </div>
 
@@ -218,6 +219,7 @@ const HW_TYPES = [
 	{id:'banfi',            variant:'banfi',          group:'vintage', desc:'Le più sofisticate elaborazioni della cibernetica'},	
 	{id:'sip70',            variant:'sip70',          group:'vintage', desc:'Il dottor Tomas non è in sede!'},
 	{id:'sip2123',          variant:'sip2123',        group:'vintage', desc:'Sip ARE VT2123 modem from 1980'},	
+	{id:'apple1',           variant:'apple1',         group:'vintage', desc:'Apple I Computer kit from 1976'},
 	//color variants
 	{id:'notebook',			variant:'notebookwhite',  group:'modern',  desc:'Generic White Notebook'},
 	{id:'router',			variant:'routerwhite',    group:'modern',  desc:'Router Wi-Fi TpLink White'},
@@ -235,6 +237,25 @@ const HW_TYPES = [
 	{id:'imacg3',			variant:'imacg3gray',     group:'classic', desc:'iMac G3 Graphite Gray from 2000'},
 	{id:'imacg3',			variant:'imacg3blue',     group:'classic', desc:'iMac G3 Indigo Blue from 2000'},
 	];
+
+
+const currentGroup = ['all','vintage','classic','modern'];
+let currentGroupIndex = 0;
+
+function changeGroup(btn) {
+	currentGroupIndex = (currentGroupIndex + 1) % currentGroup.length;
+	if(btn) {
+		if(currentGroupIndex) btn.classList.add('active');
+		else btn.classList.remove('active');
+		btn.innerText = "🖥️ "+capitalize(currentGroup[currentGroupIndex]);
+	}
+	initGame();
+}
+
+function capitalize(str) {
+    return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
 
 //Palette realistica condivisa
 const colors = {
@@ -496,7 +517,7 @@ function assignTypes() {
 //fix: genera il prossimo DIVERSO dall'attuale!
 function getNextHwType() {
     // Se la lista è vuota, crea una nuova sequenza casuale
-    if (shuffledTypes.length === 0) shuffledTypes = [...HW_TYPES].sort(() => Math.random() - 0.5);
+    if (shuffledTypes.length === 0) shuffledTypes = [...HW_TYPES].filter(e => currentGroup[currentGroupIndex] === 'all' || currentGroup[currentGroupIndex].includes(e.group)).sort(() => Math.random() - 0.5);
 
     // Estrae il prossimo tipo unico
 	const piece = shuffledTypes.pop();
@@ -819,33 +840,6 @@ function draw() {
 	//drawLake();
 
     grid.forEach(row => row.forEach(tile => drawTile(tile)));
-}
-
-function drawLake() {
-    const serverX = serverPos.x * CELL_SIZE + CELL_SIZE / 2;
-    const serverY = serverPos.y * CELL_SIZE + CELL_SIZE / 2;
-    
-    // Gradient radiale centrato sul server
-    let lakeGrad = ctx.createRadialGradient(serverX, serverY, 0, serverX, serverY, Math.max(canvas.width, canvas.height));
-    lakeGrad.addColorStop(0, "rgba(6, 182, 212, 0.15)");   // Azzurro
-    lakeGrad.addColorStop(1, "rgba(59, 130, 246, 0.05)");    // Bordi: blu tenue
-    
-    ctx.fillStyle = lakeGrad;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    
-    // Onde animate
-    ctx.lineWidth = 1.5;
-    
-    const waveCount = 30;
-    for(let w = 0; w < waveCount; w++) {
-        const waveRadius = (flowOffset * 2 + w * 20) % (Math.max(canvas.width, canvas.height));
-        const opacity = Math.max(0, 1 - (waveRadius / (Math.max(canvas.width, canvas.height))));
-        const op100 = (opacity * 100)|0;
-        ctx.strokeStyle = colors.activeColor+op100;//`rgba(34, 94, 197, ${0.3 * opacity})`;
-        ctx.beginPath();
-        ctx.arc(serverX, serverY, waveRadius, 0, Math.PI * 2);
-        ctx.stroke();
-    }
 }
 
 function drawIcons(x, y, size, rows, cols, bwColor = null) {
@@ -5118,6 +5112,171 @@ function drawPC(x, y, tile) {
 		ctx.fillText('==',s*0.07,s*0.74);
 		
 	}
+	else if (type.id === 'apple1') {
+		//apple1, un pezzo di legno con dentro 4 chip in croce
+			
+		// CASE LEGNO (corpo principale, tono caldo)
+		let woodGrad = ctx.createLinearGradient(0, 0, s, s);
+		woodGrad.addColorStop(0, "#a63");
+		woodGrad.addColorStop(0.5, "#842");
+		woodGrad.addColorStop(1, "#631");
+		ctx.fillStyle = woodGrad;
+		ctx.strokeStyle = "#3a2010";
+		ctx.lineWidth = s*0.02;
+		ctx.beginPath();
+		ctx.roundRect(0, s*0.15, s, s*0.65, s*0.04);
+		ctx.fill();
+		ctx.stroke();		
+		
+		// Venature del legno (linee orizzontali leggere)
+		ctx.strokeStyle = "rgba(0,0,0,0.08)";
+		ctx.lineWidth = s*0.005;
+		for(let i = 0; i < 5; i++) {
+			const wy = s*0.2 + i * s*0.16;
+			ctx.beginPath();
+			ctx.moveTo(s*0.02, wy);
+			ctx.lineTo(s*0.98, wy + (Math.sin(i) * s*0.01));
+			ctx.stroke();
+		}
+		
+		// PANNELLO POSTERIORE ALZATO (con scritta APPLE COMPUTER)
+		let backGrad = ctx.createLinearGradient(0, 0, s, s*0.18);
+		backGrad.addColorStop(0, "#b63");
+		backGrad.addColorStop(1, "#842");
+		ctx.fillStyle = backGrad;
+		ctx.fillRect(s*0.05, 0, s*0.9, s*0.25);
+		ctx.strokeStyle = "#321";
+		ctx.lineWidth = s*0.01;
+		ctx.strokeRect(s*0.05, 0, s*0.9, s*0.25);
+		
+		// Scritta "APPLE" intagliata (scura)
+		ctx.fillStyle = "#222";
+		ctx.font = `bold ${s*0.18}px sans-serif`;
+		ctx.textAlign = "left";
+		ctx.textBaseline = "middle";
+		ctx.fillText("A", s*0.38, s*0.1);
+		ctx.font = `bold ${s*0.1}px sans-serif`;
+		ctx.textAlign = "left";
+		ctx.textBaseline = "middle";
+		ctx.fillText("PPLE", s*0.5, s*0.07);
+		ctx.font = `bold ${s*0.05}px sans-serif`;
+		ctx.fillText("COMPUTER", s*0.51, s*0.15);
+		
+		// 2 vitoni a sinistra della scritta
+		ctx.fillStyle = '#333';
+		ctx.strokeStyle = '#666';
+		ctx.beginPath();
+		ctx.arc(s*0.15, s*0.08, s*0.02, 0, Math.PI*2);
+		ctx.fill();
+		ctx.stroke();
+		ctx.beginPath();
+		ctx.arc(s*0.22, s*0.08, s*0.02, 0, Math.PI*2);
+		ctx.fill();
+		ctx.stroke();
+		// 1 a destra
+		ctx.beginPath();
+		ctx.arc(s*0.79, s*0.08, s*0.02, 0, Math.PI*2);
+		ctx.fill();
+		ctx.stroke();
+		
+		// presa elettrica nera a destra (con foro a vista)
+		ctx.fillStyle = "#1a1a1a";
+		ctx.beginPath();
+		ctx.roundRect(s*0.83, s*0.02, s*0.1, s*0.16, s*0.01);
+		ctx.fill();
+		ctx.fillStyle = connected ? colors.orangeOn : "#444";
+		ctx.beginPath();
+		ctx.arc(s*0.88, s*0.06, s*0.012, 0, Math.PI*2);
+		ctx.fill();
+		ctx.beginPath();
+		ctx.arc(s*0.88, s*0.12, s*0.012, 0, Math.PI*2);
+		ctx.fill();
+		if (connected) drawLedAloneCircle(s*0.885, s*0.06, s*0.012, colors.orangeOn);
+		
+		// CASSETTO/FRONTALE INFERIORE (la parte bombata in basso)
+		let drawerGrad = ctx.createLinearGradient(0, s*0.6, 0, s);
+		drawerGrad.addColorStop(0, "#7a4220");
+		drawerGrad.addColorStop(0.5, "#623318");
+		drawerGrad.addColorStop(1, "#4a2510");
+		ctx.fillStyle = drawerGrad;
+		ctx.strokeStyle = "#2a1808";
+		ctx.lineWidth = s*0.01;
+		ctx.beginPath();
+		ctx.roundRect(s*0.02, s*0.60, s*0.96, s*0.18, s*0.04);
+		ctx.fill();
+		ctx.stroke();
+		
+		// riflesso lucido sul cassetto di legno
+		ctx.fillStyle = "rgba(255,255,255,0.1)";
+		ctx.beginPath();
+		ctx.roundRect(s*0.04, s*0.62, s*0.92, s*0.10, s*0.02);
+		ctx.fill();
+		
+		
+		// TASTIERA (rettangolo grigio-beige, leggermente incassato)
+		ctx.fillStyle = "#333";
+		ctx.beginPath();
+		ctx.roundRect(s*0.11, s*0.32, s*0.62, s*0.22, s*0.02);
+		ctx.fill();
+		
+		// righe di tasti beige
+		const keyRows = 3;
+		const keyCols = 10;
+		const kw = (s*0.58) / keyCols;
+		const kh = (s*0.18) / keyRows;
+		ctx.fillStyle = "#ddc";
+		ctx.strokeStyle = "#888";
+		ctx.lineWidth = s*0.003;
+		for(let r = 0; r < keyRows; r++) {
+			for(let c = 0; c < keyCols; c++) {
+				const kx = s*0.13 + c * kw;
+				const ky = s*0.34 + r * kh;
+				ctx.fillRect(kx, ky, kw*0.85, kh*0.8);
+				ctx.strokeRect(kx, ky, kw*0.85, kh*0.8);
+			}
+		}
+		// tasto RETURN arancione
+		ctx.fillStyle = "#f80";
+		ctx.beginPath();
+		ctx.roundRect(s*0.65, s*0.4, kw*0.9, kh*0.9, s*0.005);
+		ctx.fill();
+		
+		// LED indicatore alimentazione (sempre acceso se connesso, ambra)
+		const blinkPower = Math.sin(flowOffset*0.1) > -0.6;
+		ctx.fillStyle = connected && blinkPower ? colors.orangeOn : colors.orangeOff;
+		ctx.strokeStyle = '#333';
+		ctx.beginPath();
+		ctx.arc(s*0.68, s*0.485, s*0.02, 0, Math.PI*2);
+		ctx.fill();
+		ctx.stroke();
+		if (connected && blinkPower) drawLedAloneCircle(s*0.75, s*0.4, s*0.018, colors.orangeOn);
+		
+		// barra spaziatrice enorme
+		ctx.fillStyle = '#222';
+		ctx.strokeStyle = '#333';
+		ctx.beginPath();
+		ctx.roundRect(s*0.20, s*0.52, s*0.4, kh*0.8, s*0.005);
+		ctx.fill();
+		ctx.stroke();
+		
+		// blocchetto tasti TAPE/PAPER ADV a destra della tastiera
+		ctx.strokeStyle = "#999";
+		ctx.fillStyle = "#555";
+		for(let i=0; i<4; i++) {
+			ctx.fillRect(s*0.8, s*0.34 + i*s*0.05, s*0.07, s*0.05);
+			ctx.strokeRect(s*0.8, s*0.34 + i*s*0.05, s*0.07, s*0.05);
+		}
+		
+		// 4 viti angolari sul case
+		ctx.fillStyle = '#333';
+		ctx.strokeStyle = '#666';
+		[[s*0.05,s*0.35],[s*0.95,s*0.35],[s*0.05,s*0.55],[s*0.95,s*0.55]].forEach(([px,py])=>{
+			ctx.beginPath();
+			ctx.arc(px, py, s*0.02, 0, Math.PI*2);
+			ctx.fill();
+			ctx.stroke();
+		});
+	}
 	
 	ctx.restore();
 }
@@ -5185,8 +5344,8 @@ canvas.addEventListener('pointermove', e => {
         tooltip.innerHTML = `<strong>${cell.type === 'server' ? 'Server' : cell.subType ? cell.subType.desc : 'Link'}</strong>`;
         
         // Posiziona la tooltip vicino al mouse (offset di 15px per non coprire il cursore)
-        tooltip.style.left = (e.clientX - 20) + 'px';
-        tooltip.style.top = (e.clientY - 40) + 'px';
+        tooltip.style.left = (e.clientX - CELL_SIZE * 0.25) + 'px';
+        tooltip.style.top = (e.clientY - CELL_SIZE * 0.5) + 'px';
         tooltip.style.display = 'block';
     } else {
         tooltip.style.display = 'none';
@@ -5215,11 +5374,11 @@ canvas.addEventListener('pointerdown', e => {
     let gy = Math.floor(((clientY - r.top) * scaleY) / CELL_SIZE);
     
     if (grid[gy] && grid[gy][gx]) {
-        grid[gy][gx].conns = event.button === 2 ? rotateBitmaskCCW(grid[gy][gx].conns) : rotateBitmask(grid[gy][gx].conns);
+        grid[gy][gx].conns = e.button === 2 ? rotateBitmaskCCW(grid[gy][gx].conns) : rotateBitmask(grid[gy][gx].conns);
 		
 		//rotazione link
 		grid[gy][gx].currentRotation = grid[gy][gx].rotation;
-		grid[gy][gx].rotation = grid[gy][gx].rotation - (Math.PI * 0.5) * (event.button === 2 ? -1 : 1);
+		grid[gy][gx].rotation = grid[gy][gx].rotation - (Math.PI * 0.5) * (e.button === 2 ? -1 : 1);
 		
 		updateConnectivity();
     }
