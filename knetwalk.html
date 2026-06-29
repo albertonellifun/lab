@@ -5237,7 +5237,7 @@ function drawPC(x, y, tile) {
 			}
 		}
 		// tasto RETURN arancione
-		ctx.fillStyle = "#f80";
+		ctx.fillStyle = "#c40";
 		ctx.beginPath();
 		ctx.roundRect(s*0.65, s*0.4, kw*0.9, kh*0.9, s*0.005);
 		ctx.fill();
@@ -5250,7 +5250,7 @@ function drawPC(x, y, tile) {
 		ctx.arc(s*0.68, s*0.485, s*0.02, 0, Math.PI*2);
 		ctx.fill();
 		ctx.stroke();
-		if (connected && blinkPower) drawLedAloneCircle(s*0.75, s*0.4, s*0.018, colors.orangeOn);
+		if (connected && blinkPower) drawLedAloneCircle(s*0.68, s*0.485, s*0.02, colors.orangeOn);
 		
 		// barra spaziatrice enorme
 		ctx.fillStyle = '#222';
@@ -5496,15 +5496,20 @@ function drawLedAloneLine(x1, y1, x2, y2, thickness, color) {
 
 //
 const tooltip = document.getElementById('tooltip');
+const isTouchDevice = window.matchMedia('(pointer: coarse)').matches;
 
 canvas.addEventListener('pointermove', e => {
-    let r = canvas.getBoundingClientRect();
+	let r = canvas.getBoundingClientRect();
     let scaleX = canvas.width / r.width;
     let scaleY = canvas.height / r.height;
     
     // Calcoliamo la posizione sulla griglia
-    let gx = Math.floor(((e.clientX - r.left) * scaleX) / CELL_SIZE);
-    let gy = Math.floor(((e.clientY - r.top) * scaleY) / CELL_SIZE);
+	let clientX = e.clientX || (e.touches && e.touches[0].clientX);
+	let clientY = e.clientY || (e.touches && e.touches[0].clientY);
+	console.log(clientX,clientY);
+		
+	let gx = Math.floor(((clientX - r.left) * scaleX) / CELL_SIZE);
+    let gy = Math.floor(((clientY - r.top) * scaleY) / CELL_SIZE);
     
     if (grid[gy] && grid[gy][gx]) {
         const cell = grid[gy][gx];
@@ -5512,9 +5517,9 @@ canvas.addEventListener('pointermove', e => {
 		// Aggiorna contenuto
         tooltip.innerHTML = `<strong>${cell.type === 'server' ? 'Server' : cell.subType ? cell.subType.desc : 'Link'}</strong>`;
         
-        // Posiziona la tooltip vicino al mouse (offset di 15px per non coprire il cursore)
-        tooltip.style.left = (e.clientX - CELL_SIZE * 0.25) + 'px';
-        tooltip.style.top = (e.clientY - CELL_SIZE * 0.5) + 'px';
+        // Posiziona la tooltip vicino al mouse
+		tooltip.style.left = Math.max((clientX - CELL_SIZE * 0.25 * (isTouchDevice ? 2 : 1)),0) + 'px';
+        tooltip.style.top = Math.max((clientY - CELL_SIZE * 0.5 * (isTouchDevice? 2 : 1)),0) + 'px';
         tooltip.style.display = 'block';
     } else {
         tooltip.style.display = 'none';
