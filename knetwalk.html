@@ -5472,8 +5472,8 @@ function drawPC(x, y, tile) {
 		ctx.fillStyle = caseGrad;
 		ctx.beginPath();
 		ctx.moveTo(s*0.18, s*0.40);
-		ctx.lineTo(s*0.26, s*0.02);
-		ctx.lineTo(s*0.74, s*0.02);
+		ctx.lineTo(s*0.24, s*0.02);
+		ctx.lineTo(s*0.76, s*0.02);
 		ctx.lineTo(s*0.82, s*0.40);
 		ctx.closePath();
 		ctx.fill();
@@ -5485,8 +5485,8 @@ function drawPC(x, y, tile) {
 		ctx.fillStyle = '#333';
 		ctx.beginPath();
 		ctx.moveTo(s*0.20, s*0.38);
-		ctx.lineTo(s*0.24, s*0.04);
-		ctx.lineTo(s*0.76, s*0.04);
+		ctx.lineTo(s*0.26, s*0.04);
+		ctx.lineTo(s*0.74, s*0.04);
 		ctx.lineTo(s*0.80, s*0.38);
 		ctx.closePath();
 		ctx.fill();
@@ -5515,7 +5515,7 @@ function drawPC(x, y, tile) {
 			ctx.font = `${s*0.026}px monospace`;
 			ctx.textAlign = "left";
 			ctx.textBaseline = "middle";
-			ctx.fillText("**** COMMODORE BASIC ****", s*0.335, s*0.115);
+			ctx.fillText("*** COMMODORE BASIC ***", s*0.335, s*0.115);
 			ctx.fillText("READY.", s*0.335, s*0.15);
 
 			if (Math.sin(flowOffset*0.6) > 0) {
