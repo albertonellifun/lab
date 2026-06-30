@@ -4073,6 +4073,12 @@ function drawPC(x, y, tile) {
 		ctx.roundRect(s*0.05, s*0.05, s*0.9, s*0.78, [s*0.14,s*0.14,s*0.08,s*0.08]);
 		ctx.fill();
 		
+		//righe verticali
+		ctx.fillStyle = 'rgba(0,0,0,0.1)';
+		for(let i=0;i<23;i++) {
+			ctx.fillRect(s*0.05 + i * s*0.04, s*0.05, s*0.015, s*0.78);
+		}
+		
 		//palla sinistra
 		let handleGrad = ctx.createLinearGradient(0, 0, s*0.1, 0);
 		handleGrad.addColorStop(0, g3cols[type.variant].split('|')[0]);
@@ -4117,7 +4123,7 @@ function drawPC(x, y, tile) {
 		ctx.fillRect(s*0.37, s*0.70, s*0.26, s*0.01);
 		
 		//etichetta imac
-		ctx.fillStyle = "#999";
+		ctx.fillStyle = "#666";
 		ctx.font = `${s*0.05}px sans-serif`;
 		ctx.textAlign = "center";
 		ctx.textBaseline = "middle";
