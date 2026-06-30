@@ -221,6 +221,7 @@ const HW_TYPES = [
 	{id:'sip2123',          variant:'sip2123',        group:'vintage', desc:'Sip ARE VT2123 modem from 1980'},	
 	{id:'apple1',           variant:'apple1',         group:'vintage', desc:'Apple I Computer kit from 1976'},
 	{id:'ibmpc',            variant:'ibmpc',          group:'vintage', desc:'IBM Personal Computer from 1984'},
+	{id:'commodorecbm',     variant:'commodorecbm',   group:'vintage', desc:'Commodore CBM/PET 3008 from 1980'},
 	//color variants
 	{id:'notebook',			variant:'notebookwhite',  group:'modern',  desc:'Generic White Notebook'},
 	{id:'router',			variant:'routerwhite',    group:'modern',  desc:'Router Wi-Fi TpLink White'},
@@ -5445,6 +5446,137 @@ function drawPC(x, y, tile) {
 				ctx.strokeRect(kx, ky, tkw*0.8, tkh*0.7);
 			}
 		}
+	}
+	else if (type.id === 'commodorecbm') {
+		// Commodore CBM/PET 3001 series - monitor a trapezio!!!
+
+		// CASE PRINCIPALE (corpo unico, base + monitor è un blocco solo visto da davanti)
+		let caseGrad = ctx.createLinearGradient(0, s*0.42, 0, s);
+		caseGrad.addColorStop(0, "#eed");
+		caseGrad.addColorStop(1, "#ccb");
+		ctx.fillStyle = caseGrad;
+		ctx.strokeStyle = "#666";
+		ctx.lineWidth = s*0.01;
+		ctx.beginPath();
+		ctx.roundRect(s*0.03, s*0.42, s*0.94, s*0.5, s*0.02);
+		ctx.fill();
+		ctx.stroke();
+
+		// MONITOR A TORRETTA (cornice nera sporgente in alto, leggermente trapezoidale)
+		ctx.fillStyle = caseGrad;
+		ctx.beginPath();
+		ctx.moveTo(s*0.18, s*0.40);
+		ctx.lineTo(s*0.26, s*0.02);
+		ctx.lineTo(s*0.74, s*0.02);
+		ctx.lineTo(s*0.82, s*0.40);
+		ctx.closePath();
+		ctx.fill();
+		ctx.strokeStyle = "#666";
+		ctx.lineWidth = s*0.01;
+		ctx.stroke();
+		
+		// internamente era nero!
+		ctx.fillStyle = '#333';
+		ctx.beginPath();
+		ctx.moveTo(s*0.20, s*0.38);
+		ctx.lineTo(s*0.24, s*0.04);
+		ctx.lineTo(s*0.76, s*0.04);
+		ctx.lineTo(s*0.80, s*0.38);
+		ctx.closePath();
+		ctx.fill();
+		ctx.strokeStyle = "#666";
+		ctx.lineWidth = s*0.01;
+		ctx.stroke();
+		
+		// Schermo CRT
+		ctx.fillStyle = "#111";
+		ctx.beginPath();
+		ctx.roundRect(s*0.30, s*0.07, s*0.40, s*0.28, s*0.012);
+		ctx.fill();
+		
+		if (connected) {
+			ctx.fillStyle = "#0a2a10";
+		} else {
+			ctx.fillStyle = "#555048";
+		}
+		ctx.beginPath();
+		ctx.roundRect(s*0.325, s*0.09, s*0.35, s*0.24, s*0.008);
+		ctx.fill();
+
+		if (connected) {
+			// testo verde fosforo tipico PET
+			ctx.fillStyle = "#3f3";
+			ctx.font = `${s*0.026}px monospace`;
+			ctx.textAlign = "left";
+			ctx.textBaseline = "middle";
+			ctx.fillText("**** COMMODORE BASIC ****", s*0.335, s*0.115);
+			ctx.fillText("READY.", s*0.335, s*0.15);
+
+			if (Math.sin(flowOffset*0.6) > 0) {
+				ctx.fillRect(s*0.335, s*0.165, s*0.014, s*0.022);
+			}
+		}
+		
+		
+		// targhetta gigante "commodore" sotto il monitor
+		ctx.fillStyle = "#222";
+		ctx.beginPath();
+		ctx.roundRect(s*0.08, s*0.435, s*0.84, s*0.10, s*0.005);
+		ctx.fill();
+		ctx.fillStyle = "#fff";
+		ctx.font = `bold ${s*0.04}px monospace`;
+		ctx.textAlign = "left";
+		ctx.textBaseline = "middle";
+		ctx.fillText("C=commodore       cbm        computer", s*0.095, s*0.46);
+		ctx.font = `bold ${s*0.035}px monospace`;
+		ctx.fillText("                3001 series      3008", s*0.095, s*0.50);
+		
+		// led on/off
+		ctx.fillStyle = connected ? colors.greenOn : colors.greenOff;
+		ctx.beginPath();
+		ctx.arc(s*0.88, s*0.51, s*0.02, 0, Math.PI*2);
+		ctx.fill();
+		if (connected) drawLedAloneCircle(s*0.88, s*0.51, s*0.02, colors.greenOn);
+
+		// TASTIERA principale (parte sinistra/centrale, leggermente in prospettiva)
+		ctx.fillStyle = "#222";
+		ctx.strokeStyle = "#444";
+		ctx.lineWidth = s*0.01;
+		
+		const kbRows = 3;
+		const kbCols = 10;
+		const tkw = (s*0.6)/kbCols;
+		const tkh = (s*0.2)/kbRows;
+		for(let r = 0; r < kbRows; r++) {
+			for(let c = 0; c < kbCols; c++) {
+				const kx = s*0.10 + c*tkw;
+				const ky = s*0.60 + r*tkh;
+				ctx.fillRect(kx, ky, tkw*0.82, tkh*0.7);
+				ctx.strokeRect(kx, ky, tkw*0.82, tkh*0.7);
+			}
+		}
+
+		// SPAZIO (barra lunga in basso a sinistra, sotto la tastiera principale)
+		ctx.fillRect(s*0.20, s*0.80, s*0.42, s*0.045);
+		ctx.strokeRect(s*0.20, s*0.80, s*0.42, s*0.045);
+
+		// KEYPAD NUMERICO (separato a destra, griglia 4x4)
+		const padRows = 4;
+		const padCols = 3;
+		for(let r = 0; r < padRows; r++) {
+			for(let c = 0; c < padCols; c++) {
+				const kx = s*0.75 + c*tkw;
+				const ky = s*0.60 + r*tkh;
+				ctx.fillRect(kx, ky, tkw*0.8, tkh*0.75);
+				ctx.strokeRect(kx, ky, tkw*0.8, tkh*0.75);
+			}
+		}
+
+		// piedino/bordo inferiore scuro del case
+		ctx.fillStyle = "#333";
+		ctx.beginPath();
+		ctx.roundRect(s*0.1, s*0.92, s*0.8, s*0.04, s*0.01);
+		ctx.fill();
 	}
 	
 	ctx.restore();
