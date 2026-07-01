@@ -67,7 +67,7 @@
             white-space: nowrap;
             flex-shrink: 0;
             line-height: 1;
-        }
+        }			
         
         button:hover { background: #334155; color: #38bdf8; border-color: #38bdf8; }
 		button.active { background: #0ea5e9; color: #ffffff; border-color: #0ea5e9; box-shadow: 0 0 15px rgba(14, 165, 233, 0.4); }
@@ -304,7 +304,7 @@ let serverPos = {x: 0, y: 0};
 let gameWon = false;
 let flowOffset = 0; //Per l'animazione dei dati
 let animateFlag = false;//animazione flag
-let motherboardFlag = false;//
+let motherboardFlag = 0;//0=pc, 1=mobo, 2=water
 let shuffledTypes = [];//per evitare duplicati
 let motherboardBackgroundLines = [];//griglia Motherboard
 const FAKEBLUR_SIZE = 2.5;//per i led
@@ -325,15 +325,24 @@ function changeAnimateFlag(btn) {
 }
 
 function changeMotherboardFlag(btn) {
-	motherboardFlag = !motherboardFlag;
+	motherboardFlag = (motherboardFlag + 1) % 3;
 	if(btn) {
 		if(motherboardFlag) btn.classList.add('active');
 		else btn.classList.remove('active');
+		
+		if (motherboardFlag === 0) btn.innerText = '🔋';
+		else if (motherboardFlag === 1) btn.innerText = '🌻';
+		else btn.innerText = '🖥️';
 	}
-	if (motherboardFlag) {
+	if (motherboardFlag === 1) {
 		colors.activeColor = wireColors[0];
 		document.body.style.backgroundImage = 'url(./knetwalk-mobo.png)';
 		canvas.style.background = '#2b8956f5';	
+	}
+	else if (motherboardFlag === 2) {
+		colors.activeColor = wireColors[wireColors.length-1];
+		document.body.style.backgroundImage = 'url(./knetwalk-flower.png)';
+		canvas.style.background = '#0f172add';
 	}
 	else {
 		colors.activeColor = wireColors[wireColors.length-1];
@@ -751,7 +760,7 @@ function draw() {
 	//ctx.fillStyle = motherboardFlag ? colors.motherBoardBackground : colors.tileBackground;
 	//ctx.fillRect(0, 0, canvas.width, canvas.height);
 	
-	if (motherboardFlag) {
+	if (motherboardFlag === 1) {
 		// piste fini bianche
 		ctx.strokeStyle = "rgba(255,255,255,0.1)";
 		ctx.lineWidth = CELL_SIZE * 0.01;
@@ -1025,7 +1034,8 @@ function drawIcons(x, y, size, rows, cols, bwColor = null) {
 }
 
 function drawTile(tile) {
-	if(motherboardFlag) drawTileMotherboard(tile);
+	if(motherboardFlag === 1) drawTileMotherboard(tile);
+	else if(motherboardFlag === 2) drawTileWATER(tile);
 	else drawTileOLD(tile);
 }
 
@@ -1242,6 +1252,121 @@ function drawMotherboardPC(x, y, tile) {
 }
 
 
+function drawTileWATER(tile) {
+    let x = tile.x * CELL_SIZE;
+    let y = tile.y * CELL_SIZE;
+    let mid = CELL_SIZE * 0.5;
+
+    // Disegna cavi
+    let hue = (flowOffset * 5 + 240) % 360;
+    let dynamicColor = `hsl(${hue}, 100%, 50%)`;
+
+    const cableColor = tile.connected ?
+        (colors.activeColor === '#000000' ? dynamicColor : colors.activeColor) : colors.inactiveColor;
+
+    const pipeW = CELL_SIZE * 0.10;
+    const shadowW = pipeW + CELL_SIZE * 0.02;
+    const highlightW = pipeW * 0.20;
+
+    ctx.lineCap = "butt";
+    ctx.lineJoin = "round";
+
+    const glow = tile.connected && !USEFAKEBLUR_LINES;
+
+    ctx.save();
+    ctx.translate(x + mid, y + mid);
+    let angle = tile.rotation - tile.currentRotation;
+    ctx.rotate(angle);
+
+    // [dx, dy, perpX, perpY] - perpX/perpY = direzione dell'highlight (lato "lucido" del tubo)
+    const dirs = [];
+    if (tile.conns & N) dirs.push([0, -mid, 1, 0]);
+    if (tile.conns & E) dirs.push([mid, 0, 0, 1]);
+    if (tile.conns & S) dirs.push([0, mid, 1, 0]);
+    if (tile.conns & W) dirs.push([-mid, 0, 0, 1]);
+
+    // 1. Ombra (dà profondità, resta sotto tutto)
+    ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+    ctx.lineWidth = shadowW;
+    ctx.shadowBlur = 0;
+    dirs.forEach(([tx, ty]) => {
+        ctx.beginPath();
+        ctx.moveTo(0, 1.5);
+        ctx.lineTo(tx, ty + 1.5);
+        ctx.stroke();
+    });
+
+    // 2. Corpo del tubo
+    ctx.strokeStyle = cableColor;
+    ctx.lineWidth = pipeW;
+    if (glow) { ctx.shadowBlur = 16; ctx.shadowColor = cableColor; }
+    else { ctx.shadowBlur = 0; }
+    dirs.forEach(([tx, ty]) => {
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(tx, ty);
+        ctx.stroke();
+    });
+    ctx.shadowBlur = 0;
+
+    // 3. Riflesso lucido (solo se connesso, dà l'effetto "gomma/plastica")
+    if (1 || tile.connected) {
+        ctx.strokeStyle = 'rgba(255,255,255,0.55)';
+        ctx.lineWidth = highlightW;
+        const off = pipeW * 0.18;
+        dirs.forEach(([tx, ty, px, py]) => {
+            ctx.beginPath();
+            ctx.moveTo(-px * off, -py * off);
+            ctx.lineTo(tx - px * off, ty - py * off);
+            ctx.stroke();
+        });
+    }
+
+    // Giunto centrale: pallina "gommosa" invece del puntino piatto originale
+    ctx.beginPath();
+    ctx.arc(0, 0, pipeW * 0.55, 0, Math.PI * 2);
+    ctx.fillStyle = cableColor;
+    ctx.fill();
+	
+	//riflesso fisso figo
+    if (0 && tile.connected) {
+        ctx.beginPath();
+        ctx.arc(-pipeW * 0.12, -pipeW * 0.12, pipeW * 0.22, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255,255,255,0.5)';
+        ctx.fill();
+    }
+	
+	//flusso acqua lento fighissimo
+	if (tile.connected) {
+		ctx.save();
+		ctx.strokeStyle = 'rgba(255,255,255,0.5)';//'rgba(180, 230, 255, 0.65)'; // azzurro chiaro traslucido
+		ctx.lineWidth = pipeW * 0.55;
+		ctx.lineCap = 'round';
+		ctx.setLineDash([pipeW * 0.9, pipeW * 1.3]); // segmento pieno, spazio vuoto
+		ctx.lineDashOffset = -flowOffset * 4; // negativo = scorre verso l'esterno del tubo
+		dirs.forEach(([tx, ty]) => {
+			ctx.beginPath();
+			ctx.moveTo(0, 0);
+			ctx.lineTo(tx, ty);
+			ctx.stroke();
+		});
+		ctx.setLineDash([]); // reset, IMPORTANTE altrimenti "sporca" gli altri stroke
+		ctx.restore();
+	}
+
+    if (USEFAKEBLUR_LINES) {
+        if(tile.connected && tile.conns & N) drawLedAloneLine(0, 0, 0, -mid, pipeW, cableColor);
+        if(tile.connected && tile.conns & E) drawLedAloneLine(0, 0, mid, 0,  pipeW, cableColor);
+        if(tile.connected && tile.conns & S) drawLedAloneLine(0, 0, 0, mid,  pipeW, cableColor);
+        if(tile.connected && tile.conns & W) drawLedAloneLine(0, 0, -mid, 0, pipeW, cableColor);
+    }
+
+    ctx.restore();
+    ctx.shadowBlur = 0;
+
+    if(tile.type) drawPCWATER(x, y, tile);
+}
+
 function drawTileOLD(tile) {
     let x = tile.x * CELL_SIZE;
     let y = tile.y * CELL_SIZE;
@@ -1322,6 +1447,220 @@ const msgs = [
 let msgIdx = 0;
 let msgTimer = 0;
 
+
+function drawPCWATER(x, y, tile) {
+	const isServer = tile.type === 'server';
+	const type = tile.subType;
+	const connected = tile.connected;
+    const s = CELL_SIZE * (	isServer ? 0.75 : 
+							connected && animateFlag ? Math.abs(Math.sin(flowOffset*0.5)*0.05) + 0.7 :
+							0.65 );//Leggermente più grande per i dettagli
+    const p = (CELL_SIZE - s) * 0.5;
+    
+    ctx.save();
+    ctx.translate(x + p, y + p);
+	
+	if (isServer) {
+		const bodyW = s * 0.5;
+		const bodyX = (s - bodyW) * 0.5;
+
+		// gradiente rosso idrante per dare volume (sx scuro, centro chiaro, dx scuro)
+		let hydrantGrad = ctx.createLinearGradient(bodyX, 0, bodyX + bodyW, 0);
+		hydrantGrad.addColorStop(0, '#8B1A1A');
+		hydrantGrad.addColorStop(0.45, '#D62828');
+		hydrantGrad.addColorStop(0.55, '#E8433D');
+		hydrantGrad.addColorStop(1, '#8B1A1A');
+
+		// --- BASE (flangia a terra) ---
+		const baseH = s * 0.08;
+		ctx.fillStyle = '#5C1010';
+		ctx.beginPath();
+		ctx.roundRect(bodyX - s*0.08, s - baseH, bodyW + s*0.16, baseH, s*0.02);
+		ctx.fill();
+
+		// --- CORPO PRINCIPALE (barile) ---
+		const barrelTop = s * 0.22;
+		const barrelBottom = s - baseH;
+		ctx.fillStyle = hydrantGrad;
+		ctx.beginPath();
+		ctx.roundRect(bodyX, barrelTop, bodyW, barrelBottom - barrelTop, s*0.04);
+		ctx.fill();
+
+		// fascia centrale (dettaglio tipico degli idranti reali)
+		const midBandY = barrelTop + (barrelBottom - barrelTop) * 0.55;
+		ctx.fillStyle = '#6E1414';
+		ctx.beginPath();
+		ctx.roundRect(bodyX - s*0.03, midBandY, bodyW + s*0.06, s*0.05, s*0.02);
+		ctx.fill();
+
+		// --- CUPOLA SUPERIORE (arc, non bezier) ---
+		const domeY = barrelTop;
+		const domeR = bodyW * 0.5;
+		ctx.fillStyle = hydrantGrad;
+		ctx.beginPath();
+		ctx.arc(s/2, domeY, domeR, Math.PI, 0);
+		ctx.fill();
+
+		// --- DADO A STELLA (pentagono) ---
+		const nutY = domeY - domeR * 0.85;
+		const nutR = s * 0.09;
+		ctx.fillStyle = '#4A0E0E';
+		ctx.beginPath();
+		for (let i = 0; i < 6; i++) {
+			let ang = (Math.PI * 2 / 6) * i - Math.PI/2;
+			let px = s*0.5 + Math.cos(ang) * nutR;
+			let py = nutY + Math.sin(ang) * nutR;
+			if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+		}
+		ctx.closePath();
+		ctx.fill();
+
+		// pallina di sicurezza in cima
+		ctx.fillStyle = '#8B1A1A';
+		ctx.beginPath();
+		ctx.arc(s/2, nutY - nutR*0.7, s*0.025, 0, Math.PI*2);
+		ctx.fill();
+
+		// --- BOCCHETTONI LATERALI (sx/dx) ---
+		const nozzleY = barrelTop + (barrelBottom - barrelTop) * 0.32;
+		const nozzleLen = s * 0.12;
+		const nozzleH = s * 0.14;
+
+		[-1, 1].forEach(dir => {
+			const nx = dir === -1 ? bodyX - nozzleLen : bodyX + bodyW;
+			ctx.fillStyle = '#7A1515';
+			ctx.beginPath();
+			ctx.roundRect(nx, nozzleY - nozzleH/2, nozzleLen, nozzleH, s*0.02);
+			ctx.fill();
+			// tappo esagonale in punta
+			const capX = dir === -1 ? nx : nx + nozzleLen;
+			ctx.fillStyle = '#4A0E0E';
+			ctx.beginPath();
+			ctx.arc(capX, nozzleY, s*0.045, 0, Math.PI*2);
+			ctx.fill();
+		});
+
+		// --- HIGHLIGHT LUCIDO (stesso trucco della carrozzeria server) ---
+		ctx.fillStyle = 'rgba(255,255,255,0.18)';
+		ctx.beginPath();
+		ctx.roundRect(bodyX + bodyW*0.15, barrelTop + s*0.02, bodyW*0.12, (barrelBottom - barrelTop) * 0.85, s*0.02);
+		ctx.fill();
+
+		// --- STATO CONNESSO: goccioline che sprizzano dai lati
+		if (connected) {
+			const capX1 = bodyX + bodyW + nozzleLen;
+			for (let i = 0; i < 3; i++) {
+				let dropT = ((flowOffset * 2 + i * 8) % 24) / 24;
+				let dx = capX1 + dropT * s*0.15;
+				let dy = nozzleY - dropT * s*0.1 + dropT*dropT * s*0.15;
+				ctx.beginPath();
+				ctx.arc(dx, dy, s*0.02 * (1 - dropT*0.5), 0, Math.PI*2);
+				ctx.fillStyle = 'rgba(150,220,255,0.75)';
+				ctx.fill();
+			}		
+			const capX2 = bodyX - nozzleLen;
+			for (let i = 0; i < 3; i++) {
+				let dropT = ((flowOffset * 2 + i * 8) % 24) / 24;
+				let dx = capX2 - dropT * s*0.15;
+				let dy = nozzleY - dropT * s*0.1 + dropT*dropT * s*0.15;
+				ctx.beginPath();
+				ctx.arc(dx, dy, s*0.02 * (1 - dropT*0.5), 0, Math.PI*2);
+				ctx.fillStyle = 'rgba(150,220,255,0.75)';
+				ctx.fill();
+			}
+		}
+	} else if (type.id) {
+		//vaso di margherite :-)
+		const vaseTop = s * 0.4;
+		const vaseBorderH = s * 0.25;
+		const vaseBodyH = s * 0.35;
+		let vaseGrad = ctx.createLinearGradient(s*0.1, 0, s*0.9, 0);
+		vaseGrad.addColorStop(0, '#2C5F6F');
+		vaseGrad.addColorStop(0.4, '#4A8FA3');
+		vaseGrad.addColorStop(0.6, '#5FA8BD');
+		vaseGrad.addColorStop(1, '#2C5F6F');
+		ctx.fillStyle = vaseGrad;
+		ctx.beginPath();
+		ctx.roundRect(s*0.15,vaseTop,s*0.7,vaseBorderH,s*0.02);
+		ctx.fill();
+		ctx.beginPath();
+		ctx.roundRect(s*0.2,vaseTop+vaseBorderH,s*0.6,vaseBodyH,s*0.02);
+		ctx.fill();
+		ctx.fillStyle = '#292';
+		ctx.beginPath();
+		ctx.roundRect(s*0.1,vaseTop+vaseBorderH+vaseBodyH,s*0.8,s*0.05,[s*0.02,s*0.02,s*0.1,s*0.1]);
+		ctx.fill();
+		
+		// --- FIORI (3 margherite, quella centrale più alta) ---
+		const flowerCount = 3;
+		const sway = connected ? Math.sin(flowOffset * 0.3) * s*0.025 : 0;
+
+		for (let i = 0; i < flowerCount; i++) {
+			let baseX = s*0.5 + (i - 1) * s * 0.25;
+			let stemSway = connected ? Math.sin(flowOffset * 0.3 + i * 1.5) * s*0.02 : 0;
+			let topY = (i === 1 ? s*0.05 : s*0.15);
+			let midY = vaseTop - (vaseTop - topY) * 0.5;
+			let topX = baseX + stemSway;
+			let midX = baseX + stemSway * 0.3;
+
+			// stelo spezzato in 2 tratti (simula curvatura senza bezier)
+			ctx.strokeStyle = '#3E7D3E';
+			ctx.lineWidth = s * 0.025;
+			ctx.lineCap = 'round';
+			ctx.beginPath();
+			ctx.moveTo(baseX, vaseTop + s*0.01);
+			ctx.lineTo(midX, midY);
+			ctx.lineTo(topX, topY);
+			ctx.stroke();
+
+			// fogliolina (triangolo via lineTo)
+			if (i !== 1) {
+				let leafDir = i === 0 ? -1 : 1;
+				ctx.fillStyle = '#4A9B4A';
+				ctx.beginPath();
+				ctx.moveTo(midX, midY);
+				ctx.lineTo(midX + leafDir * s*0.06, midY - s*0.02);
+				ctx.lineTo(midX + leafDir * s*0.01, midY + s*0.03);
+				ctx.closePath();
+				ctx.fill();
+			}
+
+			// --- TESTA DELLA MARGHERITA ---
+			const petalCount = 8;
+			const petalLen = s * 0.15;
+			const petalW = s * 0.08;
+			const petalColor = connected ? ['#fff','#f80','#a00','#00a','#0c0','#f0f','#0bf'][type.id.length % 7] : '#ddc';
+
+			ctx.save();
+			ctx.translate(topX, topY);
+			for (let p = 0; p < petalCount; p++) {
+				ctx.save();
+				ctx.rotate((Math.PI * 2 / petalCount) * p);
+				ctx.fillStyle = petalColor;
+				ctx.beginPath();
+				// petalo = cerchio schiacciato con scale, non bezier
+				ctx.save();
+				ctx.translate(0, -petalLen * 0.55);
+				ctx.scale(petalW / petalLen, 1);
+				ctx.arc(0, 0, petalLen * 0.55, 0, Math.PI * 2);
+				ctx.restore();
+				ctx.fill();
+				ctx.restore();
+			}
+			ctx.restore();
+
+			// centro giallo
+			ctx.beginPath();
+			ctx.arc(topX, topY, s*0.03, 0, Math.PI*2);
+			ctx.fillStyle = connected ? '#fc3' : '#ba6';
+			ctx.fill();
+
+			// glow di "polline" quando connesso
+			if (connected) drawLedAloneCircle(topX, topY, s*0.02, '#fc3');
+		}
+	}
+	ctx.restore();
+}
 
 function drawPC(x, y, tile) {
 	const isServer = tile.type === 'server';
