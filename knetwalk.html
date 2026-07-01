@@ -5454,10 +5454,10 @@ function drawPC(x, y, tile) {
 		// MONITOR A TORRETTA (cornice nera sporgente in alto, leggermente trapezoidale)
 		ctx.fillStyle = caseGrad;
 		ctx.beginPath();
-		ctx.moveTo(s*0.18, s*0.40);
-		ctx.lineTo(s*0.24, s*0.02);
-		ctx.lineTo(s*0.76, s*0.02);
-		ctx.lineTo(s*0.82, s*0.40);
+		ctx.moveTo(s*0.14, s*0.40);
+		ctx.lineTo(s*0.20, s*0.02);
+		ctx.lineTo(s*0.80, s*0.02);
+		ctx.lineTo(s*0.86, s*0.40);
 		ctx.closePath();
 		ctx.fill();
 		ctx.strokeStyle = "#666";
@@ -5467,10 +5467,10 @@ function drawPC(x, y, tile) {
 		// internamente era nero!
 		ctx.fillStyle = '#333';
 		ctx.beginPath();
-		ctx.moveTo(s*0.20, s*0.38);
-		ctx.lineTo(s*0.26, s*0.04);
-		ctx.lineTo(s*0.74, s*0.04);
-		ctx.lineTo(s*0.80, s*0.38);
+		ctx.moveTo(s*0.16, s*0.38);
+		ctx.lineTo(s*0.22, s*0.04);
+		ctx.lineTo(s*0.78, s*0.04);
+		ctx.lineTo(s*0.84, s*0.38);
 		ctx.closePath();
 		ctx.fill();
 		ctx.strokeStyle = "#666";
@@ -5480,7 +5480,7 @@ function drawPC(x, y, tile) {
 		// Schermo CRT
 		ctx.fillStyle = "#111";
 		ctx.beginPath();
-		ctx.roundRect(s*0.30, s*0.07, s*0.40, s*0.28, s*0.012);
+		ctx.roundRect(s*0.25, s*0.07, s*0.50, s*0.28, s*0.012);
 		ctx.fill();
 		
 		if (connected) {
@@ -5489,7 +5489,7 @@ function drawPC(x, y, tile) {
 			ctx.fillStyle = "#555048";
 		}
 		ctx.beginPath();
-		ctx.roundRect(s*0.325, s*0.09, s*0.35, s*0.24, s*0.008);
+		ctx.roundRect(s*0.30, s*0.09, s*0.40, s*0.24, s*0.008);
 		ctx.fill();
 
 		if (connected) {
@@ -5519,7 +5519,7 @@ function drawPC(x, y, tile) {
 		ctx.textBaseline = "middle";
 		ctx.fillText("C=commodore       CBM        computer", s*0.095, s*0.47);
 		ctx.font = `${s*0.04}px monospace`;
-		ctx.fillText("3001 series                  3008", s*0.095, s*0.50);
+		ctx.fillText("3001 series                  3008", s*0.095, s*0.51);
 		
 		// led on/off
 		ctx.fillStyle = connected ? colors.greenOn : colors.greenOff;
@@ -5527,6 +5527,11 @@ function drawPC(x, y, tile) {
 		ctx.arc(s*0.88, s*0.50, s*0.02, 0, Math.PI*2);
 		ctx.fill();
 		if (connected) drawLedAloneCircle(s*0.88, s*0.51, s*0.02, colors.greenOn);
+		
+		// riga divisoria
+		ctx.fillStyle = '#aaa';
+		ctx.fillRect(s*0.1, s*0.55, s*0.8, s*0.01);
+		
 
 		// TASTIERA principale (parte sinistra/centrale, leggermente in prospettiva)
 		ctx.fillStyle = "#222";
@@ -5550,12 +5555,13 @@ function drawPC(x, y, tile) {
 		ctx.fillRect(s*0.20, s*0.75, s*0.42, s*0.045);
 		ctx.strokeRect(s*0.20, s*0.75, s*0.42, s*0.045);
 
-		// KEYPAD NUMERICO (separato a destra, griglia 4x4)
+		// KEYPAD NUMERICO (separato a destra, griglia 4x3)
 		const padRows = 4;
 		const padCols = 3;
 		for(let r = 0; r < padRows; r++) {
 			for(let c = 0; c < padCols; c++) {
-				const kx = s*0.75 + c*tkw;
+				const perspective = r * s * 0.1;
+				const kx = s*0.72 + c*tkw;
 				const ky = s*0.60 + r*tkh;
 				ctx.fillRect(kx, ky, tkw*0.8, tkh*0.75);
 				ctx.strokeRect(kx, ky, tkw*0.8, tkh*0.75);
@@ -5636,7 +5642,6 @@ canvas.addEventListener('pointermove', e => {
     // Calcoliamo la posizione sulla griglia
 	let clientX = e.clientX || (e.touches && e.touches[0].clientX);
 	let clientY = e.clientY || (e.touches && e.touches[0].clientY);
-	console.log(clientX,clientY);
 		
 	let gx = Math.floor(((clientX - r.left) * scaleX) / CELL_SIZE);
     let gy = Math.floor(((clientY - r.top) * scaleY) / CELL_SIZE);
