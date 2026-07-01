@@ -296,6 +296,7 @@ const wireColors = [
 	'#0033ff',//blu
 	'#ff8800',//arancione
 	'#00ff66',//verdazzo
+	'#000000',//blackerrimo
 	];
 	
 let grid = [];
@@ -839,9 +840,7 @@ function draw() {
 		}
 	}
 	
-	//drawLake();
-
-    grid.forEach(row => row.forEach(tile => drawTile(tile)));
+	grid.forEach(row => row.forEach(tile => drawTile(tile)));
 }
 
 function drawIcons(x, y, size, rows, cols, bwColor = null) {
@@ -1047,10 +1046,16 @@ function drawTileMotherboard(tile) {
     let y = tile.y * CELL_SIZE;
     let mid = CELL_SIZE / 2;
 	
-	ctx.strokeStyle = tile.connected ? colors.activeColor : colors.inactiveColor;
+	let hue = (flowOffset * 5 + 240) % 360; // CALCOLO DEL COLORE DINAMICO RIMOSSO - TODO!
+    let dynamicColor = `hsl(${hue}, 100%, 50%)`;
+	
+	const cableColor = tile.connected ? 
+		(colors.activeColor === '#000000' ? dynamicColor : colors.activeColor) : colors.inactiveColor;
+	
+	ctx.strokeStyle = cableColor;
     ctx.lineWidth = CELL_SIZE * 0.08;
     ctx.lineCap = "butt";
-	
+		
 	//rotazione link
 	ctx.save(); 
     ctx.translate(x + mid, y + mid);
@@ -1058,13 +1063,7 @@ function drawTileMotherboard(tile) {
 	ctx.rotate(angle);
     
     ctx.beginPath();
-	/*
-    if (tile.conns & N) { ctx.moveTo(x + mid, y + mid); ctx.lineTo(x + mid, y); }
-    if (tile.conns & E) { ctx.moveTo(x + mid, y + mid); ctx.lineTo(x + CELL_SIZE, y + mid); }
-    if (tile.conns & S) { ctx.moveTo(x + mid, y + mid); ctx.lineTo(x + mid, y + CELL_SIZE); }
-    if (tile.conns & W) { ctx.moveTo(x + mid, y + mid); ctx.lineTo(x, y + mid); }
-    */
-	
+		
 	if (tile.conns & N) { ctx.moveTo(0, 0); ctx.lineTo(0, -mid); }
     if (tile.conns & E) { ctx.moveTo(0, 0); ctx.lineTo(mid, 0); }
     if (tile.conns & S) { ctx.moveTo(0, 0); ctx.lineTo(0, mid); }
@@ -1075,11 +1074,10 @@ function drawTileMotherboard(tile) {
 	//rotazione link
     ctx.restore();
 	
-	
 	//fix round / butt con una palla al centro della tile
 	ctx.beginPath();
 	ctx.arc(x+mid, y+mid, CELL_SIZE * 0.05, 0, Math.PI*2);
-	ctx.fillStyle = tile.connected ? colors.activeColor : colors.inactiveColor;
+	ctx.fillStyle = cableColor;
 	ctx.fill();
 	ctx.beginPath();
 	ctx.arc(x+mid, y+mid, CELL_SIZE * 0.02, 0, Math.PI*2);
@@ -1248,25 +1246,22 @@ function drawTileOLD(tile) {
     let x = tile.x * CELL_SIZE;
     let y = tile.y * CELL_SIZE;
     let mid = CELL_SIZE * 0.5;
-    
+	
 	// Disegna cavi
-	let hue = (flowOffset * 2 + 240) % 360; // CALCOLO DEL COLORE DINAMICO RIMOSSO - TODO!
+	let hue = (flowOffset * 5 + 240) % 360; // CALCOLO DEL COLORE DINAMICO RIMOSSO - TODO!
     let dynamicColor = `hsl(${hue}, 100%, 50%)`;
-    
-    ctx.strokeStyle = tile.connected ? 
-		colors.activeColor 
-		//dynamicColor
-		: colors.inactiveColor;
+	
+	const cableColor = tile.connected ? 
+		(colors.activeColor === '#000000' ? dynamicColor : colors.activeColor) : colors.inactiveColor;
 		
+    ctx.strokeStyle = cableColor;
     ctx.lineWidth = CELL_SIZE * 0.08;
     ctx.lineCap = "butt";//"round";
     
     // Effetto bagliore se connesso
     if(tile.connected) {
         ctx.shadowBlur = USEFAKEBLUR_LINES ? 0 : 20;
-		ctx.shadowColor = 
-			colors.activeColor;
-			//dynamicColor;
+		ctx.shadowColor = cableColor;
     } else {
         ctx.shadowBlur = 0;
     }
@@ -1275,15 +1270,10 @@ function drawTileOLD(tile) {
 	//fix round / butt con una palla al centro della tile
 	ctx.beginPath();
 	ctx.arc(x+mid, y+mid, CELL_SIZE * 0.04, 0, Math.PI*2);
-	ctx.fillStyle = tile.connected ? 
-						colors.activeColor 
-						//dynamicColor
-						: colors.inactiveColor;
+	ctx.fillStyle = cableColor;
 	ctx.fill();
 	
 	if(USEFAKEBLUR_LINES && tile.connected) drawLedAloneCircle(x+mid, y+mid, CELL_SIZE * 0.03, colors.activeColor);
-	
-	
 	
 	//rotazione link
 	ctx.save(); 
@@ -1293,13 +1283,7 @@ function drawTileOLD(tile) {
 	
 	
     ctx.beginPath();
-    /*
-	if (tile.conns & N) { ctx.moveTo(x + mid, y + mid); ctx.lineTo(x + mid, y); }
-    if (tile.conns & E) { ctx.moveTo(x + mid, y + mid); ctx.lineTo(x + CELL_SIZE, y + mid); }
-    if (tile.conns & S) { ctx.moveTo(x + mid, y + mid); ctx.lineTo(x + mid, y + CELL_SIZE); }
-    if (tile.conns & W) { ctx.moveTo(x + mid, y + mid); ctx.lineTo(x, y + mid); }
-	*/
-	
+    
 	if (tile.conns & N) { ctx.moveTo(0, 0); ctx.lineTo(0, -mid); }
     if (tile.conns & E) { ctx.moveTo(0, 0); ctx.lineTo(mid, 0);  }
     if (tile.conns & S) { ctx.moveTo(0, 0); ctx.lineTo(0, mid);  }
@@ -1308,17 +1292,16 @@ function drawTileOLD(tile) {
 	ctx.stroke();
 	
 	if (USEFAKEBLUR_LINES) {
-		if(tile.connected && tile.conns & N) drawLedAloneLine(0, 0, 0, -mid, CELL_SIZE * 0.08, colors.activeColor); 
-		if(tile.connected && tile.conns & E) drawLedAloneLine(0, 0, mid, 0,  CELL_SIZE * 0.08, colors.activeColor); 
-		if(tile.connected && tile.conns & S) drawLedAloneLine(0, 0, 0, mid,  CELL_SIZE * 0.08, colors.activeColor); 
-		if(tile.connected && tile.conns & W) drawLedAloneLine(0, 0, -mid, 0, CELL_SIZE * 0.08, colors.activeColor);
+		if(tile.connected && tile.conns & N) drawLedAloneLine(0, 0, 0, -mid, CELL_SIZE * 0.08, cableColor); 
+		if(tile.connected && tile.conns & E) drawLedAloneLine(0, 0, mid, 0,  CELL_SIZE * 0.08, cableColor); 
+		if(tile.connected && tile.conns & S) drawLedAloneLine(0, 0, 0, mid,  CELL_SIZE * 0.08, cableColor); 
+		if(tile.connected && tile.conns & W) drawLedAloneLine(0, 0, -mid, 0, CELL_SIZE * 0.08, cableColor);
 	}
 	
     ctx.restore();
     
 	
     ctx.shadowBlur = 0;
-	
 	
 	// Disegna icone
     if(tile.type) drawPC(x, y, tile);
@@ -5464,7 +5447,7 @@ function drawPC(x, y, tile) {
 		ctx.strokeStyle = "#666";
 		ctx.lineWidth = s*0.01;
 		ctx.beginPath();
-		ctx.roundRect(s*0.03, s*0.42, s*0.94, s*0.5, s*0.02);
+		ctx.roundRect(s*0.05, s*0.42, s*0.90, s*0.42, s*0.02);
 		ctx.fill();
 		ctx.stroke();
 
@@ -5515,11 +5498,12 @@ function drawPC(x, y, tile) {
 			ctx.font = `${s*0.026}px monospace`;
 			ctx.textAlign = "left";
 			ctx.textBaseline = "middle";
-			ctx.fillText("*** COMMODORE BASIC ***", s*0.335, s*0.115);
-			ctx.fillText("READY.", s*0.335, s*0.15);
+			ctx.fillText("*** COMMODORE BASIC ***", s*0.335, s*0.12);
+			ctx.fillText("31743 BYTE FREE", s*0.335, s*0.15);
+			ctx.fillText("READY.", s*0.335, s*0.18);
 
 			if (Math.sin(flowOffset*0.6) > 0) {
-				ctx.fillRect(s*0.335, s*0.165, s*0.014, s*0.022);
+				ctx.fillRect(s*0.335, s*0.2, s*0.015, s*0.02);
 			}
 		}
 		
@@ -5533,14 +5517,14 @@ function drawPC(x, y, tile) {
 		ctx.font = `bold ${s*0.04}px monospace`;
 		ctx.textAlign = "left";
 		ctx.textBaseline = "middle";
-		ctx.fillText("C=commodore       cbm        computer", s*0.095, s*0.46);
-		ctx.font = `bold ${s*0.035}px monospace`;
-		ctx.fillText("                3001 series      3008", s*0.095, s*0.50);
+		ctx.fillText("C=commodore       CBM        computer", s*0.095, s*0.47);
+		ctx.font = `${s*0.04}px monospace`;
+		ctx.fillText("3001 series                  3008", s*0.095, s*0.50);
 		
 		// led on/off
 		ctx.fillStyle = connected ? colors.greenOn : colors.greenOff;
 		ctx.beginPath();
-		ctx.arc(s*0.88, s*0.51, s*0.02, 0, Math.PI*2);
+		ctx.arc(s*0.88, s*0.50, s*0.02, 0, Math.PI*2);
 		ctx.fill();
 		if (connected) drawLedAloneCircle(s*0.88, s*0.51, s*0.02, colors.greenOn);
 
@@ -5552,7 +5536,7 @@ function drawPC(x, y, tile) {
 		const kbRows = 3;
 		const kbCols = 10;
 		const tkw = (s*0.6)/kbCols;
-		const tkh = (s*0.2)/kbRows;
+		const tkh = (s*0.15)/kbRows;
 		for(let r = 0; r < kbRows; r++) {
 			for(let c = 0; c < kbCols; c++) {
 				const kx = s*0.10 + c*tkw;
@@ -5563,8 +5547,8 @@ function drawPC(x, y, tile) {
 		}
 
 		// SPAZIO (barra lunga in basso a sinistra, sotto la tastiera principale)
-		ctx.fillRect(s*0.20, s*0.80, s*0.42, s*0.045);
-		ctx.strokeRect(s*0.20, s*0.80, s*0.42, s*0.045);
+		ctx.fillRect(s*0.20, s*0.75, s*0.42, s*0.045);
+		ctx.strokeRect(s*0.20, s*0.75, s*0.42, s*0.045);
 
 		// KEYPAD NUMERICO (separato a destra, griglia 4x4)
 		const padRows = 4;
@@ -5577,12 +5561,20 @@ function drawPC(x, y, tile) {
 				ctx.strokeRect(kx, ky, tkw*0.8, tkh*0.75);
 			}
 		}
-
-		// piedino/bordo inferiore scuro del case
-		ctx.fillStyle = "#333";
+		
+		//bordo chiaro
+		ctx.fillStyle = "#ccb";
+		ctx.strokeStyle = "#333";
+		ctx.lineWidth = s * 0.01;
 		ctx.beginPath();
-		ctx.roundRect(s*0.1, s*0.92, s*0.8, s*0.04, s*0.01);
+		ctx.moveTo(s*0.05, s*0.84);
+		ctx.lineTo(s*0.07, s*0.88);
+		ctx.lineTo(s*0.93, s*0.88);
+		ctx.lineTo(s*0.95, s*0.84);
+		ctx.lineTo(s*0.05, s*0.84);
+		ctx.closePath();
 		ctx.fill();
+		ctx.stroke();
 	}
 	
 	ctx.restore();
