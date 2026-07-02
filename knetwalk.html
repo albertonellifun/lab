@@ -1502,15 +1502,16 @@ function drawPCWATER(x, y, tile) {
 		ctx.fill();
 
 		// --- DADO A STELLA (pentagono) ---
-		const nutY = domeY - domeR * 0.85;
+		const nutY = domeY - domeR * 0.95;
 		const nutR = s * 0.09;
 		ctx.fillStyle = '#4A0E0E';
 		ctx.beginPath();
 		for (let i = 0; i < 6; i++) {
-			let ang = (Math.PI * 2 / 6) * i - Math.PI/2;
+			let ang = (Math.PI * 2 / 6) * i - Math.PI * 0.5;
 			let px = s*0.5 + Math.cos(ang) * nutR;
-			let py = nutY + Math.sin(ang) * nutR;
-			if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+			let py = nutY + Math.sin(ang) * nutR * 0.33;//schiacciato
+			if (i === 0) ctx.moveTo(px, py); 
+			else ctx.lineTo(px, py);
 		}
 		ctx.closePath();
 		ctx.fill();
@@ -1518,26 +1519,22 @@ function drawPCWATER(x, y, tile) {
 		// pallina di sicurezza in cima
 		ctx.fillStyle = '#8B1A1A';
 		ctx.beginPath();
-		ctx.arc(s/2, nutY - nutR*0.7, s*0.025, 0, Math.PI*2);
+		ctx.arc(s*0.5, nutY - nutR*0.5, s*0.04, 0, Math.PI*2);
 		ctx.fill();
 
 		// --- BOCCHETTONI LATERALI (sx/dx) ---
-		const nozzleY = barrelTop + (barrelBottom - barrelTop) * 0.32;
-		const nozzleLen = s * 0.12;
+		const nozzleY = barrelTop + (barrelBottom - barrelTop) * 0.33;//ad un terzo altezza
+		const nozzleLen = s * 0.08;
 		const nozzleH = s * 0.14;
 
 		[-1, 1].forEach(dir => {
 			const nx = dir === -1 ? bodyX - nozzleLen : bodyX + bodyW;
 			ctx.fillStyle = '#7A1515';
-			ctx.beginPath();
-			ctx.roundRect(nx, nozzleY - nozzleH/2, nozzleLen, nozzleH, s*0.02);
-			ctx.fill();
-			// tappo esagonale in punta
-			const capX = dir === -1 ? nx : nx + nozzleLen;
+			ctx.fillRect(nx, nozzleY - nozzleH/2, nozzleLen, nozzleH);
+			// tappo quadrato in punta
+			const capX = dir === -1 ? nx - s*0.02 : nx + nozzleLen - s*0.02;
 			ctx.fillStyle = '#4A0E0E';
-			ctx.beginPath();
-			ctx.arc(capX, nozzleY, s*0.045, 0, Math.PI*2);
-			ctx.fill();
+			ctx.fillRect(capX, nozzleY - s*0.08, s*0.04, s*0.16);
 		});
 
 		// --- HIGHLIGHT LUCIDO (stesso trucco della carrozzeria server) ---
@@ -1548,7 +1545,7 @@ function drawPCWATER(x, y, tile) {
 
 		// --- STATO CONNESSO: goccioline che sprizzano dai lati
 		if (connected) {
-			const capX1 = bodyX + bodyW + nozzleLen;
+			const capX1 = bodyX + bodyW + nozzleLen + s*0.02;
 			for (let i = 0; i < 3; i++) {
 				let dropT = ((flowOffset * 2 + i * 8) % 24) / 24;
 				let dx = capX1 + dropT * s*0.15;
@@ -1558,7 +1555,7 @@ function drawPCWATER(x, y, tile) {
 				ctx.fillStyle = 'rgba(150,220,255,0.75)';
 				ctx.fill();
 			}		
-			const capX2 = bodyX - nozzleLen;
+			const capX2 = bodyX - nozzleLen - s*0.02;
 			for (let i = 0; i < 3; i++) {
 				let dropT = ((flowOffset * 2 + i * 8) % 24) / 24;
 				let dx = capX2 - dropT * s*0.15;
@@ -1581,10 +1578,10 @@ function drawPCWATER(x, y, tile) {
 		vaseGrad.addColorStop(1, '#2C5F6F');
 		ctx.fillStyle = vaseGrad;
 		ctx.beginPath();
-		ctx.roundRect(s*0.15,vaseTop,s*0.7,vaseBorderH,s*0.02);
+		ctx.roundRect(s*0.15,vaseTop,s*0.7,vaseBorderH,[s*0.02,s*0.02,s*0.04,s*0.04]);
 		ctx.fill();
 		ctx.beginPath();
-		ctx.roundRect(s*0.2,vaseTop+vaseBorderH,s*0.6,vaseBodyH,s*0.02);
+		ctx.roundRect(s*0.2,vaseTop+vaseBorderH,s*0.6,vaseBodyH,[0,0,s*0.04,s*0.04]);
 		ctx.fill();
 		ctx.fillStyle = '#292';
 		ctx.beginPath();
@@ -1599,7 +1596,7 @@ function drawPCWATER(x, y, tile) {
 			let baseX = s*0.5 + (i - 1) * s * 0.25;
 			let stemSway = connected ? Math.sin(flowOffset * 0.3 + i * 1.5) * s*0.02 : 0;
 			let topY = (i === 1 ? s*0.05 : s*0.15);
-			let midY = vaseTop - (vaseTop - topY) * 0.5;
+			let midY = vaseTop - (vaseTop - topY) * 0.25;
 			let topX = baseX + stemSway;
 			let midX = baseX + stemSway * 0.3;
 
@@ -1608,7 +1605,7 @@ function drawPCWATER(x, y, tile) {
 			ctx.lineWidth = s * 0.025;
 			ctx.lineCap = 'round';
 			ctx.beginPath();
-			ctx.moveTo(baseX, vaseTop + s*0.01);
+			ctx.moveTo(baseX, vaseTop);
 			ctx.lineTo(midX, midY);
 			ctx.lineTo(topX, topY);
 			ctx.stroke();
@@ -1619,8 +1616,8 @@ function drawPCWATER(x, y, tile) {
 				ctx.fillStyle = '#4A9B4A';
 				ctx.beginPath();
 				ctx.moveTo(midX, midY);
-				ctx.lineTo(midX + leafDir * s*0.06, midY - s*0.02);
-				ctx.lineTo(midX + leafDir * s*0.01, midY + s*0.03);
+				ctx.lineTo(midX + leafDir * s*0.10, midY - s*0.02);
+				ctx.lineTo(midX + leafDir * s*0.02, midY + s*0.02);
 				ctx.closePath();
 				ctx.fill();
 			}
@@ -1629,7 +1626,7 @@ function drawPCWATER(x, y, tile) {
 			const petalCount = 8;
 			const petalLen = s * 0.15;
 			const petalW = s * 0.08;
-			const petalColor = connected ? ['#fff','#f80','#a00','#00a','#0c0','#f0f','#0bf'][type.id.length % 7] : '#ddc';
+			const petalColor = connected ? ['#fff','#f80','#a00','#00a','#0c0','#f0f','#0bf','#444'][type.id.length % 8] : '#ddc';
 
 			ctx.save();
 			ctx.translate(topX, topY);
