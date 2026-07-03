@@ -326,13 +326,14 @@ function changeAnimateFlag(btn) {
 }
 
 function changeMotherboardFlag(btn) {
-	motherboardFlag = (motherboardFlag + 1) % 3;
+	motherboardFlag = (motherboardFlag + 1) % 4;
 	if(btn) {
 		if(motherboardFlag) btn.classList.add('active');
 		else btn.classList.remove('active');
 		
 		if (motherboardFlag === 0) btn.innerText = '🔋';
 		else if (motherboardFlag === 1) btn.innerText = '🌻';
+		else if (motherboardFlag === 2) btn.innerText = '🕹️';
 		else btn.innerText = '🖥️';
 	}
 	if (motherboardFlag === 1) {
@@ -343,6 +344,11 @@ function changeMotherboardFlag(btn) {
 	else if (motherboardFlag === 2) {
 		colors.activeColor = wireColors[wireColors.length-1];
 		document.body.style.backgroundImage = 'url(./knetwalk-flower.png)';
+		canvas.style.background = '#0f172add';
+	}
+	else if (motherboardFlag === 3) {
+		colors.activeColor = wireColors[wireColors.length-1];
+		document.body.style.backgroundImage = 'url(./knetwalk-globe.png)';
 		canvas.style.background = '#0f172add';
 	}
 	else {
@@ -1039,6 +1045,7 @@ function drawIcons(x, y, size, rows, cols, bwColor = null) {
 function drawTile(tile) {
 	if(motherboardFlag === 1) drawTileMotherboard(tile);
 	else if(motherboardFlag === 2) drawTileWATER(tile);
+	else if(motherboardFlag === 3) drawTilePACMAN(tile);
 	else drawTileOLD(tile);
 }
 
@@ -1420,6 +1427,244 @@ function drawTileWATER(tile) {
 
     if(tile.type) drawPCWATER(x, y, tile);
 }
+
+
+
+function drawTilePACMAN(tile) {
+    let x = tile.x * CELL_SIZE;
+    let y = tile.y * CELL_SIZE;
+    let mid = CELL_SIZE * 0.5;
+
+	let hue = (flowOffset * 5 + 240) % 360;
+    let dynamicColor = `hsl(${hue}, 100%, 50%)`;
+
+	const cableColor = tile.connected ?
+		(colors.activeColor === '#000000' ? dynamicColor : colors.activeColor) : colors.inactiveColor;
+
+    ctx.strokeStyle = cableColor;
+    ctx.lineWidth = CELL_SIZE * 0.08;
+    ctx.lineCap = "butt";
+
+    if(tile.connected) {
+        ctx.shadowBlur = 20;
+		ctx.shadowColor = cableColor;
+    } else {
+        ctx.shadowBlur = 0;
+    }
+
+	//fix round / butt con una palla al centro della tile
+	ctx.beginPath();
+	ctx.arc(x+mid, y+mid, CELL_SIZE * 0.04, 0, Math.PI*2);
+	ctx.fillStyle = cableColor;
+	ctx.fill();
+
+	//rotazione link
+	ctx.save();
+    ctx.translate(x + mid, y + mid);
+	let angle = tile.rotation - tile.currentRotation;
+	ctx.rotate(angle);
+
+    ctx.beginPath();
+	if (tile.conns & N) { ctx.moveTo(0, 0); ctx.lineTo(0, -mid); }
+    if (tile.conns & E) { ctx.moveTo(0, 0); ctx.lineTo(mid, 0);  }
+    if (tile.conns & S) { ctx.moveTo(0, 0); ctx.lineTo(0, mid);  }
+    if (tile.conns & W) { ctx.moveTo(0, 0); ctx.lineTo(-mid, 0); }
+	ctx.stroke();
+
+	//pallini stile "biscottini" pacman a meta di ogni cavo connesso
+	if (tile.connected) {
+		ctx.fillStyle = '#ffee55';
+		[[N,0,-mid],[E,mid,0],[S,0,mid],[W,-mid,0]].forEach(([bit,dx,dy]) => {
+			if (tile.conns & bit) {
+				//ctx.beginPath();
+				//ctx.arc(dx*0.5, dy*0.5, CELL_SIZE*0.025, 0, Math.PI*2);
+				//ctx.fill();
+				ctx.beginPath();
+				ctx.arc(dx*0.25, dy*0.25, CELL_SIZE*0.025, 0, Math.PI*2);
+				ctx.fill();
+				ctx.beginPath();
+				ctx.arc(dx*0.75, dy*0.75, CELL_SIZE*0.025, 0, Math.PI*2);
+				ctx.fill();
+			}
+		});
+	}
+
+	ctx.restore();
+    ctx.shadowBlur = 0;
+
+    if(tile.type) drawPCPACMAN(x, y, tile);
+}
+
+function drawPCPACMAN(x, y, tile) {
+	const isServer = tile.type === 'server';
+	const type = tile.subType;
+	const connected = tile.connected;
+	const s = CELL_SIZE * (	isServer ? 0.8 :
+							connected && animateFlag ? Math.abs(Math.sin(flowOffset*0.5)*0.05) + 0.65 :
+							0.6 );
+	const p = (CELL_SIZE - s) * 0.5;
+
+	ctx.save();
+	ctx.translate(x + p, y + p);
+
+	if (isServer) {
+		// TERRA (mappamondo) al posto del server
+		let earthGrad = ctx.createRadialGradient(s*0.35, s*0.35, s*0.05, s*0.5, s*0.5, s*0.55);
+		earthGrad.addColorStop(0, connected ? '#4ab0f0' : '#25415a');
+		earthGrad.addColorStop(1, connected ? '#0d5aa8' : '#12212f');
+		ctx.fillStyle = earthGrad;
+		ctx.beginPath();
+		ctx.arc(s*0.5, s*0.5, s*0.5, 0, Math.PI*2);
+		ctx.fill();
+
+		//continenti (macchie verdi, no bezier: solo arc + lineTo)
+		ctx.fillStyle = connected ? '#2f9e44' : '#1b3a24';
+		ctx.save();
+		ctx.translate(s*0.5, s*0.5);
+		ctx.rotate(connected ? flowOffset * 0.01 : 0);
+		ctx.beginPath();
+		ctx.arc(-s*0.12, -s*0.15, s*0.14, 0, Math.PI*2);
+		ctx.fill();
+		ctx.beginPath();
+		ctx.arc(s*0.15, s*0.05, s*0.1, 0, Math.PI*2);
+		ctx.fill();
+		ctx.beginPath();
+		ctx.moveTo(-s*0.05, s*0.15);
+		ctx.lineTo(s*0.1, s*0.25);
+		ctx.lineTo(-s*0.02, s*0.32);
+		ctx.lineTo(-s*0.18, s*0.22);
+		ctx.closePath();
+		ctx.fill();
+		ctx.restore();
+
+		//riflesso lucido
+		ctx.fillStyle = 'rgba(255,255,255,0.15)';
+		ctx.beginPath();
+		ctx.arc(s*0.35, s*0.32, s*0.18, 0, Math.PI*2);
+		ctx.fill();
+
+		if (connected) drawLedAloneCircle(s*0.5, s*0.5, s*0.25, '#4ab0f0');
+
+	} else if (type.id) {
+		//sceglie il personaggio in base al nome del device (deterministico, no random per tile)
+		const charType = (type.id.length + x|0 + y|0) % 12; // 0..1=pacman mr+mrs, 2..6=5 fantasmi colorati, 7..11=5 invaders colorati
+
+		if (charType <= 1) {
+			// PAC-MAN — apre/chiude la bocca sempre quando connesso
+			const mouthAngle = !connected ? 0.05 : 0.2 * Math.abs ( charType === 1 ? Math.sin(flowOffset*0.5) : Math.cos(flowOffset*0.5) );
+			ctx.fillStyle = !connected ? '#666' : (charType === 1 ? '#fac' : '#ff0');//grigione : mrs/mr pacman
+			ctx.strokeStyle = '#00000022';
+			ctx.lineWidth = s*0.02;
+			ctx.beginPath();
+			ctx.arc(s*0.5, s*0.5, s*0.45, mouthAngle*Math.PI, (2-mouthAngle)*Math.PI);
+			ctx.lineTo(s*0.5, s*0.5);
+			ctx.closePath();
+			ctx.fill();
+			ctx.stroke();
+			//occhio
+			ctx.fillStyle = '#111';
+			ctx.beginPath();
+			ctx.arc(s*0.5, s*0.2, s*0.05, 0, Math.PI*2);
+			ctx.fill();
+		} else if (charType <= 6) {
+			// FANTASMA classico == cupola + 3 "piedini" arrotondati
+			const ghostColors = ['#ff0000','#00ccff','#ff8800','#ffbbdd', '#eeeeee', '#0000ff', '#ff00ff', '#ffff00'];//rosso, ciano, arancio, rosa, bianco, +blu +viola +giallo
+			const gc = connected ? ghostColors[type.id.length%8] : '#666666';
+
+			const gcx = s*0.5;
+			const r = s*0.38;
+			const domeY = s*0.42;
+			const legR = r/3;
+			const bumpY = s*0.88 - legR;
+			
+			ctx.strokeStyle = '#00000022';
+			ctx.lineWidth = s*0.02;
+			ctx.fillStyle = gc;
+			ctx.beginPath();			
+			ctx.arc(gcx, domeY, r, Math.PI, 0, false); // cupola, arriva a (gcx+r, domeY)
+			ctx.lineTo(gcx + r, bumpY);
+			for (let j = 0; j < 3; j++) {
+				const segW = (2*r)/3;
+				const cx2 = (gcx + r) - segW*(j+0.5);
+				ctx.arc(cx2, bumpY, legR, 0, Math.PI, false); // bump verso il basso
+			}
+			ctx.lineTo(gcx - r, domeY);
+			ctx.closePath();
+			ctx.fill();
+			ctx.stroke();
+
+			//occhi ovali bianchi + pupille colorate
+			[s*0.35, s*0.65].forEach(ex => {
+				ctx.fillStyle = '#ffffff';
+				ctx.beginPath();
+				ctx.ellipse(ex, s*0.42, s*0.1, s*0.12, 0, 0, Math.PI*2);
+				ctx.fill();
+				ctx.stroke();
+				ctx.fillStyle = '#1155aa';
+				const pupilOffset = connected ? (charType % 2 ? Math.sin(flowOffset*0.5) : Math.cos(flowOffset*0.5) ) * s * 0.05 : 0;
+				ctx.beginPath();
+				ctx.arc(ex + pupilOffset, s*0.42, s*0.045, 0, Math.PI*2);
+				ctx.fill();
+			});
+		} else {
+			// SPACE INVADERS — 5 alieni diversi, pixel grid, no bezier
+			let invGridsX = [];
+			let invGridsY = [];
+			
+			const alien1x = [ "000011111000", "000111111100", "001100100110", "001111111110", "000001110000", "000010001000", "000100000100", "000011011000"];
+			const alien1y = [ "000011111000", "000111111100", "001100100110", "001111111110", "000001110000", "000010001000", "000100000100", "001000000010"];
+
+			const alien2x = [ "001000001000", "000100010000", "001111111000", "011011101100", "111111111110", "101111111010", "101000001010", "000110110000"];
+			const alien2y = [ "001000001000", "100100010010", "101111111010", "011011101100", "111111111110", "001111111000", "001000001000", "010000000100"];
+			
+			const alien3x = [ "000001100000", "000011110000", "000111111000", "001101101100", "001111111100", "000010010000", "000100001000", "001000000100"];
+			const alien3y = [ "000001100000", "000011110000", "000111111000", "001101101100", "001111111100", "000010010000", "000100001000", "000010010000"];
+
+			const alien4x = [ "000011110000", "011111111110", "111111111111", "111001100111", "111111111111", "000110011000", "001001100100", "000100001000"];
+			const alien4y = [ "000011110000", "011111111110", "111111111111", "111001100111", "111111111111", "000110011000", "001101101100", "110000000011"];
+			
+			const ufoSprite1x = ["0000011111100000","0001111111111000","0011111111111100","0110110110110110","1111111111111111","0011100110011100","0001000000001000"];
+			const ufoSprite1y = ["0000011111100000","0001111111111000","0011111111111100","0101101101101110","1111111111111111","0011100110011100","0001000000001000"];
+			
+			invGridsX.push(alien1x);
+			invGridsX.push(alien2x);
+			invGridsX.push(alien3x);
+			invGridsX.push(alien4x);
+			invGridsX.push(ufoSprite1x);
+			
+			invGridsY.push(alien1y);
+			invGridsY.push(alien2y);
+			invGridsY.push(alien3y);
+			invGridsY.push(alien4y);
+			invGridsY.push(ufoSprite1y);
+			
+			const shape = connected && Math.sin(flowOffset*0.5) > 0 ? invGridsY[charType - 7] : invGridsX[charType - 7];
+			const cols = shape[0].length;
+			const rows = shape.length;
+			const px = s / cols;
+			const gridH = rows * px;
+			const offY = (s - gridH) * 0.5;
+			
+			const invColors = ['#ffff00','#0000ff','#ff8800','#22ff44','#ff00ff', '#00ffff', '#ff0000'];//giallo, blu, arancio, verde, viola, ciano, rosso
+			
+			ctx.fillStyle = connected ? invColors[type.id.length % 7] : '#333333';
+			for (let ry=0; ry<rows; ry++) {
+				for (let rx=0; rx<cols; rx++) {
+					if (shape[ry][rx] === '1') {
+						ctx.fillRect(rx*px, offY + ry*px, px*1.05, px*1.05);
+					}
+				}
+			}
+		}
+	}
+
+	ctx.restore();
+}
+
+
+
+
+
 
 function drawTileOLD(tile) {
     let x = tile.x * CELL_SIZE;
