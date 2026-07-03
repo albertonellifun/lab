@@ -145,14 +145,14 @@
     <div class="controls">
 		<h1>KNetWalk</h1>
 		
-		<label>WIDTH:  <input type="range" id="widthSlider"  min="2" max="12" value="5" onchange="changeSliderDifficulty()" list="values"></label>
-		<label>HEIGHT: <input type="range" id="heightSlider" min="2" max="12" value="3" onchange="changeSliderDifficulty()" list="values"></label>
+		<label>WIDTH:  <input type="range" id="widthSlider"  min="2" max="12" value="5" list="values"></label>
+		<label>HEIGHT: <input type="range" id="heightSlider" min="2" max="12" value="3" list="values"></label>
 		
-		<button id="animateBtn"     onclick="changeAnimateFlag(this)">🔍</button>
-		<button id="wiresColorBtn"  onclick="changeWiresColorFlag(this)">🌈</button>
-		<button id="motherboardBtn" onclick="changeMotherboardFlag(this)">🔋</button>
-		<button id="groupBtn"       onclick="changeGroup(this)">🖥️ All</button>
-		<button id="restart"        onclick="initGame()">↻ Restart</button>
+		<button id="animateBtn">🔍</button>
+		<button id="wiresColorBtn">🌈</button>
+		<button id="motherboardBtn">🔋</button>
+		<button id="groupBtn">🖥️ All</button>
+		<button id="restart">↻ Restart</button>
     </div>
 
 	<div id="game-container">
@@ -175,6 +175,8 @@
 	</datalist>
 
 <script>
+window.addEventListener("load", () => {
+
 let WIDTH = 5;
 let HEIGHT = 3;
 const CANVAS_MAX_SIZE = 4096;
@@ -308,7 +310,6 @@ let motherboardFlag = 0;//0=pc, 1=mobo, 2=water
 let shuffledTypes = [];//per evitare duplicati
 let motherboardBackgroundLines = [];//griglia Motherboard
 const FAKEBLUR_SIZE = 2.5;//per i led
-let USEFAKEBLUR_LINES = false;//per i link connessi
 
 function changeSliderDifficulty() {
 	const w = parseInt(document.getElementById('widthSlider').value);
@@ -481,14 +482,14 @@ function generateNetwork() {
     let walls = [];
     serverPos = { x: Math.floor(Math.random()*WIDTH), y: Math.floor(Math.random()*HEIGHT) };//SIZE
     visited[serverPos.y][serverPos.x] = true;
-    addWalls(serverPos.x, serverPos.y, walls, visited);
+	addWalls(serverPos.x, serverPos.y, walls, visited);
 
     while (walls.length > 0) {
         let wall = walls.splice(Math.floor(Math.random()*walls.length), 1)[0];
         if (visited[wall.y2][wall.x2]) continue;
         grid[wall.y1][wall.x1].conns |= wall.dir1;
         grid[wall.y2][wall.x2].conns |= wall.dir2;
-        visited[wall.y2][wall.x2] = true;
+		visited[wall.y2][wall.x2] = true;
         addWalls(wall.x2, wall.y2, walls, visited);
     }
 }
@@ -592,6 +593,8 @@ function updateConnectivity() {
         statusDiv.innerText = "SYSTEM ONLINE — NETWORK CONFIGURED!";
 		statusDiv.style.display = 'block';
     }
+	
+	updateWaterFlow();//AGGIORNA IL FLUSSO D'ACQUA
 }
 
 /** RENDERING AVANZATO */
@@ -1252,6 +1255,46 @@ function drawMotherboardPC(x, y, tile) {
 }
 
 
+const FLOW_DIRS = [
+    { bit: N, dx: 0, dy: -1, opposite: S },
+    { bit: E, dx: 1, dy: 0, opposite: W },
+    { bit: S, dx: 0, dy: 1, opposite: N },
+    { bit: W, dx: -1, dy: 0, opposite: E },
+];
+
+function updateWaterFlow() {
+    // reset
+    for (let y = 0; y < HEIGHT; y++)
+        for (let x = 0; x < WIDTH; x++)
+            grid[y][x].parentDir = 0;
+
+    const visited = Array(HEIGHT).fill().map(() => Array(WIDTH).fill(false));
+    const startTile = grid[serverPos.y][serverPos.x];
+    visited[serverPos.y][serverPos.x] = true;
+    const queue = [startTile];
+
+    while (queue.length) {
+        const current = queue.shift();
+
+        FLOW_DIRS.forEach(d => {
+            if (!(current.conns & d.bit)) return; // niente stub in quella direzione
+
+            const nx = current.x + d.dx;
+            const ny = current.y + d.dy;
+            if (nx < 0 || ny < 0 || nx >= WIDTH || ny >= HEIGHT) return;
+            if (visited[ny][nx]) return; // già raggiunta: ignora eventuali connessioni "extra"/anelli
+
+            const neighbor = grid[ny][nx];
+            if (!(neighbor.conns & d.opposite)) return; // lo stub del vicino non combacia
+
+            neighbor.parentDir = d.opposite;
+            visited[ny][nx] = true;
+            queue.push(neighbor);
+        });
+    }
+}
+
+
 function drawTileWATER(tile) {
     let x = tile.x * CELL_SIZE;
     let y = tile.y * CELL_SIZE;
@@ -1271,7 +1314,7 @@ function drawTileWATER(tile) {
     ctx.lineCap = "butt";
     ctx.lineJoin = "round";
 
-    const glow = tile.connected && !USEFAKEBLUR_LINES;
+    const glow = tile.connected;
 
     ctx.save();
     ctx.translate(x + mid, y + mid);
@@ -1280,10 +1323,10 @@ function drawTileWATER(tile) {
 
     // [dx, dy, perpX, perpY] - perpX/perpY = direzione dell'highlight (lato "lucido" del tubo)
     const dirs = [];
-    if (tile.conns & N) dirs.push([0, -mid, 1, 0]);
-    if (tile.conns & E) dirs.push([mid, 0, 0, 1]);
-    if (tile.conns & S) dirs.push([0, mid, 1, 0]);
-    if (tile.conns & W) dirs.push([-mid, 0, 0, 1]);
+    if (tile.conns & N) dirs.push([0, -mid, 1, 0    , N]);//PROVENIENZA
+    if (tile.conns & E) dirs.push([mid, 0, 0, 1		, E]);
+    if (tile.conns & S) dirs.push([0, mid, 1, 0		, S]);
+    if (tile.conns & W) dirs.push([-mid, 0, 0, 1	, W]);
 
     // 1. Ombra (dà profondità, resta sotto tutto)
     ctx.strokeStyle = 'rgba(0,0,0,0.3)';
@@ -1336,13 +1379,15 @@ function drawTileWATER(tile) {
         ctx.fill();
     }
 	
-	//flusso acqua lento fighissimo
-	if (tile.connected) {
-		ctx.save();
-		ctx.strokeStyle = 'rgba(255,255,255,0.5)';//'rgba(180, 230, 255, 0.65)'; // azzurro chiaro traslucido
-		ctx.lineWidth = pipeW * 0.55;
-		ctx.lineCap = 'round';
-		ctx.setLineDash([pipeW * 0.9, pipeW * 1.3]); // segmento pieno, spazio vuoto
+	// flusso acqua lento fighissimo DIREZIONALE in base a parentDir settata da updateWaterFlow()
+    if (tile.connected) {
+        ctx.save();
+        ctx.strokeStyle = 'rgba(255,255,255,0.5)';// azzurro chiaro traslucido
+        ctx.lineWidth = pipeW * 0.5;
+        ctx.lineCap = 'round';//gocce rotonde
+        ctx.setLineDash([pipeW * 0.2, pipeW * 1.2]);
+
+		/*
 		ctx.lineDashOffset = -flowOffset * 4; // negativo = scorre verso l'esterno del tubo
 		dirs.forEach(([tx, ty]) => {
 			ctx.beginPath();
@@ -1350,15 +1395,24 @@ function drawTileWATER(tile) {
 			ctx.lineTo(tx, ty);
 			ctx.stroke();
 		});
-		ctx.setLineDash([]); // reset, IMPORTANTE altrimenti "sporca" gli altri stroke
-		ctx.restore();
-	}
+		*/
+		
+        dirs.forEach(([tx, ty, px, py, bit]) => {
+            // se questo stub è quello da cui arriva l'acqua (parentDir), il flusso
+            // visivo deve andare dal bordo VERSO il centro >>> segno opposto rispetto
+            // a uno stub "figlio" (che ridistribuisce l'acqua verso l'esterno)
+            const isParent = bit === tile.parentDir;
+            const flowSign = isParent ? 1 : -1;
 
-    if (USEFAKEBLUR_LINES) {
-        if(tile.connected && tile.conns & N) drawLedAloneLine(0, 0, 0, -mid, pipeW, cableColor);
-        if(tile.connected && tile.conns & E) drawLedAloneLine(0, 0, mid, 0,  pipeW, cableColor);
-        if(tile.connected && tile.conns & S) drawLedAloneLine(0, 0, 0, mid,  pipeW, cableColor);
-        if(tile.connected && tile.conns & W) drawLedAloneLine(0, 0, -mid, 0, pipeW, cableColor);
+            ctx.lineDashOffset = flowSign * flowOffset * 3;
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(tx, ty);
+            ctx.stroke();
+        });
+
+        ctx.setLineDash([]);
+        ctx.restore();
     }
 
     ctx.restore();
@@ -1385,7 +1439,7 @@ function drawTileOLD(tile) {
     
     // Effetto bagliore se connesso
     if(tile.connected) {
-        ctx.shadowBlur = USEFAKEBLUR_LINES ? 0 : 20;
+        ctx.shadowBlur = 20;
 		ctx.shadowColor = cableColor;
     } else {
         ctx.shadowBlur = 0;
@@ -1397,8 +1451,6 @@ function drawTileOLD(tile) {
 	ctx.arc(x+mid, y+mid, CELL_SIZE * 0.04, 0, Math.PI*2);
 	ctx.fillStyle = cableColor;
 	ctx.fill();
-	
-	if(USEFAKEBLUR_LINES && tile.connected) drawLedAloneCircle(x+mid, y+mid, CELL_SIZE * 0.03, colors.activeColor);
 	
 	//rotazione link
 	ctx.save(); 
@@ -1416,16 +1468,8 @@ function drawTileOLD(tile) {
     
 	ctx.stroke();
 	
-	if (USEFAKEBLUR_LINES) {
-		if(tile.connected && tile.conns & N) drawLedAloneLine(0, 0, 0, -mid, CELL_SIZE * 0.08, cableColor); 
-		if(tile.connected && tile.conns & E) drawLedAloneLine(0, 0, mid, 0,  CELL_SIZE * 0.08, cableColor); 
-		if(tile.connected && tile.conns & S) drawLedAloneLine(0, 0, 0, mid,  CELL_SIZE * 0.08, cableColor); 
-		if(tile.connected && tile.conns & W) drawLedAloneLine(0, 0, -mid, 0, CELL_SIZE * 0.08, cableColor);
-	}
-	
-    ctx.restore();
+	ctx.restore();
     
-	
     ctx.shadowBlur = 0;
 	
 	// Disegna icone
@@ -1498,7 +1542,7 @@ function drawPCWATER(x, y, tile) {
 		const domeR = bodyW * 0.5;
 		ctx.fillStyle = hydrantGrad;
 		ctx.beginPath();
-		ctx.arc(s/2, domeY, domeR, Math.PI, 0);
+		ctx.arc(s*0.5, domeY, domeR, Math.PI, 0);
 		ctx.fill();
 
 		// --- DADO A STELLA (pentagono) ---
@@ -1516,12 +1560,10 @@ function drawPCWATER(x, y, tile) {
 		ctx.closePath();
 		ctx.fill();
 
-		// pallina di sicurezza in cima
+		// dado quadrato di sicurezza in cima
 		ctx.fillStyle = '#8B1A1A';
-		ctx.beginPath();
-		ctx.arc(s*0.5, nutY - nutR*0.5, s*0.04, 0, Math.PI*2);
-		ctx.fill();
-
+		ctx.fillRect(s*0.5-s*0.04,nutY - nutR*0.25-s*0.06,s*0.08,s*0.06);
+		
 		// --- BOCCHETTONI LATERALI (sx/dx) ---
 		const nozzleY = barrelTop + (barrelBottom - barrelTop) * 0.33;//ad un terzo altezza
 		const nozzleLen = s * 0.08;
@@ -1530,12 +1572,24 @@ function drawPCWATER(x, y, tile) {
 		[-1, 1].forEach(dir => {
 			const nx = dir === -1 ? bodyX - nozzleLen : bodyX + bodyW;
 			ctx.fillStyle = '#7A1515';
-			ctx.fillRect(nx, nozzleY - nozzleH/2, nozzleLen, nozzleH);
+			ctx.fillRect(nx, nozzleY - nozzleH*0.5, nozzleLen, nozzleH);
 			// tappo quadrato in punta
 			const capX = dir === -1 ? nx - s*0.02 : nx + nozzleLen - s*0.02;
 			ctx.fillStyle = '#4A0E0E';
 			ctx.fillRect(capX, nozzleY - s*0.08, s*0.04, s*0.16);
 		});
+		
+		// --- bocchettone centrale davanti
+		ctx.fillStyle = '#7A1515';
+		ctx.beginPath();
+		ctx.arc(s*0.5, nozzleY, nozzleLen*1.25, 0, Math.PI * 2);
+		ctx.fill();
+		// tappo quadrato in punta è rotondo!
+		ctx.fillStyle = '#4A0E0E';
+		ctx.beginPath();
+		ctx.arc(s*0.5, nozzleY, nozzleLen*0.9, 0, Math.PI * 2);
+		ctx.fill();
+		//ctx.fillRect(s*0.5 - s*0.06, nozzleY - s*0.06, s*0.12, s*0.12);
 
 		// --- HIGHLIGHT LUCIDO (stesso trucco della carrozzeria server) ---
 		ctx.fillStyle = 'rgba(255,255,255,0.18)';
@@ -1545,24 +1599,24 @@ function drawPCWATER(x, y, tile) {
 
 		// --- STATO CONNESSO: goccioline che sprizzano dai lati
 		if (connected) {
-			const capX1 = bodyX + bodyW + nozzleLen + s*0.02;
+			const capX1 = bodyX + bodyW + nozzleLen + s*0.02;//DX
+			const capX2 = bodyX - nozzleLen - s*0.02;//SX
+			const capX3 = s * 0.5;//CX
+			ctx.fillStyle = 'rgba(150,220,255,0.75)';
 			for (let i = 0; i < 3; i++) {
 				let dropT = ((flowOffset * 2 + i * 8) % 24) / 24;
-				let dx = capX1 + dropT * s*0.15;
+				let dx1 = capX1 + dropT * s*0.15;
+				let dx2 = capX2 - dropT * s*0.15;
+				let dx3 = capX3;
 				let dy = nozzleY - dropT * s*0.1 + dropT*dropT * s*0.15;
 				ctx.beginPath();
-				ctx.arc(dx, dy, s*0.02 * (1 - dropT*0.5), 0, Math.PI*2);
-				ctx.fillStyle = 'rgba(150,220,255,0.75)';
+				ctx.arc(dx1, dy, s*0.02 * (1 - dropT*0.5), 0, Math.PI*2);
 				ctx.fill();
-			}		
-			const capX2 = bodyX - nozzleLen - s*0.02;
-			for (let i = 0; i < 3; i++) {
-				let dropT = ((flowOffset * 2 + i * 8) % 24) / 24;
-				let dx = capX2 - dropT * s*0.15;
-				let dy = nozzleY - dropT * s*0.1 + dropT*dropT * s*0.15;
 				ctx.beginPath();
-				ctx.arc(dx, dy, s*0.02 * (1 - dropT*0.5), 0, Math.PI*2);
-				ctx.fillStyle = 'rgba(150,220,255,0.75)';
+				ctx.arc(dx2, dy, s*0.02 * (1 - dropT*0.5), 0, Math.PI*2);
+				ctx.fill();
+				ctx.beginPath();
+				ctx.arc(dx3, dy, s*0.02 * (1 - dropT*0.5), 0, Math.PI*2);
 				ctx.fill();
 			}
 		}
@@ -6035,7 +6089,35 @@ canvas.addEventListener("contextmenu", (event) => {
 
 calculateGridSizeRatio();//fix per cercare di adattare subito la griglia 
 initGame();
+
+// Gestione rotazione schermo e ridimensionamento
+window.addEventListener('resize', () => {
+    calculateGridSizeRatio();
+    initGame();
+});
+
+
+
+//aggancia i listener dei pulsanti via js
+document.getElementById("widthSlider").addEventListener("change", changeSliderDifficulty);
+document.getElementById("heightSlider").addEventListener("change", changeSliderDifficulty);
+
+//restart
+document.getElementById("restart").addEventListener("click", initGame);
+
+//flag vari passano il btn
+const animateBtn = document.getElementById("animateBtn"); animateBtn.addEventListener("click", () => changeAnimateFlag(animateBtn));
+const wiresColorBtn = document.getElementById("wiresColorBtn"); wiresColorBtn.addEventListener("click", () => changeWiresColorFlag(wiresColorBtn));
+const motherboardBtn = document.getElementById("motherboardBtn"); motherboardBtn.addEventListener("click", () => changeMotherboardFlag(motherboardBtn));
+const groupBtn = document.getElementById("groupBtn"); groupBtn.addEventListener("click", () => changeGroup(groupBtn));
+
+
+
+
 animate(); // Avvia l'animazione
+
+
+});
 </script>
 </body>
 </html>
