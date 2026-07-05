@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <title>HexNet Walk</title>
-    <style>
-       * { box-sizing: border-box; }
+<style>
+        * { box-sizing: border-box; }
         
         body {
             background-color: #020617;
-            color: #38bdf8;
+			color: #38bdf8;
 			font-family: 'Segoe UI', system-ui, sans-serif;
             display: flex;
             flex-direction: column;
@@ -24,82 +24,90 @@
             user-select: none;
             -webkit-user-select: none;
             -webkit-touch-callout: none;
+			-webkit-tap-highlight-color: transparent;
+			background-image: url(./knetwalk-globe.png);
+			background-repeat: no-repeat;
+			background-position: center center;
+			background-size: cover;
         }
-        
-        h1 { 
-            font-size: clamp(16px, 5vw, 28px);
-            font-weight: bold; 
-            margin: 0;
-            color: #38bdf8; 
-            text-shadow: 0 0 16px rgba(56, 189, 248, 0.5);
-            white-space: nowrap;
-        }
-        
-        .controls { 
+		
+		.controls { 
             width: 100%;
-            padding: clamp(4px, 2vw, 8px) clamp(4px, 2vw, 12px);
+            padding: clamp(2px, 1vw, 6px) clamp(6px, 2vw, 18px);
             display: flex;
-            gap: clamp(4px, 2vw, 12px);
+            gap: clamp(2px, 1vw, 24px) clamp(4px, 2vw, 48px);
             align-items: center;
             justify-content: center;
             flex-wrap: wrap;
-            background: rgba(30, 41, 59, 0.5);
-            border-bottom: 1px solid #334155;
+            min-height: 3vh;
             min-height: fit-content;
+			background: rgba(0, 0, 0, 0.2);
+        }
+        
+        h1 { 
+            font-size: clamp(16px, 12px + 1vw, 80px);
+			font-weight: bold; 
+            margin: 0;
+            color: #38bdf8; 
+            text-shadow: 0 0 16px rgba(56, 189, 248, 0.5);
+			white-space: nowrap;
         }
         
         button {
-            padding: clamp(6px, 2vw, 10px) clamp(8px, 2vw, 16px);
-            font-size: clamp(6px, 2vw, 10px);
+            padding: clamp(6px, 1vw, 12px) clamp(8px, 2vw, 24px);
+            font-size: clamp(10px, 6px + 1vw, 48px);
             cursor: pointer;
             background: #1e293b;
-            border: 1px solid #334155;
+            border: 0.2vw solid #334155;
             color: #94a3b8;
-            border-radius: 4px;
+			border-radius: 0.5vw;
             transition: all 0.3s;
             font-weight: bold;
             white-space: nowrap;
             flex-shrink: 0;
             line-height: 1;
-        }
+        }			
         
         button:hover { background: #334155; color: #38bdf8; border-color: #38bdf8; }
-        button.active { background: #0ea5e9; color: #ffffff; border-color: #0ea5e9; box-shadow: 0 0 15px rgba(14, 165, 233, 0.4); }
-        
+		button.active { background: #0ea5e9; color: #ffffff; border-color: #0ea5e9; box-shadow: 0 0 15px rgba(14, 165, 233, 0.4); }
+		
         #game-container {
             flex: 1;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: clamp(4px, 2vw, 12px);
+            padding: clamp(2px, 1vw, 6px) clamp(4px, 1vw, 12px);
             min-width: 0;
             min-height: 0;
         }
         
-        canvas { 
-            background-color: #0f172a; 
+        #gameCanvas { 
+            background-color: #0f172add; 
             display: block; 
             cursor: pointer; 
-            border-radius: 4px;
             max-width: 100%;
             max-height: 100%;
             image-rendering: crisp-edges;
-			border: 4px solid #334155;
+			border: 0.5vw solid #334155;
+			border-radius: 0.5vw;
         }
         
         #status { 
-            width: 100%;
-            padding: clamp(4px, 2vw, 8px);
+            padding: clamp(4px, 2vw, 48px);
             height: auto;
             min-height: fit-content;
-            font-size: clamp(12px, 2vw, 20px);
+			font-size: clamp(16px, 12px + 1vw, 80px);
             font-weight: bold; 
-            color: #22c55e; 
+			color: #22c55e;
             text-shadow: 0 0 16px rgba(34, 197, 94, 0.3);
-            text-align: center;
-            background: rgba(30, 41, 59, 0.5);
-            border-top: 1px solid #334155;
+			text-align: center;
+            background: rgba(30, 41, 59, 0.9);
+            border: 0.2vw solid #334155;
             word-break: break-word;
+			position: absolute;
+			top: 35%;
+			display: none;
+			line-height: 2;
         }
 		
 		#tooltip {
@@ -110,7 +118,7 @@
 			color: white; 
 			padding: 5px 10px; 
 			border-radius: 4px; 
-			font-size: 12px;
+			font-size: clamp(12px, 8px + 2vw, 36px);
 			z-index: 100;
 		}
 		
@@ -118,9 +126,9 @@
             display: flex;
             align-items: center;
             gap: 6px;
-            font-size: clamp(10px, 2vw, 14px);
+            font-size: clamp(10px, 6px + 1vw, 36px);
             color: #94a3b8;
-            flex-shrink: 0;
+			flex-shrink: 0;
             white-space: nowrap;
         }
         
@@ -156,17 +164,15 @@
         const hexDirs = [[1, 0], [0, 1], [-1, 1], [-1, 0], [0, -1], [1, -1]];
         let hexes = [];
 		
+		const FAKEBLUR_SIZE = 2.5;//per i led
+		
 		//Palette realistica condivisa
 		const colors = {
-			activeColor: "#0ea5e9",
-			inactiveColor: "#334155",
-			borderColor : "#445166",
-
 			midGray: "#1e293b",
 			silver: "#94a3b8",
 			darkSilver: "#475569",
 			screenOff: "#0f172a",
-			glass: "rgba(255, 255, 255, 0.15)",
+			glass: "#ffffff22",//ocho: trasparenza
 			greenOn: "#22c55e",
 			greenOff: "#064e3b",
 			orangeOn: "#f59e0b",
@@ -177,8 +183,16 @@
 			blueOff: "#0c4a6e",
 			yellowOn: "#efef44",
 			yellowOff: "#7f7f1d",
-			whiteOn: "#fff",
-			whiteOff: "#666",
+			whiteOn: "#ffffff",
+			whiteOff: "#666666",
+			activeColor: "#0ea5e9",
+			inactiveColor: "#334155",
+			tileBackground: "#0f172add",//ocho: trasparenza
+			motherBoardBackground: "#2b8956f5",//ocho: trasparenza
+			screenGradDark: "#1e5aa6",
+			screenGradLight: "#2b7fc8",
+			screenGradCyanDark:"#0369a1",
+			screenGradCyanLight:"#38bdf8",
 		};
 
         canvas.addEventListener('contextmenu', e => e.preventDefault());
@@ -283,6 +297,189 @@
                 statusDiv.innerText = victory ? "SISTEMA ONLINE - RETE CONFIGURATA!" : "Collega tutti i PC al Server!";
             }
         }
+		
+		
+		function drawIcons(x, y, size, rows, cols, bwColor = null) {
+			const icons = [
+				{ name: 'phone',    color: bwColor ? bwColor : '#4af' },
+				{ name: 'message',  color: bwColor ? bwColor : '#2f2' },
+				{ name: 'camera',   color: bwColor ? bwColor : '#f4a' },
+				{ name: 'mail',     color: bwColor ? bwColor : '#f84' },
+				{ name: 'settings', color: bwColor ? bwColor : '#aaa' },
+				{ name: 'calendar', color: bwColor ? bwColor : '#f44' },
+				{ name: 'maps',     color: bwColor ? bwColor : '#4f4' },
+				{ name: 'music',    color: bwColor ? bwColor : '#a4f' },
+				{ name: 'photo',    color: bwColor ? bwColor : '#fa4' },
+				{ name: 'browser',  color: bwColor ? bwColor : '#4af' },
+				{ name: 'store',    color: bwColor ? bwColor : '#48f' },
+				{ name: 'clock',    color: bwColor ? bwColor : '#4af' }
+			];
+			
+			let iconIndex = 0;
+			const spacing = size * 1.4;
+			
+			for (let r = 0; r < rows; r++) {
+				for (let c = 0; c < cols; c++) {
+					//if (iconIndex >= icons.length) return;
+					
+					const ix = x + (c * spacing);
+					const iy = y + (r * spacing);
+					const icon = icons[iconIndex % icons.length];
+					
+					ctx.save();
+					ctx.translate(ix, iy);
+					
+					// Sfondo icona (quadrato arrotondato)
+					ctx.fillStyle = icon.color;
+					ctx.beginPath();
+					ctx.roundRect(0, 0, size, size, size * 0.2);
+					ctx.fill();
+					
+					// Ombra leggera
+					ctx.fillStyle = 'rgba(0,0,0,0.2)';
+					ctx.beginPath();
+					ctx.roundRect(0, 0, size, size, size * 0.2);
+					ctx.fill();
+					
+					// Disegno icona in base al tipo
+					ctx.fillStyle = '#fff';
+					ctx.strokeStyle = '#fff';
+					ctx.lineWidth = size * 0.08;
+					ctx.lineCap = 'round';
+					ctx.lineJoin = 'round';
+					
+					const padding = size * 0.25;
+					const inner = size - (padding * 2);
+					
+					switch(icon.name) {
+						case 'phone':
+							ctx.beginPath();
+							ctx.roundRect(padding, padding, inner, inner * 1.4, size * 0.15);
+							ctx.stroke();
+							ctx.beginPath();
+							ctx.arc(size*0.5, size - padding*1.2, size * 0.08, 0, Math.PI*2);
+							ctx.fill();
+							break;
+						case 'message':
+							ctx.beginPath();
+							ctx.moveTo(padding, padding + inner*0.3);
+							ctx.lineTo(size*0.5, padding + inner*0.6);
+							ctx.lineTo(size - padding, padding + inner*0.3);
+							ctx.stroke();
+							ctx.beginPath();
+							ctx.roundRect(padding, padding, inner, inner, size * 0.15);
+							ctx.stroke();
+							break;
+						case 'camera':
+							ctx.beginPath();
+							ctx.arc(size*0.5, size*0.5, inner*0.3, 0, Math.PI*2);
+							ctx.stroke();
+							ctx.beginPath();
+							ctx.arc(size*0.5, size*0.5, inner*0.15, 0, Math.PI*2);
+							ctx.fill();
+							break;
+						case 'mail':
+							ctx.beginPath();
+							ctx.moveTo(padding, padding);
+							ctx.lineTo(size*0.5, padding + inner*0.4);
+							ctx.lineTo(size - padding, padding);
+							ctx.moveTo(padding, padding);
+							ctx.lineTo(size - padding, padding + inner*0.8);
+							ctx.lineTo(size - padding, padding);
+							ctx.stroke();
+							break;
+						case 'settings':
+							ctx.beginPath();
+							ctx.arc(size*0.5, size*0.5, inner*0.25, 0, Math.PI*2);
+							ctx.stroke();
+							for(let a = 0; a < Math.PI*2; a += Math.PI*0.33) {
+								const r = inner*0.4;
+								ctx.fillRect(size*0.5 + Math.cos(a)*r - size*0.04, size*0.5 + Math.sin(a)*r - size*0.04, size*0.08, size*0.08);
+							}
+							break;
+						case 'calendar':
+							ctx.beginPath();
+							ctx.roundRect(padding, padding, inner, inner, size * 0.1);
+							ctx.stroke();
+							ctx.beginPath();
+							ctx.moveTo(padding + inner*0.2, padding + inner*0.25);
+							ctx.lineTo(padding + inner*0.2, padding + inner*0.5);
+							ctx.moveTo(padding + inner*0.8, padding + inner*0.25);
+							ctx.lineTo(padding + inner*0.8, padding + inner*0.5);
+							ctx.stroke();
+							ctx.beginPath();
+							ctx.moveTo(padding, padding + inner*0.5);
+							ctx.lineTo(size - padding, padding + inner*0.5);
+							ctx.stroke();
+							break;
+						case 'maps':
+							ctx.beginPath();
+							ctx.arc(size*0.5, size*0.5 - inner*0.1, inner*0.2, 0, Math.PI*2);
+							ctx.fill();
+							ctx.beginPath();
+							ctx.moveTo(size*0.5 - inner*0.15, size*0.5 + inner*0.2);
+							ctx.lineTo(size*0.5, size*0.5 - inner*0.15);
+							ctx.lineTo(size*0.5 + inner*0.15, size*0.5 + inner*0.2);
+							ctx.fill();
+							break;
+						case 'music':
+							ctx.beginPath();
+							ctx.arc(padding + inner*0.25, size*0.5, inner*0.25, 0, Math.PI*2);
+							ctx.fill();
+							ctx.beginPath();
+							ctx.moveTo(padding + inner*0.5, padding);
+							ctx.lineTo(padding + inner*0.5, size - padding);
+							ctx.stroke();
+							break;
+						case 'photo':
+							ctx.beginPath();
+							ctx.arc(padding + inner*0.3, padding + inner*0.35, inner*0.15, 0, Math.PI*2);
+							ctx.fill();
+							ctx.beginPath();
+							ctx.moveTo(padding, size - padding);
+							ctx.lineTo(padding + inner*0.4, padding + inner*0.5);
+							ctx.lineTo(size - padding, padding);
+							ctx.stroke();
+							break;
+						case 'browser':
+							ctx.beginPath();
+							ctx.roundRect(padding, padding, inner, inner, size * 0.1);
+							ctx.stroke();
+							ctx.beginPath();
+							ctx.moveTo(padding, padding + inner*0.25);
+							ctx.lineTo(size - padding, padding + inner*0.25);
+							ctx.stroke();
+							break;
+						case 'store':
+							ctx.beginPath();
+							ctx.moveTo(padding, size - padding);
+							ctx.lineTo(padding + inner*0.25, padding);
+							ctx.lineTo(padding + inner*0.75, padding);
+							ctx.lineTo(size - padding, size - padding);
+							ctx.closePath();
+							ctx.stroke();
+							break;
+						case 'clock':
+							ctx.beginPath();
+							ctx.arc(size*0.5, size*0.5, inner*0.3, 0, Math.PI*2);
+							ctx.stroke();
+							ctx.beginPath();
+							ctx.moveTo(size*0.5, size*0.5);
+							ctx.lineTo(size*0.5, padding + inner*0.15);
+							ctx.stroke();
+							ctx.beginPath();
+							ctx.moveTo(size*0.5, size*0.5);
+							ctx.lineTo(size*0.5 + inner*0.15, size*0.5);
+							ctx.stroke();
+							break;
+					}
+					
+					ctx.restore();
+					iconIndex++;
+				}
+			}
+		}
+
 
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -327,22 +524,8 @@
                 }
 				
 
-				if (h.type === 'server') {
-                    /*
-					ctx.fillStyle = '#f33';
-                    ctx.beginPath(); ctx.arc(x, y, size * 0.4, 0, 2 * Math.PI); ctx.fill(); ctx.stroke();
-                    ctx.fillStyle = 'white'; ctx.font = "bold 12px sans-serif"; ctx.fillText("SRV", x - 12, y + 4);
-					*/
-					drawPC(x-CELL_SIZE*0.5, y-CELL_SIZE*0.5, {type:'server',connected:h.isPowered});
-					
-                } else if (h.type === 'pc') {
-					/*
-                    ctx.fillStyle = h.isPowered ? colors.activeColor : colors.inactiveColor;
-                    ctx.beginPath(); ctx.arc(x, y, size * 0.35, 0, 2 * Math.PI); ctx.fill(); ctx.stroke();
-                    ctx.fillStyle = 'white'; ctx.font = "bold 12px sans-serif"; ctx.fillText("PC", x - 8, y + 4);
-					*/
-					drawPC(x-CELL_SIZE*0.5, y-CELL_SIZE*0.5, {type:'pc', connected:h.isPowered, subType: h.subType});
-					
+				if (h.type === 'server' || h.type === 'pc') {
+                    drawPC(x-CELL_SIZE*0.5, y-CELL_SIZE*0.5, h);
                 } else {
 					//centro
                     ctx.fillStyle = h.isPowered ? colors.activeColor : colors.inactiveColor;
@@ -387,44 +570,57 @@ function animate() {
 animate();
 
 const HW_TYPES = [ 
-	{id:'notebook',			variant:'notebook',      desc:'Generic Notebook'},
-	{id:'desktop',			variant:'desktop',       desc:'Monitor + MiniPC all-in-one'},
-	{id:'minipc',			variant:'minipc',        desc:'Morefine MiniPC N100'},
-	{id:'tablet',			variant:'tablet',        desc:'Generic Tablet'},
-	{id:'baraccone',		variant:'baraccone',     desc:'Baraccone anni 90'},
-	{id:'dx40',				variant:'dx40',     	 desc:'Baraccone Intel 386DX-40 del 1990'},
-	{id:'pentium75',		variant:'pentium75',   	 desc:'Baraccone Intel Pentium-75 del 1996'},
-	{id:'router',			variant:'router',        desc:'Router Wi-Fi TpLink'},
-	{id:'ipcamera',			variant:'ipcamera',      desc:'IP Camera TpLink'},
-	{id:'macintosh',		variant:'macintosh',     desc:'Macintosh 128K del 1984'},
-	{id:'imac',				variant:'imac',          desc:'iMac G4 del 2002'},
-	{id:'gameboy',			variant:'gameboy',       desc:'GameBoy White classic del 1989'},
-	{id:'nintendoswitch',	variant:'nintendoswitch',desc:'Nintendo Switch 2017'},
-	{id:'hplaserjet',		variant:'hplaserjet',    desc:'HP LaserJet 107w'},
-	{id:'atari2600',		variant:'atari2600',     desc:'Atari 2600 del 1977'},
-	{id:'hantarex',			variant:'hantarex',      desc:'Apple ][ Compatibile del 1983'},
-	{id:'radio',			variant:'radio',         desc:'AliExpress Vintage Radio R919'},
-	{id:'nesthub',			variant:'nesthub',       desc:'Google NestHub del 2018'},
-	{id:'yamahathr',		variant:'yamahathr',     desc:'Ampli Yamaha THR5-V2'},
-	{id:'ps7000',			variant:'ps7000',        desc:'AliExpress PS7000 del 2023'},
-	{id:'ps4',				variant:'ps4',      	 desc:'Sony PS4 Black del 2014'},
-	{id:'imacg3',			variant:'imacg3',        desc:'iMac G3 Blueberry Cyan del 1998'},
+	{id:'notebook',			variant:'notebook',       group:'modern',  desc:'Generic Notebook'},
+	{id:'desktop',			variant:'desktop',        group:'modern',  desc:'Monitor + MiniPC all-in-one'},
+	{id:'minipc',			variant:'minipc',         group:'modern',  desc:'Morefine MiniPC N100'},
+	{id:'imacmini',			variant:'imacmini',       group:'modern',  desc:'iMac Mini M4 from 2026'},
+	{id:'tablet',			variant:'tablet',         group:'modern',  desc:'Generic Tablet'},
+	{id:'baraccone',		variant:'baraccone',      group:'classic', desc:'An old clunker from 90s'},
+	{id:'dx40',				variant:'dx40',     	  group:'classic', desc:'A clunky Intel 386DX-40 machine from 1990'},
+	{id:'pentium75',		variant:'pentium75',   	  group:'classic', desc:'A clunky Intel Pentium-75 machine from 1996'},
+	{id:'pentium2',		    variant:'pentium2',   	  group:'classic', desc:'A clunky Intel Pentium2-300 machine from 2000'},
+	{id:'router',			variant:'router',         group:'modern',  desc:'Router Wi-Fi TpLink'},
+	{id:'ipcamera',			variant:'ipcamera',       group:'modern',  desc:'IP Camera TpLink'},
+	{id:'macintosh',		variant:'macintosh',      group:'vintage', desc:'Macintosh 128K from 1984'},
+	{id:'imac',				variant:'imac',           group:'modern',  desc:'iMac G4 from 2002'},
+	{id:'gameboy',			variant:'gameboy',        group:'classic', desc:'GameBoy White classic from 1989'},
+	{id:'nintendoswitch',	variant:'nintendoswitch', group:'modern',  desc:'Nintendo Switch from 2017'},
+	{id:'hplaserjet',		variant:'hplaserjet',     group:'modern',  desc:'HP LaserJet 107w'},
+	{id:'atari2600',		variant:'atari2600',      group:'vintage', desc:'Atari 2600 from 1977'},
+	{id:'hantarex',			variant:'hantarex',       group:'vintage', desc:'Apple ][ Compatibile from 1983'},
+	{id:'radio',			variant:'radio',          group:'modern',  desc:'AliExpress Vintage Radio R919'},
+	{id:'nesthub',			variant:'nesthub',        group:'modern',  desc:'Google NestHub from 2018'},
+	{id:'yamahathr',		variant:'yamahathr',      group:'modern',  desc:'Ampli Yamaha THR5-V2'},
+	{id:'ps7000',			variant:'ps7000',         group:'modern',  desc:'AliExpress PS7000 from 2023'},
+	{id:'ps4',				variant:'ps4',      	  group:'modern',  desc:'Sony PS4 Black from 2014'},
+	{id:'imacg3',			variant:'imacg3',         group:'classic', desc:'iMac G3 Blueberry Cyan from 1998'},
+	{id:'imacintel',		variant:'imacintel',      group:'modern',  desc:'iMac Intel from 2020'},
+	{id:'starlc10',         variant:'starlc10',       group:'vintage', desc:'Star Lc-10 Multifont from 1988'},
+	{id:'c64',				variant:'c64',            group:'vintage', desc:'Commodore C-64 from 1984'},
+	{id:'raspberrypi',		variant:'raspberrypi',    group:'modern',  desc:'Raspberry Pi 4 Model B from 2020'},
+	{id:'zxspectrum',		variant:'zxspectrum',	  group:'vintage', desc:'Sinclair ZX Spectrum from 1983'},
+	{id:'banfi',            variant:'banfi',          group:'vintage', desc:'Le più sofisticate elaborazioni della cibernetica'},	
+	{id:'sip70',            variant:'sip70',          group:'vintage', desc:'Il dottor Tomas non è in sede!'},
+	{id:'sip2123',          variant:'sip2123',        group:'vintage', desc:'Sip ARE VT2123 modem from 1980'},	
+	{id:'apple1',           variant:'apple1',         group:'vintage', desc:'Apple I Computer kit from 1976'},
+	{id:'ibmpc',            variant:'ibmpc',          group:'vintage', desc:'IBM Personal Computer from 1984'},
+	{id:'commodorecbm',     variant:'commodorecbm',   group:'vintage', desc:'Commodore CBM/PET 3008 from 1980'},
 	//color variants
-	{id:'notebook',			variant:'notebookwhite', desc:'Generic White Notebook'},
-	{id:'router',			variant:'routerwhite',   desc:'Router Wi-Fi TpLink White'},
-	{id:'ipcamera',			variant:'ipcamerablack', desc:'IP Camera TpLink Black'},
-	{id:'gameboy',			variant:'gameboyred',    desc:'GameBoy Red classic del 1990'},
-	{id:'gameboy',			variant:'gameboyblue',   desc:'GameBoy Blue classic del 1990'},
-	{id:'hplaserjet',		variant:'hplaserjetblack',desc:'HP LaserJet 107w Black'},
-	{id:'radio',			variant:'radiodark',     desc:'AliExpress Vintage Radio R919'},
-	{id:'nesthub',			variant:'nesthubgray',   desc:'Google NestHub Charcoal Gray del 2021'},
-	{id:'yamahathr',		variant:'yamahathrgreen',desc:'Ampli Yamaha THR10X'},
-	{id:'ps4',				variant:'ps4white',      desc:'Sony PS4 White del 2014'},
-	{id:'imacg3',			variant:'imacg3orange',  desc:'iMac G3 Tangerine Orange del 1999'},
-	{id:'imacg3',			variant:'imacg3red',     desc:'iMac G3 Strawberry Red del 1999'},
-	{id:'imacg3',			variant:'imacg3green',   desc:'iMac G3 Lime Green del 1999'},
-	{id:'imacg3',			variant:'imacg3gray',    desc:'iMac G3 Graphite Gray del 2000'},
-	{id:'imacg3',			variant:'imacg3blue',    desc:'iMac G3 Indigo Blue del 2000'},
+	{id:'notebook',			variant:'notebookwhite',  group:'modern',  desc:'Generic White Notebook'},
+	{id:'router',			variant:'routerwhite',    group:'modern',  desc:'Router Wi-Fi TpLink White'},
+	{id:'ipcamera',			variant:'ipcamerablack',  group:'modern',  desc:'IP Camera TpLink Black'},
+	{id:'gameboy',			variant:'gameboyred',     group:'classic', desc:'GameBoy Red classic from 1990'},
+	{id:'gameboy',			variant:'gameboyblue',    group:'classic', desc:'GameBoy Blue classic from 1990'},
+	{id:'hplaserjet',		variant:'hplaserjetblack',group:'modern',  desc:'HP LaserJet 107w Black'},
+	{id:'radio',			variant:'radiodark',      group:'modern',  desc:'AliExpress Vintage Radio R919'},
+	{id:'nesthub',			variant:'nesthubgray',    group:'modern',  desc:'Google NestHub Charcoal Gray from 2021'},
+	{id:'yamahathr',		variant:'yamahathrgreen', group:'modern',  desc:'Ampli Yamaha THR10X'},
+	{id:'ps4',				variant:'ps4white',       group:'modern',  desc:'Sony PS4 White from 2014'},
+	{id:'imacg3',			variant:'imacg3orange',   group:'classic', desc:'iMac G3 Tangerine Orange from 1999'},
+	{id:'imacg3',			variant:'imacg3red',      group:'classic', desc:'iMac G3 Strawberry Red from 1999'},
+	{id:'imacg3',			variant:'imacg3green',    group:'classic', desc:'iMac G3 Lime Green from 1999'},
+	{id:'imacg3',			variant:'imacg3gray',     group:'classic', desc:'iMac G3 Graphite Gray from 2000'},
+	{id:'imacg3',			variant:'imacg3blue',     group:'classic', desc:'iMac G3 Indigo Blue from 2000'},
 	];
 
 function drawPC(x, y, tile) {
@@ -432,7 +628,7 @@ function drawPC(x, y, tile) {
 	const type = tile.subType;
 	const connected = tile.connected;
     const s = CELL_SIZE * (	isServer ? 0.75 : 
-							connected && animateFlag ? 0.75 :
+							connected && animateFlag ? Math.abs(Math.sin(flowOffset*0.5)*0.05) + 0.7 :
 							0.65 );//Leggermente più grande per i dettagli
     const p = (CELL_SIZE - s) * 0.5;
     
@@ -440,92 +636,426 @@ function drawPC(x, y, tile) {
     ctx.translate(x + p, y + p);
 	
 	if (isServer) {
-		// --- CASE ESTERNO (RACK) ---
-		// Effetto metallo spazzolato scuro
-		let caseGrad = ctx.createLinearGradient(0 - s*0.08, 0, s + s*0.08, s);
-		caseGrad.addColorStop(0, "#334155");
-		caseGrad.addColorStop(0.5, "#1e293b");
-		caseGrad.addColorStop(1, "#0f172a");
-		
-		ctx.fillStyle = caseGrad;
-		ctx.beginPath();
-		ctx.roundRect(0, 0, s, s, s * 0.02);
-		ctx.fill();
-
-		// Maniglie frontali (dettaglio di classe)
-		ctx.fillStyle = '#000';//colors.darkSilver;
-		//sx
-		ctx.beginPath();
-		ctx.roundRect(s*0.02, s*0.05, s*0.02, s*0.88, s*0.04);
-		ctx.fill();
-		//dx
-		ctx.beginPath();
-		ctx.roundRect(s*0.96, s*0.05, s*0.02, s*0.88, s*0.04);
-		ctx.fill();
-
-		// --- UNITÀ SERVER (Blade) ---
-		const units = 4;
-		const unitHeight = (s - s*0.10) / units;
-		
-		
-		//righe ventilazione
-		let sizeRighe = Math.max(0.6, s*0.01);//larghezza righe
-		let deltaRighe = sizeRighe * 2.5;//spazio tra righe
-		ctx.lineWidth = sizeRighe;
-		
-		//led di stato
-		const ledRadius = Math.max(1, s * 0.02); // Scala i LED con la scocca
-		const ledSpacing = s * 0.1;
-		
-		const unitsToShutdown = [];
-		const currentCycle = flowOffset * 0.0001;
-		unitsToShutdown[0] = Math.floor(currentCycle * 73.1 + 1 ) % 10;
-		unitsToShutdown[1] = Math.floor(currentCycle * 73.1 + 42.3 ) % 10;
-		
-		
-		for (let i = 0; i < units; i++) {
-		
-			let uy = s*0.05 + (i * unitHeight);
+		if (type === 'hal9000') {
+			ctx.fillStyle = '#222';
+			ctx.strokeStyle = '#111';
+			ctx.lineWidth = s * 0.01;
+			ctx.beginPath();
+			ctx.roundRect(0, 0, s, s, s * 0.04);
+			ctx.fill();
+			ctx.stroke();
 			
-			// Slot dell'unità
-			ctx.fillStyle = "#020617";
-			ctx.fillRect(s*0.06, uy, s - s*0.12, unitHeight - s*0.02);
+			// label sotto display
+			ctx.fillStyle = '#666';
+			ctx.font = `${s * 0.04}px monospace`;
+			ctx.fillText('HAL-9000', s * 0.8, s * 0.95);
 			
-			// Griglia di ventilazione (30 righe)
-			ctx.strokeStyle = colors.midGray;
-			for(let gx = s*0.08; gx < s * 0.94; gx += deltaRighe) {
+			const eyeY = s * 0.3;
+			const eyeR = s * 0.22;
+			const cx = s * 0.5
+
+			// anello esterno grigio metallico
+			ctx.beginPath();
+			ctx.arc(cx, eyeY, eyeR * 1.1, 0, Math.PI * 2);
+			ctx.fillStyle = '#444';
+			ctx.fill();
+
+			// lente interna nera
+			ctx.beginPath();
+			ctx.arc(cx, eyeY, eyeR * 1.0, 0, Math.PI * 2);
+			ctx.fillStyle = '#000';
+			ctx.fill();
+
+			// occhio rosso
+			let eyeStrength = Math.abs(Math.sin(flowOffset * 0.15)*Math.cos(flowOffset * 0.45));
+			let redGrad = ctx.createRadialGradient(cx, eyeY, 0, cx, eyeY, eyeR);
+			redGrad.addColorStop(0, "#a00");
+			redGrad.addColorStop(eyeStrength, "#300");
+			redGrad.addColorStop(1, "#000");
+			ctx.fillStyle = redGrad;
+			ctx.beginPath();
+			ctx.arc(cx, eyeY, eyeR * 0.9, 0, Math.PI * 2);
+			ctx.fill();
+			
+			// pupilla
+			ctx.beginPath();
+			ctx.arc(cx, eyeY, eyeR * 0.1, 0, Math.PI * 2);
+			ctx.fillStyle = eyeStrength > 0.1 ? '#f00' : '#000';
+			ctx.fill();
+			
+			
+			// BARRA WAVEFORM AUDIO
+			const waveY = s * 0.64;
+			const bars = 10;
+			const bw = (s * 0.88) / bars - 1;
+			for (let b = 0; b < bars; b++) {
+				const bh = s * 0.04 * (0.2 + 0.8 * Math.abs(Math.sin(flowOffset * 0.12 + b * 0.6 + Math.sin(flowOffset * 0.03) * 3)));
+				const bx = s * 0.06 + b * ((s * 0.88) / bars);
+				const intensity = bh / (s * 0.025);
+				const r = Math.floor(180 * intensity);
+				ctx.fillStyle = `rgb(${r},${Math.floor(r * 0.1)},${Math.floor(r * 0.05)})`;
+				ctx.fillRect(bx, waveY + s * 0.025 - bh, bw, bh);
+			}
+			ctx.fillStyle = '#111';
+			ctx.fillRect(s * 0.06, waveY + s * 0.026, s * 0.88, 1);
+						
+
+			// display LCD
+			const dispY = s * 0.7;
+			ctx.fillStyle = '#000';
+			ctx.beginPath();
+			ctx.roundRect(s * 0.06, dispY, s * 0.88, s * 0.065, 3);
+			ctx.fill();
+			
+			// testo display — scorre
+			msgTimer++;
+			if (msgTimer > 240) { msgTimer = 0; msgIdx = (msgIdx + 1) % msgs.length; }
+			const visibleLen = Math.min(msgs[msgIdx].length, Math.floor(msgTimer / 4) + 1);
+			const dispText = msgs[msgIdx].substring(0, visibleLen);
+			ctx.fillStyle = '#f00';
+			ctx.font = `${s * 0.05}px monospace`;
+			ctx.fillText(dispText, s * 0.09, dispY + s * 0.043);
+
+			// cursore lampeggiante
+			if (Math.floor(flowOffset * 0.3) % 2 === 0){
+				const tw = ctx.measureText(dispText).width;
+				ctx.fillStyle = '#f00';
+				ctx.fillRect(s * 0.09 + tw + 2, dispY + s * 0.013, s * 0.015, s * 0.034);
+			}
+
+			// PANNELLO LED INFERIORE
+			const ledPanY = s * 0.8;
+			const ledDefs = [
+				{ label: 'LIFE', c: '#ff2222', freq: 0.03 },
+				{ label: 'CMND', c: '#ff8800', freq: 0.07 },
+				{ label: 'DATA', c: '#ffaa00', freq: 1.1 },
+				{ label: 'MEM',  c: '#cc0000', freq: 0.2 },
+				{ label: 'NET',  c: '#aa0000', freq: 0.9 },
+				{ label: 'ATMO', c: '#cc8800', freq: 0.05 },
+				{ label: 'NAV',  c: '#ff0000', freq: 1.4 },
+				{ label: 'FAIL', c: '#ff6600', freq: 0.1 },
+			];
+
+			const nLeds = ledDefs.length;
+			const ledSpX = s * 0.88 / nLeds;
+			for (let i = 0; i < nLeds; i++) {
+				const ld = ledDefs[i];
+				const lx = s * 0.06 + i * ledSpX + ledSpX * 0.5;
+				const ly = ledPanY + s * 0.032;
+				const lr = s * 0.018;
+
+				const on = ld.freq === 0.0 ? false : (Math.sin(flowOffset * ld.freq + i * 1.3) > (i % 3 === 0 ? -0.9 : 0.1));
+
 				ctx.beginPath();
-				ctx.moveTo(gx, uy + s*0.02);
-				ctx.lineTo(gx, uy + unitHeight - s*0.04);
+				ctx.arc(lx, ly, lr * 1.5, 0, Math.PI * 2);
+				ctx.fillStyle = '#050608';
+				ctx.fill();
+
+				ctx.beginPath();
+				ctx.arc(lx, ly, lr, 0, Math.PI * 2);
+				ctx.fillStyle = on ? ld.c : '#12141a';
+				ctx.fill();
+
+				if (on) {
+					ctx.beginPath();
+					ctx.arc(lx, ly, lr * 0.5, 0, Math.PI * 2);
+					ctx.fillStyle = 'rgba(255,255,255,0.4)';
+					ctx.fill();
+					
+					//prova blur semplificato
+					drawLedAloneCircle(lx, ly, lr, ld.c);
+				}
+
+				ctx.fillStyle = '#1e2a3e';
+				ctx.font = `${s * 0.016}px monospace`;
+				ctx.textAlign = 'center';
+				ctx.fillText(ld.label, lx, ly + lr * 2.4);
+				ctx.textAlign = 'left';
+			}
+
+			// bordo case esterno
+			ctx.strokeStyle = '#0a0c14';
+			ctx.lineWidth = 2;
+			ctx.beginPath();
+			ctx.roundRect(0, 0, s, s, s * 0.04);
+			ctx.stroke();
+		} else if (type === 'megaserver') {
+			// MEGA SERVER
+			ctx.fillStyle = '#222';
+			ctx.strokeStyle = '#111';
+			ctx.lineWidth = s*0.01;
+			ctx.beginPath();
+			ctx.roundRect(0, 0, s, s, s * 0.02);
+			ctx.fill();
+			ctx.stroke();			
+			
+			// fascia brand superiore
+			ctx.fillStyle = '#111';
+			ctx.fillRect(s * 0.04, s * 0.03, s * 0.92, s * 0.07);
+			ctx.fillStyle = '#666';
+			ctx.font = `${s * 0.05}px monospace`;
+			ctx.fillText('MEGA SERVER', s * 0.08, s * 0.08);
+
+			// power
+			ctx.beginPath();
+			ctx.arc(s * 0.9, s * 0.055, s * 0.03, 0, Math.PI * 2);
+			ctx.fillStyle = '#666';
+			ctx.fill();
+			ctx.beginPath();
+			ctx.arc(s * 0.9, s * 0.055, s * 0.02, 0, Math.PI * 2);
+			ctx.fillStyle = Math.sin(flowOffset * 0.1) > 0 ? colors.redOn : colors.redOff;
+			ctx.fill();
+			
+			//prova blur semplificato
+			if (Math.sin(flowOffset * 0.1) > 0) drawLedAloneCircle(s * 0.9, s * 0.055, s * 0.02, colors.redOn);
+			
+			// reset button (piccolo)
+			ctx.beginPath();
+			ctx.arc(s * 0.8, s * 0.055, s * 0.012, 0, Math.PI * 2);
+			ctx.fillStyle = '#aaa';
+			ctx.fill();
+			
+
+			//DISPLAY con temp/load
+			const dispX = s * 0.04, dispY = s * 0.12;
+			const dispW = s * 0.7, dispH = s * 0.06;
+			ctx.fillStyle = '#040';
+			ctx.fillRect(dispX, dispY, dispW, dispH);
+			
+			const tempVal = Math.floor(42 + Math.sin(flowOffset * 0.005) * 8);
+			const loadVal = Math.floor(60 + Math.sin(flowOffset * 0.01 + 1) * 35);
+			ctx.fillStyle = '#0f8';
+			ctx.font = `${s * 0.05}px monospace`;
+			ctx.fillText(`TEMP ${tempVal}°C    LOAD ${loadVal}%`, dispX + s * 0.03, dispY + dispH * 0.68);
+
+			// STRISCIA 8 LED STATUS
+			const ledRow = s * 0.215;
+			const ledLabels = ['PWR', 'HDD', 'NET', 'CPU', 'MEM', 'FAN', 'ERR', 'SYS'];
+			const pwrOn = true;
+			const hddOn = (Math.sin(flowOffset * 0.9) > 0);
+			const netOn = (Math.cos(flowOffset * 1.3) > 0.2);
+			const cpuOn = (Math.sin(flowOffset * 0.4 + 1) > -0.5);
+			const memOn = (Math.sin(flowOffset * 0.2 + 2) > 0.3);
+			const fanOn = (Math.sin(flowOffset * 0.15) > 0.7);
+			const errOn = (Math.sin(flowOffset * 0.15) > 0.9);
+			const sysOn = (Math.sin(flowOffset * 0.05) > -0.9);
+			
+			const ledStatus = [ pwrOn, hddOn, netOn, cpuOn, memOn, fanOn, errOn, sysOn];
+			const ledColors = [
+				pwrOn ? colors.greenOn : colors.greenOff,
+				hddOn ? colors.orangeOn : colors.orangeOff,
+				netOn ? colors.blueOn : colors.blueOff,
+				cpuOn ? colors.greenOn : colors.greenOff,
+				memOn ? colors.yellowOn : colors.yellowOff,
+				fanOn ? colors.whiteOn : colors.whiteOff,
+				errOn ? colors.redOn : colors.redOff, // ERR: sempre spento salvo guasto
+				sysOn ? colors.greenOn : colors.greenOff,
+			];
+
+			const ledSpacing = s * 0.1;
+			for (let i = 0; i < 8; i++) {
+				const lx = s * 0.05 + i * ledSpacing ;
+				const lr = s * 0.022;
+
+				ctx.fillStyle = ledColors[i];
+				ctx.fillRect(lx,ledRow,lr*2,lr);
+								
+				//prova blur semplificato
+				if (ledStatus[i]) drawLedAloneRect(lx,ledRow,lr*2,lr, ledColors[i]);
+								
+				ctx.fillStyle = '#999';
+				ctx.font = `${s * 0.03}px monospace`;
+				ctx.textAlign = 'center';
+				ctx.fillText(ledLabels[i], lx + ledSpacing * 0.2, ledRow + lr * 2.2);
+				ctx.textAlign = 'left';
+			}
+
+			//drive alti x 2
+			for (let i = 0; i < 2; i++) {
+				const by = s * 0.28 + i * s * 0.1;
+				ctx.fillStyle = '#111';
+				ctx.beginPath();
+				ctx.roundRect(s * 0.04, by, s * 0.92, s * 0.085, 3);
+				ctx.fill();
+				ctx.strokeStyle = '#333';
+				ctx.lineWidth = 0.5;
+				ctx.stroke();
+
+				ctx.fillStyle = '#333';
+				ctx.fillRect(s * 0.73, by + s * 0.02, s * 0.06, s * 0.045);
+				
+				const isActive = Math.sin(flowOffset * 1.8 + i) > 0.3;
+				const driveLed = isActive ? colors.orangeOn : colors.orangeOff;
+				ctx.beginPath();
+				ctx.arc(s * 0.83, by + s * 0.04, s * 0.012, 0, Math.PI * 2);
+				ctx.fillStyle = driveLed;
+				ctx.fill();
+				
+				//prova blur semplificato
+				if(isActive) drawLedAloneCircle(s * 0.83, by + s * 0.04, s * 0.012, colors.orangeOn);
+				
+				ctx.fillStyle = '#999';
+				ctx.font = `${s * 0.03}px monospace`;
+				ctx.fillText(i === 0 ? 'BD-ROM' : 'TAPE', s * 0.06, by + s * 0.075);
+			}
+
+			//drive hdd x 4
+			for (let i = 0; i < 4; i++) {
+				const hy = s * 0.5 + i * s * 0.075;
+				ctx.fillStyle = '#111';
+				ctx.beginPath();
+				ctx.roundRect(s * 0.04, hy, s * 0.92, s * 0.065, 2);
+				ctx.fill();
+				
+				const hddActive = Math.sin(flowOffset * (1.5 + i * 0.7) + i * 2.3) > 0.4;
+				ctx.beginPath();
+				ctx.arc(s * 0.82, hy + s * 0.033, s * 0.011, 0, Math.PI * 2);
+				ctx.fillStyle = hddActive ? colors.orangeOn : colors.orangeOff;
+				ctx.fill();
+				if (hddActive) {
+					ctx.beginPath();
+					ctx.arc(s * 0.82, hy + s * 0.033, s * 0.005, 0, Math.PI * 2);
+					ctx.fillStyle = '#fff8';
+					ctx.fill();
+					
+					//prova blur semplificato
+					drawLedAloneCircle(s * 0.82, hy + s * 0.033, s * 0.011, colors.orangeOn);
+				}
+
+				ctx.fillStyle = '#999';
+				ctx.font = `${s * 0.03}px monospace`;
+				ctx.fillText(`HDD-${i}`, s * 0.06, hy + s * 0.05);
+			}
+
+			//pannello con pulsantoni blu + due ruote
+			const panY = s * 0.82;
+			ctx.fillStyle = '#111';
+			ctx.fillRect(s * 0.04, panY, s * 0.92, s * 0.085);
+			
+			for (let u = 0; u < 5; u++) {
+				let isOn = u % 3 !== 0;
+				ctx.fillStyle = '#333';
+				ctx.fillRect(s * 0.06 + u * s * 0.08, panY + s * 0.018, s * 0.05, s * 0.05);
+				ctx.fillStyle = isOn ? colors.blueOn : colors.blueOff;
+				ctx.fillRect(s * 0.06 + u * s * 0.08, panY + (isOn ? s * 0.06 : s * 0.02), s * 0.05, s * 0.01);
+			}
+
+			//doppio connettore tondo (uhauhauha)
+			for (let j = 0; j < 2; j++) {
+				ctx.beginPath();
+				ctx.arc(s * 0.5 + j * s * 0.06, panY + s * 0.042, s * 0.018, 0, Math.PI * 2);
+				ctx.fillStyle = '#111';
+				ctx.fill();
+				ctx.strokeStyle = j === 0 ? '#090' : '#933';
+				ctx.lineWidth = s * 0.01;
 				ctx.stroke();
 			}
-			
-			if (connected && unitsToShutdown.indexOf(i) === -1) {
-				// LED Verde (Power/Link) - Fisso o lampeggio lento
-				ctx.fillStyle = (Math.sin(flowOffset * 0.1 + i) > -0.8) ? colors.greenOn : colors.greenOff;
-				ctx.shadowBlur = 5; ctx.shadowColor = colors.greenOn;
-				ctx.beginPath(); ctx.arc(s - ledSpacing * 4, uy + unitHeight/2, ledRadius, 0, Math.PI*2); ctx.fill();
 
-				// LED Arancione (Disk Activity) - Lampeggio frenetico
-				ctx.fillStyle = (Math.sin(flowOffset * 0.8 + i*2) > 0) ? colors.orangeOn : colors.orangeOff;
-				ctx.shadowColor = colors.orangeOn;
-				ctx.beginPath(); ctx.arc(s - ledSpacing * 3, uy + unitHeight/2, ledRadius, 0, Math.PI*2); ctx.fill();
+			//barra di led fricchettona
+			const barX = s * 0.64;
+			const barY = s * 0.85;
+			for (let b = 0; b < 4; b++) {
+				const active = connected && (Math.sin(flowOffset * (0.5 + b * 0.3) + b) > 0.2 + b * 0.04);
+				ctx.fillStyle = active ? colors.greenOn : colors.greenOff;
+				ctx.beginPath();
+				ctx.roundRect(barX + b * (s * 0.08), barY, s * 0.06, s * 0.022, s*0.04);
+				ctx.fill();
 				
-				// LED Blu/Azzurro (Network Dati) - Lampeggio randomico
-				ctx.fillStyle = (Math.cos(flowOffset * 1.2 + i) > 0.3) ? colors.blueOn : colors.blueOff;
-				ctx.shadowColor = colors.blueOn;
-				ctx.beginPath(); ctx.arc(s - ledSpacing * 2, uy + unitHeight/2, ledRadius, 0, Math.PI*2); ctx.fill();
+				if(active) drawLedAloneRect(barX + b * (s * 0.08), barY, s * 0.06, s * 0.022, colors.greenOn);
+			}
+		} else {
+			// CASE ESTERNO (RACK)
+			// Effetto metallo spazzolato scuro
+			let caseGrad = ctx.createLinearGradient(0 - s*0.08, 0, s + s*0.08, s);
+			caseGrad.addColorStop(0, "#334155");
+			caseGrad.addColorStop(0.5, "#1e293b");
+			caseGrad.addColorStop(1, "#0f172a");
+			
+			ctx.fillStyle = caseGrad;
+			ctx.beginPath();
+			ctx.roundRect(0, 0, s, s, s * 0.02);
+			ctx.fill();
+
+			// Maniglie frontali (dettaglio di classe)
+			ctx.fillStyle = '#000';//colors.darkSilver;
+			//sx
+			ctx.beginPath();
+			ctx.roundRect(s*0.02, s*0.05, s*0.02, s*0.88, s*0.04);
+			ctx.fill();
+			//dx
+			ctx.beginPath();
+			ctx.roundRect(s*0.96, s*0.05, s*0.02, s*0.88, s*0.04);
+			ctx.fill();
+
+			// UNITA' SERVER (Blade)
+			const units = 4;
+			const unitHeight = (s - s*0.10) / units;
+			
+			
+			//righe ventilazione
+			let sizeRighe = Math.max(0.6, s*0.01);//larghezza righe
+			let deltaRighe = sizeRighe * 2.5;//spazio tra righe
+			ctx.lineWidth = sizeRighe;
+			
+			//led di stato
+			const ledRadius = Math.max(1, s * 0.02); // Scala i LED con la scocca
+			const ledSpacing = s * 0.1;
+			const ledw = ledRadius * 1.5;
+			const ledh = ledRadius * 1.5;
+			
+			const unitsToShutdown = [];
+			const currentCycle = flowOffset * 0.0001;
+			unitsToShutdown[0] = Math.floor(currentCycle * 73.1 + 1 ) % 10;
+			unitsToShutdown[1] = Math.floor(currentCycle * 73.1 + 42.3 ) % 10;
+			
+			
+			for (let i = 0; i < units; i++) {
+			
+				let uy = s*0.05 + (i * unitHeight);
+				let ledy = uy + unitHeight*0.45;
 				
-				ctx.shadowBlur = 0;
-			} else {
-				// Server Spento: solo un piccolo LED rosso di standby
-				ctx.fillStyle = colors.redOff; // Rosso spento
-				if (i === 0) ctx.fillStyle = colors.redOn; // Solo il primo ha il power standby
-				ctx.beginPath(); ctx.arc(s - ledSpacing * 4, uy + unitHeight/2, ledRadius, 0, Math.PI*2); ctx.fill();
+				// Slot dell'unità
+				ctx.fillStyle = "#020617";
+				ctx.fillRect(s*0.06, uy, s - s*0.12, unitHeight - s*0.02);
+				
+				// Griglia di ventilazione (30 righe)
+				ctx.strokeStyle = colors.midGray;
+				for(let gx = s*0.08; gx < s * 0.94; gx += deltaRighe) {
+					ctx.beginPath();
+					ctx.moveTo(gx, uy + s*0.02);
+					ctx.lineTo(gx, uy + unitHeight - s*0.04);
+					ctx.stroke();
+				}
+				
+				if (connected && unitsToShutdown.indexOf(i) === -1) {
+					// LED Verde (Power/Link) - Fisso o lampeggio lento
+					const led1On = (Math.sin(flowOffset * 0.1 + i) > -0.8);
+					ctx.fillStyle = led1On ? colors.greenOn : colors.greenOff;
+					ctx.fillRect(s-ledSpacing*4, ledy, ledw, ledh);
+					if (led1On) drawLedAloneRect(s-ledSpacing*4, ledy, ledw, ledh, colors.greenOn);
+
+					// LED Arancione (Disk Activity) - Lampeggio frenetico
+					const led2On = (Math.sin(flowOffset * 0.8 + i*2) > 0);
+					ctx.fillStyle = led2On ? colors.orangeOn : colors.orangeOff;
+					ctx.fillRect(s-ledSpacing*3, ledy, ledw, ledh);
+					if (led2On) drawLedAloneRect(s-ledSpacing*3, ledy, ledw, ledh, colors.orangeOn);
+					
+					// LED Blu/Azzurro (Network Dati) - Lampeggio randomico
+					const led3On = (Math.cos(flowOffset * 1.2 + i) > 0.3);
+					ctx.fillStyle = led3On ? colors.blueOn : colors.blueOff;
+					ctx.fillRect(s-ledSpacing*2, ledy, ledw, ledh);
+					if (led3On) drawLedAloneRect(s-ledSpacing*2, ledy, ledw, ledh, colors.blueOn);
+				} else {
+					// Server Spento: solo un piccolo LED rosso di standby
+					ctx.fillStyle = colors.redOff; // Rosso spento
+					if (i === 0) ctx.fillStyle = colors.redOn; // Solo il primo ha il power standby
+					ctx.fillRect(s-ledSpacing*4, ledy, ledw, ledh);
+					drawLedAloneRect(s-ledSpacing*4, ledy, ledw, ledh, colors.redOn);
+				}
 			}
 		}
 	} else if (type.id === 'desktop') {
-		// --- MONITOR ---
+		// MONITOR
 		// Scocca posteriore/ombra
 		ctx.fillStyle = "#000";
 		ctx.beginPath(); ctx.roundRect(0, 0, s, s * 0.65, s * 0.04); ctx.fill();
@@ -540,13 +1070,25 @@ function drawPC(x, y, tile) {
 		// Schermo
 		if (connected) {
 			let screenGrad = ctx.createLinearGradient(0, 0, s, s * 0.6);
-			screenGrad.addColorStop(0, "#38bdf8");
-			screenGrad.addColorStop(1, "#0369a1");
+			screenGrad.addColorStop(0, colors.screenGradCyanLight);
+			screenGrad.addColorStop(1, colors.screenGradCyanDark);
 			ctx.fillStyle = screenGrad;
 		} else {
 			ctx.fillStyle = colors.screenOff;
 		}
 		ctx.fillRect(s*0.04, s*0.04, s - s*0.08, s * 0.65 - s*0.10);
+
+		//icone!!!
+		if (connected) {
+			// Menu bar
+			ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
+			ctx.fillRect(s*0.04, s*0.55, s*0.92, s*0.04);
+			ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
+			for(let i = 0; i < 6; i++) {
+				ctx.fillRect(s*0.06 + (i*s*0.11), s*0.55, s*0.04, s*0.02);
+			}
+			drawIcons(s*0.1, s*0.08, s*0.06, 4, 3);
+		}
 
 		// Riflesso "Glossy"
 		ctx.fillStyle = colors.glass;
@@ -558,7 +1100,7 @@ function drawPC(x, y, tile) {
 		ctx.fillStyle = "#000";
 		ctx.beginPath(); ctx.arc(s * 0.5, s*0.025, Math.max(0.5, s * 0.01), 0, Math.PI * 2); ctx.fill();
 
-		// --- STAND (Supporto) ---
+		// STAND (Supporto)
 		let standGrad = ctx.createLinearGradient(s * 0.4, 0, s * 0.5, 0);
 		standGrad.addColorStop(0, colors.darkSilver);
 		standGrad.addColorStop(0.5, colors.silver);
@@ -568,8 +1110,101 @@ function drawPC(x, y, tile) {
 		ctx.fillRect(s * 0.42, s * 0.65, s * 0.16, s * 0.2); // Collo
 		ctx.beginPath(); ctx.roundRect(s * 0.2, s * 0.8, s * 0.6, s * 0.08, s * 0.02); ctx.fill(); // Base
 	} 
+	else if (type.id === 'imacintel') {
+		// MONITOR
+		// Scocca posteriore/ombra
+		ctx.fillStyle = "#000";
+		ctx.beginPath(); ctx.roundRect(0, 0, s, s * 0.75, s * 0.02); ctx.fill();
+
+		// Bezel (Cornice)
+		let bezelGrad = ctx.createLinearGradient(0, 0, 0, s * 0.65);
+		bezelGrad.addColorStop(0, "#334155");
+		bezelGrad.addColorStop(1, "#111827");
+		ctx.fillStyle = bezelGrad;
+		ctx.beginPath(); 
+		ctx.roundRect(s*0.00, s*0.01, s*1.00, s * 0.63, [s * 0.03, s*0.03, 0,0]); 
+		ctx.fill();
+
+		// Schermo
+		if (connected) {
+			let screenGrad = ctx.createLinearGradient(s*0, s*0.08, s*0.55, s*0.63);
+			screenGrad.addColorStop(0, colors.screenGradDark);
+			screenGrad.addColorStop(0.65, colors.screenGradLight);
+			screenGrad.addColorStop(1, colors.screenGradDark);
+			ctx.fillStyle = screenGrad;
+		} else {
+			ctx.fillStyle = colors.screenOff;
+		}
+		ctx.fillRect(s*0.04, s*0.05, s - s*0.08, s * 0.65 - s*0.10);
+		
+		
+		// Icone menu bar (piccoli quadratini)
+		if (connected) {
+			// Menu bar (imitazione macOS)
+			ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
+			ctx.fillRect(s*0.04, s*0.05, s*0.92, s*0.05);
+			ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
+			for(let i = 0; i < 6; i++) {
+				ctx.fillRect(s*0.06 + (i*s*0.11), s*0.06, s*0.04, s*0.02);
+			}
+			// Dock (imitazione macOS in basso)
+			ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
+			ctx.beginPath();
+			ctx.roundRect(s*0.2, s*0.53, s*0.6, s*0.06, s*0.04);
+			ctx.fill();
+			// Icone dock
+			drawIcons(s*0.24, s*0.48, s*0.08, 1, 5);
+		}
+		
+
+		// Riflesso "Glossy"
+		ctx.fillStyle = colors.glass;
+		ctx.beginPath();
+		ctx.moveTo(s*0.04, s*0.05); ctx.lineTo(s*0.96, s*0.05); ctx.lineTo(s*0.04, s * 0.4);
+		ctx.fill();
+
+		// Webcam
+		ctx.fillStyle = "#000";
+		ctx.fillRect(s * 0.48, s*0.025, s * 0.04, s*0.02);
+		
+		// STAND (Supporto)
+		let standGrad = ctx.createLinearGradient(0,s * 0.7, 0, s * 0.9);
+		standGrad.addColorStop(0, colors.darkSilver);
+		standGrad.addColorStop(0.75, colors.silver);
+		standGrad.addColorStop(1, colors.darkSilver);
+		
+		ctx.fillStyle = standGrad;
+		ctx.beginPath();
+		ctx.moveTo(s*0.40,s*0.74);
+		ctx.lineTo(s*0.60,s*0.74);
+		ctx.lineTo(s*0.61,s*0.85);
+		ctx.lineTo(s*0.39,s*0.85);
+		ctx.closePath();
+		ctx.fill();	
+		ctx.fillStyle = colors.silver;
+		ctx.beginPath();
+		ctx.roundRect(s*0.37,s*0.85,s*0.26,s*0.02,s*0.02);
+		ctx.fill();
+
+		//bordo inferiore
+		ctx.fillStyle = colors.silver;
+		ctx.beginPath();
+		ctx.roundRect(s*0.01,s*0.625,s*0.98,s*0.12,[0,0,s*0.03,s*0.03]);
+		ctx.fill();
+		
+		//apple LOGO
+		ctx.lineWidth = s*0.01
+		ctx.fillStyle = '#000';
+		ctx.beginPath();
+		ctx.ellipse(s*0.5,s*0.69,s*0.03,s*0.02,0,0,Math.PI * 2);
+		ctx.fill();		
+		ctx.fillStyle = colors.silver;
+		ctx.beginPath();
+		ctx.arc(s*0.52,s*0.69,s*0.01,0,Math.PI * 2);
+		ctx.fill();		
+	} 
 	else if (type.id === 'notebook') {
-		// --- SCHERMO APERTO ---
+		// SCHERMO APERTO
 		const isWhite = type.variant === 'notebookwhite';
 		ctx.fillStyle = "#111";
 		ctx.beginPath(); ctx.roundRect(s * 0.05, 0, s * 0.9, s * 0.6, s * 0.03); ctx.fill(); // Cornice
@@ -577,8 +1212,8 @@ function drawPC(x, y, tile) {
 		// Schermo LCD
 		if (connected) {
 			let screenGrad = ctx.createLinearGradient(0, 0, s, s * 0.6);
-			screenGrad.addColorStop(0, "#38bdf8");
-			screenGrad.addColorStop(1, "#0369a1");
+			screenGrad.addColorStop(0, colors.screenGradCyanLight);
+			screenGrad.addColorStop(1, colors.screenGradCyanDark);
 			ctx.fillStyle = screenGrad;
 		} else {
 			ctx.fillStyle = "#000";
@@ -591,9 +1226,19 @@ function drawPC(x, y, tile) {
 		ctx.moveTo(s*0.08, s*0.04); ctx.lineTo(s - s*0.08, s*0.04); ctx.lineTo(s*0.08, s * 0.4);
 		ctx.fill();
 		
-		//ctx.shadowBlur = 0;
+		//icone!!!
+		if (connected) {
+			// Menu bar
+			ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
+			ctx.fillRect(s*0.08, s*0.53, s*0.84, s*0.04);
+			ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
+			for(let i = 0; i < 6; i++) {
+				ctx.fillRect(s*0.1 + (i*s*0.11), s*0.53, s*0.04, s*0.02);
+			}
+			drawIcons(s*0.1, s*0.08, s*0.06, 5, 3);
+		}
 
-		// --- BASE TASTIERA (Prospettiva) ---
+		// BASE TASTIERA (Prospettiva)
 		let baseGrad = ctx.createLinearGradient(0, s * 0.6, 0, s);
 		baseGrad.addColorStop(0, isWhite ? '#fff' : colors.silver);
 		baseGrad.addColorStop(1, isWhite ? '#ddd' : colors.darkSilver);
@@ -607,33 +1252,31 @@ function drawPC(x, y, tile) {
 		ctx.closePath();
 		ctx.fill();
 
-		// Dettaglio tastiera (puntini) - SCALATI
-		const keySize = s * 0.035;
-		const keySpacing = s * 0.1;
-		const keyRowSpacing = s * 0.04;
+		// Dettaglio tastiera (prova prospettiva)
+		const keySizeX = s * 0.075;
+		const keySizeY = s * 0.035;
+		const keySpacing = s * 0.12;
+		const keyRowSpacing = s * 0.05;
 		ctx.fillStyle = "rgba(0,0,0,0.2)";
-		for(let i=0; i<8; i++) {
-			for(let j=0; j<4; j++) {
-				ctx.fillRect(s*0.15 + (i*keySpacing), s*0.65 + (j*keyRowSpacing), keySize, keySize);
+		for(let j=0; j<3; j++) {
+			for(let i=0; i<7; i++) {						
+				const perspective = j * s * 0.008;
+				ctx.fillRect(s*0.12 + (i*keySpacing) - perspective, s*0.65 + (j*keyRowSpacing), keySizeX + perspective * 2, keySizeY);
 			}
 		}
 		// Touchpad - SCALATO
 		ctx.fillRect(s*0.4, s*0.82, s*0.2, s*0.08);
 		
 		//led all'angolino
-		ctx.fillStyle = connected ? (Math.cos(flowOffset*0.92) > 0.2 ? colors.whiteOn : colors.whiteOff) : colors.whiteOff;
-		if (connected && Math.cos(flowOffset*0.92) > 0.2) {
-			ctx.shadowBlur = 6;
-			ctx.shadowColor = colors.whiteOn;
-		}
-		ctx.beginPath();
-		ctx.arc(s * 0.87, s * 0.65, s * 0.01, 0, Math.PI*2);
-		ctx.fill();
-		ctx.shadowBlur = 0;
+		const led1On = connected && Math.cos(flowOffset*0.52) > 0.2;
+		ctx.fillStyle = led1On ? colors.whiteOn : colors.whiteOff;
+		ctx.fillRect(s*0.12 + (6*keySpacing), s*0.65, keySizeX, keySizeY);
+		//prova blur semplificato
+		if(led1On) drawLedAloneRect(s*0.12 + (6*keySpacing), s*0.65, keySizeX, keySizeY, colors.whiteOn);
 	} 
 	else if (type.id === 'tablet') {
-		// --- SCOCCA ---
-		let tabletGrad = ctx.createRadialGradient(s/2, s/2, 0, s/2, s/2, s);
+		// SCOCCA
+		let tabletGrad = ctx.createRadialGradient(s*0.5, s*0.5, 0, s*0.5, s*0.5, s);
 		tabletGrad.addColorStop(0, "#475569");
 		tabletGrad.addColorStop(1, "#0f172a");
 		ctx.fillStyle = tabletGrad;
@@ -642,8 +1285,8 @@ function drawPC(x, y, tile) {
 		// Schermo Tutto Vetro
 		if (connected) {
 			let screenGrad = ctx.createLinearGradient(0, 0, s, s * 0.6);
-			screenGrad.addColorStop(0, "#38bdf8");
-			screenGrad.addColorStop(1, "#0369a1");
+			screenGrad.addColorStop(0, colors.screenGradCyanLight);
+			screenGrad.addColorStop(1, colors.screenGradCyanDark);
 			ctx.fillStyle = screenGrad;
 		} else {
 			ctx.fillStyle = "#000";
@@ -652,14 +1295,17 @@ function drawPC(x, y, tile) {
 		ctx.roundRect(s*0.1 + s*0.03, s*0.03, s*0.8 - s*0.06, s - s*0.06, s * 0.08); 
 		ctx.fill();
 		
+		//icone!!!
+		if (connected) {
+			drawIcons(s*0.18, s*0.1, s*0.1, 6, 5);
+		}
+		
 		// Riflesso "Glossy"
 		ctx.fillStyle = colors.glass;
 		ctx.beginPath();
 		ctx.moveTo(s*0.12, s*0.04); ctx.lineTo(s - s*0.10, s*0.04); ctx.lineTo(s*0.12, s * 0.04);
 		ctx.fill();
 		
-		//ctx.shadowBlur = 0;
-
 		// Riflesso curva
 		ctx.strokeStyle = "rgba(255,255,255,0.1)";
 		ctx.lineWidth = 1;
@@ -690,42 +1336,26 @@ function drawPC(x, y, tile) {
 		const ledY = s - ledRadius * 3;
 		
 		// Blink smoothing per LED
-		const blinkGreen = Math.sin(flowOffset * 0.05) > -0.8;
-		const blinkOrange = Math.sin(flowOffset * 0.06 + 1.5) > -0.8;
-		const blinkRed = Math.sin(flowOffset * 0.07 + 3) > -0.8;
+		const blinkGreen = Math.sin(flowOffset * 0.15) > -0.8;
+		const blinkOrange = Math.sin(flowOffset * 0.2 + 1.5) > -0.8;
+		const blinkRed = Math.sin(flowOffset * 0.25 + 3) > -0.8;
 		
 		// LED VERDE A DX
-		ctx.fillStyle = connected ? (blinkGreen ? colors.greenOn : colors.greenOff) : colors.greenOff;
-		if (connected && blinkGreen) {
-			ctx.shadowBlur = 8; 
-			ctx.shadowColor = colors.greenOn;
-		}
-		ctx.beginPath(); 
-		ctx.arc(s - ledRadius * 2.5, ledY, ledRadius, 0, Math.PI*2); 
-		ctx.fill();
-		ctx.shadowBlur = 0;
+		ctx.fillStyle = connected && blinkGreen ? colors.greenOn : colors.greenOff;
+		ctx.fillRect(s - ledRadius * 3, ledY, ledRadius * 1.5, ledRadius);
+		if (connected && blinkGreen) drawLedAloneRect(s - ledRadius * 3, ledY, ledRadius * 1.5, ledRadius, colors.greenOn);
 		
 		// LED ARANCIO A CX
-		ctx.fillStyle = connected ? (blinkOrange ? colors.orangeOn : colors.orangeOff) : colors.orangeOff;
-		if (connected && blinkOrange) {
-			ctx.shadowBlur = 8; 
-			ctx.shadowColor = colors.orangeOn;
-		}
-		ctx.beginPath(); 
-		ctx.arc(s - ledRadius * 5, ledY, ledRadius, 0, Math.PI*2); 
-		ctx.fill();
-		ctx.shadowBlur = 0;
+		ctx.fillStyle = connected && blinkOrange ? colors.orangeOn : colors.orangeOff;
+		ctx.fillRect(s - ledRadius * 5.5, ledY, ledRadius * 1.5, ledRadius);
+		//prova blur semplificato
+		if (connected && blinkOrange) drawLedAloneRect(s - ledRadius * 5.5, ledY, ledRadius * 1.5, ledRadius, colors.orangeOn);
 		
 		// LED ROSSO A SX
-		ctx.fillStyle = connected ? (blinkRed ? colors.redOn : colors.redOff) : colors.redOff;
-		if (connected && blinkRed) {
-			ctx.shadowBlur = 8; 
-			ctx.shadowColor = colors.redOn;
-		}
-		ctx.beginPath(); 
-		ctx.arc(s - ledRadius * 7.5, ledY, ledRadius, 0, Math.PI*2); 
-		ctx.fill();
-		ctx.shadowBlur = 0;
+		ctx.fillStyle = connected && blinkRed ? colors.redOn : colors.redOff;
+		ctx.fillRect(s - ledRadius * 8, ledY, ledRadius * 1.5, ledRadius);
+		//prova blur semplificato
+		if (connected && blinkRed) drawLedAloneRect(s - ledRadius * 8, ledY, ledRadius * 1.5, ledRadius, colors.redOn);
 	}
 	else if (type.id === 'dx40') {
 		// Case
@@ -761,7 +1391,7 @@ function drawPC(x, y, tile) {
 		
 		//floppy 5.25
 		ctx.fillStyle = '#999';
-		ctx.fillRect(s*0.41,s*0.25,s*0.53,s*0.15);
+		ctx.fillRect(s*0.40,s*0.25,s*0.55,s*0.15);
 		ctx.fillStyle = '#222';
 		ctx.fillRect(s*0.45,s*0.32,s*0.45,s*0.03);
 		ctx.fillStyle = '#777';
@@ -770,33 +1400,30 @@ function drawPC(x, y, tile) {
 		ctx.fill();
 		ctx.stroke();
 		// LED ROSSO
-		ctx.fillStyle = connected ? (blinkRed ? colors.redOn : colors.redOff) : colors.redOff;
-		if (connected && blinkRed) {
-			ctx.shadowBlur = 8; 
-			ctx.shadowColor = colors.redOn;
-		}
+		ctx.fillStyle = connected && blinkRed ? colors.redOn : colors.redOff;
 		ctx.beginPath(); 
 		ctx.arc(s*0.46, s*0.29, s*0.02, 0, Math.PI*2); 
 		ctx.fill();
-		ctx.shadowBlur = 0;
+		//prova blur semplificato
+		if (connected && blinkRed) drawLedAloneCircle(s*0.46, s*0.29, s*0.02, colors.redOn);
 		
 		
 		//floppy 3.5
 		ctx.lineWidth = s*0.01;
 		ctx.strokeRect(s*0.41,s*0.40,s*0.53,s*0.15);
 		ctx.strokeRect(s*0.45,s*0.42,s*0.45,s*0.11);//bordo interno
-		ctx.strokeRect(s*0.53,s*0.48,s*0.28,s*0.03);//fessura
-		ctx.strokeRect(s*0.53,s*0.44, s*0.05,s*0.03);//pulsante eject
+		ctx.strokeRect(s*0.62,s*0.44,s*0.1,s*0.07);//mano
+		ctx.strokeRect(s*0.76,s*0.49, s*0.05,s*0.02);//pulsante eject
+		ctx.fillStyle = '#ccc';
+		ctx.fillRect(s*0.53,s*0.45,s*0.28,s*0.02);//fessura
+		ctx.strokeRect(s*0.53,s*0.45,s*0.28,s*0.02);//fessura
 		// LED VERDE
-		ctx.fillStyle = connected ? (blinkGreen ? colors.greenOn : colors.greenOff) : colors.greenOff;
-		if (connected && blinkGreen) {
-			ctx.shadowBlur = 8; 
-			ctx.shadowColor = colors.redOn;
-		}
+		ctx.fillStyle = connected && blinkGreen ? colors.greenOn : colors.greenOff;
 		ctx.beginPath(); 
-		ctx.fillRect(s*0.62, s*0.44, s*0.05, s*0.02); 
+		ctx.fillRect(s*0.54, s*0.49, s*0.05, s*0.02); 
 		ctx.fill();
-		ctx.shadowBlur = 0;
+		//prova blur semplificato
+		if (connected && blinkGreen) drawLedAloneRect(s*0.54, s*0.49, s*0.05, s*0.02, colors.greenOn);
 		
 		
 		//hdd non visibile no led
@@ -815,21 +1442,14 @@ function drawPC(x, y, tile) {
 		ctx.stroke();
 		
 		// LED VERDE
-		ctx.fillStyle = connected ? (blinkGreen ? colors.greenOn : colors.greenOff) : colors.greenOff;
-		if (connected && blinkGreen) {
-			ctx.shadowBlur = 8; 
-			ctx.shadowColor = colors.greenOn;
-		}
-		ctx.fillRect(s*0.26,s*0.40,s*0.05,s*0.03); 
-		ctx.shadowBlur = 0;
+		ctx.fillStyle = connected && blinkGreen ? colors.greenOn : colors.greenOff;
+		ctx.fillRect(s*0.26,s*0.41,s*0.05,s*0.03); 
+		if (connected && blinkGreen) drawLedAloneRect(s*0.26,s*0.41,s*0.05,s*0.03, colors.greenOn); 
+		
 		// LED ARANCIO
-		ctx.fillStyle = connected ? (blinkOrange ? colors.orangeOn : colors.orangeOff) : colors.orangeOff;
-		if (connected && blinkOrange) {
-			ctx.shadowBlur = 8; 
-			ctx.shadowColor = colors.orangeOn;
-		}
+		ctx.fillStyle = connected && blinkOrange ? colors.orangeOn : colors.orangeOff;
 		ctx.fillRect(s*0.26,s*0.45,s*0.05,s*0.03); 
-		ctx.shadowBlur = 0;
+		if (connected && blinkOrange) drawLedAloneRect(s*0.26,s*0.45,s*0.05,s*0.03, colors.orangeOn);
 		
 		
 		//schermo verde 40 a SX
@@ -868,23 +1488,19 @@ function drawPC(x, y, tile) {
 		ctx.fillRect(s*0.50,s*0.84,s*0.13,s*0.04);
 		ctx.fillRect(s*0.65,s*0.84,s*0.13,s*0.04);
 		ctx.fillRect(s*0.80,s*0.84,s*0.13,s*0.04);
-		
 	}
 	else if (type.id === 'pentium75') {
 		// Case
 		let grad = ctx.createLinearGradient(-s*0.05, 0, s*1.1, s);
 		grad.addColorStop(0, "#ffe"); 
 		grad.addColorStop(1, "#ccb");
-		//corpo
+		//corpo e bordo
+		ctx.lineWidth = s*0.01;
+		ctx.strokeStyle = '#999';
 		ctx.fillStyle = grad;
 		ctx.beginPath();
 		ctx.roundRect(-s*0.05, s*0.2, s*1.1, s*0.5, s*0.02);
 		ctx.fill();
-		//bordo
-		ctx.lineWidth = s*0.01;
-		ctx.strokeStyle = '#999';
-		ctx.beginPath();
-		ctx.roundRect(-s*0.05, s*0.2, s*1.1, s*0.5, s*0.02);
 		ctx.stroke();
 		//LOGO
 		ctx.fillStyle = '#88f';
@@ -906,44 +1522,37 @@ function drawPC(x, y, tile) {
 		ctx.strokeRect(s*0.38,s*0.27,s*0.51,s*0.06);
 		ctx.strokeRect(s*0.38, s*0.35, s*0.06, s*0.03); //eject
 		// LED VERDE CD
-		ctx.fillStyle = connected ? (blinkCD ? colors.greenOn : colors.greenOff) : colors.greenOff;
-		if (connected && blinkCD) {
-			ctx.shadowBlur = 8; 
-			ctx.shadowColor = colors.greenOn;
-		}
+		ctx.fillStyle = connected && blinkCD ? colors.greenOn : colors.greenOff;
 		ctx.fillRect(s*0.46, s*0.35, s*0.06, s*0.03); 
-		ctx.shadowBlur = 0;
-		
+		//prova blur semplificato
+		if (connected && blinkCD) drawLedAloneRect(s*0.46, s*0.35, s*0.06, s*0.03, colors.greenOn);
+				
 		//floppy in verticale
 		ctx.strokeRect(s*0.94, s*0.28, s*0.08, s*0.28);
-		ctx.strokeRect(s*0.98, s*0.3, s*0.02, s*0.24);
 		ctx.strokeRect(s*0.95, s*0.3, s*0.02, s*0.04); //eject
-		// LED VERDE FD
-		ctx.fillStyle = connected ? (blinkFD ? colors.blinkOrange : colors.orangeOff) : colors.orangeOff;
-		if (connected && blinkCD) {
-			ctx.shadowBlur = 8; 
-			ctx.shadowColor = colors.blinkOrange;
-		}
-		ctx.fillRect(s*0.95, s*0.36, s*0.02, s*0.04); 
-		ctx.shadowBlur = 0;
+		ctx.strokeRect(s*0.95, s*0.38, s*0.05, s*0.1);//mano
 		
+		ctx.fillStyle = '#aaa';
+		ctx.fillRect(s*0.98, s*0.3, s*0.02, s*0.24);
+		ctx.strokeRect(s*0.98, s*0.3, s*0.02, s*0.24);
+		// LED arancio FD
+		ctx.fillStyle = connected && blinkFD ? colors.orangeOn : colors.orangeOff;
+		ctx.fillRect(s*0.95, s*0.50, s*0.02, s*0.04); 
+		//prova blur semplificato
+		if (connected && blinkFD) drawLedAloneRect(s*0.95, s*0.50, s*0.02, s*0.04, colors.orangeOn);
+				
 	
 		// LED VERDE
-		ctx.fillStyle = connected ? (blinkGreen ? colors.greenOn : colors.greenOff) : colors.greenOff;
-		if (connected && blinkGreen) {
-			ctx.shadowBlur = 8; 
-			ctx.shadowColor = colors.greenOn;
-		}
+		ctx.fillStyle = connected && blinkGreen ? colors.greenOn : colors.greenOff;
 		ctx.fillRect(s*0.26,s*0.40,s*0.05,s*0.03); 
-		ctx.shadowBlur = 0;
+		//prova blur semplificato
+		if (connected && blinkGreen) drawLedAloneRect(s*0.26,s*0.40,s*0.05,s*0.03, colors.greenOn);
+		
 		// LED ARANCIO
-		ctx.fillStyle = connected ? (blinkOrange ? colors.orangeOn : colors.orangeOff) : colors.orangeOff;
-		if (connected && blinkOrange) {
-			ctx.shadowBlur = 8; 
-			ctx.shadowColor = colors.orangeOn;
-		}
+		ctx.fillStyle = connected && blinkOrange ? colors.orangeOn : colors.orangeOff;
 		ctx.fillRect(s*0.26,s*0.45,s*0.05,s*0.03); 
-		ctx.shadowBlur = 0;
+		//prova blur semplificato
+		if (connected && blinkOrange) drawLedAloneRect(s*0.26,s*0.45,s*0.05,s*0.03, colors.orangeOn);
 		
 		
 		//schermo verde 75 a SX
@@ -973,41 +1582,115 @@ function drawPC(x, y, tile) {
 		ctx.fillRect(s*0.50,s*0.64,s*0.13,s*0.04);
 		ctx.fillRect(s*0.65,s*0.64,s*0.13,s*0.04);
 		ctx.fillRect(s*0.80,s*0.64,s*0.13,s*0.04);
+	}	
+	else if (type.id === 'pentium2') {
+		// Case tower
+		let grad = ctx.createLinearGradient(-s*0.05, 0, s*1.1, s);
+		grad.addColorStop(0, "#ffe"); 
+		grad.addColorStop(1, "#ccb");
+		//corpo
+		ctx.fillStyle = grad;
+		ctx.beginPath();
+		ctx.roundRect(s*0.2, 0, s*0.6, s, s*0.02);
+		ctx.fill();
+		//bordo
+		ctx.lineWidth = s*0.01;
+		ctx.strokeStyle = '#999';
+		ctx.beginPath();
+		ctx.roundRect(s*0.2, 0, s*0.6, s, s*0.02);
+		ctx.stroke();
+		
+		//2 slot grandi
+		ctx.strokeStyle = '#444';
+		ctx.strokeRect(s*0.22,s*0.05,s*0.55,s*0.15);//CD
+		ctx.strokeRect(s*0.22,s*0.20,s*0.55,s*0.15);//vuoto
+		ctx.strokeRect(s*0.22,s*0.35,s*0.35,s*0.15);//vuoto
+		ctx.strokeRect(s*0.22,s*0.50,s*0.35,s*0.15);//floppy
+		
+		//LOGO
+		ctx.fillStyle = '#225';
+		ctx.fillRect(s*0.62,s*0.4,s*0.1,s*0.1);
+		
+		//cdrom
+		ctx.strokeRect(s*0.24, s*0.07,s*0.51,s*0.06);
+		ctx.strokeRect(s*0.24, s*0.15, s*0.06, s*0.03); //eject
+		
+		//FLOPPY
+		ctx.strokeRect(s*0.26, s*0.54, s*0.26, s*0.02);
+		ctx.strokeRect(s*0.34, s*0.53, s*0.1, s*0.04);//quadrato al centro
+		ctx.strokeRect(s*0.26, s*0.59, s*0.06, s*0.02); //tasto eject
+		
+		const blinkGreen = Math.sin(flowOffset * 0.05) > -0.8;
+		const blinkOrange = Math.sin(flowOffset * 0.06 + 1.5) > -0.8;
+		const blinkRed = Math.sin(flowOffset * 0.08 + 1) > -0.8;
+		const blinkYellow = Math.sin(flowOffset * 0.09 - 1.2) > -0.8;
+		const blinkCD = Math.sin(flowOffset * 0.07 + 3) > -0.8;
+		const blinkFD = Math.cos(flowOffset * 0.07) > -0.8;
+		
+		// LED VERDE CD
+		ctx.fillStyle = connected && blinkCD ? colors.greenOn : colors.greenOff;
+		ctx.fillRect(s*0.36, s*0.15, s*0.06, s*0.03); 
+		//prova blur semplificato
+		if (connected && blinkCD) drawLedAloneRect(s*0.36, s*0.15, s*0.06, s*0.03, colors.greenOn);
+		
+		// LED ARANCIO FD
+		ctx.fillStyle = connected && blinkFD ? colors.orangeOn : colors.orangeOff;
+		ctx.fillRect(s*0.46, s*0.59, s*0.06, s*0.02); 
+		if (connected && blinkFD) drawLedAloneRect(s*0.46, s*0.59, s*0.06, s*0.02, colors.orangeOn); 
+		
+		//LED DI SOTTO
+		// LED ROSSO
+		ctx.fillStyle = connected && blinkRed ? colors.redOn : colors.redOff;
+		ctx.fillRect(s*0.56,s*0.75,s*0.04,s*0.04); 
+		//prova blur semplificato
+		if (connected && blinkRed) drawLedAloneRect(s*0.56,s*0.75,s*0.04,s*0.04, colors.redOn);		
+		
+		// LED VERDE
+		ctx.fillStyle = connected && blinkGreen ? colors.greenOn : colors.greenOff;
+		ctx.fillRect(s*0.56,s*0.83,s*0.04,s*0.04); 
+		//prova blur semplificato
+		if (connected && blinkGreen) drawLedAloneRect(s*0.56,s*0.83,s*0.04,s*0.04, colors.greenOn);
+				
+		// LED GIALLO
+		ctx.fillStyle = connected && blinkYellow ? colors.yellowOn : colors.yellowOff;
+		ctx.fillRect(s*0.56,s*0.91,s*0.04,s*0.04); 
+		//prova blur semplificato
+		if (connected && blinkYellow) drawLedAloneRect(s*0.56,s*0.91,s*0.04,s*0.04, colors.yellowOn);		
+		
+		//schermo verde 75 a SX
+		ctx.fillStyle = '#000';
+		ctx.fillRect(s*0.62,s*0.54,s*0.15,s*0.1);
+		ctx.fillStyle='#363';
+		ctx.fillRect(s*0.63,s*0.55,s*0.13,s*0.08);
+		ctx.fillStyle='#3f3';
+		ctx.font = `${s*0.08}px sans-serif`;
+		ctx.fillText(connected ? "300" : " 50",s*0.63,s*0.62);
+		
+		//shutdown
+		ctx.strokeStyle = '#666';
+		ctx.beginPath();
+		ctx.arc(s*0.7,s*0.77,s*0.03,0,Math.PI*2);
+		ctx.stroke();
+		ctx.strokeRect(s*0.64,s*0.76,s*0.1,s*0.02);
+		//turbo
+		ctx.beginPath();
+		ctx.arc(s*0.7,s*0.85,s*0.03,0,Math.PI*2);
+		ctx.stroke();
+		ctx.strokeRect(s*0.64,s*0.84,s*0.1,s*0.02);
+		//reset
+		ctx.beginPath();
+		ctx.arc(s*0.7,s*0.93,s*0.03,0,Math.PI*2);
+		ctx.stroke();
+		ctx.strokeRect(s*0.64,s*0.92,s*0.1,s*0.02);
 	}
-	
 	else if (type.id === 'router') {
-		// --- ROUTER WiFi ---
+		// ROUTER WiFi
 		const isWhite = type.variant === 'routerwhite';
 		
-		let routerGrad = ctx.createLinearGradient(0, 0, s, s);
-		routerGrad.addColorStop(0.0, isWhite ? '#fff' : "#334155");
-		routerGrad.addColorStop(0.5, isWhite ? '#eee' : "#1e293b");
-		routerGrad.addColorStop(1.0, isWhite ? '#bbb' : "#0f172a");
-		ctx.fillStyle = routerGrad;
-		ctx.beginPath();
-		ctx.roundRect(s*0.05, s*0.3, s*0.9, s*0.4, s * 0.04);
-		ctx.fill();
-		
-		// Griglia ventilazione frontale
-		ctx.strokeStyle = colors.darkSilver;
-		ctx.lineWidth = s * 0.01;
-		const ventRows = 3;
-		const ventSpacing = s * 0.08;
-		for(let i = 0; i < ventRows; i++) {
-			const y = s*0.35 + (i * ventSpacing);
-			for(let j = 0; j < 4; j++) {
-				const x = s*0.15 + (j * s*0.15);
-				ctx.beginPath();
-				ctx.moveTo(x, y);
-				ctx.lineTo(x + s*0.08, y + s*0.02);
-				ctx.stroke();
-			}
-		}
-		
-		// --- ANTENNE (4 antenne esterne) ---
+		// ANTENNE (2 antenne esterne)
 		const antennaPositions = [
-			{x: s*0.2, y: s*0.28, angle: -0.3},   // SX alto
-			{x: s*0.8, y: s*0.28, angle: 0.3},    // DX alto
+			{x: s*0.2, y: s*0.3, angle: -0.3},   // SX alto
+			{x: s*0.8, y: s*0.3, angle: 0.3},    // DX alto
 		];
 		
 		antennaPositions.forEach((pos, idx) => {
@@ -1027,79 +1710,95 @@ function drawPC(x, y, tile) {
 			ctx.restore();
 		});
 		
-		// --- LED INDICATORI ---
+		
+		let routerGrad = ctx.createLinearGradient(0, 0, s, s);
+		routerGrad.addColorStop(0.0, isWhite ? '#fff' : "#334155");
+		routerGrad.addColorStop(0.5, isWhite ? '#eee' : "#1e293b");
+		routerGrad.addColorStop(1.0, isWhite ? '#bbb' : "#0f172a");
+		ctx.fillStyle = routerGrad;
+		ctx.beginPath();
+		ctx.roundRect(s*0.05, s*0.3, s*0.9, s*0.4, s * 0.04);
+		ctx.fill();
+		
+		// Griglia ventilazione frontale
+		ctx.strokeStyle = colors.darkSilver;
+		ctx.lineWidth = s * 0.01;
+		const ventRows = 3;
+		const ventSpacing = s * 0.03;
+		for(let i = 0; i < ventRows; i++) {
+			const y = s*0.34 + (i * ventSpacing);
+			for(let j = 0; j < 5; j++) {
+				const x = s*0.15 + (j * s*0.15);
+				ctx.beginPath();
+				ctx.moveTo(x, y);
+				ctx.lineTo(x + s*0.08, y);// + s*0.02);
+				ctx.stroke();
+			}
+		}
+		
+		// LED INDICATORI
 		const ledRadius = Math.max(1.5, s*0.02);
-		const ledStartX = s*0.15;
+		const ledStartX = s*0.16;
 		const ledStartY = s*0.66;
 		const ledSpacing = s*0.15;
 		
 		// LED Power (Verde) - BLINK
-		ctx.fillStyle = connected ? (Math.sin(flowOffset*0.15) > -0.3 ? colors.greenOn : colors.greenOff) : colors.greenOff;
-		if (connected && Math.sin(flowOffset*0.15) > -0.3) {
-			ctx.shadowBlur = 6;
-			ctx.shadowColor = colors.greenOn;
-		}
-		ctx.beginPath();
-		ctx.arc(ledStartX, ledStartY, ledRadius, 0, Math.PI*2);
-		ctx.fill();
-		ctx.shadowBlur = 0;
+		const blinkGreen = Math.sin(flowOffset*0.15) > -0.3;
+		ctx.fillStyle = connected && blinkGreen ? colors.greenOn : colors.greenOff;
+		ctx.fillRect(ledStartX, ledStartY, ledRadius * 3, ledRadius);
+		//prova blur semplificato
+		if (connected && blinkGreen) drawLedAloneRect(ledStartX, ledStartY, ledRadius * 3, ledRadius, colors.greenOn);
 		
 		// LED Internet/WAN (Blu) - BLINK
-		ctx.fillStyle = connected ? (Math.cos(flowOffset*0.2) > 0.2 ? colors.blueOn : colors.blueOff) : colors.blueOff;
-		if (connected && Math.cos(flowOffset*0.2) > 0.2) {
-			ctx.shadowBlur = 6;
-			ctx.shadowColor = colors.blueOn;
-		}
-		ctx.beginPath();
-		ctx.arc(ledStartX + ledSpacing, ledStartY, ledRadius, 0, Math.PI*2);
-		ctx.fill();
-		ctx.shadowBlur = 0;
+		const blinkBlue = Math.cos(flowOffset*0.2) > 0.2;
+		ctx.fillStyle = connected && blinkBlue ? colors.blueOn : colors.blueOff;
+		ctx.fillRect(ledStartX + ledSpacing, ledStartY, ledRadius * 3, ledRadius);
+		//prova blur semplificato
+		if (connected && blinkBlue) drawLedAloneRect(ledStartX + ledSpacing, ledStartY, ledRadius * 3, ledRadius, colors.blueOn);
+		
 		
 		// LED WiFi 2.4GHz (Arancio) - BLINK
-		ctx.fillStyle = connected ? (Math.sin(flowOffset*0.25 + 1) > 0.1 ? colors.orangeOn : colors.orangeOff) : colors.orangeOff;
-		if (connected && Math.sin(flowOffset*0.25 + 1) > 0.1) {
-			ctx.shadowBlur = 6;
-			ctx.shadowColor = colors.orangeOff;
-		}
-		ctx.beginPath();
-		ctx.arc(ledStartX + ledSpacing*2, ledStartY, ledRadius, 0, Math.PI*2);
-		ctx.fill();
-		ctx.shadowBlur = 0;
+		let blinkOrange = Math.sin(flowOffset*0.25 + 1) > 0.1;
+		ctx.fillStyle = connected && blinkOrange ? colors.orangeOn : colors.orangeOff;
+		ctx.fillRect(ledStartX + ledSpacing*2, ledStartY, ledRadius * 3, ledRadius);
+		//prova blur semplificato
+		if (connected && blinkOrange) drawLedAloneRect(ledStartX + ledSpacing*2, ledStartY, ledRadius * 3, ledRadius, colors.orangeOn);
 		
 		// LED WiFi 5GHz (Rosso) - BLINK
-		ctx.fillStyle = connected ? (Math.cos(flowOffset*0.3 + 2) > 0.2 ? colors.redOn : colors.redOff) : colors.redOff;
-		if (connected && Math.cos(flowOffset*0.3 + 2) > 0.2) {
-			ctx.shadowBlur = 6;
-			ctx.shadowColor = colors.redOn;
-		}
-		ctx.beginPath();
-		ctx.arc(ledStartX + ledSpacing*3, ledStartY, ledRadius, 0, Math.PI*2);
-		ctx.fill();
-		ctx.shadowBlur = 0;
+		let blinkRed = Math.cos(flowOffset*0.3 + 2) > 0.2;
+		ctx.fillStyle = connected && blinkRed ? colors.redOn : colors.redOff;
+		ctx.fillRect(ledStartX + ledSpacing*3, ledStartY, ledRadius * 3, ledRadius);
+		//prova blur semplificato
+		if (connected && blinkRed) drawLedAloneRect(ledStartX + ledSpacing*3, ledStartY, ledRadius * 3, ledRadius, colors.redOn);
 		
-		// --- SIMBOLO WiFi STILIZZATO ---
-		if (connected) {
-			ctx.strokeStyle = colors.blueOn;
-			ctx.lineWidth = Math.max(0.5, s*0.01);
+		// SIMBOLO WiFi STILIZZATO
+		let coss = Math.cos(flowOffset*0.2);
+		let blink = [connected, connected && coss > -0.5, connected && coss > -0.2, connected && coss > 0.1];
+		
+		ctx.lineWidth = Math.max(0.5, s*0.01);
 			
-			const wifiX = s*0.8;
-			const wifiY = s*0.5;
-			const wifiSize = s*0.07;
+		const wifiX = s*0.8;
+		const wifiY = s*0.55;
+		const wifiSize = s*0.07;
 			
-			[1, 2, 3].forEach((ring, i) => {
-				ctx.beginPath();
-				ctx.arc(wifiX, wifiY, wifiSize*(i+1)*0.33, 1.15 * Math.PI, 1.85 * Math.PI, false);
-				ctx.stroke();
-			});
-			
-			ctx.fillStyle = colors.blueOn;
+		[1, 2, 3].forEach((ring, i) => {
+			ctx.strokeStyle = blink[i] ? colors.blueOn : colors.blueOff;
 			ctx.beginPath();
-			ctx.arc(wifiX, wifiY, Math.max(0.8, s*0.01), 0, Math.PI*2);
-			ctx.fill();
-		}
+			ctx.arc(wifiX, wifiY, wifiSize*(i+1)*0.33, 1.15 * Math.PI, 1.85 * Math.PI, false);
+			ctx.stroke();
+			//prova blur semplificato
+			if (blink[i]) drawLedAloneCircle(wifiX, wifiY, wifiSize*(i+1)*0.2, colors.blueOn, 1.15 * Math.PI, 1.85 * Math.PI);
+		});
+			
+		ctx.fillStyle = blink[0] ? colors.blueOn : colors.blueOff;
+		ctx.beginPath();
+		ctx.arc(wifiX, wifiY, Math.max(0.8, s*0.01), 0, Math.PI*2);
+		ctx.fill();
+		//prova blur semplificato
+		if (blink[0]) drawLedAloneCircle(wifiX, wifiY, Math.max(0.8, s*0.01), colors.blueOn);
 	}
 	else if (type.id === 'ipcamera') {
-		// --- IP CAMERA tp-link per casa
+		// IP CAMERA tp-link per casa
 		const isBlack = type.variant === 'ipcamerablack';
 		// Base cilindrica inferiore (bianca)
 		let baseGrad = ctx.createRadialGradient(s*0.5, s*0.75, 0, s*0.5, s*0.75, s*0.4);
@@ -1164,15 +1863,14 @@ function drawPC(x, y, tile) {
 		}
 		
 		// LED indicatore di stato
-		ctx.fillStyle = connected ? colors.greenOn : colors.greenOff;
-		if (connected && Math.sin(flowOffset*0.2) > 0) {
-			ctx.shadowBlur = 6;
-			ctx.shadowColor = colors.greenOn;
-		}
+		const blinkGreen = Math.sin(flowOffset*0.2) > -0.5;
+		ctx.fillStyle = connected && blinkGreen ? colors.greenOn : colors.greenOff;
 		ctx.beginPath();
 		ctx.arc(s*0.75, s*0.45, Math.max(1.5, s*0.025), 0, Math.PI*2);
 		ctx.fill();
-		ctx.shadowBlur = 0;
+		//prova blur semplificato
+		if (connected && blinkGreen) drawLedAloneCircle(s*0.75, s*0.45, Math.max(1.5, s*0.025), colors.greenOn);
+		
 		
 		// Ombra/sfumatura laterale per effetto 3D
 		ctx.fillStyle = "rgba(0,0,0,0.1)";
@@ -1181,7 +1879,7 @@ function drawPC(x, y, tile) {
 		ctx.fill();
 	}
 	else if (type.id === 'macintosh') {
-		// --- MACINTOSH 128K (1984) - Classic Beige ---
+		// MACINTOSH 128K (1984) - Classic Beige
 		
 		// Case beige principale (molto arrotondato)
 		let macGrad = ctx.createLinearGradient(0, 0, s, s);
@@ -1200,7 +1898,7 @@ function drawPC(x, y, tile) {
 		ctx.roundRect(s*0.05, s*0.08, s*0.9, s*0.9, s*0.04);
 		ctx.stroke();
 		
-		// --- SCHERMO CRT (quadrato, centrato, non full-width) ---
+		// SCHERMO CRT (quadrato, centrato, non full-width)
 		// Bordo nero schermo
 		ctx.fillStyle = "#000";
 		ctx.beginPath();
@@ -1218,7 +1916,15 @@ function drawPC(x, y, tile) {
 		}
 		ctx.fillRect(s*0.22, s*0.19, s*0.56, s*0.4);
 		
-		// --- SLOT FLOPPY (sotto lo schermo) ---
+		//icone!!!
+		if (connected) {
+			// Menu bar
+			ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
+			ctx.fillRect(s*0.24, s*0.20, s*0.52, s*0.04);
+			drawIcons(s*0.25, s*0.3, s*0.06, 3, 4, 'rgba(0,0,0,0.3)');
+		}
+		
+		// SLOT FLOPPY (sotto lo schermo)
 		ctx.fillStyle = "#444";
 		ctx.fillRect(s*0.3, s*0.75, s*0.5, s*0.04);
 		ctx.fillRect(s*0.6, s*0.73, s*0.2, s*0.08);
@@ -1228,25 +1934,22 @@ function drawPC(x, y, tile) {
 		ctx.fillRect(s*0.15, s*0.73, s*0.1, s*0.1);
 		ctx.fillStyle = "#44ee44";
 		ctx.fillRect(s*0.17, s*0.75, s*0.05, s*0.02);
-		ctx.fillStyle = "#eeee44";
+		ctx.fillStyle = "#bb9944";
 		ctx.fillRect(s*0.16, s*0.77, s*0.05, s*0.02);
-		ctx.fillStyle = "#ee44ee";
+		ctx.fillStyle = "#bb44bb";
 		ctx.fillRect(s*0.17, s*0.79, s*0.05, s*0.02);
 		
 		
-		// --- LED INDICATORE (basso destra) ---
+		// LED INDICATORE (basso destra) sempre on
+		const blinkOrange = Math.sin(flowOffset*0.1) > -0.3;
 		ctx.fillStyle = connected ? colors.orangeOn : colors.orangeOff;
-		if (connected && Math.sin(flowOffset*0.1) > -0.3) {
-			ctx.shadowBlur = 6;
-			ctx.shadowColor = colors.orangeOn;
-		}
 		ctx.beginPath();
 		ctx.arc(s*0.85, s*0.78, Math.max(1.5, s*0.022), 0, Math.PI*2);
 		ctx.fill();
-		ctx.shadowBlur = 0;
+		if (connected && blinkOrange) drawLedAloneCircle(s*0.85, s*0.78, Math.max(1.5, s*0.022, colors.orangeOn), colors.orangeOn);
 	}
 	else if (type.id === 'imac') {
-		// --- iMAC MODERNO G4
+		// iMAC MODERNO G4
 		
 		// Base emisfericale (bianca)
 		let baseGrad = ctx.createRadialGradient(s*0.5, s*1.0, 0, s*0.5, s*1.0, s*0.3);
@@ -1272,7 +1975,7 @@ function drawPC(x, y, tile) {
 		ctx.fillStyle = standGrad;
 		ctx.fillRect(s*0.47, s*0.68, s*0.06, s*0.18);
 		
-		// --- SCHERMO (grande, rettangolare) ---
+		// SCHERMO (grande, rettangolare)
 		// Cornice bianca esterna
 		let screenBorderGrad = ctx.createLinearGradient(0, 0, s, s*0.65);
 		screenBorderGrad.addColorStop(0, "#ffffff");
@@ -1293,9 +1996,9 @@ function drawPC(x, y, tile) {
 		// Schermo vero e proprio (con gradient blu se connesso)
 		if (connected) {
 			let screenGrad = ctx.createLinearGradient(0, s*0.08, 0, s*0.63);
-			screenGrad.addColorStop(0, "#1e5a96");
-			screenGrad.addColorStop(0.5, "#2b7fb8");
-			screenGrad.addColorStop(1, "#1e5a96");
+			screenGrad.addColorStop(0, colors.screenGradDark);
+			screenGrad.addColorStop(0.5, colors.screenGradLight);
+			screenGrad.addColorStop(1, colors.screenGradDark);
 			ctx.fillStyle = screenGrad;
 		} else {
 			ctx.fillStyle = "#0a0a0a";
@@ -1310,56 +2013,48 @@ function drawPC(x, y, tile) {
 			ctx.fill();
 		}
 		
-		// Menu bar (imitazione macOS)
-		ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
-		ctx.fillRect(s*0.12, s*0.08, s*0.76, s*0.05);
+		if (connected ) {
+			// Menu bar (imitazione macOS)
+			ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
+			ctx.fillRect(s*0.12, s*0.08, s*0.76, s*0.05);
 		
-		// Icone menu bar (piccoli quadratini)
-		if (connected) {
+			// Icone menu bar (piccoli quadratini)
 			ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
 			for(let i = 0; i < 8; i++) {
 				ctx.fillRect(s*0.14 + (i*s*0.09), s*0.095, s*0.02, s*0.03);
 			}
+			
+			// Dock (imitazione macOS in basso)
+			ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
+			ctx.beginPath();
+			ctx.roundRect(s*0.2, s*0.57, s*0.6, s*0.06, s*0.04);
+			ctx.fill();		
+			// Icone dock
+			drawIcons(s*0.24, s*0.53, s*0.08, 1, 5);
 		}
 		
-		// Dock (imitazione macOS in basso)
-		ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
-		ctx.beginPath();
-		ctx.roundRect(s*0.2, s*0.57, s*0.6, s*0.06, s*0.04);
-		ctx.fill();
-		
-		// Icone dock
-		if (connected) {
-			ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
-			for(let i = 0; i < 7; i++) {
-				ctx.fillRect(s*0.24 + (i*s*0.08), s*0.585, s*0.025, s*0.03);
-			}
-		}
-		
-		// --- CAMERA FRONTALE (piccolo puntino) ---
+		// CAMERA FRONTALE (piccolo puntino)
 		ctx.fillStyle = "#333";
 		ctx.beginPath();
 		ctx.arc(s*0.5, s*0.065, Math.max(0.8, s*0.008), 0, Math.PI*2);
 		ctx.fill();
 		
-		// --- LED INDICATORE (basso, sotto il stand) ---
+		// LED INDICATORE (basso, sotto il stand) sempre on
+		const blinkGreen = Math.sin(flowOffset*0.12) > -0.4;
 		ctx.fillStyle = connected ? colors.greenOn : colors.greenOff;
-		if (connected && Math.sin(flowOffset*0.12) > -0.4) {
-			ctx.shadowBlur = 6;
-			ctx.shadowColor = colors.greenOn;
-		}
 		ctx.beginPath();
 		ctx.arc(s*0.5, s*0.82, Math.max(1.2, s*0.015), 0, Math.PI*2);
 		ctx.fill();
-		ctx.shadowBlur = 0;
+		if (connected && blinkGreen) drawLedAloneCircle(s*0.5, s*0.82, Math.max(1.2, s*0.015), colors.greenOn);
 	}	
 	else if (type.id === 'gameboy') {
-		// --- GAME BOY CLASSICO (1989) ---
+		// GAME BOY CLASSICO (1989)
 		// Body grigio-beige
 		//grad1->grad2 + bordo + tasti outer->inner
 		const gbcols = { 	gameboyred:  '#d20|#b10|#300|#000|#222',
 							gameboyblue: '#03d|#02b|#003|#000|#222',
 							gameboy:     '#f0f0f0|#b0b0b0|#333|#806|#a08'};
+		let isWhite = type.variant === 'gameboy';
 		let gbGrad = ctx.createLinearGradient(0, 0, s, s);
 		gbGrad.addColorStop(0, gbcols[type.variant].split('|')[0]);
 		gbGrad.addColorStop(1, gbcols[type.variant].split('|')[1]);
@@ -1375,14 +2070,14 @@ function drawPC(x, y, tile) {
 		ctx.roundRect(s*0.1, s*0.05, s*0.75, s*0.9, s*0.04);
 		ctx.stroke();
 		
-		// --- SCHERMO LCD ---
+		// SCHERMO LCD
 		ctx.fillStyle = "#000";
 		ctx.beginPath();
 		ctx.roundRect(s*0.16, s*0.12, s*0.64, s*0.35, s*0.02);
 		ctx.fill();
 		
 		// Etichetta GAMEBOY
-		ctx.fillStyle = "#999";
+		ctx.fillStyle = isWhite ? '#999' : '#333';
 		ctx.font = `${s*0.04}px sans-serif`;
 		ctx.textAlign = "left";
 		ctx.textBaseline = "middle";
@@ -1412,6 +2107,17 @@ function drawPC(x, y, tile) {
 				ctx.lineTo(s*0.78, s*0.14 + i);
 				ctx.stroke();
 			}
+			//scritta nintendo
+			ctx.fillStyle = "#444";
+			ctx.font = `${s*0.07}px sans-serif`;
+			ctx.textAlign = "left";
+			ctx.textBaseline = "middle";
+			ctx.fillText("Nintendo", s*0.35, s*0.3);
+			ctx.strokeStyle = '#444';
+			ctx.lineWidth = s * 0.008;
+			ctx.beginPath();
+			ctx.roundRect(s*0.3,s*0.25,s*0.4,s*0.1,s*0.04);
+			ctx.stroke();
 		}
 		
 		// Speaker (griglia in alto)
@@ -1424,7 +2130,7 @@ function drawPC(x, y, tile) {
 			ctx.stroke();
 		}
 		
-		// --- D-PAD (CROCE NERA A SINISTRA) ---
+		// D-PAD (CROCE NERA A SINISTRA)
 		const dpadX = s*0.3;
 		const dpadY = s*0.7;
 		const dpadSize = s*0.35;
@@ -1441,7 +2147,7 @@ function drawPC(x, y, tile) {
 		// Destra
 		ctx.fillRect(dpadX + dpadSize*0.15, dpadY - dpadSize*0.1, dpadSize*0.2, dpadSize*0.2);
 		
-		// --- TASTI A E B (A DESTRA) ---
+		// TASTI A E B (A DESTRA)
 		const buttonsX = s*0.6;
 		const buttonsY = s*0.7;
 		const buttonSize = s*0.05;
@@ -1473,16 +2179,13 @@ function drawPC(x, y, tile) {
 		ctx.roundRect(s*0.5, s*0.85, s*0.05, s*0.02, s*0.02);
 		ctx.fill();
 		
-		// --- LED INDICATORE ---
+		// LED INDICATORE sempre on
+		const blinkLed = Math.sin(flowOffset*0.15) > -0.5;
 		ctx.fillStyle = connected ? "#c55e22" : "#4e3b06";
-		if (connected && Math.sin(flowOffset*0.15) > -0.5) {
-			ctx.shadowBlur = 8;
-			ctx.shadowColor = "#c55e22";
-		}
 		ctx.beginPath();
 		ctx.arc(s*0.2, s*0.3, Math.max(1, s*0.02), 0, Math.PI*2);
 		ctx.fill();
-		ctx.shadowBlur = 0;
+		if (connected && blinkLed) drawLedAloneCircle(s*0.2, s*0.3, Math.max(1, s*0.02), colors.orangeOn);
 		
 		ctx.strokeStyle = 'rgba(0,0,0,0.5)';
 		ctx.beginPath();
@@ -1503,7 +2206,7 @@ function drawPC(x, y, tile) {
 		ctx.stroke();
 	}	
 	else if (type.id === 'nintendoswitch') {
-		// --- NINTENDO SWITCH ---
+		// NINTENDO SWITCH
 		
 		// Body nero principale
 		let switchGrad = ctx.createLinearGradient(0, 0, s, s);
@@ -1518,7 +2221,7 @@ function drawPC(x, y, tile) {
 		ctx.lineWidth = s*0.01;
 		ctx.strokeRect(s*0.08, s*0.15, s*0.84, s*0.7);
 		
-		// --- JOY-CON SINISTRO (grigio) ---
+		// JOY-CON SINISTRO (grigio)
 		let joyLGrad = ctx.createLinearGradient(0, 0, s*0.15, s*0.7);
 		joyLGrad.addColorStop(0, "#3377cc");
 		joyLGrad.addColorStop(1, "#1155aa");
@@ -1542,7 +2245,7 @@ function drawPC(x, y, tile) {
 		ctx.fill();
 		
 		
-		// --- JOY-CON DESTRO (rosso/blu) ---
+		// JOY-CON DESTRO (rosso/blu)
 		let joyRGrad = ctx.createLinearGradient(s*0.85, 0, s, s*0.7);
 		joyRGrad.addColorStop(0, "#e74c3c");
 		joyRGrad.addColorStop(1, "#c0392b");
@@ -1566,16 +2269,16 @@ function drawPC(x, y, tile) {
 		ctx.arc(joyRX, joyRY * 1.6, s*0.04, 0, Math.PI * 2);
 		ctx.fill();
 		
-		// --- SCHERMO CENTRALE ---
+		// SCHERMO CENTRALE
 		ctx.fillStyle = "#000";
 		ctx.fillRect(s*0.2, s*0.18, s*0.6, s*0.45);
 		
 		// Schermo LCD (blu se connesso)
 		if (connected) {
 			let screenGrad = ctx.createLinearGradient(0, s*0.2, 0, s*0.6);
-			screenGrad.addColorStop(0, "#1e5a96");
-			screenGrad.addColorStop(0.5, "#2b7fb8");
-			screenGrad.addColorStop(1, "#1e5a96");
+			screenGrad.addColorStop(0, colors.screenGradDark);
+			screenGrad.addColorStop(0.5, colors.screenGradLight);
+			screenGrad.addColorStop(1, colors.screenGradDark);
 			ctx.fillStyle = screenGrad;
 		} else {
 			ctx.fillStyle = "#0a0a0a";
@@ -1590,7 +2293,7 @@ function drawPC(x, y, tile) {
 			ctx.fill();
 		}
 		
-		// --- HOME BUTTON (al centro in basso) ---
+		// HOME BUTTON (al centro in basso)
 		ctx.fillStyle = "#555";
 		ctx.beginPath();
 		ctx.arc(s*0.5, s*0.75, s*0.03, 0, Math.PI*2);
@@ -1604,7 +2307,7 @@ function drawPC(x, y, tile) {
 		ctx.fillText("SWITCH", s*0.5, s*0.75);
 	}
 	else if (type.id === 'hplaserjet') {
-		// --- HP LASERJET 107w
+		// HP LASERJET 107w
 		let isDark = type.variant === 'hplaserjetblack';
 		
 		// Top grigio/nero
@@ -1633,7 +2336,7 @@ function drawPC(x, y, tile) {
 			ctx.stroke();
 		}
 		
-		// --- CORPO PRINCIPALE (bianco) ---
+		// CORPO PRINCIPALE (bianco)
 		let bodyGrad = ctx.createLinearGradient(0, s*0.2, 0, s);
 		bodyGrad.addColorStop(0, isDark ? '#333' : "#ffffff");
 		bodyGrad.addColorStop(0.5, isDark ? '#222' : "#f5f5f5");
@@ -1663,7 +2366,7 @@ function drawPC(x, y, tile) {
 		ctx.stroke();
 		
 		
-		// --- LOGO HP (al centro) ---
+		// LOGO HP (al centro)
 		ctx.fillStyle = connected ? "#0066cc" : isDark ? '#666' : '#ccc';
 		ctx.beginPath();
 		ctx.arc(s*0.5, s*0.6, s*0.08, 0, Math.PI*2);
@@ -1676,33 +2379,27 @@ function drawPC(x, y, tile) {
 		ctx.textBaseline = "middle";
 		ctx.fillText("hp", s*0.5, s*0.6);
 		
-		// --- PULSANTI PANNELLO CONTROLLO ---
+		// PULSANTI PANNELLO CONTROLLO
 		// Pulsante power (blu fisso se acceso)
-		ctx.fillStyle = colors.blueOff;
-		if (connected) {
-			ctx.fillStyle = colors.blueOn;
-			ctx.shadowBlur = 8;
-			ctx.shadowColor = colors.blueOn;
-		}
+		ctx.fillStyle = connected ? colors.blueOn : colors.blueOff;
 		ctx.beginPath();
 		ctx.arc(s*0.9, s*0.15, s*0.02, 0, Math.PI*2);
 		ctx.fill();
-		ctx.shadowBlur = 0;
+		//prova blur semplificato
+		if (connected) drawLedAloneCircle(s*0.9, s*0.15, s*0.02, colors.blueOn);
 		
 		// pulsante connessione dati (bianco)
-		ctx.fillStyle = connected && Math.cos(flowOffset*0.25) > 0.5 ? colors.whiteOn : colors.whiteOff;
-		if (connected && Math.cos(flowOffset*0.15) > -0.5) {
-			ctx.shadowBlur = 8;
-			ctx.shadowColor = colors.whiteOn;
-		}
+		const blinkWhite = Math.cos(flowOffset*0.25) > 0.5;
+		ctx.fillStyle = connected && blinkWhite ? colors.whiteOn : colors.whiteOff;
 		ctx.beginPath();
 		ctx.arc(s*0.9, s*0.25, s*0.02, 0, Math.PI*2);
 		ctx.fill();
-		ctx.shadowBlur = 0;
+		//prova blur semplificato
+		if (connected && blinkWhite) drawLedAloneCircle(s*0.9, s*0.25, s*0.02, colors.whiteOn);
 	}
 	else if (type.id === 'atari2600') {
-		// --- ATARI 2600 CLASSICO (1977) ---
-		// --- SEZIONE INFERIORE (LEGNO MASSELLO) ---
+		// ATARI 2600 CLASSICO (1977)
+		// SEZIONE INFERIORE (LEGNO MASSELLO)
 		let woodGrad = ctx.createLinearGradient(0, s*0.6, 0, s);
 		woodGrad.addColorStop(0, "#d4a574");
 		woodGrad.addColorStop(0.5, "#c89460");
@@ -1726,12 +2423,12 @@ function drawPC(x, y, tile) {
 		ctx.fill();
 		
 		ctx.fillStyle = "#fff";
-		ctx.font = `bold ${s*0.07}px sans-serif`;
+		ctx.font = `${s*0.07}px sans-serif`;
 		ctx.textAlign = "center";
 		ctx.textBaseline = "middle";
 		ctx.fillText("A", s*0.9, s*0.6);
 		
-		// --- SEZIONE SUPERIORE (NERO/GRIGIO) ---
+		// SEZIONE SUPERIORE (NERO/GRIGIO)
 		let topGrad = ctx.createLinearGradient(0, s*0.1, 0, s*0.5);
 		topGrad.addColorStop(0, "#4a4a4a");
 		topGrad.addColorStop(0.5, "#2a2a2a");
@@ -1774,20 +2471,18 @@ function drawPC(x, y, tile) {
 		ctx.fillRect(s*0.04, s*0.47, s*0.92, s*0.025);
 		ctx.fillRect(s*0.02, s*0.54, s*0.96, s*0.025);
 		
-		// --- LED POWER (pic0colo, rosso) ---
-		ctx.fillStyle = connected ? colors.greenOn : colors.greenOff;
-		if (connected && Math.sin(flowOffset*0.15) > -0.5) {
-			ctx.shadowBlur = 6;
-			ctx.shadowColor = colors.greenOn;
-			ctx.beginPath();
-			ctx.arc(s*0.88, s*0.23, s*0.03, 0, Math.PI*2);
-			ctx.fill();
-			}		
-		ctx.shadowBlur = 0;
+		// LED POWER (piccolo, rosso)
+		const blinkLed = Math.sin(flowOffset*0.15) > -0.5;
+		ctx.fillStyle = connected && blinkLed ? colors.redOn : colors.redOff;
+		ctx.beginPath();
+		ctx.arc(s*0.88, s*0.23, s*0.03, 0, Math.PI*2);
+		ctx.fill();
+		//prova blur semplificato
+		if (connected && blinkLed) drawLedAloneCircle(s*0.88, s*0.23, s*0.03, colors.redOn);
 	}	
 	else if (type.id === 'hantarex') {
 		// IL MIO AMATO APPLE ][ / SHUTTLE (COMPATIBILE) CON MONITOR HANTAREX
-		// --- MONITOR SUPERIORE ---
+		// MONITOR SUPERIORE
 		// Case beige/crema
 		let caseGrad = ctx.createLinearGradient(0, 0, s, s*0.6);
 		caseGrad.addColorStop(0, "#e8d7c3");
@@ -1807,7 +2502,7 @@ function drawPC(x, y, tile) {
 		ctx.roundRect(s*0.07, s*0.03, s*0.86, s*0.55, s*0.02);
 		ctx.fill();
 		
-		// --- SCHERMO CRT (grande) ---
+		// SCHERMO CRT (grande)
 		// Bordo nero profondo
 		ctx.fillStyle = "#111";
 		ctx.beginPath();
@@ -1826,23 +2521,24 @@ function drawPC(x, y, tile) {
 		
 		if (connected) {
 			ctx.fillStyle = "#bfb";
-			ctx.font = `${s*0.03}px sans-serif`;
+			ctx.font = `${s*0.04}px monospace`;
 			ctx.textAlign = "center";
 			ctx.fillText("APPLE ][", s*0.5, s*0.15);
 			ctx.textAlign = "left";
 			ctx.fillText("]", s*0.24, s*0.45);
-			if(Math.sin(flowOffset*0.5) > -0.5) {
-				ctx.shadowBlur = 6;
-				ctx.fillText("O", s*0.26, s*0.45);
-				ctx.shadowBlur = 0;
+			if(Math.sin(flowOffset*0.6) > -0.5) {
+				ctx.font = `${s*0.03}px monospace`;
+				ctx.fillText("█", s*0.27, s*0.45);
+				//prova blur semplificato anche su cursore lampeggiante
+				drawLedAloneRect(s*0.27, s*0.43, s*0.01, s*0.01, '#bbffbb');
 			}				
 		}
 		
-		// --- PANNELLO CONTROLLI (inferiore monitor) ---
+		// PANNELLO CONTROLLI (inferiore monitor)
 		ctx.fillStyle = "#645440";
 		ctx.fillRect(s*0.05, s*0.6, s*0.9, s*0.09);
 		
-		// --- 4 MANOPOLE CONTROLLO (DESTRA) ---
+		// 4 MANOPOLE CONTROLLO (DESTRA)
 		const knobY = s*0.65;
 		const knobSpacing = s*0.1;
 		
@@ -1873,6 +2569,13 @@ function drawPC(x, y, tile) {
 			ctx.lineCap = "butt";
 		}
 		
+		//scritta hantarex
+		ctx.fillStyle = '#543';
+		ctx.fillRect(s*0.1, s*0.63, s*0.23, s*0.04);
+		ctx.fillStyle = '#987';
+		ctx.font = `${s*0.04}px sans-serif`;
+		ctx.fillText('HANTAREX',s*0.11,s*0.66);
+		
 		//CASE alluminio
 		ctx.beginPath();
 		ctx.fillStyle = "#e8d7c3";
@@ -1895,28 +2598,51 @@ function drawPC(x, y, tile) {
 		ctx.roundRect(-s*0.06,s*0.92,s*1.12,s*0.08,[0,0,s*0.04,s*0.04]);
 		ctx.fill();
 		
-		//scritta logata shuttle [-
-		ctx.fillStyle = "#444";
-		ctx.fillRect(s*0.15, s*0.81, s*0.1, s*0.05);
+		//TASTIERA GRIGIONA
+		ctx.strokeStyle = '#444';
+		ctx.setLineDash([s*0.05,s*0.01]);
+		ctx.lineWidth = s * 0.03;
+		ctx.beginPath();
+		ctx.moveTo(s*0.10,s*0.91);
+		ctx.lineTo(s*0.73,s*0.91);
+		ctx.stroke();
+		//TASTIERINO NUMERICO
+		ctx.beginPath();
+		ctx.moveTo(s*0.80,s*0.91);
+		ctx.lineTo(s*0.94,s*0.91);
+		ctx.stroke();
+		ctx.setLineDash([]);
+		//BARRA SPAZIATRICE
+		ctx.beginPath();
+		ctx.moveTo(s*0.30,s*0.91);
+		ctx.lineTo(s*0.55,s*0.91);
+		ctx.stroke();
 		
-		// --- LED INDICATORE (angolo inferiore destro) ---
-		ctx.fillStyle = connected ? "#ff5e22" : "#0d3a0d";
-		if (connected && Math.sin(flowOffset*0.15) > -0.5) {
-			ctx.shadowBlur = 5;
-			ctx.shadowColor = "#ff5e22";
-		}
+		
+		//scritta logata shuttle
+		ctx.fillStyle = '#333';
+		ctx.fillRect(s*0.15, s*0.81, s*0.14, s*0.04);
+		ctx.fillStyle = '#666';
+		ctx.font = `${s*0.04}px sans-serif`;
+		ctx.fillText('shuttle',s*0.16,s*0.84);
+		
+		
+		// LED INDICATORE (angolo inferiore destro)
+		ctx.fillStyle = connected ? colors.redOn : colors.redOff;
 		ctx.beginPath();
 		ctx.arc(s*0.1, s*0.83, s*0.018, 0, Math.PI*2);
 		ctx.fill();
+		if (connected && Math.sin(flowOffset*0.15) > -0.5) drawLedAloneCircle(s*0.1, s*0.83, s*0.018, colors.redOn);
 		
+		//led fisso monitor
+		ctx.fillStyle = connected ? colors.redOn : colors.redOff;
 		ctx.beginPath();
 		ctx.arc(s*0.8, s*0.65, s*0.02, 0, Math.PI*2);
 		ctx.fill();
-		
-		ctx.shadowBlur = 0;
+		if (connected) drawLedAloneCircle(s*0.8, s*0.65, s*0.02, colors.redOn);
 	}
 	else if (type.id === 'minipc') {
-		// --- SCOCCA ---
+		// SCOCCA
 		let minipcGrad = ctx.createRadialGradient(s*0.5, s*0.5, 0, s*0.5, s*0.5, s);
 		minipcGrad.addColorStop(0, "#273549");
 		minipcGrad.addColorStop(1, "#0f070a");
@@ -1930,8 +2656,8 @@ function drawPC(x, y, tile) {
 		//cerchio di luce
 		if (connected) {
 			let screenGrad = ctx.createRadialGradient(s*0.5, s*0.5, 0, s*0.5, s*0.5, s);
-			screenGrad.addColorStop(0, "#38bdf8");
-			screenGrad.addColorStop(1, "#0369a1");
+			screenGrad.addColorStop(0, colors.screenGradCyanLight);
+			screenGrad.addColorStop(1, colors.screenGradCyanDark);
 			ctx.fillStyle = screenGrad;
 		} else {
 			ctx.fillStyle = minipcGrad;
@@ -1991,13 +2717,80 @@ function drawPC(x, y, tile) {
 		
 		//led
 		ctx.fillStyle = connected ? colors.blueOn : "#222";
-		if (connected && Math.sin(flowOffset*0.95) > -0.5) {
-			ctx.shadowBlur = 5;
-			ctx.shadowColor = colors.blueOn;
-		}
 		ctx.beginPath();
 		ctx.arc(s*0.72, s*0.67, s*0.01, 0, Math.PI*2);
 		ctx.fill();
+		//prova blur semplificato
+		if (connected && Math.sin(flowOffset*0.95) > -0.5) drawLedAloneCircle(s*0.72, s*0.67, s*0.01, colors.blueOn);
+	}
+	else if (type.id === 'imacmini') {
+		// SCOCCA
+		let minipcGrad = ctx.createRadialGradient(s*0.5, s*0.5, 0, s*0.5, s*0.5, s);
+		minipcGrad.addColorStop(0, colors.darkSilver);
+		minipcGrad.addColorStop(0.75, colors.silver);
+		minipcGrad.addColorStop(1, colors.darkSilver);
+		
+		//base NERA
+		ctx.fillStyle = '#111';
+		ctx.beginPath(); 
+		ctx.roundRect(s*0.25, s*0.43, s*0.5, s*0.4, s * 0.08); 
+		ctx.fill();
+		
+		//mezzo grigio
+		ctx.fillStyle = minipcGrad;
+		ctx.beginPath(); 
+		ctx.roundRect(s*0.2, s*0.40, s*0.6, s*0.4, s * 0.08); 
+		ctx.fill();
+		
+		//top chiaro
+		minipcGrad = ctx.createRadialGradient(s*0.5, s*0.5, 0, s*0.5, s*0.5, s);
+		minipcGrad.addColorStop(0, colors.darkSilver);
+		minipcGrad.addColorStop(0.5, colors.silver);
+		minipcGrad.addColorStop(1, colors.darkSilver);
+		ctx.fillStyle = minipcGrad;//'#111';
+		ctx.beginPath(); 
+		ctx.roundRect(s*0.2, s*0.20, s*0.6, s*0.40, s * 0.08); 
+		ctx.fill();
+		
+		//apple LOGO
+		ctx.lineWidth = s*0.01
+		ctx.fillStyle = '#000';
+		ctx.beginPath();
+		ctx.ellipse(s*0.5,s*0.40,s*0.09,s*0.06,0,0,Math.PI * 2);
+		ctx.fill();		
+		//foglietta
+		ctx.beginPath();
+		ctx.ellipse(s*0.52,s*0.32,s*0.01,s*0.03,1,0,Math.PI * 2);
+		ctx.fill();		
+		//morso		
+		ctx.fillStyle = minipcGrad;
+		ctx.beginPath();
+		ctx.arc(s*0.57,s*0.40,s*0.03,0,Math.PI * 2);
+		ctx.fill();	
+		
+		
+		//usb + pulsantone
+		ctx.fillStyle = '#000';
+		ctx.beginPath();
+		ctx.roundRect(s*0.32, s*0.68, s*0.03, s*0.08, s*0.04);
+		ctx.fill();
+		ctx.beginPath();
+		ctx.roundRect(s*0.40, s*0.68, s*0.03, s*0.08, s*0.04);
+		ctx.fill();
+		
+		//led
+		ctx.fillStyle = connected ? colors.whiteOn : "#222";
+		ctx.beginPath();
+		ctx.arc(s*0.6, s*0.70, s*0.015, 0, Math.PI*2);
+		ctx.fill();
+		if (connected && Math.sin(flowOffset*0.95) > -0.5) drawLedAloneCircle(s*0.6, s*0.70, s*0.015, colors.whiteOn);
+		
+		//buco
+		ctx.fillStyle = '#000';
+		ctx.beginPath();
+		ctx.arc(s*0.70, s*0.70, s*0.02, 0, Math.PI*2);
+		ctx.fill();
+		
 	}
 	else if (type.id === 'radio') {
 		//CORPO IN LEGNO
@@ -2014,34 +2807,34 @@ function drawPC(x, y, tile) {
 		ctx.strokeStyle = 'rgba(0,0,0,0.5)';
 		ctx.lineWidth = s*0.02;
 		ctx.beginPath();
-		ctx.roundRect(s*0.1, s*0.1, s*0.8, s*0.5, [s*0.2,s*0.1,s*0.04,s*0.04]);
+		ctx.roundRect(s*0.1, s*0.1, s*0.8, s*0.5, [s*0.15,s*0.15,s*0.08,s*0.08]);
 		ctx.closePath();
 		ctx.fill();
 		ctx.stroke();
 		
 		//piedini
-		ctx.fillStyle = '#111';
-		ctx.fillRect(s*0.2,s*0.6,s*0.1,s*0.06);
-		ctx.fillRect(s*0.7,s*0.6,s*0.1,s*0.06);
+		ctx.fillStyle = '#222';
+		ctx.fillRect(s*0.2,s*0.6,s*0.1,s*0.05);
+		ctx.fillRect(s*0.7,s*0.6,s*0.1,s*0.05);
 		
-		//--- GRIGLIA SPEAKER (SX) ---
+		//GRIGLIA SPEAKER (SX)
 		ctx.fillStyle = '#111';
-		ctx.fillRect(s*0.16,s*0.24,s*0.04,s*0.21);
-		ctx.fillRect(s*0.22,s*0.23,s*0.04,s*0.22);
-		ctx.fillRect(s*0.28,s*0.22,s*0.04,s*0.23);
-		ctx.fillRect(s*0.34,s*0.21,s*0.04,s*0.24);
-		ctx.fillRect(s*0.40,s*0.20,s*0.04,s*0.25);
+		ctx.fillRect(s*0.16,s*0.22,s*0.04,s*0.26);
+		ctx.fillRect(s*0.22,s*0.18,s*0.04,s*0.30);
+		ctx.fillRect(s*0.28,s*0.16,s*0.04,s*0.32);
+		ctx.fillRect(s*0.34,s*0.15,s*0.04,s*0.33);
+		ctx.fillRect(s*0.40,s*0.15,s*0.04,s*0.33);
 		
 		//scritte
-		ctx.fillStyle = "rgba(0,0,0,0.94)";
+		ctx.fillStyle = "#111";
 		ctx.font = `${s*0.08}px serif`;
 		ctx.textAlign = "left";
-		ctx.fillText("fm radio", s*0.16, s*0.52);
+		ctx.fillText("fm radio", s*0.16, s*0.55);
 		
 		
-		// --- QUADRANTE FM (DX) ---
+		// QUADRANTE FM (DX)
 		const dialX = s*0.7;
-		const dialY = s*0.35;
+		const dialY = s*0.32;
 		const dialRadius = s*0.18;
 		
 		// Sfondo quadrante (colore arancio/oro)
@@ -2073,10 +2866,10 @@ function drawPC(x, y, tile) {
 		ctx.font = `${s*0.05}px serif`;
 		ctx.textAlign = "center";
 		ctx.textBaseline = "middle";
-		const freqs = [90, 94, 98, 102, 106, 110];
+		const freqs = [88, 92, 96, 100, 104, 108];
 		freqs.forEach((freq, idx) => {
-			const angle = (idx / freqs.length) * Math.PI * 2;
-			const labelRadius = dialRadius * 0.75;
+			const angle = (idx / freqs.length) * Math.PI * 2 + Math.PI * 0.66;
+			const labelRadius = dialRadius * 0.7;
 			const lx = dialX + Math.cos(angle) * labelRadius;
 			const ly = dialY + Math.sin(angle) * labelRadius;
 			ctx.fillText(freq.toString(), lx, ly);
@@ -2087,7 +2880,7 @@ function drawPC(x, y, tile) {
 		for(let i = 0; i < 24; i++) {
 			const angle = (i / 24) * Math.PI * 2;
 			const r1 = dialRadius * 0.95;
-			const r2 = dialRadius * 0.85;
+			const r2 = dialRadius * (i%4 === 0 ? 0.80 : 0.85);
 			const x1 = dialX + Math.cos(angle) * r1;
 			const y1 = dialY + Math.sin(angle) * r1;
 			const x2 = dialX + Math.cos(angle) * r2;
@@ -2099,7 +2892,7 @@ function drawPC(x, y, tile) {
 		}
 		
 		// Lancetta indicatore FM (animated se connesso)
-		const dialAngle = connected ? (Math.sin(flowOffset * 0.04) * 0.9) - 1.75 : (Math.PI * 1.75);
+		const dialAngle = connected ? (Math.sin(flowOffset * 0.1) * 0.9) - 1.75 : (Math.PI * 1.75);
 		
 		ctx.strokeStyle = '#333';
 		ctx.lineWidth = s*0.03;
@@ -2122,15 +2915,15 @@ function drawPC(x, y, tile) {
 		ctx.fill();
 		
 		// Label "FM" sotto quadrante
-		ctx.fillStyle = "#333";
-		ctx.font = `bold ${s*0.07}px serif`;
-		ctx.textAlign = "center";
-		ctx.fillText("R919", dialX, dialY + dialRadius + s*0.04);
+		ctx.fillStyle = "#111";
+		ctx.font = `${s*0.06}px serif`;
+		ctx.textAlign = "left";
+		ctx.fillText("R919", dialX - s * 0.06, dialY + dialRadius + s*0.04);
 		
-		// --- MANOPOLE BASSE ---
-		const knobY = s*0.54;
-		const knob1X = s*0.56;
-		const knob2X = s*0.84;
+		// MANOPOLE BASSE
+		const knobY = s*0.52;
+		const knob1X = s*0.57;
+		const knob2X = s*0.83;
 		
 		[knob1X, knob2X].forEach((knobX) => {
 			// Base manopola
@@ -2139,23 +2932,23 @@ function drawPC(x, y, tile) {
 			knobGrad.addColorStop(1, "#6B5203");
 			ctx.fillStyle = knobGrad;
 			ctx.beginPath();
-			ctx.arc(knobX, knobY, s*0.05, 0, Math.PI*2);
+			ctx.arc(knobX, knobY, s*0.04, 0, Math.PI*2);
 			ctx.fill();
 			
 			// Bordo manopola
-			ctx.strokeStyle = "#3D3D3D";
+			ctx.strokeStyle = "#432";
 			ctx.lineWidth = s*0.008;
 			ctx.beginPath();
-			ctx.arc(knobX, knobY, s*0.05, 0, Math.PI*2);
+			ctx.arc(knobX, knobY, s*0.04, 0, Math.PI*2);
 			ctx.stroke();
 			
 			// Indicatore manopola (lineetta)
-			ctx.strokeStyle = "#2a2a2a";
+			ctx.strokeStyle = "#333";
 			ctx.lineWidth = s*0.015;
 			ctx.lineCap = "round";
 			ctx.beginPath();
 			ctx.moveTo(knobX, knobY);
-			ctx.lineTo(knobX + Math.cos(-1.75) * s*0.04, knobY + Math.sin(-1.75) * s*0.04);
+			ctx.lineTo(knobX + Math.cos(-1.75) * s*0.03, knobY + Math.sin(-1.75) * s*0.03);
 			ctx.stroke();
 		});
 		ctx.lineCap = 'butt';
@@ -2172,8 +2965,8 @@ function drawPC(x, y, tile) {
 		ctx.roundRect(s*0.25, s*0.45, s*0.50, s*0.2, s*0.02);
 		ctx.fill();
 		
-		// --- SCOCCA ---
-		let tabletGrad = ctx.createRadialGradient(s/2, s/2, 0, s/2, s/2, s);
+		// SCOCCA
+		let tabletGrad = ctx.createRadialGradient(s*0.5, s*0.5, 0, s*0.5, s*0.5, s);
 		tabletGrad.addColorStop(0, "#fff");
 		tabletGrad.addColorStop(1, "#ccc");
 		ctx.fillStyle = tabletGrad;
@@ -2182,8 +2975,8 @@ function drawPC(x, y, tile) {
 		// Schermo Tutto Vetro
 		if (connected) {
 			let screenGrad = ctx.createLinearGradient(0, 0, s, s * 0.6);
-			screenGrad.addColorStop(0, "#38bdf8");
-			screenGrad.addColorStop(1, "#0369a1");
+			screenGrad.addColorStop(0, colors.screenGradCyanLight);
+			screenGrad.addColorStop(1, colors.screenGradCyanDark);
 			ctx.fillStyle = screenGrad;
 		} else {
 			ctx.fillStyle = "#000";
@@ -2214,14 +3007,18 @@ function drawPC(x, y, tile) {
 		//connessione G
 		if (connected) {
 			ctx.fillStyle = '#fff';
-			ctx.font = `${s*0.2}px serif`;
+			ctx.font = `${s*0.18}px serif`;
 			ctx.textAlign = "center";
-			ctx.fillText("G", s*0.5, s*0.3);
+			const ora = new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit', hour12: false });
+			ctx.fillText(ora, s*0.5, s*0.31);//"G"
+			
+			ctx.font = `${s*0.05}px serif`;
+			ctx.fillText('23° Sunny', s*0.5, s*0.38)
 		}
 		
 	} 
 	else if (type.id === 'yamahathr') {
-		// --- MANIGLIA (Arco superiore) ---
+		// MANIGLIA (Arco superiore)
 		const isGreen = type.variant === 'yamahathrgreen';
 		ctx.strokeStyle = "#9ca3af";
 		ctx.lineWidth = s * 0.03;
@@ -2229,36 +3026,48 @@ function drawPC(x, y, tile) {
 		ctx.roundRect(s*0.1, s*0.02, s*0.8, s*0.2, s*0.04);
 		ctx.stroke();
 		
-		// --- CORPO PRINCIPALE ---
+		// CORPO PRINCIPALE
 		let bodyGrad = ctx.createLinearGradient(0, 0, 0, s);
 		bodyGrad.addColorStop(0, isGreen ? "#564" : "#dca");
 		bodyGrad.addColorStop(1, isGreen ? "#242" : "#bb9");
 		ctx.fillStyle = bodyGrad;
 		ctx.beginPath(); ctx.roundRect(0, s*0.15, s, s*0.7, s*0.05); ctx.fill();
 
-		// --- GRIGLIA VENTILAZIONE (Chevron pattern) ---
+		// GRIGLIA VENTILAZIONE
 		ctx.strokeStyle = "#2d2d2d";
-		ctx.lineWidth = Math.max(0.5, s * 0.008);
-		const chevronSpacing = s * 0.1;
-		const chevronStart = s * 0.08;
-		const chevronWidth = s * 0.8;
+		ctx.lineWidth = s * 0.008;
+		const chevronStartX = s * 0.1;
+		const chevronEndX = s * 0.88;
+		const chevronSpacingX = s * 0.1;
 		
-		for(let x = chevronStart; x <= chevronStart + chevronWidth; x += chevronSpacing) {
-			for(let y = s*0.35; y < s*0.75; y += s*0.04) {
-				if(y>s*0.3 && y<s*0.5 && x>s*0.3 && x<s*0.6) continue;
+		const chevronStartY = s * 0.32;
+		const chevronEndY = s * 0.75;
+		const chevronSpacingY = s * 0.05;
+		
+		const chevronWidth = chevronSpacingX * 0.75;//lunghezza orizzontale riga
+		const chevronHeight = s * 0.05;//lunghezza verticale riga
+		
+		let ingiu = false;
+		for(let x = chevronStartX; x <= chevronEndX; x += chevronSpacingX) {
+			ingiu = !ingiu;
+			for(let y = chevronStartY; y < chevronEndY; y += chevronSpacingY) {
+				if(y>s*0.3 && y<s*0.5 && x>s*0.32 && x<s*0.6) continue;//buco sul logo
+				
 				// Linee oblique a V
 				ctx.beginPath();
-				ctx.moveTo(x, y);
-				ctx.lineTo(x + chevronSpacing*0.5, y + s*0.02);
-				ctx.stroke();
-				ctx.beginPath();
-				ctx.moveTo(x + chevronSpacing*0.5, y + s*0.02);
-				ctx.lineTo(x, y + s*0.04);
+				
+				if(ingiu) {
+					ctx.moveTo(x, y);
+					ctx.lineTo(x + chevronWidth, y + chevronHeight);
+				} else {
+					ctx.moveTo(x, y + chevronHeight);
+					ctx.lineTo(x + chevronWidth, y);
+				}				
 				ctx.stroke();
 			}
 		}
 
-		// --- PULSANTI SUPERIORI ---
+		// PULSANTI SUPERIORI
 		const knobSize = s * 0.06;
 		const knobStart = s * 0.2;
 		const knobSpacing = s * 0.12;
@@ -2284,13 +3093,9 @@ function drawPC(x, y, tile) {
 		ctx.arc(s*0.06, s*0.78, s*0.014, 0, Math.PI*2);
 		ctx.fill();
 
-		// --- LOGO YAMAHA (Tuning fork nel cerchio) ---
+		// LOGO YAMAHA (Tuning fork nel cerchio)
 		ctx.fillStyle = connected ? "#f80" : "#2d2d2d";
-		ctx.strokeStyle = connected ? "#f80" : "#2d2d2d";
-		if (connected) {
-			ctx.shadowBlur = 10;
-			ctx.shadowColor = "#f80";
-		}
+		ctx.strokeStyle = connected ? "#f80" : "#2d2d2d";		
 		ctx.beginPath();
 		ctx.arc(s*0.5, s*0.4, s*0.05, 0, Math.PI*2);
 		ctx.fill();
@@ -2299,26 +3104,24 @@ function drawPC(x, y, tile) {
 		ctx.lineWidth = s * 0.01;
 		ctx.arc(s*0.5, s*0.4, s*0.07, 0, Math.PI*2);
 		ctx.stroke();
-		ctx.shadowBlur = 0;
+		//prova blur semplificato
+		if (connected) drawLedAloneCircle(s*0.5, s*0.4, s*0.05, colors.orangeOn);
 		
 		ctx.fillStyle = connected ? '#d4c5a9' : '#ddd';
 		ctx.textAlign = 'center';
 		ctx.font = `${s*0.1}px sans-serif`;
-		ctx.fillText('Y',s*0.5,s*0.43);
+		ctx.fillText('Y',s*0.5,s*0.44);
 		
 		
-		// --- LED POWER
-		ctx.fillStyle = connected && Math.cos(flowOffset*0.4) > 0.2 ? "#f80" : "#374151";
-		if (connected && Math.cos(flowOffset*0.4) > 0.2) {
-			ctx.shadowBlur = 5;
-			ctx.shadowColor = "#f80";
-		}
+		// LED POWER
+		const ledBlink = Math.cos(flowOffset*0.4) > 0.2;
+		ctx.fillStyle = connected && ledBlink ? "#f80" : "#374151";
 		ctx.beginPath();
 		ctx.arc(s*0.82, s*0.14, s*0.012, 0, Math.PI*2);
 		ctx.fill();
-		ctx.shadowBlur = 0;
+		if (connected && ledBlink) drawLedAloneCircle(s*0.82, s*0.14, s*0.012, colors.orangeOn);		
 		
-		// --- RIFLESSO GLOSSY ---
+		// RIFLESSO GLOSSY
 		ctx.fillStyle = "rgba(255,255,255,0.1)";
 		ctx.beginPath();
 		ctx.moveTo(s*0.05, s*0.15); ctx.lineTo(s*0.5, s*0.2); ctx.lineTo(s*0.1, s*0.35);
@@ -2399,16 +3202,16 @@ function drawPC(x, y, tile) {
 		ctx.fillRect(joyRX - s*0.02, s*0.65, s*0.02, s*0.01);
 		ctx.fillRect(joyRX + s*0.02, s*0.65, s*0.02, s*0.01);
 		
-		// --- SCHERMO CENTRALE ---
+		// SCHERMO CENTRALE
 		ctx.fillStyle = "#000";
 		ctx.fillRect(s*0.2, s*0.22, s*0.6, s*0.4);
 		
 		// Schermo LCD (blu se connesso)
 		if (connected) {
 			let screenGrad = ctx.createLinearGradient(0, s*0.4, 0, s*0.6);
-			screenGrad.addColorStop(0, "#1e5a96");
-			screenGrad.addColorStop(0.5, "#2b7fb8");
-			screenGrad.addColorStop(1, "#1e5a96");
+			screenGrad.addColorStop(0, colors.screenGradDark);
+			screenGrad.addColorStop(0.5, colors.screenGradLight);
+			screenGrad.addColorStop(1, colors.screenGradDark);
 			ctx.fillStyle = screenGrad;
 		} else {
 			ctx.fillStyle = "#0a0a0a";
@@ -2421,28 +3224,28 @@ function drawPC(x, y, tile) {
 			ctx.beginPath();
 			ctx.ellipse(s*0.35, s*0.35, s*0.08, s*0.06, -0.3, 0, Math.PI*2);
 			ctx.fill();
+			
+			//temibile scritta STARTGAME
+			ctx.fillStyle = "#eee";
+			ctx.font = `${s*0.05}px sans-serif`;
+			ctx.textAlign = "center";
+			ctx.textBaseline = "middle";
+			ctx.fillText("C-3", s*0.5, s*0.42);
+			ctx.fillText("STARTGAME", s*0.5, s*0.48);
 		}
 		
 		//led fisso blue in alto a dx
-		ctx.fillStyle = colors.blueOff;
-		if (connected) {
-			ctx.fillStyle = colors.blueOn;
-			ctx.shadowBlur = 8;
-			ctx.shadowColor = colors.blueOn;
-		}
+		ctx.fillStyle = connected ? colors.blueOn : colors.blueOff;
 		ctx.fillRect(s*0.9, s*0.24, s*0.02, s*0.01);
-		ctx.shadowBlur = 0;
+		//prova blur semplificato
+		if (connected) drawLedAloneRect(s*0.9, s*0.24, s*0.02, s*0.01, colors.blueOn);
 		
 		//led fisso rosso in alto a sx
-		ctx.fillStyle = colors.redOff;
-		if (connected) {
-			ctx.fillStyle = colors.redOn;
-			ctx.shadowBlur = 8;
-			ctx.shadowColor = colors.redOn;
-		}
+		ctx.fillStyle = connected ? colors.redOn : colors.redOff;
 		ctx.fillRect(s*0.1, s*0.24, s*0.02, s*0.01);
-		ctx.shadowBlur = 0;
-		
+		//prova blur semplificato
+		if (connected) drawLedAloneRect(s*0.1, s*0.24, s*0.02, s*0.01, colors.redOn);
+				
 		// Etichetta PS7000
 		ctx.fillStyle = "#999";
 		ctx.font = `${s*0.05}px sans-serif`;
@@ -2452,7 +3255,7 @@ function drawPC(x, y, tile) {
 	}
 	else if (type.id === 'ps4') {
 		const isWhite = type.variant === 'ps4white';
-		// --- PLAYSTATION 4 2014
+		// PLAYSTATION 4 2014
 		// CORPO PRINCIPALE INFERIORE (più scuro)
 		let baseGrad = ctx.createLinearGradient(0, s*0.3, 0, s*0.7);
 		baseGrad.addColorStop(0, isWhite ? "#eee" : "#222");
@@ -2493,21 +3296,31 @@ function drawPC(x, y, tile) {
 		ctx.fillText("SONY", s*0.02, s*0.38);
 		
 		// LED power (blu fisso se connesso)
-		ctx.fillStyle = connected ? (isWhite ? colors.blueOn : colors.blueOff) : (isWhite ? '#ddd' : '#000');
+		ctx.fillStyle = connected ? 
+							(isWhite ? colors.blueOn : colors.blueOff) : 
+							(isWhite ? '#ddd' : '#000');
 		ctx.beginPath();
 		ctx.arc(s*0.12, s*0.6, s*0.015, 0, Math.PI*2);
 		ctx.fill();
-		ctx.shadowBlur = 0;
+		if (connected) drawLedAloneCircle(s*0.12, s*0.6, s*0.015, isWhite ? colors.blueOn : '#dddddd');
 		
+		//base color
 		ctx.fillStyle = isWhite ? '#ddd' : '#000';
-		if (connected && Math.sin(flowOffset*0.15) > -0.3) {
-			ctx.fillStyle = (isWhite ? colors.blueOn : colors.blueOff)
-			ctx.shadowBlur = 10;
-			ctx.shadowColor = (isWhite ? colors.blueOn : colors.blueOff)
+
+		//blink state
+		const blinkLed = Math.sin(flowOffset * 0.15) > -0.3;
+		const isLedActive = connected && blinkLed;
+		if (isLedActive) {
+			ctx.fillStyle = isWhite ? colors.blueOn : colors.blueOff;
 		}
-		ctx.fillRect(s*0.35, s*0.31,s*0.03,s*0.16);
-		ctx.fillRect(s*0.35, s*0.54,s*0.03,s*0.15);
-		ctx.shadowBlur = 0;
+		//base rectangles
+		ctx.fillRect(s * 0.35, s * 0.31, s * 0.03, s * 0.16);
+		ctx.fillRect(s * 0.35, s * 0.54, s * 0.03, s * 0.15);
+		//LED effects
+		if (isLedActive) {
+			drawLedAloneRect(s * 0.35, s * 0.31, s * 0.03, s * 0.16, colors.blueOn);
+			drawLedAloneRect(s * 0.35, s * 0.54, s * 0.03, s * 0.15, colors.blueOn);
+		}
 		
 		// PULSANTE EJECT (piccolo, in basso a destra)
 		ctx.fillStyle = isWhite ? '#ccc' : '#222';
@@ -2520,7 +3333,7 @@ function drawPC(x, y, tile) {
 		ctx.fill();
 	}
 	else if (type.id === 'imacg3') {
-		// --- IMAC G3 BIANCO E BLU?
+		// IMAC G3 BIANCO E BLU?
 		const g3cols = {
 		  imacg3:       '#09b|#079',//default
 		  imacg3blue:   '#00a|#006',
@@ -2542,6 +3355,12 @@ function drawPC(x, y, tile) {
 		ctx.beginPath();
 		ctx.roundRect(s*0.05, s*0.05, s*0.9, s*0.78, [s*0.14,s*0.14,s*0.08,s*0.08]);
 		ctx.fill();
+		
+		//righe verticali
+		ctx.fillStyle = 'rgba(0,0,0,0.1)';
+		for(let i=0;i<23;i++) {
+			ctx.fillRect(s*0.05 + i * s*0.04, s*0.05, s*0.015, s*0.78);
+		}
 		
 		//palla sinistra
 		let handleGrad = ctx.createLinearGradient(0, 0, s*0.1, 0);
@@ -2587,7 +3406,7 @@ function drawPC(x, y, tile) {
 		ctx.fillRect(s*0.37, s*0.70, s*0.26, s*0.01);
 		
 		//etichetta imac
-		ctx.fillStyle = "#999";
+		ctx.fillStyle = "#666";
 		ctx.font = `${s*0.05}px sans-serif`;
 		ctx.textAlign = "center";
 		ctx.textBaseline = "middle";
@@ -2602,9 +3421,9 @@ function drawPC(x, y, tile) {
 		//schermo quasi nero
 		if (connected) {
 			let screenGrad = ctx.createLinearGradient(0, s*0.19, 0, s*0.37);
-			screenGrad.addColorStop(0, "#1e5a96");
-			screenGrad.addColorStop(0.5, "#2b7fb8");
-			screenGrad.addColorStop(1, "#1e5a96");
+			screenGrad.addColorStop(0, colors.screenGradDark);
+			screenGrad.addColorStop(0.5, colors.screenGradLight);
+			screenGrad.addColorStop(1, colors.screenGradDark);
 			ctx.fillStyle = screenGrad;
 		} else {
 			ctx.fillStyle = "#111";
@@ -2612,6 +3431,14 @@ function drawPC(x, y, tile) {
 		ctx.beginPath();
 		ctx.roundRect(s*0.2, s*0.19, s*0.6, s*0.37, s*0.04);
 		ctx.fill();
+		
+		if (connected) {
+			// Menu bar
+			ctx.fillStyle = "rgba(255, 255, 255, 0.3)";
+			ctx.fillRect(s*0.21, s*0.2, s*0.58, s*0.03);
+			
+			drawIcons(s*0.72, s*0.26, s*0.06, 3, 1, 'rgba(0,0,0,0.3)');
+		}
 		
 		//riflesso curvo alto + basso
 		ctx.strokeStyle = "rgba(255,255,255,0.1)";
@@ -2636,21 +3463,1474 @@ function drawPC(x, y, tile) {
 		ctx.fill();
 		ctx.stroke();
 		//accensione a dx, led fisso
-		ctx.fillStyle = colors.whiteOff;
-		if (connected) {
-			ctx.fillStyle = colors.whiteOn;
-			ctx.shadowBlur = 6;
-			ctx.shadowColor = colors.whiteOn;
-		}
+		ctx.fillStyle = connected ? colors.whiteOn : colors.whiteOff;
 		ctx.beginPath();
 		ctx.arc(s * 0.73, s * 0.74, s * 0.03, 0, Math.PI*2);
 		ctx.fill();
 		ctx.strokeStyle = "#ddd";
 		ctx.stroke();
-		ctx.shadowBlur = 0;
+		if (connected) drawLedAloneCircle(s * 0.73, s * 0.74, s * 0.03, colors.whiteOn);
 	}
+	else if (type.id === 'starlc10') {
+		// Case
+		let grad = ctx.createLinearGradient(0, 0, s, s);
+		grad.addColorStop(0, "#ffe"); 
+		grad.addColorStop(1, "#ccb");
+		//corpo con bordo
+		ctx.lineWidth = s*0.01;
+		ctx.strokeStyle = '#999';
+		ctx.fillStyle = grad;
+		ctx.beginPath();
+		ctx.roundRect(0, s*0.2, s, s*0.5, [s*0.16,s*0.16,s*0.04,s*0.04]);
+		ctx.fill();
+		ctx.stroke();
+		
+		//rotella carta a dx
+		ctx.fillRect(s,s*0.35,s*0.05,s*0.12);
+		
+		//guide carta al cx
+		ctx.fillRect(s*0.3,s*0.05,s*0.4,s*0.15);
+		ctx.fillRect(s*0.2,s*0.02,s*0.1,s*0.18);
+		ctx.fillRect(s*0.7,s*0.02,s*0.1,s*0.18);
+				
+		//coperchio nero semitrasparente
+		ctx.fillStyle = '#666';
+		ctx.beginPath();
+		ctx.roundRect(s*0.05, s*0.2, s*0.9, s*0.2, [s*0.16,s*0.16,s*0.04,s*0.04]);
+		ctx.fill();
+		
+		//riga sotto
+		ctx.fillStyle = '#aaa';
+		ctx.fillRect(s*0,s*0.52,s,s*0.005);
+		
+		//pannello di CONTROLLO con pulsantoni e led con i font
+		ctx.strokeStyle = '#555';
+		ctx.fillRect(s*0.5,s*0.41,s*0.45,s*0.1);
+		ctx.strokeRect(s*0.5,s*0.41,s*0.45,s*0.1);
+		ctx.fillStyle = '#444';
+		ctx.fillRect(s*0.52,s*0.42,s*0.07,s*0.07);
+		ctx.fillRect(s*0.72,s*0.42,s*0.07,s*0.07);
+		ctx.fillRect(s*0.87,s*0.42,s*0.06,s*0.07);
+		
+		//scritta incomprensibile a sx del pannello
+		ctx.strokeStyle = '#666';
+		ctx.strokeRect(s*0.15,s*0.41,s*0.25,s*0.08);
+		ctx.fillStyle = '#111';
+		ctx.font = `${s*0.04}px sans-serif`;
+		ctx.textAlign = "left";
+		ctx.textBaseline = "middle";
+		ctx.fillText("4l3er70N31L1", s*0.15, s*0.45);
+		ctx.fillText("KN37W41kxxx", s*0.15, s*0.47);
+		
+		//tasto nero accensione a sx
+		ctx.fillStyle = '#111';
+		ctx.fillRect(s*0.05,s*0.62,s*0.1,s*0.05);
+		
+		//logo
+		ctx.fillStyle = '#111';
+		ctx.font = `${s*0.05}px sans-serif`;
+		ctx.textAlign = "left";
+		ctx.textBaseline = "middle";
+		ctx.fillText("star LC-10", s*0.05, s*0.56);
+		
+		//setup blinking
+		const blinkGreen = Math.sin(flowOffset * 0.05) > -0.8;
+		const blinkOrange = Math.sin(flowOffset * 0.06 + 1.5) > -0.8;
+		const blinkYellow = Math.sin(flowOffset * 0.07 + 3) > -0.8;
+		const blinkWhite = Math.cos(flowOffset * 0.07) > -0.8;
+		const blinkBlue = Math.sin(flowOffset * 0.02) > -0.8;
+		
+		// LED 1
+		ctx.fillStyle = connected && blinkGreen ? colors.greenOn : colors.greenOff;
+		ctx.fillRect(s*0.6, s*0.42, s*0.06, s*0.03); 
+		//prova blur semplificato
+		if (connected && blinkGreen) drawLedAloneRect(s*0.6, s*0.42, s*0.06, s*0.03, colors.greenOn);
+		
+		// LED 2
+		ctx.fillStyle = connected && blinkOrange ? colors.orangeOn : colors.orangeOff;
+		ctx.fillRect(s*0.6, s*0.46, s*0.06, s*0.03); 
+		//prova blur semplificato
+		if (connected && blinkOrange) drawLedAloneRect(s*0.6, s*0.46, s*0.06, s*0.03, colors.orangeOn);
+			
+		// LED 3
+		ctx.fillStyle = connected && blinkYellow ? colors.yellowOn : colors.yellowOff;
+		ctx.fillRect(s*0.8, s*0.42, s*0.06, s*0.03); 
+		//prova blur semplificato
+		if (connected && blinkYellow) drawLedAloneRect(s*0.8, s*0.42, s*0.06, s*0.03, colors.yellowOn);
+		
+		// LED 4
+		ctx.fillStyle = connected && blinkWhite ? colors.whiteOn : colors.whiteOff;
+		ctx.fillRect(s*0.8, s*0.46, s*0.06, s*0.03); 
+		//prova blur semplificato
+		if (connected && blinkWhite) drawLedAloneRect(s*0.8, s*0.46, s*0.06, s*0.03, colors.whiteOn);
+		
+		// LED 5
+		ctx.fillStyle = connected && blinkBlue ? colors.blueOn : colors.blueOff;
+		ctx.fillRect(s*0.88, s*0.43, s*0.04, s*0.05); 
+		//prova blur semplificato
+		if (connected && blinkBlue) drawLedAloneRect(s*0.88, s*0.43, s*0.04, s*0.05, colors.blueOn);
+		
+	}
+	else if (type.id === 'c64') {
+		// Case
+		let grad = ctx.createLinearGradient(0, 0, s, s);
+		grad.addColorStop(0, "#eec"); 
+		grad.addColorStop(1, "#bba");
+		//corpo con bordo
+		ctx.lineWidth = s*0.01;
+		ctx.strokeStyle = '#999';
+		ctx.fillStyle = grad;
+		ctx.beginPath();
+		ctx.roundRect(0, s*0.18, s, s*0.55, s*0.02);
+		ctx.fill();
+		ctx.stroke();
+		
+		//righe sotto il logo
+		ctx.fillStyle = '#aaa';
+		ctx.fillRect(s*0,s*0.21,s,s*0.02);
+		ctx.fillRect(s*0,s*0.24,s,s*0.02);
+		ctx.fillRect(s*0,s*0.27,s,s*0.02);
+		ctx.fillRect(s*0,s*0.30,s,s*0.02);
+		
+		//bg scritta c + 64
+		ctx.fillStyle = '#333';
+		ctx.beginPath();
+		ctx.roundRect(s*0.05,s*0.22,s*0.60,s*0.08,s*0.08);
+		ctx.fill();
+		//bg power
+		ctx.beginPath();
+		ctx.roundRect(s*0.72,s*0.22,s*0.25,s*0.08,s*0.08);
+		ctx.fill();
+		//arcobaleno
+		ctx.fillStyle = '#f00';
+		ctx.fillRect(s*0.44,s*0.23,s*0.1,s*0.015);
+		ctx.fillStyle = '#fc8';
+		ctx.fillRect(s*0.44,s*0.245,s*0.1,s*0.015);
+		ctx.fillStyle = '#0f0';
+		ctx.fillRect(s*0.44,s*0.260,s*0.1,s*0.015);
+		ctx.fillStyle = '#06f';
+		ctx.fillRect(s*0.44,s*0.275,s*0.1,s*0.015);
+				
+		//scritta c + 64
+		ctx.fillStyle = '#fff';
+		ctx.font = `${s*0.05}px sans-serif`;
+		ctx.textAlign = "left";
+		ctx.textBaseline = "middle";
+		ctx.fillText("C= commodore          64", s*0.08, s*0.26);
+		//power
+		ctx.font = `${s*0.03}px sans-serif`;
+		ctx.fillText("POWER", s*0.75, s*0.26);
+		
+		// LED 1
+		ctx.fillStyle = connected ? colors.redOn : colors.redOff;
+		ctx.beginPath();
+		ctx.arc(s*0.92, s*0.26, s*0.025, 0, Math.PI * 2); 
+		ctx.fill();
+		//prova blur semplificato
+		if (connected) drawLedAloneCircle(s*0.92, s*0.26, s*0.025, colors.redOn);
+		
+		//bordo TASTIERA
+		ctx.strokeStyle = '#aaa';
+		ctx.lineWidth = s * 0.01;
+		ctx.beginPath();
+		ctx.roundRect(s*0.03,s*0.36,s*0.94,s*0.33, s*0.04);
+		ctx.stroke();
+		
+		//TASTIERA MARRO' A SX
+		ctx.fillStyle = '#320';
+		// Dettaglio tastiera
+		const keySizeX = s * 0.06;
+		const keySizeY = s * 0.05;
+		const keySpacing = s * 0.065;
+		const keyRowSpacing = s * 0.055;
+		for(let j=0; j<4; j++) {
+			for(let i=0; i<10; i++) {						
+				ctx.fillRect(s*0.08 + (i*keySpacing), s*0.4 + (j*keyRowSpacing), keySizeX, keySizeY);
+			}
+		}		
+		//BARRA SPAZIATRICE
+		ctx.fillRect(s*0.22,s*0.62,s*0.4,keySizeY);
+		//TASTIERA GRIGIO' A DX
+		ctx.fillStyle = '#666';
+		for(let j=0; j<4; j++) {
+			ctx.fillRect(s*0.84, s*0.4 + (j*keyRowSpacing), keySizeX, keySizeY);
+		}
+		
+		ctx.fillStyle = '#ccc';
+		ctx.font = `${s * 0.03}px monospace`;
+		ctx.fillText("ZX Spectrum", s * 0.06, s * 0.2);
+		const keyLabels = ['1   2   3   4   5   6   7   8   9   0         f1',
+						   'Q   W   E   R   T   Y   U   I   O   P         f3',
+						   'A   S   D   F   G   H   J   K   L   /         f5',
+						   'Z   X   C   V   B   N   M   ,   .   ?         f7'];
+		for(let j=0; j<4; j++) {
+			ctx.fillText(keyLabels[j],s*0.10,s*0.4 + (j*keyRowSpacing) + s*0.03);
+		}
+	}
+	else if (type.id === 'raspberrypi') {
+		// scheda madre verdona
+		const boardGrad = ctx.createLinearGradient(0, 0, s, s);
+		boardGrad.addColorStop(0, "#373");
+		boardGrad.addColorStop(1, "#252");
+		ctx.fillStyle = boardGrad;
+		ctx.lineWidth = s * 0.015;
+		ctx.strokeStyle = '#242';
+		ctx.beginPath();
+		ctx.roundRect(s * 0.05, s * 0.05, s * 0.9, s * 0.9, s * 0.05);
+		ctx.fill();
+		ctx.stroke();
+		
+		// tracce pcb decorative
+		ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+		ctx.lineWidth = s * 0.004;
+		const traces = [
+			[0.12, 0.32, 0.77, 0.32], 
+			[0.12, 0.34, 0.77, 0.34],
+			
+			[0.12, 0.52, 0.37, 0.52], 
+			[0.12, 0.54, 0.37, 0.54],
+			
+			[0.37, 0.52, 0.47, 0.55], 
+			[0.37, 0.54, 0.47, 0.57],
+			
+			[0.47, 0.55, 0.77, 0.55], 
+			[0.47, 0.57, 0.77, 0.57],
+			
+			[0.35, 0.63, 0.35, 0.75], 
+			[0.40, 0.63, 0.40, 0.75],
+		];
+		for (const [x1,y1,x2,y2] of traces) {
+			ctx.beginPath();
+			ctx.moveTo(s*x1, s*y1);
+			ctx.lineTo(s*x2, s*y2);
+			ctx.stroke();
+		}
+
+
+		// GPIO
+		ctx.fillStyle = '#ca4';//dorato
+		const pinCols = 10;
+		const pinRows = 2;
+		const pinW = s * 0.015;
+		const pinH = s * 0.030;
+		const pinStartX = s * 0.18;
+		const pinStartY = s * 0.09;
+		const pinGapX = s * 0.05;
+		for (let r = 0; r < pinRows; r++) {
+			for (let c = 0; c < pinCols; c++) {
+				ctx.fillRect(pinStartX + c * pinGapX, pinStartY + r * (pinH + s * 0.01), pinW, pinH);
+			}
+		}
+		
+		//buchi MOBO
+		ctx.fillStyle = '#ca4';//dorati
+		ctx.beginPath();
+		ctx.arc(s*0.12,s*0.12,s*0.04,0,Math.PI*2);
+		ctx.fill();
+		ctx.beginPath();
+		ctx.arc(s*0.72,s*0.12,s*0.04,0,Math.PI*2);
+		ctx.fill();
+		ctx.beginPath();
+		ctx.arc(s*0.12,s*0.88,s*0.04,0,Math.PI*2);
+		ctx.fill();
+		ctx.beginPath();
+		ctx.arc(s*0.72,s*0.88,s*0.04,0,Math.PI*2);
+		ctx.fill();
+		
+		ctx.fillStyle = '#111';
+		ctx.beginPath();
+		ctx.arc(s*0.12,s*0.12,s*0.02,0,Math.PI*2);
+		ctx.fill();
+		ctx.beginPath();
+		ctx.arc(s*0.72,s*0.12,s*0.02,0,Math.PI*2);
+		ctx.fill();
+		ctx.beginPath();
+		ctx.arc(s*0.12,s*0.88,s*0.02,0,Math.PI*2);
+		ctx.fill();
+		ctx.beginPath();
+		ctx.arc(s*0.72,s*0.88,s*0.02,0,Math.PI*2);
+		ctx.fill();
+		
+		
+		// Raspberry Pi (testo)
+		ctx.fillStyle = '#beb';
+		ctx.font = `${s * 0.04}px sans-serif`;
+		ctx.textAlign = "center";
+		ctx.textBaseline = "middle";
+		ctx.fillText("Raspberry Pi 4 Model B", s * 0.45, s * 0.2);
+		
+		// CPU al centro
+		const chipGrad = ctx.createLinearGradient(s*0.25, s*0.35, s*0.55, s*0.65);
+		chipGrad.addColorStop(0, "#ccc");
+		chipGrad.addColorStop(1, "#888");
+		ctx.fillStyle = chipGrad;
+		ctx.strokeStyle = '#555';
+		ctx.lineWidth = s * 0.01;
+		ctx.beginPath();
+		ctx.roundRect(s * 0.17, s * 0.25, s * 0.27, s * 0.27, s * 0.04);
+		ctx.fill();
+		ctx.stroke();
+		// logo testo sul chip
+		ctx.fillStyle = '#888';
+		ctx.font = `bold ${s * 0.04}px sans-serif`;
+		ctx.textAlign = "center";
+		ctx.textBaseline = "middle";
+		ctx.fillText("BCOM", s * 0.3, s * 0.35);
+		ctx.font = `${s * 0.03}px sans-serif`;
+		ctx.fillText("2711", s * 0.3, s * 0.40);
+
+		// RAM a destra
+		ctx.fillStyle = '#222';
+		ctx.strokeStyle = '#555';
+		ctx.lineWidth = s * 0.01;
+		ctx.fillRect(s * 0.47, s * 0.25, s * 0.15, s * 0.27);
+		ctx.strokeRect(s * 0.47, s * 0.25, s * 0.15, s * 0.27);
+		//quadrozzo a sx spostato in basso per riempire
+		ctx.fillRect(s * 0.08, s * 0.66, s * 0.12, s * 0.12);
+		ctx.strokeRect(s * 0.08, s * 0.66, s * 0.12, s * 0.12);
+		
+		// chip wifi e bt ancora piu a destra
+		ctx.fillStyle = '#222';
+		ctx.strokeStyle = '#333';
+		ctx.lineWidth = s * 0.005;
+		ctx.fillRect(s * 0.66, s * 0.45, s * 0.1, s * 0.1);
+		ctx.strokeRect(s * 0.66, s * 0.45, s * 0.1, s * 0.1);
+		
+		ctx.fillStyle = '#222';
+		ctx.strokeStyle = '#444';
+		ctx.lineWidth = s * 0.005;
+		ctx.fillRect(s * 0.67, s * 0.22, s * 0.08, s * 0.12);
+		ctx.strokeRect(s * 0.67, s * 0.22, s * 0.08, s * 0.12);
+		
+		//HDMI sotto 
+		ctx.fillStyle = '#beb';
+		ctx.font = `${s * 0.05}px sans-serif`;
+		ctx.textAlign = "center";
+		ctx.textBaseline = "middle";
+		ctx.fillText("HDMI", s * 0.4, s * 0.8);
+		ctx.fillText("FC", s * 0.25, s * 0.7);
+		ctx.fillText("CC", s * 0.50, s * 0.6);
+		ctx.font = `${s * 0.15}px sans-serif`;
+		ctx.fillText("❀", s * 0.32, s*0.6);
+		
+		//hdmi prese
+		ctx.fillStyle = '#999';
+		ctx.fillRect(s*0.30, s*0.85, s*0.1, s*0.13);
+		ctx.fillRect(s*0.42, s*0.85, s*0.1, s*0.13);
+		ctx.fillStyle = '#111';
+		ctx.fillRect(s*0.32, s*0.88, s*0.02, s*0.06);
+		ctx.fillRect(s*0.36, s*0.88, s*0.02, s*0.06);
+		ctx.fillRect(s*0.44, s*0.88, s*0.02, s*0.06);
+		ctx.fillRect(s*0.48, s*0.88, s*0.02, s*0.06);
+		
+		//usbona presa sotto
+		ctx.fillStyle = '#999';
+		ctx.fillRect(s*0.17, s*0.85, s*0.1, s*0.13);
+		ctx.fillStyle = '#111';
+		ctx.fillRect(s*0.18, s*0.88, s*0.03, s*0.02);
+		ctx.fillRect(s*0.23, s*0.88, s*0.03, s*0.02);
+		
+		//ethernet di lato
+		ctx.fillStyle = '#999';
+		ctx.fillRect(s*0.78, s*0.10, s*0.20, s*0.22);
+		
+		//usbone di lato alta
+		ctx.fillStyle = '#999';
+		ctx.fillRect(s*0.80, s*0.40, s*0.18, s*0.20);
+		ctx.fillStyle = '#18f';
+		//C sopra
+		ctx.fillRect(s*0.92, s*0.42, s*0.03, s*0.02);
+		ctx.fillRect(s*0.92, s*0.47, s*0.03, s*0.02);
+		ctx.fillRect(s*0.94, s*0.42, s*0.02, s*0.07);
+		//C sotto
+		ctx.fillRect(s*0.92, s*0.51, s*0.03, s*0.02);
+		ctx.fillRect(s*0.92, s*0.56, s*0.03, s*0.02);
+		ctx.fillRect(s*0.94, s*0.51, s*0.02, s*0.07);
+		
+		//usbona di lato bassa
+		ctx.fillStyle = '#999';
+		ctx.fillRect(s*0.80, s*0.70, s*0.18, s*0.20);
+		ctx.fillStyle = '#18f';
+		//C sopra
+		ctx.fillRect(s*0.92, s*0.72, s*0.03, s*0.02);
+		ctx.fillRect(s*0.92, s*0.77, s*0.03, s*0.02);
+		ctx.fillRect(s*0.94, s*0.72, s*0.02, s*0.07);
+		//C sotto
+		ctx.fillRect(s*0.92, s*0.81, s*0.03, s*0.02);
+		ctx.fillRect(s*0.92, s*0.86, s*0.03, s*0.02);
+		ctx.fillRect(s*0.94, s*0.81, s*0.02, s*0.07);
+		
+		//cazzimbocchi tutto a sx
+		ctx.fillStyle = '#222';
+		ctx.strokeStyle = '#555';
+		ctx.lineWidth = s * 0.01;
+		ctx.fillRect(s * 0.05, s * 0.25, s * 0.08, s * 0.35);
+		ctx.strokeRect(s * 0.05, s * 0.25, s * 0.08, s * 0.35);
+		//cazzimbocchio sotto 
+		ctx.fillRect(s * 0.53, s * 0.6, s * 0.05, s * 0.35);
+		ctx.strokeRect(s * 0.53, s * 0.6, s * 0.05, s * 0.35);
+		
+		//connettore sotto accanto
+		ctx.fillRect(s * 0.60, s * 0.74, s * 0.06, s * 0.25);
+		ctx.strokeRect(s * 0.60, s * 0.74, s * 0.06, s * 0.25);
+		
+		//LEDs
+		const blinkRed = Math.sin(flowOffset) > 0; // activity, più rapido
+
+		// LED PWR (verde fisso)
+		ctx.fillStyle = connected ? colors.greenOn : colors.greenOff;
+		ctx.beginPath();
+		ctx.arc(s * 0.7, s * 0.63, s * 0.018, 0, Math.PI * 2);
+		ctx.fill();
+		if (connected) drawLedAloneCircle(s * 0.7, s * 0.63, s * 0.018, colors.greenOn);
+
+		// LED ACT (rosso lampeggiante)
+		ctx.fillStyle = connected && blinkRed ? colors.redOn : colors.redOff;
+		ctx.beginPath();
+		ctx.arc(s * 0.7, s * 0.7, s * 0.018, 0, Math.PI * 2);
+		ctx.fill();
+		if (connected && blinkRed) drawLedAloneCircle(s * 0.7, s * 0.7, s * 0.018, colors.redOn);
+
+		// Label LED
+		ctx.fillStyle = '#beb';
+		ctx.font = `${s * 0.022}px sans-serif`;
+		ctx.textAlign = "left";
+		ctx.textBaseline = "middle";
+		ctx.fillText("PWR", s * 0.725, s * 0.63);
+		ctx.fillText("ACT", s * 0.725, s * 0.7);
+	}	
+	
+	else if (type.id === 'zxspectrum') {
+		//case nero
+		const caseGrad = ctx.createLinearGradient(0, 0, 0, s);
+		caseGrad.addColorStop(0.0, "#333");
+		caseGrad.addColorStop(0.3, "#111");
+		caseGrad.addColorStop(1.0, "#111");
+		ctx.fillStyle = caseGrad;
+		ctx.lineWidth = s * 0.012;
+		ctx.strokeStyle = '#000';
+		ctx.beginPath();
+		ctx.roundRect(s * 0.03, s * 0.08, s * 0.94, s * 0.84, s * 0.06);
+		ctx.fill();
+		ctx.stroke();
+
+		//arcobaleno
+		const rainbow = ['#cc0000','#ff6600','#ffcc00','#339933','#3399ff','#6633cc','#cc0099'];
+		const bandX = s * 0.75;
+		const bandY = s * 0.85;
+		const bandW = s * 0.22;
+		ctx.lineWidth = s*0.01;
+		for (let i = 0; i < rainbow.length; i++) {
+			ctx.strokeStyle = rainbow[i];
+			ctx.beginPath();
+			ctx.moveTo(bandX + s * i * 0.01, bandY);
+			ctx.lineTo(bandX+bandW, bandY+  s * i * 0.01 - s*0.3);
+			ctx.stroke();
+		}
+		// bordo destro del case che "taglia" la banda
+		ctx.fillStyle = '#111';
+		ctx.beginPath();
+		ctx.roundRect(s * 0.03, s * 0.08, s * 0.94, s * 0.84, s * 0.06);
+		// clip trick: ridisegno solo gli angoli arrotondati sopra la banda
+		// Maschera angoli su banda: rettangolo nero sopra bordo arrotondato dx
+		// (gli angoli del roundRect coprono già la banda oltre il bordo)
+
+		//logo
+		ctx.textAlign = "left";
+		ctx.textBaseline = "middle";
+		ctx.fillStyle = '#000';
+		ctx.font = `bold ${s * 0.12}px sans-serif`;
+		ctx.fillText("sinciair", s * 0.04, s * 0.14);
+		
+		ctx.fillStyle = '#ccc';
+		ctx.font = `${s * 0.04}px sans-serif`;
+		ctx.fillText("ZX Spectrum", s * 0.06, s * 0.2);
+		
+		//tasti in gomma (5 righe)
+		const rows = [
+			{ keys: 10, y: 0.42, labels: ['1','2','3','4','5','6','7','8','9','0'] },
+			{ keys: 10, y: 0.53, labels: ['Q','W','E','R','T','Y','U','I','O','P'] },
+			{ keys: 10, y: 0.64, labels: ['A','S','D','F','G','H','J','K','L','\u23CE'] },
+			{ keys: 9,  y: 0.75, labels: ['Z','X','C','V','B','N','M','.','SPC'] },
+		];
+
+		const keyW = s * 0.073;
+		const keyH = s * 0.075;
+		
+		for (const row of rows) {
+			const totalW = row.keys * keyW + (row.keys - 1) * s * 0.008;
+			const startX = (s - totalW) * 0.5;
+			for (let i = 0; i < row.keys; i++) {
+				const kx = startX + i * (keyW + s * 0.008);
+				const ky = s * row.y;
+
+				// corpo tasto (sfumato, effetto gomma)
+				ctx.fillStyle = '#333';
+				ctx.strokeStyle = '#555';
+				ctx.lineWidth = s * 0.005;
+				ctx.fillRect(kx, ky, keyW, keyH);
+				ctx.strokeRect(kx, ky, keyW, keyH);
+				
+				// etichetta tasto
+				const lbl = row.labels[i] || '';
+				ctx.fillStyle = '#eeeeee';
+				ctx.font = `${s * 0.035}px monospace`;
+				ctx.fillText(lbl, kx + keyW * 0.5, ky + keyH * 0.5);
+
+				// keyword colorata sotto (effetto Spectrum: BASIC keywords sui tasti)
+				const keywords = ['NEW','SAVE','LOAD','RUN','RND','RETURN','IF','INPUT','POKE','PRINT'];
+				if (i < keywords.length && row.y === 0.42) {
+					ctx.fillStyle = '#ff4444';
+					ctx.font = `${s * 0.018}px monospace`;
+					ctx.fillText(keywords[i], kx + keyW * 0.4, ky + keyH * 0.82);
+				}
+			}
+		}
+
+		//Tasto CAPS SHIFT (largo, sinistra riga Z)
+		const shiftW = keyW * 1.2;
+		const shiftX = (s - (9 * keyW + 8 * s * 0.008)) * 0.5 - shiftW - s * 0.008;
+		const shiftY = s * 0.75;
+		
+		ctx.fillStyle = '#333';
+		ctx.strokeStyle = '#555';
+		ctx.lineWidth = s * 0.005;
+		ctx.fillRect(shiftX, shiftY, shiftW, keyH);
+		ctx.strokeRect(shiftX, shiftY, shiftW, keyH);
+		
+		ctx.fillStyle = '#eee';
+		ctx.font = `${s * 0.025}px monospace`;
+		ctx.fillText("CAPS", shiftX + shiftW * 0.4, shiftY + keyH * 0.38);
+		ctx.fillText("SHIFT", shiftX + shiftW * 0.4, shiftY + keyH * 0.68);
+
+		//LED (verde, in alto vicino al logo)
+		const blinkGreen = Math.sin(flowOffset * 0.05) > -0.8;
+		ctx.fillStyle = connected ? colors.greenOn : colors.greenOff;
+		ctx.beginPath();
+		ctx.arc(s * 0.35, s * 0.2, s * 0.018, 0, Math.PI * 2);
+		ctx.fill();
+		if (connected) drawLedAloneCircle(s * 0.35, s * 0.2, s * 0.018, colors.greenOn);
+	}
+	else if (type.id === 'banfi') {
+		// MANIGLIA (Arco superiore)
+		ctx.strokeStyle = "#9ca3af";
+		ctx.lineWidth = s * 0.03;
+		ctx.beginPath();
+		ctx.roundRect(s*0.1, 0, s*0.8, s*0.3, s*0.04);
+		ctx.stroke();
+		
+		// CORPO PRINCIPALE
+		let bodyGrad = ctx.createLinearGradient(0, 0, 0, s);
+		bodyGrad.addColorStop(0.0, "#aaa");
+		bodyGrad.addColorStop(0.6, "#aaa");
+		bodyGrad.addColorStop(1.0, "#888");
+		ctx.strokeStyle = '#333';
+		ctx.lineWidth = s * 0.03;
+		ctx.fillStyle = bodyGrad;
+		ctx.beginPath();
+		ctx.roundRect(0, s*0.2, s, s*0.8, s*0.05);
+		ctx.fill();
+		ctx.stroke();
+		ctx.lineWidth = s * 0.01;
+		
+		// RIFLESSO GLOSSY
+		ctx.fillStyle = "rgba(255,255,255,0.1)";
+		ctx.fillRect(s*0.03, s*0.22, s*0.94, s*0.38);
+
+		// PULSANTI SUPERIORI
+		ctx.fillStyle = "#ccc";
+		ctx.beginPath();
+		ctx.roundRect(s * 0.2, s*0.16, s * 0.2, s * 0.04, [s*0.02,s*0.02,0,0]);
+		ctx.fill();
+		ctx.beginPath();
+		ctx.roundRect(s * 0.6, s*0.16, s * 0.2, s * 0.04, [s*0.02,s*0.02,0,0]);
+		ctx.fill();
+		
+		//4 viti
+		ctx.fillStyle = '#666';
+		ctx.beginPath();
+		ctx.arc(s*0.94, s*0.28, s*0.014, 0, Math.PI*2);
+		ctx.fill();
+		ctx.beginPath();
+		ctx.arc(s*0.94, s*0.94, s*0.014, 0, Math.PI*2);
+		ctx.fill();
+		ctx.beginPath();
+		ctx.arc(s*0.06, s*0.28, s*0.014, 0, Math.PI*2);
+		ctx.fill();
+		ctx.beginPath();
+		ctx.arc(s*0.06, s*0.94, s*0.014, 0, Math.PI*2);
+		ctx.fill();
+		
+		// LEDDONI ROSSO+VERDE
+		const blinkGreen = Math.sin(flowOffset * 0.2) > 0;
+		const blinkRed   = Math.cos(flowOffset * 0.2) > 0;
+		const blinkGreenLever = Math.sin(flowOffset * 0.2 - 0.75) > 0.25;//la perfezione è di questo mondo... grazie di esistere alberto nelli!!!
+		const blinkRedLever   = Math.cos(flowOffset * 0.2 - 0.75) > 0.25;//sto magheggio perchè le leve si devono muovere appena dopo il cambio led
+		ctx.fillStyle = connected && blinkRed ? colors.redOn : colors.redOff;
+		ctx.beginPath();
+		ctx.roundRect(s * 0.22, s*0.08, s * 0.16, s * 0.08, [s*0.02,s*0.02,0,0]);
+		ctx.fill();
+		if (connected && blinkRed) drawLedAloneRect(s * 0.22, s*0.08, s * 0.16, s * 0.08, colors.redOn);
+		
+		ctx.fillStyle = connected && blinkGreen ? colors.greenOn : colors.greenOff;
+		ctx.beginPath();
+		ctx.roundRect(s * 0.62, s*0.08, s * 0.16, s * 0.08, [s*0.02,s*0.02,0,0]);
+		ctx.fill();
+		if (connected && blinkGreen) drawLedAloneRect(s * 0.62, s*0.08, s * 0.16, s * 0.08, colors.greenOn);
+		
+		//due joystick in alto
+		//base
+		ctx.fillStyle = '#111';
+		ctx.beginPath();
+		ctx.arc(s*0.3,s*0.45,s*0.1,0,Math.PI*2);
+		ctx.fill();
+		//medio
+		ctx.fillStyle = '#222';
+		ctx.beginPath();
+		ctx.arc(s*0.3,s*0.43 + (connected && blinkRedLever ? s*0.04 : 0),s*0.08,0,Math.PI*2);
+		ctx.fill();
+		//medio2
+		ctx.fillStyle = '#111';
+		ctx.beginPath();
+		ctx.arc(s*0.3,s*0.41 + (connected && blinkRedLever ? s*0.08 : 0),s*0.06,0,Math.PI*2);
+		ctx.fill();
+		//punta
+		ctx.fillStyle = '#222';
+		ctx.beginPath();
+		ctx.roundRect(s*0.27,s*0.3 + (connected && blinkRedLever ? s*0.14 : 0),s*0.06,s*0.15,s*0.08);
+		ctx.fill();
+		
+		//base
+		ctx.fillStyle = '#111';
+		ctx.beginPath();
+		ctx.arc(s*0.7,s*0.45,s*0.1,0,Math.PI*2);
+		ctx.fill();
+		//medio
+		ctx.fillStyle = '#222';
+		ctx.beginPath();
+		ctx.arc(s*0.7,s*0.43 + (connected && blinkGreenLever ? s*0.04 : 0),s*0.08,0,Math.PI*2);
+		ctx.fill();
+		//medio2
+		ctx.fillStyle = '#111';
+		ctx.beginPath();
+		ctx.arc(s*0.7,s*0.41 + (connected && blinkGreenLever ? s*0.08 : 0),s*0.06,0,Math.PI*2);
+		ctx.fill();
+		//punta
+		ctx.fillStyle = '#222';
+		ctx.beginPath();
+		ctx.roundRect(s*0.67,s*0.3 + (connected && blinkGreenLever ? s*0.14 : 0),s*0.06,s*0.15,s*0.08);
+		ctx.fill();
+		
+		//manopola nera sotto
+		ctx.fillStyle = '#111';
+		ctx.beginPath();
+		ctx.arc(s*0.5,s*0.8,s*0.1,0,Math.PI*2);
+		ctx.fill();
+		
+		//scritta centrale -1 0 1
+		ctx.fillStyle = '#111';
+		ctx.font = `${s * 0.06}px monospace`;
+		ctx.fillText("- | 0 | +", s*0.35, s*0.68);
+		
+		// Lancetta indicatore (animated se connesso)
+		const dialAngle = connected ? (Math.sin(flowOffset * 0.1) * 0.9) - 1.75 : (Math.PI * 1.75);
+		
+		ctx.strokeStyle = '#333';
+		ctx.lineWidth = s*0.05;
+		ctx.lineCap = "round";
+		ctx.beginPath();
+		ctx.moveTo(s*0.5, s*0.8);
+		ctx.lineTo(
+			s*0.5 + Math.cos(dialAngle) * (s * 0.1),
+			s*0.8 + Math.sin(dialAngle) * (s * 0.1)
+		);
+		ctx.stroke();
+	}
+	else if (type.id === 'sip70') {
+		// CORPO PRINCIPALE (base del telefono)
+		let bodyGrad = ctx.createLinearGradient(0, s*0.18, 0, s);
+		bodyGrad.addColorStop(0.0, "#988");
+		bodyGrad.addColorStop(0.5, "#877");
+		bodyGrad.addColorStop(1.0, "#665");
+		ctx.fillStyle = bodyGrad;
+		ctx.strokeStyle = "#444";
+		ctx.lineWidth = s * 0.012;
+		ctx.beginPath();
+		ctx.roundRect(s*0.15, s*0.18, s*0.7, s*0.78, s*0.08);
+		ctx.fill();
+		ctx.stroke();
+
+		// riflesso glossy sul corpo, in alto
+		ctx.fillStyle = "#ffffff11";
+		ctx.beginPath();
+		ctx.roundRect(s*0.25, s*0.20, s*0.50, s*0.14, s*0.05);
+		ctx.fill();
+		
+		// riflesso glossy sul corpo, in basso
+		ctx.fillStyle = "#ffffff11";
+		ctx.beginPath();
+		ctx.roundRect(s*0.22, s*0.35, s*0.56, s*0.54, s*0.05);
+		ctx.fill();
+
+		// TARGHETTA ovale sopra il disco
+		ctx.fillStyle = "#ccc";
+		ctx.strokeStyle = "#666";
+		ctx.lineWidth = s*0.01;
+		ctx.beginPath();
+		ctx.roundRect(s*0.4, s*0.25, s*0.2, s*0.08, s*0.02);
+		ctx.fill();
+		ctx.stroke();
+		ctx.fillStyle = "#111";
+		ctx.font = `${s*0.045}px monospace`;
+		ctx.fillText("7471855", s*0.42, s*0.31);
+		
+		// CORNETTA!!!
+		//TAMBURI SX + DX == orecchie di topolino
+		ctx.fillStyle = '#433';
+		ctx.strokeStyle = '#211';
+		ctx.beginPath();
+		ctx.arc(s*0.1, s*0.3, s*0.15, 0, Math.PI * 1.5);
+		ctx.fill();
+		ctx.stroke();
+		ctx.beginPath();
+		ctx.arc(s*0.9, s*0.3, s*0.15, Math.PI * 1.5, Math.PI * 3);
+		ctx.fill();
+		ctx.stroke();
+		
+		// PONTE - arco vero (cerchio con raggio grande, centro più in basso)
+		const bridgeY = s * 0.30 - s * 0.15;  // altezza di aggancio = y dei tamburi (s*0.15)
+		const archR = s * 1.1;                 // raggio grande = arco quasi piatto
+		const archCenterX = s * 0.5;
+		const archCenterY = bridgeY + Math.sqrt(archR*archR - (s*0.4)*(s*0.4));
+		const startAngle = Math.atan2(bridgeY - archCenterY, s*0.1 - archCenterX);
+		const endAngle   = Math.atan2(bridgeY - archCenterY, s*0.9 - archCenterX);
+	
+		ctx.strokeStyle = '#211';
+		ctx.lineWidth = s * 0.2;
+		ctx.beginPath();
+		ctx.arc(archCenterX, archCenterY, s * 1, startAngle, endAngle);
+		ctx.stroke();
+		ctx.strokeStyle = '#433';
+		ctx.lineWidth = s * 0.18;
+		ctx.beginPath();
+		ctx.arc(archCenterX, archCenterY, s * 1, startAngle, endAngle);
+		ctx.stroke();
+		ctx.strokeStyle = '#66666611';
+		ctx.lineWidth = s * 0.05;
+		ctx.beginPath();
+		ctx.arc(archCenterX, archCenterY * 0.95, s * 1, startAngle*1.02, endAngle*0.98);
+		ctx.stroke();
+		ctx.strokeStyle = '#00000011';
+		ctx.lineWidth = s * 0.05;
+		ctx.beginPath();
+		ctx.arc(archCenterX, archCenterY * 1.06, s * 1, startAngle*1.0, endAngle*1.02);
+		ctx.stroke();
+		
+		ctx.lineWidth = s * 0.01;
+		
+		
+		// DISCO COMBINATORE - base ottone/giallo
+		const dialCx = s*0.5;
+		const dialCy = s*0.6;
+		const dialR = s*0.25;
+		let dialGrad = ctx.createRadialGradient(dialCx, dialCy, dialR*0.2, dialCx, dialCy, dialR);
+		dialGrad.addColorStop(0, "#d9c98a");
+		dialGrad.addColorStop(0.85, "#cdb96a");
+		dialGrad.addColorStop(1, "#b8a35a");
+		ctx.fillStyle = dialGrad;
+		ctx.strokeStyle = "#666";
+		ctx.lineWidth = s*0.01;
+		ctx.beginPath();
+		ctx.arc(dialCx, dialCy, dialR, 0, Math.PI*2);
+		ctx.fill();
+		ctx.stroke();
+		
+		// MOZZO CENTRALE (disco interno grigio che gira col rotore)
+		ctx.fillStyle = '#aaa';
+		ctx.strokeStyle = "#666";
+		ctx.lineWidth = s*0.01;
+		ctx.beginPath();
+		ctx.arc(dialCx, dialCy, dialR*0.6, 0, Math.PI*2);
+		ctx.fill();
+		ctx.stroke();
+		ctx.fillStyle = '#999';
+		ctx.strokeStyle = "#666";
+		ctx.beginPath();
+		ctx.arc(dialCx, dialCy, dialR*0.20, 0, Math.PI*2);
+		ctx.fill();
+		ctx.stroke();
+
+		// ROTORE NUMERATO (10 buchi con numeri, ruota se connesso)
+		const dialRotation = connected ? Math.sin(flowOffset * 0.05) * 3 : 0;
+		const numbers = ["0","9","8","7","6","5","4","3","2","1"];
+		const holeR = dialR * 0.78;
+		const holeRadius = dialR * 0.13;
+
+		for (let i = 0; i < 10; i++) {
+			// i numeri sul vecchio SIP partono da "1" in alto e vanno in senso antiorario fino a "0"
+			const angleHole = (Math.PI/2) + (i * (Math.PI*2/13)) + dialRotation;
+			const angleNumber = (Math.PI/2) + (i * (Math.PI*2/13));
+			const hx = dialCx + Math.cos(angleHole) * holeR;//buchi, ruotano
+			const hy = dialCy + Math.sin(angleHole) * holeR;
+			const nx = dialCx + Math.cos(angleNumber) * holeR;//numeri sotto, fissi
+			const ny = dialCy + Math.sin(angleNumber) * holeR;
+			const inx = dialCx + Math.cos(angleHole) * holeR * 0.6;//interni, ruotano
+			const iny = dialCy + Math.sin(angleHole) * holeR * 0.6;
+
+			// buco (foro nel disco)
+			ctx.fillStyle = '#ffffff22';
+			ctx.strokeStyle = '#00000022';
+			ctx.beginPath();
+			ctx.arc(hx, hy, holeRadius, 0, Math.PI*2);
+			ctx.fill();
+			ctx.stroke();
+
+			// numero visibile sotto il disco (fisso, non ruota)
+			ctx.fillStyle = "#111";
+			ctx.font = `bold ${s*0.06}px monospace`;
+			ctx.fillText(numbers[i], nx-s*0.02, ny + s*0.015);
+			
+			// numero visibile sul grigio del disco (ruota)
+			ctx.fillStyle = "#111";
+			ctx.font = `bold ${s*0.05}px monospace`;
+			ctx.fillText(numbers[i], inx-s*0.02, iny + s*0.015);
+		}
+
+		// DITO FERMO / leva di arresto (in basso a destra del disco)
+		ctx.strokeStyle = "#666";
+		ctx.lineWidth = s*0.04;
+		ctx.beginPath();
+		ctx.moveTo(dialCx + dialR*0.75, dialCy + dialR*0.75);
+		ctx.lineTo(dialCx + dialR*0.45, dialCy + dialR*0.45);
+		ctx.stroke();
+	}
+	else if (type.id === 'sip2123') {
+		// modem sip 300-1200 bps
+		
+		//corpo grigione
+		ctx.fillStyle = '#444';
+		ctx.beginPath();
+		ctx.roundRect(s*0,s*0.3,s*1,s*0.5,s*0.02);
+		ctx.fill();
+		ctx.fillStyle = '#666';
+		ctx.beginPath();
+		ctx.roundRect(s*0,s*0.45,s*1,s*0.35,[0,0,s*0.02,s*0.02]);
+		ctx.fill();
+		ctx.fillStyle = '#333';
+		//scassi sul grigione
+		for(let i=0;i<9;i++){
+			ctx.fillRect(s*0.08+s*i*0.1,s*0.32,s*0.06,s*0.1);//orizzontali
+			if (i<4) {
+				ctx.fillRect(s*0,s*0.32+s*i*0.03,s*0.02,s*0.02);//vert sx
+				ctx.fillRect(s*0.98,s*0.32+s*i*0.03,s*0.02,s*0.02);//vert dx
+			}
+		}
+		
+		//frontalino chiaro
+		let modemGrad = ctx.createLinearGradient(0, 0, 0, s);
+		modemGrad.addColorStop(0.0, '#ffe');
+		modemGrad.addColorStop(0.5, '#eed');
+		modemGrad.addColorStop(1.0, '#bba');
+		ctx.fillStyle = modemGrad;
+		ctx.beginPath();
+		ctx.fillRect(s*0.04, s*0.5, s*0.92, s*0.28);
+		ctx.fill();
+		
+		
+		//scasso di sx coi led v+rrrr
+		ctx.fillStyle = '#ccb';
+		ctx.fillRect(s*0.07,s*0.5,s*0.4,s*0.15);
+		//scasso di dx coi pulsanti nnnn+rr
+		ctx.fillRect(s*0.52,s*0.5,s*0.41,s*0.25);
+		
+		//pulsantoni neri x 4
+		ctx.fillStyle = '#111';
+		ctx.fillRect(s*0.53, s*0.6, s*0.04, s*0.08);
+		ctx.fillRect(s*0.60, s*0.6, s*0.04, s*0.08);
+		ctx.fillRect(s*0.67, s*0.6, s*0.04, s*0.08);
+		ctx.fillRect(s*0.74, s*0.6, s*0.04, s*0.08);
+		//pulsantoni rossi x 2
+		ctx.fillStyle = '#800';
+		ctx.fillRect(s*0.81, s*0.6, s*0.04, s*0.08);
+		ctx.fillRect(s*0.88, s*0.6, s*0.04, s*0.08);
+		
+		// LED INDICATORI (1 verde + 4 rossi a sx)
+		const blinkRed1 = Math.sin(flowOffset*0.1) > 0.5;
+		const blinkRed2 = Math.cos(flowOffset*0.2) > 0.6;
+		const blinkRed3 = Math.sin(flowOffset*0.3) > 0.7;
+		const blinkRed4 = Math.cos(flowOffset*0.4) > 0.8;
+		
+		// LED Power (Verde) - BLINK
+		ctx.fillStyle = connected ? colors.greenOn : colors.greenOff;
+		ctx.fillRect(s * 0.08, s * 0.6, s*0.06, s*0.03);
+		//prova blur semplificato
+		if (connected) drawLedAloneRect(s * 0.08, s * 0.6, s*0.06, s*0.03, colors.greenOn);
+		
+		ctx.fillStyle = connected && blinkRed1 ? colors.redOn : colors.redOff;
+		ctx.fillRect(s * 0.16, s * 0.6, s*0.06, s*0.03);
+		//prova blur semplificato
+		if (connected && blinkRed1) drawLedAloneRect(s * 0.16, s * 0.6, s*0.06, s*0.03, colors.redOn);
+		
+		ctx.fillStyle = connected && blinkRed2 ? colors.redOn : colors.redOff;
+		ctx.fillRect(s * 0.24, s * 0.6, s*0.06, s*0.03);
+		//prova blur semplificato
+		if (connected && blinkRed1) drawLedAloneRect(s * 0.24, s * 0.6, s*0.06, s*0.03, colors.redOn);
+		
+		ctx.fillStyle = connected && blinkRed3 ? colors.redOn : colors.redOff;
+		ctx.fillRect(s * 0.32, s * 0.6, s*0.06, s*0.03);
+		//prova blur semplificato
+		if (connected && blinkRed1) drawLedAloneRect(s * 0.32, s * 0.6, s*0.06, s*0.03, colors.redOn);
+		
+		ctx.fillStyle = connected && blinkRed4 ? colors.redOn : colors.redOff;
+		ctx.fillRect(s * 0.40, s * 0.6, s*0.06, s*0.03);
+		
+		//scritte come se non ci fosse un domani
+		ctx.fillStyle = '#333';
+		ctx.font = `${s*0.035}px monospace`;
+		ctx.fillText('ALIM 103 104 107 109',s*0.07,s*0.68);
+		
+		ctx.font = `${s*0.029}px monospace`;
+		ctx.fillText('VDT V23  V21 V21 AUTO DATI', s*0.52,s*0.71);
+		ctx.fillText('         ORIG ANS MAN  TEL', s*0.51,s*0.74);
+		
+		ctx.font = `${s*0.03}px monospace`;
+		ctx.fillText('ARE VT2123',   s*0.3,s*0.74);
+		
+		//logo sip
+		ctx.font = `bold ${s*0.05}px monospace`;
+		ctx.fillText('Sip',s*0.12,s*0.74);
+		ctx.fillStyle = '#800';
+		ctx.fillText('==',s*0.07,s*0.74);
+		
+	}
+	else if (type.id === 'apple1') {
+		//apple1, un pezzo di legno con dentro 4 chip in croce
+			
+		// CASE LEGNO (corpo principale, tono caldo)
+		let woodGrad = ctx.createLinearGradient(0, 0, s, s);
+		woodGrad.addColorStop(0, "#a63");
+		woodGrad.addColorStop(0.5, "#842");
+		woodGrad.addColorStop(1, "#631");
+		ctx.fillStyle = woodGrad;
+		ctx.strokeStyle = "#3a2010";
+		ctx.lineWidth = s*0.02;
+		ctx.beginPath();
+		ctx.roundRect(0, s*0.15, s, s*0.65, s*0.04);
+		ctx.fill();
+		ctx.stroke();		
+		
+		// Venature del legno (linee orizzontali leggere)
+		ctx.strokeStyle = "rgba(0,0,0,0.08)";
+		ctx.lineWidth = s*0.005;
+		for(let i = 0; i < 5; i++) {
+			const wy = s*0.2 + i * s*0.16;
+			ctx.beginPath();
+			ctx.moveTo(s*0.02, wy);
+			ctx.lineTo(s*0.98, wy + (Math.sin(i) * s*0.01));
+			ctx.stroke();
+		}
+		
+		// PANNELLO POSTERIORE ALZATO (con scritta APPLE COMPUTER)
+		let backGrad = ctx.createLinearGradient(0, 0, s, s*0.18);
+		backGrad.addColorStop(0, "#b63");
+		backGrad.addColorStop(1, "#842");
+		ctx.fillStyle = backGrad;
+		ctx.fillRect(s*0.05, 0, s*0.9, s*0.25);
+		ctx.strokeStyle = "#321";
+		ctx.lineWidth = s*0.01;
+		ctx.strokeRect(s*0.05, 0, s*0.9, s*0.25);
+		
+		// Scritta "APPLE" intagliata (scura)
+		ctx.fillStyle = "#222";
+		ctx.font = `bold ${s*0.18}px sans-serif`;
+		ctx.textAlign = "left";
+		ctx.textBaseline = "middle";
+		ctx.fillText("A", s*0.38, s*0.1);
+		ctx.font = `bold ${s*0.1}px sans-serif`;
+		ctx.textAlign = "left";
+		ctx.textBaseline = "middle";
+		ctx.fillText("PPLE", s*0.5, s*0.07);
+		ctx.font = `bold ${s*0.05}px sans-serif`;
+		ctx.fillText("COMPUTER", s*0.51, s*0.15);
+		
+		// 2 vitoni a sinistra della scritta
+		ctx.fillStyle = '#333';
+		ctx.strokeStyle = '#666';
+		ctx.beginPath();
+		ctx.arc(s*0.15, s*0.08, s*0.02, 0, Math.PI*2);
+		ctx.fill();
+		ctx.stroke();
+		ctx.beginPath();
+		ctx.arc(s*0.22, s*0.08, s*0.02, 0, Math.PI*2);
+		ctx.fill();
+		ctx.stroke();
+		// 1 a destra
+		ctx.beginPath();
+		ctx.arc(s*0.79, s*0.08, s*0.02, 0, Math.PI*2);
+		ctx.fill();
+		ctx.stroke();
+		
+		// presa elettrica nera a destra (con foro a vista)
+		ctx.fillStyle = "#1a1a1a";
+		ctx.beginPath();
+		ctx.roundRect(s*0.83, s*0.02, s*0.1, s*0.16, s*0.01);
+		ctx.fill();
+		ctx.fillStyle = connected ? colors.orangeOn : "#444";
+		ctx.beginPath();
+		ctx.arc(s*0.88, s*0.06, s*0.012, 0, Math.PI*2);
+		ctx.fill();
+		ctx.beginPath();
+		ctx.arc(s*0.88, s*0.12, s*0.012, 0, Math.PI*2);
+		ctx.fill();
+		if (connected) drawLedAloneCircle(s*0.885, s*0.06, s*0.012, colors.orangeOn);
+		
+		// CASSETTO/FRONTALE INFERIORE (la parte bombata in basso)
+		let drawerGrad = ctx.createLinearGradient(0, s*0.6, 0, s);
+		drawerGrad.addColorStop(0, "#7a4220");
+		drawerGrad.addColorStop(0.5, "#623318");
+		drawerGrad.addColorStop(1, "#4a2510");
+		ctx.fillStyle = drawerGrad;
+		ctx.strokeStyle = "#2a1808";
+		ctx.lineWidth = s*0.01;
+		ctx.beginPath();
+		ctx.roundRect(s*0.02, s*0.60, s*0.96, s*0.18, s*0.04);
+		ctx.fill();
+		ctx.stroke();
+		
+		// riflesso lucido sul cassetto di legno
+		ctx.fillStyle = "rgba(255,255,255,0.1)";
+		ctx.beginPath();
+		ctx.roundRect(s*0.04, s*0.62, s*0.92, s*0.10, s*0.02);
+		ctx.fill();
+		
+		
+		// TASTIERA (rettangolo grigio-beige, leggermente incassato)
+		ctx.fillStyle = "#333";
+		ctx.beginPath();
+		ctx.roundRect(s*0.11, s*0.32, s*0.62, s*0.22, s*0.02);
+		ctx.fill();
+		
+		// righe di tasti beige
+		const keyRows = 3;
+		const keyCols = 10;
+		const kw = (s*0.58) / keyCols;
+		const kh = (s*0.18) / keyRows;
+		ctx.fillStyle = "#ddc";
+		ctx.strokeStyle = "#888";
+		ctx.lineWidth = s*0.003;
+		for(let r = 0; r < keyRows; r++) {
+			for(let c = 0; c < keyCols; c++) {
+				const kx = s*0.13 + c * kw;
+				const ky = s*0.34 + r * kh;
+				ctx.fillRect(kx, ky, kw*0.85, kh*0.8);
+				ctx.strokeRect(kx, ky, kw*0.85, kh*0.8);
+			}
+		}
+		// tasto RETURN arancione
+		ctx.fillStyle = "#c40";
+		ctx.beginPath();
+		ctx.roundRect(s*0.65, s*0.4, kw*0.9, kh*0.9, s*0.005);
+		ctx.fill();
+		
+		// LED indicatore alimentazione (sempre acceso se connesso, ambra)
+		const blinkPower = Math.sin(flowOffset*0.1) > -0.6;
+		ctx.fillStyle = connected && blinkPower ? colors.orangeOn : colors.orangeOff;
+		ctx.strokeStyle = '#333';
+		ctx.beginPath();
+		ctx.arc(s*0.68, s*0.485, s*0.02, 0, Math.PI*2);
+		ctx.fill();
+		ctx.stroke();
+		if (connected && blinkPower) drawLedAloneCircle(s*0.68, s*0.485, s*0.02, colors.orangeOn);
+		
+		// barra spaziatrice enorme
+		ctx.fillStyle = '#222';
+		ctx.strokeStyle = '#333';
+		ctx.beginPath();
+		ctx.roundRect(s*0.20, s*0.52, s*0.4, kh*0.8, s*0.005);
+		ctx.fill();
+		ctx.stroke();
+		
+		// blocchetto tasti TAPE/PAPER ADV a destra della tastiera
+		ctx.strokeStyle = "#999";
+		ctx.fillStyle = "#555";
+		for(let i=0; i<4; i++) {
+			ctx.fillRect(s*0.8, s*0.34 + i*s*0.05, s*0.07, s*0.05);
+			ctx.strokeRect(s*0.8, s*0.34 + i*s*0.05, s*0.07, s*0.05);
+		}
+		
+		// 4 viti angolari sul case
+		ctx.fillStyle = '#333';
+		ctx.strokeStyle = '#666';
+		[[s*0.05,s*0.35],[s*0.95,s*0.35],[s*0.05,s*0.55],[s*0.95,s*0.55]].forEach(([px,py])=>{
+			ctx.beginPath();
+			ctx.arc(px, py, s*0.02, 0, Math.PI*2);
+			ctx.fill();
+			ctx.stroke();
+		});
+	}
+	else if (type.id === 'ibmpc') {
+		// IBM PC - case beige con monitor CRT verde fosforo separato + tower con 2 floppy + 1 slot
+
+		// MONITOR (in alto, leggermente arretrato)
+		let monGrad = ctx.createLinearGradient(0, 0, s, s*0.42);
+		monGrad.addColorStop(0, "#edc");
+		monGrad.addColorStop(1, "#cba");
+		ctx.fillStyle = monGrad;
+		ctx.strokeStyle = "#888";
+		ctx.lineWidth = s*0.01;
+		ctx.beginPath();
+		ctx.roundRect(s*0.12, 0, s*0.74, s*0.49, s*0.03);
+		ctx.fill();
+		ctx.stroke();
+
+		// Schermo CRT verde fosforo
+		ctx.fillStyle = "#111";
+		ctx.beginPath();
+		ctx.roundRect(s*0.17, s*0.04, s*0.5, s*0.42, s*0.02);
+		ctx.fill();
+
+		if (connected) {
+			ctx.fillStyle = "#0a2a10";
+		} else {
+			ctx.fillStyle = "#080808";
+		}
+		ctx.beginPath();
+		ctx.roundRect(s*0.20, s*0.07, s*0.44, s*0.36, s*0.01);
+		ctx.fill();
+
+		if (connected) {
+			// scritta IBM verde fosforo, lampeggio leggero del cursore
+			ctx.fillStyle = "#3f3";
+			ctx.font = `bold ${s*0.25}px monospace`;
+			ctx.textAlign = "left";
+			ctx.textBaseline = "middle";
+			ctx.fillText("IBM", s*0.20, s*0.2);
+			ctx.font = `${s*0.03}px monospace`;
+			ctx.fillText("A:\>", s*0.20, s*0.40);
+
+			if (Math.sin(flowOffset*0.6) > 0) {
+				ctx.fillRect(s*0.25, s*0.39, s*0.014, s*0.025);
+			}
+			
+			//righe nere sul Logo
+			ctx.fillStyle = '#0a2a10';
+			for (let i=0; i<3; i++) {
+				ctx.fillRect(s*0.20,s*0.13+s*0.04*i,s*0.44,s*0.02);
+			}
+		}
+
+		// logo ibm anche sul monitor
+		ctx.fillStyle = "#444";
+		ctx.beginPath();
+		ctx.roundRect(s*0.7, s*0.05, s*0.12, s*0.07, s*0.005);
+		ctx.fill();
+		ctx.fillStyle = "#fff";
+		ctx.font = `bold ${s*0.04}px monospace`;
+		ctx.textAlign = "left";
+		ctx.textBaseline = "middle";
+		ctx.fillText("IBM", s*0.72, s*0.085);
+
+		// manopole luminosità/contrasto sotto al logo
+		ctx.fillStyle = "#222";
+		const blinkPwr = Math.sin(flowOffset*0.12) > -0.5;
+		ctx.beginPath();
+		ctx.arc(s*0.75, s*0.27, s*0.018, 0, Math.PI*2);
+		ctx.fill();
+		ctx.fillStyle = connected && blinkPwr ? colors.greenOn : colors.greenOff;
+		ctx.beginPath();
+		ctx.arc(s*0.75, s*0.27, s*0.01, 0, Math.PI*2);
+		ctx.fill();
+		if (connected && blinkPwr) drawLedAloneCircle(s*0.75, s*0.27, s*0.01, colors.greenOn);
+
+		//luminosita + contrasto
+		ctx.strokeStyle = "#888";
+		ctx.lineWidth = s*0.01;
+		ctx.beginPath();
+		ctx.arc(s*0.75, s*0.35, s*0.025, 0, Math.PI*2);
+		ctx.stroke();
+		ctx.beginPath();
+		ctx.arc(s*0.75, s*0.43, s*0.025, 0, Math.PI*2);
+		ctx.stroke();
+
+		// CASE ORIZZONTALE (case principale sotto il monitor)
+		let towerGrad = ctx.createLinearGradient(0, s*0.5, 0, s*0.78);
+		towerGrad.addColorStop(0, "#edc");
+		towerGrad.addColorStop(1, "#cba");
+		ctx.fillStyle = towerGrad;
+		ctx.strokeStyle = "#888";
+		ctx.lineWidth = s*0.01;
+		ctx.beginPath();
+		ctx.roundRect(s*0.05, s*0.5, s*0.9, s*0.28, s*0.02);
+		ctx.fill();
+		ctx.stroke();
+		
+		// targhetta IBM sul tower a sinistra
+		ctx.fillStyle = "#444";
+		ctx.beginPath();
+		ctx.roundRect(s*0.08, s*0.54, s*0.16, s*0.06, s*0.005);
+		ctx.fill();
+		ctx.fillStyle = "#fff";
+		ctx.font = `bold ${s*0.04}px monospace`;
+		ctx.fillText("IBM", s*0.12, s*0.57);
+
+		// griglia di ventilazione (righe verticali)
+		ctx.fillStyle = "#333";
+		for(let i = 0; i < 10; i++) {
+			const gx = s*0.08 + i * s*0.035;
+			ctx.fillRect(gx, s*0.62, s*0.017, s*0.12);
+		}
+
+		// 2 SLOT FLOPPY (impilati)
+		const blinkFD1 = Math.sin(flowOffset*0.07) > -0.7;
+		const blinkFD2 = Math.cos(flowOffset*0.09 + 1) > -0.7;
+
+		ctx.fillStyle = "#111";
+		ctx.beginPath();
+		ctx.roundRect(s*0.5, s*0.53, s*0.38, s*0.10, s*0.005);
+		ctx.fill();
+		ctx.beginPath();
+		ctx.roundRect(s*0.5, s*0.65, s*0.38, s*0.10, s*0.005);
+		ctx.fill();
+
+		// floppy
+		[0.53, 0.65].forEach((fy, idx) => {
+			ctx.fillStyle = "#333";
+			ctx.fillRect(s*0.54, s*(fy+0.025), s*0.30, s*0.012);
+			// LED rosso piccolo
+			const on = idx === 0 ? blinkFD1 : blinkFD2;
+			ctx.fillStyle = connected && on ? colors.redOn : colors.redOff;
+			ctx.beginPath();
+			ctx.arc(s*0.54, s*(fy+0.075), s*0.012, 0, Math.PI*2);
+			ctx.fill();
+			if (connected && on) drawLedAloneCircle(s*0.54, s*(fy+0.075), s*0.012, colors.redOn);
+		});
+
+		// TASTIERA (in basso, leggermente in prospettiva)
+		let kbGrad = ctx.createLinearGradient(0, s*0.82, 0, s);
+		kbGrad.addColorStop(0, "#edc");
+		kbGrad.addColorStop(1, "#cba");
+		ctx.fillStyle = kbGrad;
+		ctx.strokeStyle = "#666";
+		ctx.lineWidth = s*0.01;
+		ctx.beginPath();
+		ctx.moveTo(s*0.02, s*0.82);
+		ctx.lineTo(s*0.98, s*0.82);
+		ctx.lineTo(s*1.0, s*1.0);
+		ctx.lineTo(0, s*1.0);
+		ctx.closePath();
+		ctx.fill();		
+		ctx.stroke();
+
+		// righe di tasti
+		ctx.fillStyle = "#fff";
+		ctx.strokeStyle = "#aaa";
+		ctx.lineWidth = s*0.003;
+		const kbRows = 3, kbCols = 12;
+		const tkw = (s*0.9)/kbCols, tkh = (s*0.15)/kbRows;
+		for(let r = 0; r < kbRows; r++) {
+			for(let c = 0; c < kbCols; c++) {
+				const kx = s*0.05 + c*tkw + r*s*0.005;
+				const ky = s*0.84 + r*tkh;
+				ctx.fillRect(kx, ky, tkw*0.8, tkh*0.7);
+				ctx.strokeRect(kx, ky, tkw*0.8, tkh*0.7);
+			}
+		}
+	}
+	else if (type.id === 'commodorecbm') {
+		// Commodore CBM/PET 3001 series - monitor a trapezio!!!
+
+		// CASE PRINCIPALE (corpo unico, base + monitor è un blocco solo visto da davanti)
+		let caseGrad = ctx.createLinearGradient(0, s*0.42, 0, s);
+		caseGrad.addColorStop(0, "#eed");
+		caseGrad.addColorStop(1, "#ccb");
+		ctx.fillStyle = caseGrad;
+		ctx.strokeStyle = "#666";
+		ctx.lineWidth = s*0.01;
+		ctx.beginPath();
+		ctx.roundRect(s*0.05, s*0.42, s*0.90, s*0.42, s*0.02);
+		ctx.fill();
+		ctx.stroke();
+
+		// MONITOR A TORRETTA (cornice nera sporgente in alto, leggermente trapezoidale)
+		ctx.fillStyle = caseGrad;
+		ctx.beginPath();
+		ctx.moveTo(s*0.14, s*0.40);
+		ctx.lineTo(s*0.20, s*0.02);
+		ctx.lineTo(s*0.80, s*0.02);
+		ctx.lineTo(s*0.86, s*0.40);
+		ctx.closePath();
+		ctx.fill();
+		ctx.strokeStyle = "#666";
+		ctx.lineWidth = s*0.01;
+		ctx.stroke();
+		
+		// internamente era nero!
+		ctx.fillStyle = '#333';
+		ctx.beginPath();
+		ctx.moveTo(s*0.16, s*0.38);
+		ctx.lineTo(s*0.22, s*0.04);
+		ctx.lineTo(s*0.78, s*0.04);
+		ctx.lineTo(s*0.84, s*0.38);
+		ctx.closePath();
+		ctx.fill();
+		ctx.strokeStyle = "#666";
+		ctx.lineWidth = s*0.01;
+		ctx.stroke();
+		
+		// Schermo CRT
+		ctx.fillStyle = "#111";
+		ctx.beginPath();
+		ctx.roundRect(s*0.25, s*0.07, s*0.50, s*0.28, s*0.012);
+		ctx.fill();
+		
+		if (connected) {
+			ctx.fillStyle = "#0a2a10";
+		} else {
+			ctx.fillStyle = "#555048";
+		}
+		ctx.beginPath();
+		ctx.roundRect(s*0.30, s*0.09, s*0.40, s*0.24, s*0.008);
+		ctx.fill();
+
+		if (connected) {
+			// testo verde fosforo tipico PET
+			ctx.fillStyle = "#3f3";
+			ctx.font = `${s*0.026}px monospace`;
+			ctx.textAlign = "left";
+			ctx.textBaseline = "middle";
+			ctx.fillText("*** COMMODORE BASIC ***", s*0.335, s*0.12);
+			ctx.fillText("31743 BYTE FREE", s*0.335, s*0.15);
+			ctx.fillText("READY.", s*0.335, s*0.18);
+
+			if (Math.sin(flowOffset*0.6) > 0) {
+				ctx.fillRect(s*0.335, s*0.2, s*0.015, s*0.02);
+			}
+		}
+		
+		
+		// targhetta gigante "commodore" sotto il monitor
+		ctx.fillStyle = "#222";
+		ctx.beginPath();
+		ctx.roundRect(s*0.08, s*0.435, s*0.84, s*0.10, s*0.005);
+		ctx.fill();
+		ctx.fillStyle = "#fff";
+		ctx.font = `bold ${s*0.04}px monospace`;
+		ctx.textAlign = "left";
+		ctx.textBaseline = "middle";
+		ctx.fillText("C=commodore       CBM        computer", s*0.095, s*0.47);
+		ctx.font = `${s*0.04}px monospace`;
+		ctx.fillText("3001 series                  3008", s*0.095, s*0.51);
+		
+		// led on/off
+		ctx.fillStyle = connected ? colors.greenOn : colors.greenOff;
+		ctx.beginPath();
+		ctx.arc(s*0.88, s*0.50, s*0.02, 0, Math.PI*2);
+		ctx.fill();
+		if (connected) drawLedAloneCircle(s*0.88, s*0.51, s*0.02, colors.greenOn);
+		
+		// riga divisoria
+		ctx.fillStyle = '#aaa';
+		ctx.fillRect(s*0.1, s*0.55, s*0.8, s*0.01);
+		
+
+		// TASTIERA principale (parte sinistra/centrale, leggermente in prospettiva)
+		ctx.fillStyle = "#222";
+		ctx.strokeStyle = "#444";
+		ctx.lineWidth = s*0.01;
+		
+		const kbRows = 3;
+		const kbCols = 10;
+		const tkw = (s*0.6)/kbCols;
+		const tkh = (s*0.15)/kbRows;
+		for(let r = 0; r < kbRows; r++) {
+			for(let c = 0; c < kbCols; c++) {
+				const kx = s*0.10 + c*tkw;
+				const ky = s*0.60 + r*tkh;
+				ctx.fillRect(kx, ky, tkw*0.82, tkh*0.7);
+				ctx.strokeRect(kx, ky, tkw*0.82, tkh*0.7);
+			}
+		}
+
+		// SPAZIO (barra lunga in basso a sinistra, sotto la tastiera principale)
+		ctx.fillRect(s*0.20, s*0.75, s*0.42, s*0.045);
+		ctx.strokeRect(s*0.20, s*0.75, s*0.42, s*0.045);
+
+		// KEYPAD NUMERICO (separato a destra, griglia 4x3)
+		const padRows = 4;
+		const padCols = 3;
+		for(let r = 0; r < padRows; r++) {
+			for(let c = 0; c < padCols; c++) {
+				const perspective = r * s * 0.1;
+				const kx = s*0.72 + c*tkw;
+				const ky = s*0.60 + r*tkh;
+				ctx.fillRect(kx, ky, tkw*0.8, tkh*0.75);
+				ctx.strokeRect(kx, ky, tkw*0.8, tkh*0.75);
+			}
+		}
+		
+		//bordo chiaro
+		ctx.fillStyle = "#ccb";
+		ctx.strokeStyle = "#333";
+		ctx.lineWidth = s * 0.01;
+		ctx.beginPath();
+		ctx.moveTo(s*0.05, s*0.84);
+		ctx.lineTo(s*0.07, s*0.88);
+		ctx.lineTo(s*0.93, s*0.88);
+		ctx.lineTo(s*0.95, s*0.84);
+		ctx.lineTo(s*0.05, s*0.84);
+		ctx.closePath();
+		ctx.fill();
+		ctx.stroke();
+	}
+	
 	ctx.restore();
 }
+
+
+
+function drawLedAloneRect(x, y, w, h, color) {
+	let ALFA = (FAKEBLUR_SIZE - 1) * 0.5;//x-w*0.5==>2fb, x-w*1  ==>3fb, x-w*1.5==>4fb, x-w*2  ==>6fb
+    ctx.fillStyle = color + '1a'; // ~10% opacità
+    ctx.fillRect(x - w*ALFA, y - h*ALFA, w * FAKEBLUR_SIZE, h * FAKEBLUR_SIZE);
+	
+	ctx.fillRect(x - w*0.25, y - h*0.25, w * 1.5, h * 1.5);//doppio passaggio
+}
+
+function drawLedAloneCircle(x, y, r, color, from = 0, to = Math.PI * 2) {
+    ctx.fillStyle = color + '1a'; // ~10% opacità
+    ctx.beginPath();
+    ctx.arc(x, y, r * FAKEBLUR_SIZE, from, to);
+    ctx.fill();
+	
+	ctx.beginPath();
+    ctx.arc(x, y, r * 1.5, from, to);//doppio passaggio
+    ctx.fill();
+}
+
+function drawLedAloneLine(x1, y1, x2, y2, thickness, color) {
+    ctx.strokeStyle = color + '1a';
+    ctx.lineWidth = thickness * (FAKEBLUR_SIZE * 0.66);//1.6
+
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+
+    // secondo passaggio
+    ctx.lineWidth = thickness * (FAKEBLUR_SIZE * 0.66) * 0.9;//1.4
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+	
+	// terzo passaggio
+    ctx.lineWidth = thickness * (FAKEBLUR_SIZE * 0.66) * 0.8;//1.2
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+}
+
 
 //		
 		
