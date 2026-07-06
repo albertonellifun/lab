@@ -348,7 +348,7 @@ function changeMotherboardFlag(btn) {
 	}
 	else if (motherboardFlag === 3) {
 		colors.activeColor = wireColors[wireColors.length-1];
-		document.body.style.backgroundImage = 'url(./knetwalk-globe.png)';
+		document.body.style.backgroundImage = 'url(./knetwalk-arcade.png)';
 		canvas.style.background = '#0f172add';
 	}
 	else {
@@ -1510,8 +1510,8 @@ function drawPCPACMAN(x, y, tile) {
 	if (isServer) {
 		// TERRA (mappamondo) al posto del server
 		let earthGrad = ctx.createRadialGradient(s*0.35, s*0.35, s*0.05, s*0.5, s*0.5, s*0.55);
-		earthGrad.addColorStop(0, connected ? '#4ab0f0' : '#25415a');
-		earthGrad.addColorStop(1, connected ? '#0d5aa8' : '#12212f');
+		earthGrad.addColorStop(0.0, '#0044cc');//'#4ab0f0');
+		earthGrad.addColorStop(1.0, '#001188');//'#0d5aa8');
 		ctx.fillStyle = earthGrad;
 		ctx.beginPath();
 		ctx.arc(s*0.5, s*0.5, s*0.5, 0, Math.PI*2);
@@ -1524,10 +1524,10 @@ function drawPCPACMAN(x, y, tile) {
 		ctx.clip();
 
 		//continenti (macchie verdi, no bezier: solo arc + lineTo)
-		ctx.fillStyle = connected ? '#2f9e44' : '#1b3a24';
+		ctx.fillStyle = '#006611';
 		ctx.save();
 		ctx.translate(s*0.5, s*0.5);
-		ctx.rotate(connected ? flowOffset * 0.01 : 0);
+		ctx.rotate(flowOffset * 0.01);
 		ctx.beginPath();
 		ctx.arc(-s*0.12, -s*0.15, s*0.14, 0, Math.PI*2);
 		ctx.fill();
@@ -1575,15 +1575,17 @@ function drawPCPACMAN(x, y, tile) {
 		ctx.beginPath();
 		ctx.ellipse(s*0.5, s*0.98, s*0.25, s*0.06, 0, 0, Math.PI*2);
 		ctx.fill();
+
 		
 		//riflesso lucido
-		ctx.fillStyle = 'rgba(255,255,255,0.15)';
+		ctx.fillStyle = 'rgba(255,255,255,0.1)';
 		ctx.beginPath();
-		ctx.arc(s*0.35, s*0.32, s*0.18, 0, Math.PI*2);
+		ctx.ellipse(s*0.32, s*0.27, s*0.18, s*0.15, 0, 0, Math.PI*2);
 		ctx.fill();
-		
+				
 		ctx.restore();
-		drawLedAloneCircle(s*0.5, s*0.5, s*0.25, '#4ab0f0');
+		drawLedAloneCircle(s*0.5, s*0.5, s*0.22, '#44bbff');
+		drawLedAloneCircle(s*0.5, s*0.5, s*0.24, '#44bbff');
 		
 	} else if (type.id) {
 		//sceglie il personaggio in base al nome del device (deterministico, no random per tile)
