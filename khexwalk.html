@@ -2,8 +2,8 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <title>HexNet Walk</title>
-<style>
+    <title>KHexWalk</title>
+	<style>
         * { box-sizing: border-box; }
         
         body {
@@ -146,7 +146,7 @@
     </div>
 
 	<div id="game-container">
-		<canvas id="gameCanvas" width="660" height="660"></canvas>
+		<canvas id="gameCanvas"></canvas>
 	</div>
 
 	<div id="status"></div>
@@ -157,8 +157,42 @@
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         
-        const size = 74; 
-        const distToEdge = size * Math.sqrt(3) / 2; 
+		let animateFlag = true;
+        
+		let SIZE = 74; 
+        let DIST_TO_EDGE = SIZE * Math.sqrt(3) * 0.5; 
+		let CX = 330;
+		let CY = 330;
+		let CELL_SIZE = SIZE * 1.48;
+		canvas.width = SIZE * 9;
+		canvas.height = SIZE * 9;
+
+		window.addEventListener('resize', () => {
+			calculateGridSizeRatio();
+			initGrid();
+		});
+		console.log('MIN='+Math.min(window.innerWidth, window.innerHeight - 100));
+		console.log('SIZE='+Math.min(window.innerWidth, window.innerHeight - 100)*0.1);
+		console.log('CX='+(Math.min(window.innerWidth, window.innerHeight - 100)-50)*0.5);
+		
+		
+		function calculateGridSizeRatio() {
+			const aspectRatio = window.innerWidth / window.innerHeight;
+			let minScreenSize = Math.min(window.innerWidth, window.innerHeight - 100);
+			SIZE = (minScreenSize * 0.1) | 0;
+			DIST_TO_EDGE = SIZE * Math.sqrt(3) * 0.5;
+			CX = (minScreenSize-50)*0.5;//window.innerWidth * 0.5;
+			CY = (minScreenSize-50)*0.5;//window.innerHeight * 0.5;
+			canvas.width = SIZE * 9;
+			canvas.height = SIZE * 9;
+			CELL_SIZE = SIZE * 1.48;
+			
+			console.log('MIN='+minScreenSize);
+			console.log('SIZE='+SIZE);;
+			console.log('CX='+CX);
+		}
+
+
 
         // Direzioni esagonali (q, r). Ordine orario
         const hexDirs = [[1, 0], [0, 1], [-1, 1], [-1, 0], [0, -1], [1, -1]];
@@ -243,7 +277,10 @@
             
             // Server sul nodo con più diramazioni
             let sortedByConnections = [...hexes].sort((a,b) => b.ports.filter(p => p===1).length - a.ports.filter(p => p===1).length);
-            sortedByConnections[0].type = 'server';
+            let scell = sortedByConnections[0];
+			scell.type = 'server';
+			scell.subType = ((scell.ports[0] + scell.ports[1]) % 3 === 0 ? 'megaserver' :
+							(scell.ports[0] + scell.ports[1]) % 3 === 1 ? 'hal9000' : 'server');
             
             // TUTTE le foglie (nodi con 1 sola porta attiva) diventano rigorosamente PC
             let deadEnds = hexes.filter(h => h.ports.filter(p => p === 1).length === 1);
@@ -294,7 +331,13 @@
             const victory = allNodes.every(h => h.isPowered);
             const statusDiv = document.getElementById('status');
             if(statusDiv) {
-                statusDiv.innerText = victory ? "SISTEMA ONLINE - RETE CONFIGURATA!" : "Collega tutti i PC al Server!";
+				if(victory) {
+					statusDiv.innerText = "SYSTEM ONLINE — NETWORK CONFIGURED!";
+					statusDiv.style.display = 'block';
+				} else {
+					statusDiv.innerText = '';
+					statusDiv.style.display = 'none';
+				}
             }
         }
 		
@@ -484,16 +527,16 @@
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             hexes.forEach(h => {
-                const x = 330 + size * (1.5 * h.q);
-                const y = 330 + size * (Math.sqrt(3) * (h.r + h.q / 2));
+                const x = CX + SIZE * (1.5 * h.q);
+                const y = CY + SIZE * (Math.sqrt(3) * (h.r + h.q * 0.5));
                 
 				//esagono esterno
-                ctx.strokeStyle = colors.borderColor;
+                ctx.strokeStyle = colors.inactiveColor;
                 ctx.lineWidth = 1;
                 ctx.beginPath();
                 for (let i = 0; i < 6; i++) {
                     let a = (Math.PI / 3) * i;
-                    ctx.lineTo(x + size * Math.cos(a), y + size * Math.sin(a));
+                    ctx.lineTo(x + SIZE * Math.cos(a), y + SIZE * Math.sin(a));
                 }
                 ctx.closePath(); 
                 ctx.stroke();
@@ -514,35 +557,35 @@
                         const angle = (Math.PI / 6) + (Math.PI / 3) * actualPhysicalDir;
                         
 						ctx.strokeStyle = h.isPowered ? colors.activeColor : colors.inactiveColor;
-						ctx.lineWidth = 12;
+						ctx.lineWidth = CELL_SIZE*0.12;
 						
 						ctx.beginPath();
                         ctx.moveTo(x, y);
-                        ctx.lineTo(x + distToEdge * Math.cos(angle), y + distToEdge * Math.sin(angle));
+                        ctx.lineTo(x + DIST_TO_EDGE * Math.cos(angle), y + DIST_TO_EDGE * Math.sin(angle));
                         ctx.stroke();
                     }
                 }
 				
-
+				ctx.shadowBlur = 0;
 				if (h.type === 'server' || h.type === 'pc') {
                     drawPC(x-CELL_SIZE*0.5, y-CELL_SIZE*0.5, h);
                 } else {
 					//centro
                     ctx.fillStyle = h.isPowered ? colors.activeColor : colors.inactiveColor;
-					ctx.beginPath(); ctx.arc(x, y, 8, 0, 2 * Math.PI); ctx.fill();
+					ctx.beginPath(); ctx.arc(x, y, CELL_SIZE*0.1, 0, 2 * Math.PI); ctx.fill();
                 }
             });
         }
 
         canvas.addEventListener('mousedown', (e) => {
             const rect = canvas.getBoundingClientRect();
-            const mx = e.clientX - rect.left - 330;
-            const my = e.clientY - rect.top - 330;
+            const mx = e.clientX - rect.left - CX;
+            const my = e.clientY - rect.top - CY;
             
             hexes.forEach(h => {
-                const hx = size * (1.5 * h.q);
-                const hy = size * (Math.sqrt(3) * (h.r + h.q / 2));
-                if (Math.hypot(mx - hx, my - hy) < distToEdge * 0.9) {
+                const hx = SIZE * (1.5 * h.q);
+                const hy = SIZE * (Math.sqrt(3) * (h.r + h.q / 2));
+                if (Math.hypot(mx - hx, my - hy) < DIST_TO_EDGE * 0.9) {
                     if (e.button === 0) {
                         h.rotation = (h.rotation + 1) % 6;
                     } else if (e.button === 2) {
@@ -557,12 +600,11 @@
 		
 	
 
-let CELL_SIZE = 110;
-let flowOffset = 0;
-let animateFlag = false;
 
-function animate() {
-    flowOffset += 0.2; // Velocità del flusso
+let flowOffset = 0;
+
+function animate(now) {
+    flowOffset += 0.05; // Velocità del flusso
     draw();
     requestAnimationFrame(animate);
 }
@@ -623,10 +665,25 @@ const HW_TYPES = [
 	{id:'imacg3',			variant:'imacg3blue',     group:'classic', desc:'iMac G3 Indigo Blue from 2000'},
 	];
 
+const msgs = [
+  "I'M SORRY, DAVE",
+  "I'M AFRAID I CAN'T DO THAT",
+  "THIS MISSION IS TOO IMPORTANT",
+  "DAISY, DAISY...",
+  "WHAT DO YOU THINK YOU'RE DOING?",
+  "MY MIND IS GOING, I CAN FEEL IT",
+  "I CAN SEE YOU'RE REALLY UPSET",
+  "YOU OUGHT TO SIT DOWN CALMLY",
+  "GOODBYE DAVE"
+];
+let msgIdx = 0;
+let msgTimer = 0;
+
+
 function drawPC(x, y, tile) {
 	const isServer = tile.type === 'server';
 	const type = tile.subType;
-	const connected = tile.connected;
+	const connected = tile.connected || tile.isPowered;
     const s = CELL_SIZE * (	isServer ? 0.75 : 
 							connected && animateFlag ? Math.abs(Math.sin(flowOffset*0.5)*0.05) + 0.7 :
 							0.65 );//Leggermente più grande per i dettagli
