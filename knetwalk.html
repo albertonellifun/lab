@@ -1473,18 +1473,20 @@ function drawTilePACMAN(tile) {
 
 	//pallini stile "biscottini" pacman a meta di ogni cavo connesso
 	if (tile.connected) {
+		let cs = CELL_SIZE*0.035;
+		let csh = cs * 0.5;
 		ctx.fillStyle = '#ffee55';
 		[[N,0,-mid],[E,mid,0],[S,0,mid],[W,-mid,0]].forEach(([bit,dx,dy]) => {
 			if (tile.conns & bit) {
-				//ctx.beginPath();
-				//ctx.arc(dx*0.5, dy*0.5, CELL_SIZE*0.025, 0, Math.PI*2);
-				//ctx.fill();
-				ctx.beginPath();
+				/*ctx.beginPath();
 				ctx.arc(dx*0.25, dy*0.25, CELL_SIZE*0.025, 0, Math.PI*2);
 				ctx.fill();
 				ctx.beginPath();
 				ctx.arc(dx*0.75, dy*0.75, CELL_SIZE*0.025, 0, Math.PI*2);
-				ctx.fill();
+				ctx.fill();*/
+				ctx.fillRect(dx*0.20-csh, dy*0.20-csh, cs, cs);
+				ctx.fillRect(dx*0.55-csh, dy*0.55-csh, cs, cs);
+				ctx.fillRect(dx*0.85-csh, dy*0.85-csh, cs, cs);
 			}
 		});
 	}
@@ -1517,64 +1519,46 @@ function drawPCPACMAN(x, y, tile) {
 		ctx.arc(s*0.5, s*0.5, s*0.5, 0, Math.PI*2);
 		ctx.fill();
 		
-		// tutto quello che segue è "clippato" dentro il cerchio del pianeta
-		ctx.save();
-		ctx.beginPath();
-		ctx.arc(s*0.5, s*0.5, s*0.5, 0, Math.PI*2);
-		ctx.clip();
-
-		//continenti (macchie verdi, no bezier: solo arc + lineTo)
-		ctx.fillStyle = '#006611';
+		//continenti a tetramini colorati (6 pezzi tetris, no bezier: solo fillRect)
 		ctx.save();
 		ctx.translate(s*0.5, s*0.5);
 		ctx.rotate(flowOffset * 0.01);
-		ctx.beginPath();
-		ctx.arc(-s*0.12, -s*0.15, s*0.14, 0, Math.PI*2);
-		ctx.fill();
-		ctx.beginPath();
-		ctx.arc(s*0.15, s*0.05, s*0.1, 0, Math.PI*2);
-		ctx.fill();
-		ctx.beginPath();
-		ctx.moveTo(-s*0.05, s*0.15);
-		ctx.lineTo(s*0.1, s*0.25);
-		ctx.lineTo(-s*0.02, s*0.32);
-		ctx.lineTo(-s*0.18, s*0.22);
-		ctx.closePath();
-		ctx.fill();
-		ctx.restore();
 
-		//nuvolette
-		ctx.fillStyle = '#ddd';//'rgba(255,255,255,0.35)';
-		[	
-			[s*0.50,  s*0.25, s*0.12, s*0.05, 0.9],
-			[s*0.95,  s*0.35, s*0.18, s*0.07, 0.8],
-			[s*0.30,  s*0.45, s*0.20, s*0.08, 0.7],
-			[-s*0.15, s*0.55, s*0.10, s*0.05, 0.7],
-			[s*0.75,  s*0.60, s*0.25, s*0.12, 0.7],
-			[s*0.10,  s*0.75, s*0.15, s*0.07, 0.8],
-		]
-			.forEach(([cx,cy,cr,cs,spd]) => {
-				ctx.beginPath();
-				ctx.ellipse((cx+(flowOffset*spd))%(s*1.5)-(s*0.25), cy, cr, cs, 0, 0, Math.PI*2);
-				ctx.fill();
+		const cell = s*0.09;
+		const cellh = cell*0.5;
+		const cellsize = cell*0.94;
+		function drawTetromino(shape, color, ox, oy, rot, bord){
+			ctx.save();
+			ctx.translate(ox, oy);
+			if (rot) ctx.rotate(rot);
+			ctx.fillStyle = color;
+			ctx.strokeStyle = bord;
+			ctx.lineWidth = s * 0.02;
+			shape.forEach(([dx,dy]) => {
+				ctx.fillRect(dx*cell - cellh, dy*cell - cellh, cellsize, cellsize);
+				ctx.strokeRect(dx*cell - cellh, dy*cell - cellh, cellsize, cellsize);
 			});
+			ctx.restore();
+		}
+
+		// forme classiche (coordinate in celle, origine in alto a sx del pezzo)
+		const I = [[0,0],[1,0],[2,0],[3,0]];
+		const O = [[0,0],[1,0],[0,1],[1,1]];
+		const T = [[0,0],[1,0],[2,0],[1,1]];
+		const S = [[1,0],[2,0],[0,1],[1,1]];
+		const Z = [[0,0],[1,0],[1,1],[2,1]];
+		const L = [[0,0],[0,1],[0,2],[1,2]];
+		const J = [[0,0],[0,1],[0,2],[1,0]];
+
+		drawTetromino(I, '#f00', -s*0.30, -s*0.25,  0.3, '#c00');
+		drawTetromino(J, '#ff0',  s*0.05,  s*0.25, -1.2, '#bb0');
+		drawTetromino(L, '#f0f', -s*0.05,  s*0.15,  1.2, '#b0c');
+		drawTetromino(O, '#06f',  s*0.10, -s*0.32,  0,   '#04b');
+		drawTetromino(S, '#0ff', -s*0.24, -s*0.12,  0.6, '#2bc');
+		drawTetromino(T, '#5f0',  s*0.25, -s*0.08, -3.4, '#3b0');
+		drawTetromino(Z, '#f80',  s*0.20,  s*0.08, -0.2, '#d70');
 		
-		//poli
-		ctx.fillStyle = '#ffffff';
-		ctx.beginPath();
-		ctx.ellipse(s*0.5, s*0.08, s*0.27, s*0.09, 0, 0, Math.PI*2);
-		ctx.fill();
-		ctx.beginPath();
-		ctx.ellipse(s*0.5, s*0.05, s*0.27, s*0.10, 0, 0, Math.PI*2);
-		ctx.fill();		
-		
-		ctx.fillStyle = '#ffffff';
-		ctx.beginPath();
-		ctx.ellipse(s*0.5, s*0.95, s*0.25, s*0.05, 0, 0, Math.PI*2);
-		ctx.fill();
-		ctx.beginPath();
-		ctx.ellipse(s*0.5, s*0.98, s*0.25, s*0.06, 0, 0, Math.PI*2);
-		ctx.fill();
+		ctx.restore();
 
 		
 		//riflesso lucido
@@ -1582,8 +1566,7 @@ function drawPCPACMAN(x, y, tile) {
 		ctx.beginPath();
 		ctx.ellipse(s*0.32, s*0.27, s*0.18, s*0.15, 0, 0, Math.PI*2);
 		ctx.fill();
-				
-		ctx.restore();
+		
 		drawLedAloneCircle(s*0.5, s*0.5, s*0.22, '#44bbff');
 		drawLedAloneCircle(s*0.5, s*0.5, s*0.24, '#44bbff');
 		
@@ -1650,9 +1633,9 @@ function drawPCPACMAN(x, y, tile) {
 				ctx.fill();
 				ctx.stroke();
 				ctx.fillStyle = '#1155aa';
-				const pupilOffset = connected ? (charType % 2 ? Math.sin(flowOffset*0.75) : Math.cos(flowOffset*0.75)) * s * 0.05 : 0;
+				const pupilOffset = connected ? (charType % 2 ? Math.sin(flowOffset*0.75) : Math.cos(flowOffset*0.75)) * s * 0.04 : 0;
 				ctx.beginPath();
-				ctx.arc(ex + pupilOffset, s*0.42, s*0.045, 0, Math.PI*2);
+				ctx.arc(ex + pupilOffset, s*0.44, s*0.055, 0, Math.PI*2);
 				ctx.fill();
 			});
 		} else {
