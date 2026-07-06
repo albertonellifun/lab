@@ -1516,6 +1516,12 @@ function drawPCPACMAN(x, y, tile) {
 		ctx.beginPath();
 		ctx.arc(s*0.5, s*0.5, s*0.5, 0, Math.PI*2);
 		ctx.fill();
+		
+		// tutto quello che segue è "clippato" dentro il cerchio del pianeta
+		ctx.save();
+		ctx.beginPath();
+		ctx.arc(s*0.5, s*0.5, s*0.5, 0, Math.PI*2);
+		ctx.clip();
 
 		//continenti (macchie verdi, no bezier: solo arc + lineTo)
 		ctx.fillStyle = connected ? '#2f9e44' : '#1b3a24';
@@ -1537,14 +1543,48 @@ function drawPCPACMAN(x, y, tile) {
 		ctx.fill();
 		ctx.restore();
 
+		//nuvolette
+		ctx.fillStyle = '#ddd';//'rgba(255,255,255,0.35)';
+		[	
+			[s*0.50,  s*0.25, s*0.12, s*0.05, 0.9],
+			[s*0.95,  s*0.35, s*0.18, s*0.07, 0.8],
+			[s*0.30,  s*0.45, s*0.20, s*0.08, 0.7],
+			[-s*0.15, s*0.55, s*0.10, s*0.05, 0.7],
+			[s*0.75,  s*0.60, s*0.25, s*0.12, 0.7],
+			[s*0.10,  s*0.75, s*0.15, s*0.07, 0.8],
+		]
+			.forEach(([cx,cy,cr,cs,spd]) => {
+				ctx.beginPath();
+				ctx.ellipse((cx+(flowOffset*spd))%(s*1.5)-(s*0.25), cy, cr, cs, 0, 0, Math.PI*2);
+				ctx.fill();
+			});
+		
+		//poli
+		ctx.fillStyle = '#ffffff';
+		ctx.beginPath();
+		ctx.ellipse(s*0.5, s*0.08, s*0.27, s*0.09, 0, 0, Math.PI*2);
+		ctx.fill();
+		ctx.beginPath();
+		ctx.ellipse(s*0.5, s*0.05, s*0.27, s*0.10, 0, 0, Math.PI*2);
+		ctx.fill();		
+		
+		ctx.fillStyle = '#ffffff';
+		ctx.beginPath();
+		ctx.ellipse(s*0.5, s*0.95, s*0.25, s*0.05, 0, 0, Math.PI*2);
+		ctx.fill();
+		ctx.beginPath();
+		ctx.ellipse(s*0.5, s*0.98, s*0.25, s*0.06, 0, 0, Math.PI*2);
+		ctx.fill();
+		
 		//riflesso lucido
 		ctx.fillStyle = 'rgba(255,255,255,0.15)';
 		ctx.beginPath();
 		ctx.arc(s*0.35, s*0.32, s*0.18, 0, Math.PI*2);
 		ctx.fill();
-
-		if (connected) drawLedAloneCircle(s*0.5, s*0.5, s*0.25, '#4ab0f0');
-
+		
+		ctx.restore();
+		drawLedAloneCircle(s*0.5, s*0.5, s*0.25, '#4ab0f0');
+		
 	} else if (type.id) {
 		//sceglie il personaggio in base al nome del device (deterministico, no random per tile)
 		const charType = (type.id.length + x|0 + y|0) % 12; // 0..1=pacman mr+mrs, 2..6=5 fantasmi colorati, 7..11=5 invaders colorati
@@ -1567,33 +1607,40 @@ function drawPCPACMAN(x, y, tile) {
 			ctx.arc(s*0.5, s*0.2, s*0.05, 0, Math.PI*2);
 			ctx.fill();
 		} else if (charType <= 6) {
-			// FANTASMA classico == cupola + 3 "piedini" arrotondati
-			const ghostColors = ['#ff0000','#00ccff','#ff8800','#ffbbdd', '#eeeeee', '#0000ff', '#ff00ff', '#ffff00'];//rosso, ciano, arancio, rosa, bianco, +blu +viola +giallo
+			// FANTASMA classico == cupola + bordo inferiore a onda sinusoidale
+			const ghostColors = ['#ff0000','#00ccff','#ff8800','#ffbbdd', '#eeeeee', '#0000ff', '#ff00ff', '#ffff00'];
 			const gc = connected ? ghostColors[type.id.length%8] : '#666666';
-
 			const gcx = s*0.5;
 			const r = s*0.38;
 			const domeY = s*0.42;
-			const legR = r/3;
-			const bumpY = s*0.88 - legR;
-			
+			const midY = s*0.82;     // linea centrale dell'onda
+			const amp = s*0.06;      // ampiezza dell'onda
+			const numBumps = 4;      // numero di "piedini" (deve essere intero)
+			const steps = 40;		 // definizione alta -> la modalità arcade ha poche robe rispetto alle altre modalità
+
 			ctx.strokeStyle = '#00000022';
 			ctx.lineWidth = s*0.02;
 			ctx.fillStyle = gc;
-			ctx.beginPath();			
+			ctx.beginPath();
 			ctx.arc(gcx, domeY, r, Math.PI, 0, false); // cupola, arriva a (gcx+r, domeY)
-			ctx.lineTo(gcx + r, bumpY);
-			for (let j = 0; j < 3; j++) {
-				const segW = (2*r)/3;
-				const cx2 = (gcx + r) - segW*(j+0.5);
-				ctx.arc(cx2, bumpY, legR, 0, Math.PI, false); // bump verso il basso
+
+			// scende lungo il fianco destro fino al punto BASSO dell'onda
+			ctx.lineTo(gcx + r, midY + amp);
+
+			// onda sinusoidale: parte e finisce nel punto basso
+			for (let i = 0; i <= steps; i++) {
+				const t = i / steps;
+				const x = (gcx + r) - t * (2*r);
+				const y = midY + amp * Math.cos(t * numBumps * Math.PI * 2); // segno + invece di -
+				ctx.lineTo(x, y);
 			}
-			ctx.lineTo(gcx - r, domeY);
+
+			ctx.lineTo(gcx - r, domeY); // risale lungo il fianco sinistro
 			ctx.closePath();
 			ctx.fill();
 			ctx.stroke();
 
-			//occhi ovali bianchi + pupille colorate
+			// occhi ovali bianchi + pupille colorate
 			[s*0.35, s*0.65].forEach(ex => {
 				ctx.fillStyle = '#ffffff';
 				ctx.beginPath();
@@ -1601,7 +1648,7 @@ function drawPCPACMAN(x, y, tile) {
 				ctx.fill();
 				ctx.stroke();
 				ctx.fillStyle = '#1155aa';
-				const pupilOffset = connected ? (charType % 2 ? Math.sin(flowOffset*0.5) : Math.cos(flowOffset*0.5) ) * s * 0.05 : 0;
+				const pupilOffset = connected ? (charType % 2 ? Math.sin(flowOffset*0.75) : Math.cos(flowOffset*0.75)) * s * 0.05 : 0;
 				ctx.beginPath();
 				ctx.arc(ex + pupilOffset, s*0.42, s*0.045, 0, Math.PI*2);
 				ctx.fill();
@@ -6230,14 +6277,16 @@ function drawLedAloneRect(x, y, w, h, color) {
 	ctx.fillRect(x - w*0.25, y - h*0.25, w * 1.5, h * 1.5);//doppio passaggio
 }
 
-function drawLedAloneCircle(x, y, r, color, from = 0, to = Math.PI * 2) {
+function drawLedAloneCircle(x, y, r, color, from = 0, to = Math.PI * 2, ellipseRY) {
     ctx.fillStyle = color + '1a'; // ~10% opacità
     ctx.beginPath();
-    ctx.arc(x, y, r * FAKEBLUR_SIZE, from, to);
+    if(ellipseRY) ctx.ellipse(x, y, r * FAKEBLUR_SIZE, ellipseRY * FAKEBLUR_SIZE, 0, from, to);
+	else ctx.arc(x, y, r * FAKEBLUR_SIZE, from, to);
     ctx.fill();
 	
 	ctx.beginPath();
-    ctx.arc(x, y, r * 1.5, from, to);//doppio passaggio
+    if(ellipseRY) ctx.ellipse(x, y, r * 1.5, ellipseRY * 1.5, 0, from, to);
+	else ctx.arc(x, y, r * 1.5, from, to);//doppio passaggio
     ctx.fill();
 }
 
