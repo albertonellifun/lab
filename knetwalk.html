@@ -1478,12 +1478,6 @@ function drawTilePACMAN(tile) {
 		ctx.fillStyle = '#ffee55';
 		[[N,0,-mid],[E,mid,0],[S,0,mid],[W,-mid,0]].forEach(([bit,dx,dy]) => {
 			if (tile.conns & bit) {
-				/*ctx.beginPath();
-				ctx.arc(dx*0.25, dy*0.25, CELL_SIZE*0.025, 0, Math.PI*2);
-				ctx.fill();
-				ctx.beginPath();
-				ctx.arc(dx*0.75, dy*0.75, CELL_SIZE*0.025, 0, Math.PI*2);
-				ctx.fill();*/
 				ctx.fillRect(dx*0.20-csh, dy*0.20-csh, cs, cs);
 				ctx.fillRect(dx*0.55-csh, dy*0.55-csh, cs, cs);
 				ctx.fillRect(dx*0.85-csh, dy*0.85-csh, cs, cs);
@@ -1496,6 +1490,49 @@ function drawTilePACMAN(tile) {
 
     if(tile.type) drawPCPACMAN(x, y, tile);
 }
+
+
+
+//ad uso e consumo dei pezzi del tetris
+function drawTetromino(shape, color, ox, oy, rot, border, borderWidth, cell, cellh, cellsize){
+	ctx.save();
+	ctx.translate(ox, oy);
+	if (rot) ctx.rotate(rot);
+	ctx.fillStyle = color;
+	ctx.strokeStyle = border;
+	ctx.lineWidth = borderWidth;
+	shape.forEach(([dx,dy]) => {
+		ctx.fillRect(dx*cell - cellh, dy*cell - cellh, cellsize, cellsize);
+		ctx.strokeRect(dx*cell - cellh, dy*cell - cellh, cellsize, cellsize);
+	});
+	ctx.restore();
+}
+
+//pezzi del tetris classici (coordinate in celle, origine in alto a sx del pezzo)
+const tetrisI = {shape: [[0,0],[1,0],[2,0],[3,0]], col: '#f00', bor: '#c00' };
+const tetrisO = {shape: [[0,0],[1,0],[0,1],[1,1]], col: '#ff0', bor: '#bb0' };
+const tetrisT = {shape: [[0,0],[1,0],[2,0],[1,1]], col: '#f0f', bor: '#b0c' };
+const tetrisS = {shape: [[1,0],[2,0],[0,1],[1,1]], col: '#06f', bor: '#04b' };
+const tetrisZ = {shape: [[0,0],[1,0],[1,1],[2,1]], col: '#0ff', bor: '#2bc' };
+const tetrisL = {shape: [[0,0],[0,1],[0,2],[1,2]], col: '#5f0', bor: '#3b0' };
+const tetrisJ = {shape: [[0,0],[0,1],[0,2],[1,0]], col: '#f80', bor: '#d70' };
+
+//INVADERS
+const invGridsX = [
+	[ "000011111000", "000111111100", "001100100110", "001111111110", "000001110000", "000010001000", "000100000100", "000011011000"],//alien1x
+	[ "001000001000", "000100010000", "001111111000", "011011101100", "111111111110", "101111111010", "101000001010", "000110110000"],//alien2x
+	[ "000001100000", "000011110000", "000111111000", "001101101100", "001111111100", "000010010000", "000100001000", "001000000100"],//alien3x
+	[ "000011110000", "011111111110", "111111111111", "111001100111", "111111111111", "000110011000", "001001100100", "000100001000"],//alien4x
+	["0000011111100000","0001111111111000","0011111111111100","0110110110110110","1111111111111111","0011100110011100","0001000000001000"],//ufoSprite1x
+	];
+const invGridsY = [
+	[ "000011111000", "000111111100", "001100100110", "001111111110", "000001110000", "000010001000", "000100000100", "001000000010"],//alien1y
+	[ "001000001000", "100100010010", "101111111010", "011011101100", "111111111110", "001111111000", "001000001000", "010000000100"],//alien2y
+	[ "000001100000", "000011110000", "000111111000", "001101101100", "001111111100", "000010010000", "000100001000", "000010010000"],//alien3y
+	[ "000011110000", "011111111110", "111111111111", "111001100111", "111111111111", "000110011000", "001101101100", "110000000011"],//alien4y
+	["0000011111100000","0001111111111000","0011111111111100","0101101101101110","1111111111111111","0011100110011100","0001000000001000"],//ufoSprite1y
+	];
+
 
 function drawPCPACMAN(x, y, tile) {
 	const isServer = tile.type === 'server';
@@ -1527,39 +1564,17 @@ function drawPCPACMAN(x, y, tile) {
 		const cell = s*0.09;
 		const cellh = cell*0.5;
 		const cellsize = cell*0.94;
-		function drawTetromino(shape, color, ox, oy, rot, bord){
-			ctx.save();
-			ctx.translate(ox, oy);
-			if (rot) ctx.rotate(rot);
-			ctx.fillStyle = color;
-			ctx.strokeStyle = bord;
-			ctx.lineWidth = s * 0.02;
-			shape.forEach(([dx,dy]) => {
-				ctx.fillRect(dx*cell - cellh, dy*cell - cellh, cellsize, cellsize);
-				ctx.strokeRect(dx*cell - cellh, dy*cell - cellh, cellsize, cellsize);
-			});
-			ctx.restore();
-		}
-
-		// forme classiche (coordinate in celle, origine in alto a sx del pezzo)
-		const I = [[0,0],[1,0],[2,0],[3,0]];
-		const O = [[0,0],[1,0],[0,1],[1,1]];
-		const T = [[0,0],[1,0],[2,0],[1,1]];
-		const S = [[1,0],[2,0],[0,1],[1,1]];
-		const Z = [[0,0],[1,0],[1,1],[2,1]];
-		const L = [[0,0],[0,1],[0,2],[1,2]];
-		const J = [[0,0],[0,1],[0,2],[1,0]];
-
-		drawTetromino(I, '#f00', -s*0.30, -s*0.25,  0.3, '#c00');
-		drawTetromino(J, '#ff0',  s*0.05,  s*0.25, -1.2, '#bb0');
-		drawTetromino(L, '#f0f', -s*0.05,  s*0.15,  1.2, '#b0c');
-		drawTetromino(O, '#06f',  s*0.10, -s*0.32,  0,   '#04b');
-		drawTetromino(S, '#0ff', -s*0.24, -s*0.12,  0.6, '#2bc');
-		drawTetromino(T, '#5f0',  s*0.25, -s*0.08, -3.4, '#3b0');
-		drawTetromino(Z, '#f80',  s*0.20,  s*0.08, -0.2, '#d70');
+		const borderWidth = s*0.02;
+		
+		drawTetromino(tetrisI.shape, tetrisI.col, -s*0.30, -s*0.25,  0.3, tetrisI.bor, borderWidth, cell, cellh, cellsize);
+		drawTetromino(tetrisJ.shape, tetrisJ.col,  s*0.05,  s*0.25, -1.2, tetrisJ.bor, borderWidth, cell, cellh, cellsize);
+		drawTetromino(tetrisL.shape, tetrisL.col, -s*0.05,  s*0.15,  1.2, tetrisL.bor, borderWidth, cell, cellh, cellsize);
+		drawTetromino(tetrisO.shape, tetrisO.col,  s*0.10, -s*0.35,  0.0, tetrisO.bor, borderWidth, cell, cellh, cellsize);
+		drawTetromino(tetrisS.shape, tetrisS.col, -s*0.24, -s*0.12,  0.6, tetrisS.bor, borderWidth, cell, cellh, cellsize);
+		drawTetromino(tetrisT.shape, tetrisT.col,  s*0.25, -s*0.08, -3.4, tetrisT.bor, borderWidth, cell, cellh, cellsize);
+		drawTetromino(tetrisZ.shape, tetrisZ.col,  s*0.20,  s*0.08, -0.2, tetrisZ.bor, borderWidth, cell, cellh, cellsize);
 		
 		ctx.restore();
-
 		
 		//riflesso lucido
 		ctx.fillStyle = 'rgba(255,255,255,0.1)';
@@ -1572,8 +1587,10 @@ function drawPCPACMAN(x, y, tile) {
 		
 	} else if (type.id) {
 		//sceglie il personaggio in base al nome del device (deterministico, no random per tile)
-		const charType = (type.id.length + x|0 + y|0) % 12; // 0..1=pacman mr+mrs, 2..6=5 fantasmi colorati, 7..11=5 invaders colorati
+		//const charType = (type.id.length + x|0 + y|0) % 14; // 0..1=pacman mr+mrs, 2..6=5 fantasmi colorati, 7..11=5 invaders colorati, 12=qbert, 13=snake
+		const charType = ((type.id.length * 7 + type.id.charCodeAt(0)) % 14);// 0..1=pacman mr+mrs, 2..6=5 fantasmi colorati, 7..11=5 invaders colorati, 12=qbert, 13=snake
 
+		//todo: add qbert + asteroids + mario + luigi + snake
 		if (charType <= 1) {
 			// PAC-MAN — apre/chiude la bocca sempre quando connesso
 			const mouthAngle = !connected ? 0.05 : 0.2 * Math.abs ( charType === 1 ? Math.sin(flowOffset*0.5) : Math.cos(flowOffset*0.5) );
@@ -1638,38 +1655,160 @@ function drawPCPACMAN(x, y, tile) {
 				ctx.arc(ex + pupilOffset, s*0.44, s*0.055, 0, Math.PI*2);
 				ctx.fill();
 			});
+		} else if (charType == 12) {
+			// Q*BERT == corpo sferico arancione + occhi grandi + gambe corte
+			
+			const gc = connected ? '#f80' : '#666';
+			const gcx = s * 0.5;
+			const bodyY = s * 0.45;
+			const bodyR = s * 0.40;
+			const gcDark = connected ? '#f08000' : '#606060';
+			
+			// 2 gambe corte rettangolari con ellisse = piede
+			const legWidth = s * 0.06;
+			const legHeight = s * 0.25;
+			const legGap = s * 0.15;
+			const legBaseY = bodyY + bodyR * 0.75;
+			
+			ctx.fillStyle = gcDark;
+			[-1, 1].forEach(side => {
+				const baseX = gcx + side * legGap;
+				// gamba superiore
+				ctx.fillRect(baseX - legWidth * 0.5, legBaseY, legWidth, legHeight);
+				// piede
+				ctx.beginPath();
+				ctx.ellipse(baseX + side * s * 0.075, legBaseY + legHeight, s * 0.15, s*0.05, side * 0.5, 0, Math.PI * 2);
+				ctx.fill();
+			});
+			
+			// corpo principale (sfera)
+			ctx.fillStyle = gc;
+			ctx.beginPath();
+			ctx.ellipse(gcx, bodyY, bodyR*0.9, bodyR, 0, 0, Math.PI * 2);
+			ctx.fill();
+			ctx.strokeStyle = gcDark;
+			ctx.lineWidth = s * 0.02;
+			ctx.stroke();
+			
+			// occhi grandi bianchi
+			[s * 0.38, s * 0.62].forEach(ex => {
+				ctx.fillStyle = '#fff';
+				ctx.beginPath();
+				ctx.ellipse(ex, s * 0.38, s*0.1, s * 0.14, 0, 0, Math.PI * 2);
+				ctx.fill();
+				ctx.stroke();
+				
+				// pupille colorate (nere, con movimento)
+				ctx.fillStyle = '#111';
+				const pupilOffset = connected ? (type.id.length % 2 ? Math.sin(flowOffset * 0.75) : Math.cos(flowOffset * 0.75)) * s * 0.04 : 0;
+				ctx.beginPath();
+				ctx.arc(ex + pupilOffset, s * 0.40, s * 0.06, 0, Math.PI * 2);
+				ctx.fill();
+			});
+			
+			// naso a proboscide
+			ctx.fillStyle = gc;
+			ctx.strokeStyle = gcDark;
+			
+			for(let i=0;i<5;i++) {
+				ctx.beginPath();
+				ctx.arc(gcx - s*i*0.02, s * 0.60 + s*i*i*0.01, s * 0.1 + s*i*0.01, 0, Math.PI * 2);
+				ctx.fill();
+				ctx.stroke();
+			}
+			ctx.fillStyle = '#00000022';
+			ctx.beginPath();
+			ctx.arc(gcx - s*4*0.02, s * 0.62 + s*4*4*0.01, s * 0.08, 0, Math.PI * 2);
+			ctx.fill();
+		} else if(charType === 13) {
+			// SERPENTE (Snake) == testa sferica + occhi grandi + lingua rossa
+			const cx = s*0.5;
+			const cy = s*0.5;
+			//testa
+			ctx.fillStyle = connected ? '#00ff66' : '#666666';
+			ctx.beginPath();
+			ctx.arc(cx, cy, s*0.4, 0, Math.PI * 2);
+			ctx.fill();
+		  
+			//occhi
+			const eyeOffset = s * 0.35;
+			const eyeSize = s * 0.25;
+			let ex1, ey1, ex2, ey2;
+			ex1 = cx - eyeOffset * 0.5;
+			ey1 = cy - eyeOffset;
+			ex2 = cx + eyeOffset * 0.5;
+			ey2 = cy - eyeOffset;
+			
+			//occhio dentro+bordo
+			ctx.fillStyle = '#fff';
+			ctx.beginPath(); ctx.arc(ex1, ey1, eyeSize, 0, Math.PI * 2); ctx.fill();
+			ctx.beginPath(); ctx.arc(ex2, ey2, eyeSize, 0, Math.PI * 2); ctx.fill();
+
+			//pupille
+			ctx.strokeStyle = '#000';
+			ctx.lineCap = "round"; // bordi arrotondati
+			ctx.lineWidth = eyeSize * 0.3; // spessore = diametro della pupilla
+			
+			ctx.beginPath();
+			ctx.moveTo(ex1, ey1 - eyeSize / 3);
+			ctx.lineTo(ex1, ey1 + eyeSize / 3);
+			ctx.stroke();
+			  
+			ctx.beginPath();
+			ctx.moveTo(ex2, ey2 - eyeSize / 3);
+			ctx.lineTo(ex2, ey2 + eyeSize / 3);
+			ctx.stroke();
+			
+			//palpebre - movimento indipendente
+			ctx.fillStyle = connected ? '#00cc44' : '#888888';
+			
+			let senoSx = connected ? Math.sin(flowOffset*0.3) : 0;
+			let deltaSx = Math.abs(senoSx * 0.5);
+			let deltaDownSx = Math.max(0.75, Math.abs(senoSx * 1.5));
+			
+			let senoDx = connected ? Math.sin(flowOffset*0.29) : 0;
+			let deltaDx = Math.abs(senoDx * 0.5);
+			let deltaDownDx = Math.max(0.75, Math.abs(senoDx * 1.5));
+			//sx sopra
+			ctx.beginPath();
+			ctx.arc(ex1, ey1, eyeSize, Math.PI+deltaSx, Math.PI*2-deltaSx);
+			ctx.fill();
+			//dx sopra
+			ctx.beginPath();
+			ctx.arc(ex2, ey2, eyeSize, Math.PI+deltaDx, Math.PI*2-deltaDx);
+			ctx.fill();
+			//sx sotto
+			ctx.beginPath();
+			ctx.arc(ex1, ey1, eyeSize, deltaDownSx, Math.PI-deltaDownSx);
+			ctx.fill();
+			//dx sotto
+			ctx.beginPath();
+			ctx.arc(ex2, ey2, eyeSize, deltaDownDx, Math.PI-deltaDownDx);
+			ctx.fill();
+			
+			//linguetta biforcuta + narici
+			let modulo = connected ? (flowOffset|0) % 3 : 2;
+			let divisore = (modulo === 0 ? 24 : modulo === 1 ? 8 : 48)
+			const tongueLength =  s / divisore;
+			const noseWidth = s  * 0.1;
+			const noseHeight = s * 0.06;
+			
+			ctx.strokeStyle = connected ? '#ff0000' : '#999999';
+			ctx.lineWidth = s*0.04;
+			ctx.beginPath();
+			
+			ctx.moveTo(cx, cy + s * 0.42);
+			ctx.lineTo(cx, cy + tongueLength + s * 0.5);
+			ctx.lineTo(cx - s * 0.06, cy + tongueLength + s * 0.55);
+			ctx.moveTo(cx, cy + tongueLength + s * 0.5);
+			ctx.lineTo(cx + s * 0.06, cy + tongueLength + s * 0.55);
+			ctx.stroke();
+			
+			//naso
+			ctx.fillRect(ex1 - noseWidth * 0.5, ey1 + eyeSize * 2 - tongueLength * 0.1, noseWidth, noseHeight);
+			ctx.fillRect(ex2 - noseWidth * 0.5, ey2 + eyeSize * 2 - tongueLength * 0.1, noseWidth, noseHeight);
 		} else {
 			// SPACE INVADERS — 5 alieni diversi, pixel grid, no bezier
-			let invGridsX = [];
-			let invGridsY = [];
-			
-			const alien1x = [ "000011111000", "000111111100", "001100100110", "001111111110", "000001110000", "000010001000", "000100000100", "000011011000"];
-			const alien1y = [ "000011111000", "000111111100", "001100100110", "001111111110", "000001110000", "000010001000", "000100000100", "001000000010"];
-
-			const alien2x = [ "001000001000", "000100010000", "001111111000", "011011101100", "111111111110", "101111111010", "101000001010", "000110110000"];
-			const alien2y = [ "001000001000", "100100010010", "101111111010", "011011101100", "111111111110", "001111111000", "001000001000", "010000000100"];
-			
-			const alien3x = [ "000001100000", "000011110000", "000111111000", "001101101100", "001111111100", "000010010000", "000100001000", "001000000100"];
-			const alien3y = [ "000001100000", "000011110000", "000111111000", "001101101100", "001111111100", "000010010000", "000100001000", "000010010000"];
-
-			const alien4x = [ "000011110000", "011111111110", "111111111111", "111001100111", "111111111111", "000110011000", "001001100100", "000100001000"];
-			const alien4y = [ "000011110000", "011111111110", "111111111111", "111001100111", "111111111111", "000110011000", "001101101100", "110000000011"];
-			
-			const ufoSprite1x = ["0000011111100000","0001111111111000","0011111111111100","0110110110110110","1111111111111111","0011100110011100","0001000000001000"];
-			const ufoSprite1y = ["0000011111100000","0001111111111000","0011111111111100","0101101101101110","1111111111111111","0011100110011100","0001000000001000"];
-			
-			invGridsX.push(alien1x);
-			invGridsX.push(alien2x);
-			invGridsX.push(alien3x);
-			invGridsX.push(alien4x);
-			invGridsX.push(ufoSprite1x);
-			
-			invGridsY.push(alien1y);
-			invGridsY.push(alien2y);
-			invGridsY.push(alien3y);
-			invGridsY.push(alien4y);
-			invGridsY.push(ufoSprite1y);
-			
 			const shape = connected && Math.sin(flowOffset*0.5) > 0 ? invGridsY[charType - 7] : invGridsX[charType - 7];
 			const cols = shape[0].length;
 			const rows = shape.length;
