@@ -1393,16 +1393,6 @@ function drawTileWATER(tile) {
         ctx.lineWidth = pipeW * 0.5;
         ctx.lineCap = 'round';//gocce rotonde
         ctx.setLineDash([pipeW * 0.2, pipeW * 1.2]);
-
-		/*
-		ctx.lineDashOffset = -flowOffset * 4; // negativo = scorre verso l'esterno del tubo
-		dirs.forEach(([tx, ty]) => {
-			ctx.beginPath();
-			ctx.moveTo(0, 0);
-			ctx.lineTo(tx, ty);
-			ctx.stroke();
-		});
-		*/
 		
         dirs.forEach(([tx, ty, px, py, bit]) => {
             // se questo stub è quello da cui arriva l'acqua (parentDir), il flusso
@@ -1445,24 +1435,26 @@ function drawTilePACMAN(tile) {
     ctx.lineWidth = CELL_SIZE * 0.08;
     ctx.lineCap = "butt";
 
-    if(tile.connected) {
-        ctx.shadowBlur = 20;
-		ctx.shadowColor = cableColor;
-    } else {
-        ctx.shadowBlur = 0;
-    }
-
-	//fix round / butt con una palla al centro della tile
-	ctx.beginPath();
-	ctx.arc(x+mid, y+mid, CELL_SIZE * 0.04, 0, Math.PI*2);
-	ctx.fillStyle = cableColor;
-	ctx.fill();
-
+	
 	//rotazione link
 	ctx.save();
     ctx.translate(x + mid, y + mid);
 	let angle = tile.rotation - tile.currentRotation;
 	ctx.rotate(angle);
+	
+	if(tile.connected) {
+        ctx.shadowBlur = 20;
+		ctx.shadowColor = cableColor;
+    } else {
+        ctx.shadowBlur = 0;
+    }
+	
+	//fix round / butt con una palla al centro della tile
+	ctx.fillStyle = cableColor;
+	ctx.beginPath();
+	ctx.arc(0, 0, CELL_SIZE * 0.04, 0, Math.PI*2);
+	ctx.fill();
+	
 
     ctx.beginPath();
 	if (tile.conns & N) { ctx.moveTo(0, 0); ctx.lineTo(0, -mid); }
@@ -1470,7 +1462,9 @@ function drawTilePACMAN(tile) {
     if (tile.conns & S) { ctx.moveTo(0, 0); ctx.lineTo(0, mid);  }
     if (tile.conns & W) { ctx.moveTo(0, 0); ctx.lineTo(-mid, 0); }
 	ctx.stroke();
-
+	
+	ctx.shadowBlur = 0;
+	
 	//pallini stile "biscottini" pacman a meta di ogni cavo connesso
 	if (tile.connected) {
 		let cs = CELL_SIZE*0.035;
@@ -1484,9 +1478,9 @@ function drawTilePACMAN(tile) {
 			}
 		});
 	}
-
+	
 	ctx.restore();
-    ctx.shadowBlur = 0;
+    
 
     if(tile.type) drawPCPACMAN(x, y, tile);
 }
@@ -2078,7 +2072,13 @@ function drawTileOLD(tile) {
     ctx.lineWidth = CELL_SIZE * 0.08;
     ctx.lineCap = "butt";//"round";
     
-    // Effetto bagliore se connesso
+	//rotazione link
+	ctx.save(); 
+    ctx.translate(x + mid, y + mid);
+	let angle = tile.rotation - tile.currentRotation;
+	ctx.rotate(angle);
+	
+	// Effetto bagliore se connesso
     if(tile.connected) {
         ctx.shadowBlur = 20;
 		ctx.shadowColor = cableColor;
@@ -2086,19 +2086,11 @@ function drawTileOLD(tile) {
         ctx.shadowBlur = 0;
     }
 	
-
 	//fix round / butt con una palla al centro della tile
 	ctx.beginPath();
-	ctx.arc(x+mid, y+mid, CELL_SIZE * 0.04, 0, Math.PI*2);
+	ctx.arc(0, 0, CELL_SIZE * 0.04, 0, Math.PI*2);
 	ctx.fillStyle = cableColor;
 	ctx.fill();
-	
-	//rotazione link
-	ctx.save(); 
-    ctx.translate(x + mid, y + mid);
-	let angle = tile.rotation - tile.currentRotation;
-	ctx.rotate(angle);
-	
 	
     ctx.beginPath();
     
@@ -2109,10 +2101,10 @@ function drawTileOLD(tile) {
     
 	ctx.stroke();
 	
+	ctx.shadowBlur = 0;
+	
 	ctx.restore();
     
-    ctx.shadowBlur = 0;
-	
 	// Disegna icone
     if(tile.type) drawPC(x, y, tile);
 }
