@@ -189,57 +189,57 @@ const statusDiv = document.getElementById('status');
 const N = 1, E = 2, S = 4, W = 8;
 
 const HW_TYPES = [ 
-	{id:'notebook',			variant:'notebook',       group:'modern',  desc:'Generic Notebook'},
-	{id:'desktop',			variant:'desktop',        group:'modern',  desc:'Monitor + MiniPC all-in-one'},
-	{id:'minipc',			variant:'minipc',         group:'modern',  desc:'Morefine MiniPC N100'},
-	{id:'imacmini',			variant:'imacmini',       group:'modern',  desc:'iMac Mini M4 from 2026'},
-	{id:'tablet',			variant:'tablet',         group:'modern',  desc:'Generic Tablet'},
-	{id:'baraccone',		variant:'baraccone',      group:'classic', desc:'An old clunker from 90s'},
-	{id:'dx40',				variant:'dx40',     	  group:'classic', desc:'A clunky Intel 386DX-40 machine from 1990'},
-	{id:'pentium75',		variant:'pentium75',   	  group:'classic', desc:'A clunky Intel Pentium-75 machine from 1996'},
-	{id:'pentium2',		    variant:'pentium2',   	  group:'classic', desc:'A clunky Intel Pentium2-300 machine from 2000'},
-	{id:'router',			variant:'router',         group:'modern',  desc:'Router Wi-Fi TpLink'},
-	{id:'ipcamera',			variant:'ipcamera',       group:'modern',  desc:'IP Camera TpLink'},
-	{id:'macintosh',		variant:'macintosh',      group:'vintage', desc:'Macintosh 128K from 1984'},
-	{id:'imac',				variant:'imac',           group:'modern',  desc:'iMac G4 from 2002'},
-	{id:'gameboy',			variant:'gameboy',        group:'classic', desc:'GameBoy White classic from 1989'},
-	{id:'nintendoswitch',	variant:'nintendoswitch', group:'modern',  desc:'Nintendo Switch from 2017'},
-	{id:'hplaserjet',		variant:'hplaserjet',     group:'modern',  desc:'HP LaserJet 107w'},
-	{id:'atari2600',		variant:'atari2600',      group:'vintage', desc:'Atari 2600 from 1977'},
-	{id:'hantarex',			variant:'hantarex',       group:'vintage', desc:'Apple ][ Compatibile from 1983'},
-	{id:'radio',			variant:'radio',          group:'modern',  desc:'AliExpress Vintage Radio R919'},
-	{id:'nesthub',			variant:'nesthub',        group:'modern',  desc:'Google NestHub from 2018'},
-	{id:'yamahathr',		variant:'yamahathr',      group:'modern',  desc:'Ampli Yamaha THR5-V2'},
-	{id:'ps7000',			variant:'ps7000',         group:'modern',  desc:'AliExpress PS7000 from 2023'},
-	{id:'ps4',				variant:'ps4',      	  group:'modern',  desc:'Sony PS4 Black from 2014'},
-	{id:'imacg3',			variant:'imacg3',         group:'classic', desc:'iMac G3 Blueberry Cyan from 1998'},
-	{id:'imacintel',		variant:'imacintel',      group:'modern',  desc:'iMac Intel from 2020'},
-	{id:'starlc10',         variant:'starlc10',       group:'vintage', desc:'Star Lc-10 Multifont from 1988'},
-	{id:'c64',				variant:'c64',            group:'vintage', desc:'Commodore C-64 from 1984'},
-	{id:'raspberrypi',		variant:'raspberrypi',    group:'modern',  desc:'Raspberry Pi 4 Model B from 2020'},
-	{id:'zxspectrum',		variant:'zxspectrum',	  group:'vintage', desc:'Sinclair ZX Spectrum from 1983'},
-	{id:'banfi',            variant:'banfi',          group:'vintage', desc:'Le più sofisticate elaborazioni della cibernetica'},	
-	{id:'sip70',            variant:'sip70',          group:'vintage', desc:'Il dottor Tomas non è in sede!'},
-	{id:'sip2123',          variant:'sip2123',        group:'vintage', desc:'Sip ARE VT2123 modem from 1980'},	
-	{id:'apple1',           variant:'apple1',         group:'vintage', desc:'Apple I Computer kit from 1976'},
-	{id:'ibmpc',            variant:'ibmpc',          group:'vintage', desc:'IBM Personal Computer from 1984'},
-	{id:'commodorecbm',     variant:'commodorecbm',   group:'vintage', desc:'Commodore CBM/PET 3008 from 1980'},
+	{n:0 , id:'notebook',			variant:'notebook',       group:'modern',  desc:'Generic Notebook'},
+	{n:1 , id:'desktop',			variant:'desktop',        group:'modern',  desc:'Monitor + MiniPC all-in-one'},
+	{n:2 , id:'minipc',			variant:'minipc',         group:'modern',  desc:'Morefine MiniPC N100'},
+	{n:3 , id:'imacmini',			variant:'imacmini',       group:'modern',  desc:'iMac Mini M4 from 2026'},
+	{n:4 , id:'tablet',			variant:'tablet',         group:'modern',  desc:'Generic Tablet'},
+	{n:5 , id:'baraccone',		variant:'baraccone',      group:'classic', desc:'An old clunker from 90s'},
+	{n:6 , id:'dx40',				variant:'dx40',     	  group:'classic', desc:'A clunky Intel 386DX-40 machine from 1990'},
+	{n:7 , id:'pentium75',		variant:'pentium75',   	  group:'classic', desc:'A clunky Intel Pentium-75 machine from 1996'},
+	{n:8 , id:'pentium2',		    variant:'pentium2',   	  group:'classic', desc:'A clunky Intel Pentium2-300 machine from 2000'},
+	{n:9 , id:'router',			variant:'router',         group:'modern',  desc:'Router Wi-Fi TpLink'},
+	{n:10 , id:'ipcamera',			variant:'ipcamera',       group:'modern',  desc:'IP Camera TpLink'},
+	{n:11 , id:'macintosh',		variant:'macintosh',      group:'vintage', desc:'Macintosh 128K from 1984'},
+	{n:12 , id:'imac',				variant:'imac',           group:'modern',  desc:'iMac G4 from 2002'},
+	{n:13 , id:'gameboy',			variant:'gameboy',        group:'classic', desc:'GameBoy White classic from 1989'},
+	{n:14 , id:'nintendoswitch',	variant:'nintendoswitch', group:'modern',  desc:'Nintendo Switch from 2017'},
+	{n:15 , id:'hplaserjet',		variant:'hplaserjet',     group:'modern',  desc:'HP LaserJet 107w'},
+	{n:16 , id:'atari2600',		variant:'atari2600',      group:'vintage', desc:'Atari 2600 from 1977'},
+	{n:17 , id:'hantarex',			variant:'hantarex',       group:'vintage', desc:'Apple ][ Compatibile from 1983'},
+	{n:18 , id:'radio',			variant:'radio',          group:'modern',  desc:'AliExpress Vintage Radio R919'},
+	{n:19 , id:'nesthub',			variant:'nesthub',        group:'modern',  desc:'Google NestHub from 2018'},
+	{n:20 , id:'yamahathr',		variant:'yamahathr',      group:'modern',  desc:'Ampli Yamaha THR5-V2'},
+	{n:21 , id:'ps7000',			variant:'ps7000',         group:'modern',  desc:'AliExpress PS7000 from 2023'},
+	{n:22 , id:'ps4',				variant:'ps4',      	  group:'modern',  desc:'Sony PS4 Black from 2014'},
+	{n:23 , id:'imacg3',			variant:'imacg3',         group:'classic', desc:'iMac G3 Blueberry Cyan from 1998'},
+	{n:24 , id:'imacintel',		variant:'imacintel',      group:'modern',  desc:'iMac Intel from 2020'},
+	{n:25 , id:'starlc10',         variant:'starlc10',       group:'vintage', desc:'Star Lc-10 Multifont from 1988'},
+	{n:26 , id:'c64',				variant:'c64',            group:'vintage', desc:'Commodore C-64 from 1984'},
+	{n:27 , id:'raspberrypi',		variant:'raspberrypi',    group:'modern',  desc:'Raspberry Pi 4 Model B from 2020'},
+	{n:28 , id:'zxspectrum',		variant:'zxspectrum',	  group:'vintage', desc:'Sinclair ZX Spectrum from 1983'},
+	{n:29 , id:'banfi',            variant:'banfi',          group:'vintage', desc:'Le più sofisticate elaborazioni della cibernetica'},	
+	{n:30 , id:'sip70',            variant:'sip70',          group:'vintage', desc:'Il dottor Tomas non è in sede!'},
+	{n:31 , id:'sip2123',          variant:'sip2123',        group:'vintage', desc:'Sip ARE VT2123 modem from 1980'},	
+	{n:32 , id:'apple1',           variant:'apple1',         group:'vintage', desc:'Apple I Computer kit from 1976'},
+	{n:33 , id:'ibmpc',            variant:'ibmpc',          group:'vintage', desc:'IBM Personal Computer from 1984'},
+	{n:34 , id:'commodorecbm',     variant:'commodorecbm',   group:'vintage', desc:'Commodore CBM/PET 3008 from 1980'},
 	//color variants
-	{id:'notebook',			variant:'notebookwhite',  group:'modern',  desc:'Generic White Notebook'},
-	{id:'router',			variant:'routerwhite',    group:'modern',  desc:'Router Wi-Fi TpLink White'},
-	{id:'ipcamera',			variant:'ipcamerablack',  group:'modern',  desc:'IP Camera TpLink Black'},
-	{id:'gameboy',			variant:'gameboyred',     group:'classic', desc:'GameBoy Red classic from 1990'},
-	{id:'gameboy',			variant:'gameboyblue',    group:'classic', desc:'GameBoy Blue classic from 1990'},
-	{id:'hplaserjet',		variant:'hplaserjetblack',group:'modern',  desc:'HP LaserJet 107w Black'},
-	{id:'radio',			variant:'radiodark',      group:'modern',  desc:'AliExpress Vintage Radio R919'},
-	{id:'nesthub',			variant:'nesthubgray',    group:'modern',  desc:'Google NestHub Charcoal Gray from 2021'},
-	{id:'yamahathr',		variant:'yamahathrgreen', group:'modern',  desc:'Ampli Yamaha THR10X'},
-	{id:'ps4',				variant:'ps4white',       group:'modern',  desc:'Sony PS4 White from 2014'},
-	{id:'imacg3',			variant:'imacg3orange',   group:'classic', desc:'iMac G3 Tangerine Orange from 1999'},
-	{id:'imacg3',			variant:'imacg3red',      group:'classic', desc:'iMac G3 Strawberry Red from 1999'},
-	{id:'imacg3',			variant:'imacg3green',    group:'classic', desc:'iMac G3 Lime Green from 1999'},
-	{id:'imacg3',			variant:'imacg3gray',     group:'classic', desc:'iMac G3 Graphite Gray from 2000'},
-	{id:'imacg3',			variant:'imacg3blue',     group:'classic', desc:'iMac G3 Indigo Blue from 2000'},
+	{n:35 , id:'notebook',			variant:'notebookwhite',  group:'modern',  desc:'Generic White Notebook'},
+	{n:36 , id:'router',			variant:'routerwhite',    group:'modern',  desc:'Router Wi-Fi TpLink White'},
+	{n:37 , id:'ipcamera',			variant:'ipcamerablack',  group:'modern',  desc:'IP Camera TpLink Black'},
+	{n:38 , id:'gameboy',			variant:'gameboyred',     group:'classic', desc:'GameBoy Red classic from 1990'},
+	{n:39 , id:'gameboy',			variant:'gameboyblue',    group:'classic', desc:'GameBoy Blue classic from 1990'},
+	{n:40 , id:'hplaserjet',		variant:'hplaserjetblack',group:'modern',  desc:'HP LaserJet 107w Black'},
+	{n:41 , id:'radio',			variant:'radiodark',      group:'modern',  desc:'AliExpress Vintage Radio R919'},
+	{n:42 , id:'nesthub',			variant:'nesthubgray',    group:'modern',  desc:'Google NestHub Charcoal Gray from 2021'},
+	{n:43 , id:'yamahathr',		variant:'yamahathrgreen', group:'modern',  desc:'Ampli Yamaha THR10X'},
+	{n:44 , id:'ps4',				variant:'ps4white',       group:'modern',  desc:'Sony PS4 White from 2014'},
+	{n:45 , id:'imacg3',			variant:'imacg3orange',   group:'classic', desc:'iMac G3 Tangerine Orange from 1999'},
+	{n:46 , id:'imacg3',			variant:'imacg3red',      group:'classic', desc:'iMac G3 Strawberry Red from 1999'},
+	{n:47 , id:'imacg3',			variant:'imacg3green',    group:'classic', desc:'iMac G3 Lime Green from 1999'},
+	{n:48 , id:'imacg3',			variant:'imacg3gray',     group:'classic', desc:'iMac G3 Graphite Gray from 2000'},
+	{n:49 , id:'imacg3',			variant:'imacg3blue',     group:'classic', desc:'iMac G3 Indigo Blue from 2000'},
 	];
 
 
@@ -1587,14 +1587,13 @@ function drawPCPACMAN(x, y, tile) {
 		
 	} else if (type.id) {
 		//sceglie il personaggio in base al nome del device (deterministico, no random per tile)
-		//const charType = (type.id.length + x|0 + y|0) % 14; // 0..1=pacman mr+mrs, 2..6=5 fantasmi colorati, 7..11=5 invaders colorati, 12=qbert, 13=snake
-		const charType = ((type.id.length * 7 + type.id.charCodeAt(0)) % 14);// 0..1=pacman mr+mrs, 2..6=5 fantasmi colorati, 7..11=5 invaders colorati, 12=qbert, 13=snake
+		const charType = type.n % 25;// 2 pacman mr+mrs, 9 fantasmi colorati, 8 invaders colorati, 2 qbert, 2 snake, 1 asteroid, 1 lander
 
-		//todo: add qbert + asteroids + mario + luigi + snake
-		if (charType <= 1) {
+		//todo: add asteroids + mario + luigi
+		if (charType === 0 || charType === 1) {
 			// PAC-MAN — apre/chiude la bocca sempre quando connesso
 			const mouthAngle = !connected ? 0.05 : 0.2 * Math.abs ( charType === 1 ? Math.sin(flowOffset*0.5) : Math.cos(flowOffset*0.5) );
-			ctx.fillStyle = !connected ? '#666' : (charType === 1 ? '#fac' : '#ff0');//grigione : mrs/mr pacman
+			ctx.fillStyle = !connected ? '#666' : (charType === 1 ? '#f50' : '#ff0');//grigione : mrs/mr pacman
 			ctx.strokeStyle = '#00000022';
 			ctx.lineWidth = s*0.02;
 			ctx.beginPath();
@@ -1608,10 +1607,10 @@ function drawPCPACMAN(x, y, tile) {
 			ctx.beginPath();
 			ctx.arc(s*0.5, s*0.2, s*0.05, 0, Math.PI*2);
 			ctx.fill();
-		} else if (charType <= 6) {
+		} else if (charType >= 2 && charType < 11) {
 			// FANTASMA classico == cupola + bordo inferiore a onda sinusoidale
-			const ghostColors = ['#ff0000','#00ccff','#ff8800','#ffbbdd', '#eeeeee', '#0000ff', '#ff00ff', '#ffff00'];
-			const gc = connected ? ghostColors[type.id.length%8] : '#666666';
+			const ghostColors = ['#ff0000','#00ccff','#ff8800','#ffbbdd', '#0000ff', '#ff00ff', '#ffff00', '#00ff00', '#eeeeee'];//red,ciano,arancio,rosa,blu,viola,giallo,verde,bianco
+			const gc = connected ? ghostColors[(type.n * 7) % ghostColors.length] : '#666';
 			const gcx = s*0.5;
 			const r = s*0.38;
 			const domeY = s*0.42;
@@ -1655,14 +1654,32 @@ function drawPCPACMAN(x, y, tile) {
 				ctx.arc(ex + pupilOffset, s*0.44, s*0.055, 0, Math.PI*2);
 				ctx.fill();
 			});
-		} else if (charType == 12) {
-			// Q*BERT == corpo sferico arancione + occhi grandi + gambe corte
+		} else if (charType >= 11 && charType < 19) {
+			// SPACE INVADERS — 5 alieni diversi, pixel grid, no bezier
+			const shape = connected && Math.sin(flowOffset*0.5) > 0 ? invGridsY[charType%5] : invGridsX[charType%5];
+			const cols = shape[0].length;
+			const rows = shape.length;
+			const px = s / cols;
+			const gridH = rows * px;
+			const offY = (s - gridH) * 0.5;
 			
-			const gc = connected ? '#f80' : '#666';
+			const invColors = ['#ff0000','#00ccff','#ff8800', '#0000ff', '#ff00ff', '#ffff00', '#00ff00', '#eeeeee'];//red,ciano,arancio,blu,viola,giallo,verde,bianco
+			ctx.fillStyle = connected ? invColors[(type.n * 7) % invColors.length] : '#666';
+			for (let ry=0; ry<rows; ry++) {
+				for (let rx=0; rx<cols; rx++) {
+					if (shape[ry][rx] === '1') {
+						ctx.fillRect(rx*px, offY + ry*px, px*1.05, px*1.05);
+					}
+				}
+			}
+		}
+		else if (charType === 19 || charType === 20) {
+			// Q*BERT == corpo sferico arancione + occhi grandi + gambe corte
+			const gc = connected ? (charType % 2 ? '#f80' : '#f0f') : '#666';
 			const gcx = s * 0.5;
 			const bodyY = s * 0.45;
 			const bodyR = s * 0.40;
-			const gcDark = connected ? '#f08000' : '#606060';
+			const gcDark = connected ? (charType % 2 ? '#f08000' : '#e000e0') : '#606060';
 			
 			// 2 gambe corte rettangolari con ellisse = piede
 			const legWidth = s * 0.06;
@@ -1720,12 +1737,12 @@ function drawPCPACMAN(x, y, tile) {
 			ctx.beginPath();
 			ctx.arc(gcx - s*4*0.02, s * 0.62 + s*4*4*0.01, s * 0.08, 0, Math.PI * 2);
 			ctx.fill();
-		} else if(charType === 13) {
+		} else if(charType === 21 || charType === 22) {
 			// SERPENTE (Snake) == testa sferica + occhi grandi + lingua rossa
 			const cx = s*0.5;
 			const cy = s*0.5;
 			//testa
-			ctx.fillStyle = connected ? '#00ff66' : '#666666';
+			ctx.fillStyle = connected ? (charType % 2 ? '#0f6' : '#f06') : '#666';
 			ctx.beginPath();
 			ctx.arc(cx, cy, s*0.4, 0, Math.PI * 2);
 			ctx.fill();
@@ -1733,58 +1750,69 @@ function drawPCPACMAN(x, y, tile) {
 			//occhi
 			const eyeOffset = s * 0.35;
 			const eyeSize = s * 0.25;
-			let ex1, ey1, ex2, ey2;
+			let ex1, ey1;
+			let ex2, ey2;
 			ex1 = cx - eyeOffset * 0.5;
 			ey1 = cy - eyeOffset;
 			ex2 = cx + eyeOffset * 0.5;
 			ey2 = cy - eyeOffset;
 			
-			//occhio dentro+bordo
+			//occhio sx
 			ctx.fillStyle = '#fff';
 			ctx.beginPath(); ctx.arc(ex1, ey1, eyeSize, 0, Math.PI * 2); ctx.fill();
-			ctx.beginPath(); ctx.arc(ex2, ey2, eyeSize, 0, Math.PI * 2); ctx.fill();
-
-			//pupille
+			
+			//pupille sx
 			ctx.strokeStyle = '#000';
 			ctx.lineCap = "round"; // bordi arrotondati
 			ctx.lineWidth = eyeSize * 0.3; // spessore = diametro della pupilla
-			
 			ctx.beginPath();
 			ctx.moveTo(ex1, ey1 - eyeSize / 3);
 			ctx.lineTo(ex1, ey1 + eyeSize / 3);
 			ctx.stroke();
-			  
-			ctx.beginPath();
-			ctx.moveTo(ex2, ey2 - eyeSize / 3);
-			ctx.lineTo(ex2, ey2 + eyeSize / 3);
-			ctx.stroke();
 			
-			//palpebre - movimento indipendente
-			ctx.fillStyle = connected ? '#00cc44' : '#888888';
-			
+			//palpebra sx
 			let senoSx = connected ? Math.sin(flowOffset*0.3) : 0;
 			let deltaSx = Math.abs(senoSx * 0.5);
 			let deltaDownSx = Math.max(0.75, Math.abs(senoSx * 1.5));
-			
-			let senoDx = connected ? Math.sin(flowOffset*0.29) : 0;
-			let deltaDx = Math.abs(senoDx * 0.5);
-			let deltaDownDx = Math.max(0.75, Math.abs(senoDx * 1.5));
 			//sx sopra
+			ctx.fillStyle = connected ? (charType % 2 ? '#0c4' : '#c04') : '#888';
 			ctx.beginPath();
 			ctx.arc(ex1, ey1, eyeSize, Math.PI+deltaSx, Math.PI*2-deltaSx);
-			ctx.fill();
-			//dx sopra
-			ctx.beginPath();
-			ctx.arc(ex2, ey2, eyeSize, Math.PI+deltaDx, Math.PI*2-deltaDx);
 			ctx.fill();
 			//sx sotto
 			ctx.beginPath();
 			ctx.arc(ex1, ey1, eyeSize, deltaDownSx, Math.PI-deltaDownSx);
 			ctx.fill();
+			
+			
+			
+			//occhio dx
+			ctx.fillStyle = '#fff';
+			ctx.beginPath(); ctx.arc(ex2, ey2, eyeSize, 0, Math.PI * 2); ctx.fill();
+			
+			//pupille dx
+			ctx.strokeStyle = '#000';
+			ctx.lineCap = "round"; // bordi arrotondati
+			ctx.lineWidth = eyeSize * 0.3; // spessore = diametro della pupilla
+			ctx.beginPath();
+			ctx.moveTo(ex2, ey2 - eyeSize / 3);
+			ctx.lineTo(ex2, ey2 + eyeSize / 3);
+			ctx.stroke();
+			
+			//palpebra dx
+			let senoDx = connected ? Math.sin(flowOffset*0.29) : 0;
+			let deltaDx = Math.abs(senoDx * 0.5);
+			let deltaDownDx = Math.max(0.75, Math.abs(senoDx * 1.5));
+			//dx sopra
+			ctx.fillStyle = connected ? (charType % 2 ? '#0c4' : '#c04') : '#888';
+			ctx.beginPath();
+			ctx.arc(ex2, ey2, eyeSize, Math.PI+deltaDx, Math.PI*2-deltaDx);
+			ctx.fill();
 			//dx sotto
 			ctx.beginPath();
 			ctx.arc(ex2, ey2, eyeSize, deltaDownDx, Math.PI-deltaDownDx);
 			ctx.fill();
+			
 			
 			//linguetta biforcuta + narici
 			let modulo = connected ? (flowOffset|0) % 3 : 2;
@@ -1807,25 +1835,119 @@ function drawPCPACMAN(x, y, tile) {
 			//naso
 			ctx.fillRect(ex1 - noseWidth * 0.5, ey1 + eyeSize * 2 - tongueLength * 0.1, noseWidth, noseHeight);
 			ctx.fillRect(ex2 - noseWidth * 0.5, ey2 + eyeSize * 2 - tongueLength * 0.1, noseWidth, noseHeight);
-		} else {
-			// SPACE INVADERS — 5 alieni diversi, pixel grid, no bezier
-			const shape = connected && Math.sin(flowOffset*0.5) > 0 ? invGridsY[charType - 7] : invGridsX[charType - 7];
-			const cols = shape[0].length;
-			const rows = shape.length;
-			const px = s / cols;
-			const gridH = rows * px;
-			const offY = (s - gridH) * 0.5;
+		} else if (charType === 23) {
+			//asteroids!!!
+			ctx.fillStyle = connected ? '#eee' : '#666';
+			ctx.strokeStyle = connected ? '#eee' : '#666';
 			
-			const invColors = ['#ffff00','#0000ff','#ff8800','#22ff44','#ff00ff', '#00ffff', '#ff0000'];//giallo, blu, arancio, verde, viola, ciano, rosso
-			
-			ctx.fillStyle = connected ? invColors[type.id.length % 7] : '#333333';
-			for (let ry=0; ry<rows; ry++) {
-				for (let rx=0; rx<cols; rx++) {
-					if (shape[ry][rx] === '1') {
-						ctx.fillRect(rx*px, offY + ry*px, px*1.05, px*1.05);
-					}
-				}
+			ctx.save();
+			ctx.translate(s*0.5,s*0.5);
+			if(connected) {
+				ctx.rotate(5 + Math.sin(flowOffset * 0.02) * flowOffset * 0.02);
 			}
+			
+			ctx.beginPath();
+			ctx.moveTo(s*0.35, s*0.0);    //punta
+			ctx.lineTo(-s*0.3, -s*0.2);   //sinistra
+			ctx.lineTo(-s*0.2, s*0.0);    //rientranza
+			ctx.lineTo(-s*0.3, s*0.2);    //destra
+			ctx.closePath();
+			ctx.strokeStyle = connected ? '#999' : '#444';
+			ctx.lineWidth = s*0.02;
+			
+			const grad = ctx.createLinearGradient(s*0.0, -s*0.4, s*0.0, s*0.4);
+			grad.addColorStop(0, connected ? '#fff' : '#666');
+			grad.addColorStop(0.55, connected ? '#aaa' : '#666');
+			grad.addColorStop(1, connected ? '#aaa' : '#666');
+			ctx.fillStyle = grad;
+			ctx.fill(); 
+			
+			if (connected) {
+				const dist = (flowOffset * 100) % (s*0.65);
+				ctx.fillStyle = '#ff0000';
+				ctx.fillRect(s*0.35+dist,-s*0.015,s*0.05,s*0.03);
+			}
+			
+			ctx.stroke();
+			ctx.restore();
+		} else if (charType === 24) {
+			//lunar lander		
+			ctx.save();
+			ctx.translate(s * 0.5, s * 0.5);
+			if(connected) {
+				ctx.rotate((Math.sin(flowOffset * 0.1) * 0.9));
+			}
+			ctx.lineWidth = s * 0.02;
+			ctx.strokeStyle = '#666';
+			
+			const radius = s * 0.28;
+			const sides = 6;
+			const startAngle = 2.4;
+			const endAngle = 7.0;
+			const step = (7.0 - 2.4) / sides;
+			ctx.beginPath();
+			for (i = 0; i <= sides; i++) {
+				let angle = startAngle + i * step;
+				const x = Math.cos(angle) * radius;
+				const y = Math.sin(angle) * radius - s * 0.2;
+				if (angle === startAngle) ctx.moveTo(x, y);
+				else ctx.lineTo(x, y);
+			}
+			ctx.closePath();
+		
+			const ballGradient = ctx.createRadialGradient(
+				s*0.1, s*0.2, s*0.3,
+				s*0.2, s*0.4, s*1);
+			ballGradient.addColorStop(0.0, connected ? '#ddd' : '#666');
+			ballGradient.addColorStop(1.0, '#000');
+			ctx.fillStyle = ballGradient;
+			ctx.fill();
+			ctx.stroke();
+			
+			//rettangolo
+			ctx.fillStyle = '#222';
+			ctx.fillRect(-s* 0.22, 0, s* 0.44, s * 0.20);
+
+			//rettangolo centrale chiaro
+			ctx.fillStyle = connected ? '#ddd' : '#666';
+			ctx.fillRect(-s * 0.05, 0, s * 0.10, s * 0.14);
+			
+			ctx.beginPath();
+			ctx.strokeStyle = connected ? '#ddd' : '#666';
+			ctx.strokeRect(-s * 0.22, 0, s * 0.44, s * 0.20);
+			ctx.beginPath();
+			ctx.moveTo(-s * 0.22, s * 0.14); //---- orizz sx
+			ctx.lineTo(-s * 0.05, s * 0.14);
+			ctx.stroke();
+			ctx.beginPath();
+			ctx.moveTo(s * 0.22, s * 0.14); //---- orizz dx
+			ctx.lineTo(s * 0.05, s * 0.14);
+			ctx.stroke();
+			
+			if (connected) drawUSFlag(-s * 0.20, s * 0.04, s * 0.14, 1);
+			else ctx.fillRect(-s * 0.20, s * 0.04, s * 0.14, s*0.07);
+			
+			//righe verticali
+			ctx.beginPath();
+			ctx.moveTo(-s * 0.05, 0); //--|---|-- a sx
+			ctx.lineTo(-s * 0.05, s * 0.14);
+			ctx.stroke();
+			ctx.beginPath();
+			ctx.moveTo(s * 0.05, 0); //--|---|-- a dx
+			ctx.lineTo(s * 0.05, s * 0.14);
+			ctx.stroke();
+
+			//zampette atterraggio
+			drawZampetta(s, s, connected ? '#f80' : '#666', -1);//sx
+			drawZampetta(s, s, connected ? '#f80' : '#666', 1);//dx
+
+			//FIAMMONE CLAMOROSO
+			if (connected) drawClamorousFlame(s, s);
+
+			//aggiunta terza gamba davanti al fiammone
+			drawZampaCentrale(s, s, connected ? '#f80' : '#666', 1);//cx
+			
+			ctx.restore();			
 		}
 	}
 
@@ -1833,6 +1955,109 @@ function drawPCPACMAN(x, y, tile) {
 }
 
 
+//zampetta uhauhauha
+	function drawZampetta(w, h, col, k) {
+		//gamba
+		ctx.strokeStyle = col;
+		ctx.beginPath();
+		ctx.moveTo(k * w * 0.22, 0); //attacco alto
+		ctx.lineTo(k * w * 0.33, h * 0.05); //alto
+		ctx.lineTo(k * w * 0.45, h * 0.47); //centro piede
+		ctx.lineTo(k * w * 0.39, h * 0.3); //medio
+		ctx.lineTo(k * w * 0.23, h * 0.2); //attacco interno
+		ctx.lineTo(k * w * 0.33, h * 0.05); //alto
+		ctx.closePath();
+		ctx.stroke();
+		//piede
+		ctx.beginPath();
+		ctx.fillStyle = col;
+		ctx.fillRect(k * w * 0.5, h * 0.5, -k * w * 0.10, -h * 0.02);
+		ctx.strokeRect(k * w * 0.5, h * 0.5, -k * w * 0.10, -h * 0.02);
+	}
+
+	//zampetta centrale (rocco approved!)
+	function drawZampaCentrale(w, h, col, k) {
+		ctx.beginPath();
+		ctx.strokeStyle = col;
+		ctx.moveTo(k * w * 0.08, h * 0.20);
+		ctx.lineTo(0, h * 0.3);
+		ctx.lineTo(0, h * 0.47);
+		ctx.lineTo(0, h * 0.3);
+		ctx.lineTo(-k * w * 0.08, h * 0.20);
+		ctx.stroke();
+
+		ctx.beginPath();
+		ctx.moveTo(k * w * 0.08, h * 0.20);
+		ctx.lineTo(0, h * 0.05); //centro
+		ctx.lineTo(-k * w * 0.08, h * 0.20);
+		ctx.lineTo(0, h * 0.05);
+		ctx.lineTo(0, h * 0.47);
+		ctx.stroke();
+
+		//piede cx
+		ctx.beginPath();
+		ctx.strokeStyle = col;
+		ctx.fillStyle = col;
+		ctx.fillRect(k * w * 0.05, h * 0.5, -k * w * 0.1, -h * 0.02);
+		ctx.strokeRect(k * w * 0.05, h * 0.5, -k * w * 0.1, -h * 0.02);
+	}
+
+	//god bless america!
+	function drawUSFlag(x, y, fw, dir) {
+		const fh = fw * 0.5; //rapporto 1/2
+
+		//sfondo bianco
+		ctx.fillStyle = '#fff';
+		ctx.fillRect(x, y, fw * dir, fh);
+
+		//strisce rosse
+		ctx.fillStyle = '#f00';
+		const stripeH = fh / 5;
+		for (let i = 0; i < 5; i += 2) {
+			ctx.fillRect(x, y + i * stripeH, fw * dir, stripeH);
+		}
+
+		//canton blu
+		const cantonW = fw * 0.4 * dir;
+		const cantonH = stripeH * 2;
+		ctx.fillStyle = '#008';
+		ctx.fillRect(x, y, cantonW, cantonH);
+
+		//stelline
+		ctx.fillStyle = '#fff';
+		const starRows = 2;
+		const starCols = 2;
+
+		for (let r = 0; r < starRows; r++) {
+			for (let c = 0; c < starCols; c++) {
+				const sx = x + cantonW * (0.1 + c / starCols);
+				const sy = y + cantonH * (0.15 + r / starRows);
+				ctx.beginPath();
+				ctx.fillRect(sx, sy, fw * 0.05, fw * 0.05);
+				ctx.fill();
+			}
+		}
+	}
+	function drawClamorousFlame(w, h) {
+			const flameLen = h * ((Math.abs(Math.sin(flowOffset * 0.05) * flowOffset * 0.02))%1); //fiamma alta
+			const flameW = w * 0.18;
+
+			const grad = ctx.createRadialGradient(0, h * 0.15, 2, //x0, y0, r0
+					0, h * 0.25, flameLen); //x1, y1, r1
+				grad.addColorStop(0, 'rgba(255,255,255,0.8)');
+				grad.addColorStop(0.25, 'rgba(255,255,255,0.8)');//nucleo bianco
+				grad.addColorStop(0.35, 'rgba(255,200,50,0.8)');
+				grad.addColorStop(0.45, 'rgba(255,0,0,0.8)');
+				grad.addColorStop(1, 'rgba(255,0,0,0)');
+			
+			ctx.fillStyle = grad;
+			ctx.beginPath();
+			ctx.moveTo(-flameW, h * 0.2);
+			ctx.lineTo(0, h * 0.2 + flameLen);
+			ctx.lineTo(flameW, h * 0.2);
+			ctx.closePath();
+			ctx.fill();
+	}
 
 
 
