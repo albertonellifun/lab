@@ -1117,14 +1117,12 @@ function drawTileMotherboard(tile) {
 	let angle = tile.rotation - tile.currentRotation;
 	ctx.rotate(angle);
     
-    ctx.beginPath();
-		
-	if (tile.conns & N) { ctx.moveTo(0, 0); ctx.lineTo(0, -mid); }
-    if (tile.conns & E) { ctx.moveTo(0, 0); ctx.lineTo(mid, 0); }
-    if (tile.conns & S) { ctx.moveTo(0, 0); ctx.lineTo(0, mid); }
-    if (tile.conns & W) { ctx.moveTo(0, 0); ctx.lineTo(-mid, 0); }
-    
-	ctx.stroke();
+	//fix lenovo?
+	if (tile.conns & N) { ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, -mid); ctx.stroke(); }
+    if (tile.conns & E) { ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(mid, 0);  ctx.stroke(); }
+    if (tile.conns & S) { ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, mid);  ctx.stroke(); }
+    if (tile.conns & W) { ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(-mid, 0); ctx.stroke(); }
+	
 	
 	//rotazione link
     ctx.restore();
@@ -1490,13 +1488,11 @@ function drawTilePACMAN(tile) {
 	ctx.arc(0, 0, CELL_SIZE * 0.04, 0, Math.PI*2);
 	ctx.fill();
 	
-
-    ctx.beginPath();
-	if (tile.conns & N) { ctx.moveTo(0, 0); ctx.lineTo(0, -mid); }
-    if (tile.conns & E) { ctx.moveTo(0, 0); ctx.lineTo(mid, 0);  }
-    if (tile.conns & S) { ctx.moveTo(0, 0); ctx.lineTo(0, mid);  }
-    if (tile.conns & W) { ctx.moveTo(0, 0); ctx.lineTo(-mid, 0); }
-	ctx.stroke();
+	//fix lenovo?
+	if (tile.conns & N) { ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, -mid); ctx.stroke(); }
+    if (tile.conns & E) { ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(mid, 0);  ctx.stroke(); }
+    if (tile.conns & S) { ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, mid);  ctx.stroke(); }
+    if (tile.conns & W) { ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(-mid, 0); ctx.stroke(); }
 	
 	ctx.shadowBlur = 0;
 	
@@ -2127,15 +2123,12 @@ function drawTileOLD(tile) {
 	ctx.fillStyle = cableColor;
 	ctx.fill();
 	
-    ctx.beginPath();
-    
-	if (tile.conns & N) { ctx.moveTo(0, 0); ctx.lineTo(0, -mid); }
-    if (tile.conns & E) { ctx.moveTo(0, 0); ctx.lineTo(mid, 0);  }
-    if (tile.conns & S) { ctx.moveTo(0, 0); ctx.lineTo(0, mid);  }
-    if (tile.conns & W) { ctx.moveTo(0, 0); ctx.lineTo(-mid, 0); }
-    
-	ctx.stroke();
-	
+    //fix lenovo?
+	if (tile.conns & N) { ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, -mid); ctx.stroke(); }
+    if (tile.conns & E) { ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(mid, 0);  ctx.stroke(); }
+    if (tile.conns & S) { ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, mid);  ctx.stroke(); }
+    if (tile.conns & W) { ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(-mid, 0); ctx.stroke(); }
+		
 	ctx.shadowBlur = 0;
 	
 	ctx.restore();
