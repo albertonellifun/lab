@@ -1857,7 +1857,7 @@ function drawPCPACMAN(x, y, tile) {
 			ctx.fill(); 
 			
 			if (connected) {
-				const dist = (flowOffset * 100) % (s*0.65);
+				const dist = (flowOffset * s * 0.3) % (s*0.65);
 				ctx.fillStyle = '#ff0000';
 				ctx.fillRect(s*0.35+dist,-s*0.015,s*0.05,s*0.03);
 			}
@@ -2313,7 +2313,36 @@ function drawPCWATER(x, y, tile) {
 			const petalCount = 8;
 			const petalLen = s * 0.15;
 			const petalW = s * 0.08;
-			const petalColor = connected ? ['#fff','#f80','#a00','#00a','#0c0','#f0f','#0bf','#444'][type.id.length % 8] : '#ddc';
+			const flowerColors = [
+			  '#fff', // bianco
+			  '#f80', // arancione
+			  '#a00', // rosso scuro
+			  '#00a', // blu
+			  '#0c0', // verde
+			  '#f0f', // fucsia/magenta
+			  '#0bf', // azzurro
+			  '#555', // grigio scuro
+			  '#ff0', // giallo
+			  '#f99', // rosa chiaro
+			  '#70f', // viola
+			  '#fc0', // giallo oro
+			  '#0cc', // turchese
+			  '#6c3', // verde lime
+			  '#c3f', // lilla
+			  '#d22', // rosso vivo
+			  '#f66', // corallo
+			  '#b0f', // porpora
+			  '#7cf', // celeste
+			  '#808', // viola intenso
+			  '#841', // marrone
+			  '#f06', // rosa acceso
+			  '#7f0', // chartreuse
+			  '#111', // nero
+			  '#19f', // blu dodger
+			  '#d13', // cremisi
+			  '#2ba', // verde acqua
+			];
+			const petalColor = connected ? flowerColors[type.n % flowerColors.length] : '#ddc';
 
 			ctx.save();
 			ctx.translate(topX, topY);
