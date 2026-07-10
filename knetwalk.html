@@ -396,7 +396,7 @@ function helpButtonClick() {
 	
     targetCell.conns = targetCell.correct;
     targetCell.rotation = 0;
-    targetCell.currentRotation = 0;
+    //targetCell.currentRotation = 0;
     
     updateConnectivity();
 }
@@ -628,8 +628,9 @@ function updateConnectivity() {
             }
         });
     }
-    if (grid.every(r => r.every(c => c.connected)) && !gameWon) {
-        gameWon = true;
+	
+    if (!gameWon && grid.every(r => r.every(c => c.connected))) {
+	    gameWon = true;
         statusDiv.innerText = "SYSTEM ONLINE — NETWORK CONFIGURED!";
 		statusDiv.style.display = 'block';
     }
@@ -1103,7 +1104,7 @@ function drawTileMotherboard(tile) {
 	let hue = (flowOffset * 5 + 240) % 360; // CALCOLO DEL COLORE DINAMICO RIMOSSO - TODO!
     let dynamicColor = `hsl(${hue}, 100%, 50%)`;
 	
-	const cableColor = tile.connected ? 
+	const cableColor = tile.connected ? // && tile.rotation === tile.currentRotation ?
 		(colors.activeColor === '#000000' ? dynamicColor : colors.activeColor) : colors.inactiveColor;
 	
 	ctx.strokeStyle = cableColor;
@@ -1345,7 +1346,7 @@ function drawTileWATER(tile) {
     let hue = (flowOffset * 5 + 240) % 360;
     let dynamicColor = `hsl(${hue}, 100%, 50%)`;
 
-    const cableColor = tile.connected ?
+    const cableColor = tile.connected ? // && tile.rotation === tile.currentRotation ?
         (colors.activeColor === '#000000' ? dynamicColor : colors.activeColor) : colors.inactiveColor;
 
     const pipeW = CELL_SIZE * 0.10;
@@ -1462,7 +1463,7 @@ function drawTilePACMAN(tile) {
 	let hue = (flowOffset * 5 + 240) % 360;
     let dynamicColor = `hsl(${hue}, 100%, 50%)`;
 
-	const cableColor = tile.connected ?
+	const cableColor = tile.connected ? // && tile.rotation === tile.currentRotation ?
 		(colors.activeColor === '#000000' ? dynamicColor : colors.activeColor) : colors.inactiveColor;
 
     ctx.strokeStyle = cableColor;
@@ -1615,7 +1616,7 @@ function drawPCPACMAN(x, y, tile) {
 		
 	} else if (type.id) {
 		//sceglie il personaggio in base al nome del device (deterministico, no random per tile)
-		const charType = type.n % 25;// 2 pacman mr+mrs, 9 fantasmi colorati, 8 invaders colorati, 2 qbert, 2 snake, 1 asteroid, 1 lander
+		const charType = type.n % 25;// 2 pacman, 9 fantasmi, 8 invaders, 2 qbert, 2 snake, 1 asteroid, 1 lander
 
 		//todo: add asteroids + mario + luigi
 		if (charType === 0 || charType === 1) {
@@ -1883,7 +1884,7 @@ function drawPCPACMAN(x, y, tile) {
 			ctx.strokeStyle = connected ? '#999' : '#444';
 			ctx.lineWidth = s*0.02;
 			
-			const grad = ctx.createLinearGradient(s*0.0, -s*0.4, s*0.0, s*0.4);
+			const grad = ctx.createLinearGradient(0, -s*0.20, 0, s*0.20);
 			grad.addColorStop(0, connected ? '#fff' : '#666');
 			grad.addColorStop(0.55, connected ? '#aaa' : '#666');
 			grad.addColorStop(1, connected ? '#aaa' : '#666');
@@ -2099,7 +2100,7 @@ function drawTileOLD(tile) {
 	let hue = (flowOffset * 5 + 240) % 360; // CALCOLO DEL COLORE DINAMICO RIMOSSO - TODO!
     let dynamicColor = `hsl(${hue}, 100%, 50%)`;
 	
-	const cableColor = tile.connected ? 
+	const cableColor = tile.connected ? // && tile.rotation === tile.currentRotation ?
 		(colors.activeColor === '#000000' ? dynamicColor : colors.activeColor) : colors.inactiveColor;
 		
     ctx.strokeStyle = cableColor;
