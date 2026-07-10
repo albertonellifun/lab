@@ -152,6 +152,7 @@
 		<button id="wiresColorBtn">🌈</button>
 		<button id="motherboardBtn">🔋</button>
 		<button id="groupBtn">🖥️ All</button>
+		<button id="helpBtn">💡 Help</button>
 		<button id="restart">↻ Restart</button>
     </div>
 
@@ -373,6 +374,33 @@ function changeWiresColorFlag(btn) {
 	else colorsBtn.classList.remove('active');
 }
 
+const helpBtn = document.getElementById("helpBtn");
+helpBtn.addEventListener("click", helpButtonClick);
+function helpButtonClick() {
+	// Trova tutte le celle sbagliate
+    const wrongCells = [];
+    grid.forEach(row => row.forEach(cell => {
+        if (cell.conns !== cell.correct) {
+            wrongCells.push(cell);
+        }
+    }));
+	
+	if (gameWon || !wrongCells.length) return;
+    
+    // Correggi una cella a caso tra quelle sbagliate
+    const wrongConnected = wrongCells.filter(c => c.connected);
+	const randomWrongConnected = wrongConnected[Math.floor(Math.random() * wrongConnected.length)];//una connessa sbagliata
+	const randomWrongAll = wrongCells[Math.floor(Math.random() * wrongCells.length)];//una qualsiasi sbagliata
+	
+    const targetCell = wrongConnected.length > 0 ? randomWrongConnected : randomWrongAll;
+	
+    targetCell.conns = targetCell.correct;
+    targetCell.rotation = 0;
+    targetCell.currentRotation = 0;
+    
+    updateConnectivity();
+}
+
 function changeDifficulty(newSizeX, newSizeY, btn) {
 	WIDTH = newSizeX;
 	HEIGHT = newSizeY;
@@ -464,6 +492,12 @@ function initGame() {
 
     generateNetwork();
     assignTypes();
+	
+	//salvo la soluzione CORRETTA prima dello shuffle... non si sa mai!
+    grid.forEach(row => row.forEach(cell => {
+        cell.correct = cell.conns;
+    }));
+	
     shuffleGrid();
     updateConnectivity();
 	
