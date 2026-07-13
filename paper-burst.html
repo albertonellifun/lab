@@ -1,0 +1,1364 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paper Burst</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            background: #050814;
+            font-family: 'Arial', sans-serif;
+            color: #fff;
+        }
+        
+        .container {
+            position: relative;
+            border: 4px solid #00FF41;
+            box-shadow: 0 0 35px rgba(0, 255, 255, 0.8), inset 0 0 15px rgba(0, 255, 255, 0.3);
+            border-radius: 12px;
+            overflow: hidden;
+            background: #0a0e27;
+        }
+        
+        canvas {
+            display: block;
+        }
+        
+        .hud {
+            position: absolute;
+            top: 16px;
+            left: 16px;
+            background: rgba(0, 20, 40, 0.85);
+            padding: 8px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 700;
+            z-index: 10;
+            border: 2px solid #00D4FF;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.4);
+			filter: opacity(0.5);
+        }
+                
+        .game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            padding: 50px;
+            border-radius: 15px;
+            text-align: center;
+            z-index: 100;
+            display: none;
+            min-width: 350px;
+            border: 3px solid #FF006E;
+            box-shadow: 0 0 40px rgba(255, 0, 110, 0.8);
+        }
+        
+        .game-over h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+            background: linear-gradient(90deg, #FF006E, #FFB703);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .game-over button {
+            margin-top: 25px;
+            padding: 16px 32px;
+            font-size: 18px;
+            background: linear-gradient(90deg, #00FF41, #00D4FF);
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.6);
+            transition: all 0.3s;
+        }
+        
+        .game-over button:hover {
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="gameContainer">
+        <canvas id="gameCanvas"></canvas>
+        <div class="hud">
+            <div class="score" id="score"></div>
+        </div>
+        <div class="game-over" id="gameOver">
+            <h1 id="endTitle">GAME OVER</h1>
+            <button onclick="init()">↻ Restart</button>
+        </div>
+    </div>
+
+    <script>
+        var canvas = document.getElementById('gameCanvas');
+        var container = document.getElementById('gameContainer');
+        var ctx = canvas.getContext('2d');
+		var territoryCanvas = document.createElement('canvas');
+		var territoryCtx = territoryCanvas.getContext('2d');
+
+        // Constants
+        var CELL_SIZE = 10;
+        var GRID_WIDTH = 0;
+        var GRID_HEIGHT = 0;
+        var PLAYER_SPEED = CELL_SIZE * 0.25;
+        var ENEMY_SPEED = CELL_SIZE * 0.25;
+        var TRAIL_WIDTH = CELL_SIZE;
+
+        // Game state
+        var gameRunning = true;
+		var gameBlocking = 0;
+		
+        var gridMap = [];
+        var player = null;
+        var particles = [];
+        var allPlayers = [];
+        var animId = null;
+
+        // VIBRANT Color palette
+        var colors = 		['#00ff22', '#00ddff', '#ff0066', '#ffee00', '#cc55cc'];//verde, azzurro, rosso, giallo, violetto
+        var colorsBright = 	['#00ff44', '#00ffff', '#ff1188', '#ffff00', '#dd77dd'];//verde, azzurro, rosso, giallo, violetto
+
+        function initGrid() {
+            gridMap = [];
+            for (var y = 0; y < GRID_HEIGHT; y++) {
+                var row = [];
+                for (var x = 0; x < GRID_WIDTH; x++) {
+                    row.push(-1);
+                }
+                gridMap.push(row);
+            }
+        }
+
+        // Particle system
+        function Particle(x, y, vx, vy, color, life) {
+            this.x = x;
+            this.y = y;
+            this.vx = vx;
+            this.vy = vy;
+            this.color = color;
+            this.life = life;
+            this.maxLife = life;
+            this.size = Math.random() * 4 + 2;
+        }
+
+        Particle.prototype.update = function() {
+            this.x += this.vx;
+            this.y += this.vy;
+            this.vy += 0.1;
+            this.life--;
+        };
+
+        Particle.prototype.draw = function() {
+            var alpha = this.life / this.maxLife;
+            ctx.globalAlpha = alpha;
+            ctx.fillStyle = this.color;
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.globalAlpha = 1;
+        };
+
+        function createParticles(x, y, color, count) {
+            for (var i = 0; i < count; i++) {
+                var angle = (Math.PI * 2 * i) / count;
+                var speed = Math.random() * 5 + 2;
+                var vx = Math.cos(angle) * speed;
+                var vy = Math.sin(angle) * speed;
+                particles.push(new Particle(x, y, vx, vy, color, 50));
+            }
+        }
+
+        // Player class
+        function Player(x, y, colorIndex, isEnemy) {
+            this.x = x;
+            this.y = y;
+            this.vx = PLAYER_SPEED;
+            this.vy = 0;
+            this.colorIndex = colorIndex;
+            this.color = colors[colorIndex];
+            this.colorBright = colorsBright[colorIndex];
+            this.trail = [];
+            this.isAlive = true;
+            this.isEnemy = isEnemy || false;
+            
+            this.state = 'IN_BASE';
+            this.lastBaseX = Math.floor(x / CELL_SIZE);
+            this.lastBaseY = Math.floor(y / CELL_SIZE);
+        }
+
+        Player.prototype.update = function() {
+            if (!this.isAlive) return;
+            
+            var newX = this.x + this.vx;
+            var newY = this.y + this.vy;
+
+            this.x = Math.max(CELL_SIZE * 0.5, Math.min(canvas.width - CELL_SIZE * 0.5, newX));
+            this.y = Math.max(CELL_SIZE * 0.5, Math.min(canvas.height - CELL_SIZE * 0.5, newY));
+
+            var gridX = Math.floor(this.x / CELL_SIZE);
+            var gridY = Math.floor(this.y / CELL_SIZE);
+            
+            if (gridY < 0 || gridY >= GRID_HEIGHT || gridX < 0 || gridX >= GRID_WIDTH) return;
+
+            var currentCell = gridMap[gridY][gridX];
+            var inOwnTerritory = (currentCell === this.colorIndex);
+
+            // Collisione testa-a-testa: se due giocatori sono sulla stessa cella
+            for (var p = 0; p < allPlayers.length; p++) {
+                var other = allPlayers[p];
+                if (other === this || !other.isAlive) continue;
+                var otherGX = Math.floor(other.x / CELL_SIZE);
+                var otherGY = Math.floor(other.y / CELL_SIZE);
+                if (otherGX === gridX && otherGY === gridY) {
+                    // Chi è nel proprio territorio sopravvive
+                    var thisInOwn = inOwnTerritory;
+                    var otherInOwn = (gridMap[otherGY][otherGX] === other.colorIndex);
+                    if (!thisInOwn) {
+					    this.isAlive = false;
+                        this.trail = [];
+                        createParticles(this.x, this.y, this.color, 80);
+                    }
+                    if (!otherInOwn) {
+					    other.isAlive = false;
+                        other.trail = [];
+                        createParticles(other.x, other.y, other.color, 80);
+                    }
+                    if (!this.isAlive) return;
+                }
+            }
+
+            if (inOwnTerritory) {
+                this.lastBaseX = gridX;
+                this.lastBaseY = gridY;
+            }
+
+            if (this.state === 'IN_BASE') {
+                if (!inOwnTerritory) {
+                    this.state = 'IN_TRAIL';
+                    this.trail = [];
+                    this.trail.push({x: this.lastBaseX, y: this.lastBaseY});
+                    this.trail.push({x: gridX, y: gridY});
+                }
+            } else if (this.state === 'IN_TRAIL') {
+                // Controlla se la cella di partenza della scia è ancora propria
+                if (this.trail.length > 0) {
+                    var startCell = this.trail[0];
+                    if (startCell.x >= 0 && startCell.x < GRID_WIDTH && startCell.y >= 0 && startCell.y < GRID_HEIGHT) {
+                        if (gridMap[startCell.y][startCell.x] !== this.colorIndex) {
+							this.isAlive = false;
+                            this.trail = [];
+                            createParticles(this.x, this.y, this.color, 80);
+                            return;
+                        }
+                    }
+                }
+
+                var lastCell = this.trail[this.trail.length - 1];
+                
+                if (!lastCell || lastCell.x !== gridX || lastCell.y !== gridY) {
+                    var secondLastCell = this.trail.length > 1 ? this.trail[this.trail.length - 2] : null;
+                    
+                    if (secondLastCell && secondLastCell.x === gridX && secondLastCell.y === gridY) {
+                        this.trail.pop();
+                    } else {
+                        var selfIndex = -1;
+                        for (var i = 0; i < this.trail.length - 1; i++) {
+                            if (this.trail[i].x === gridX && this.trail[i].y === gridY) {
+                                selfIndex = i;
+                                break;
+                            }
+                        }
+                        
+                        if (selfIndex !== -1) {
+                            this.trail.splice(selfIndex + 1);
+                        } else {
+                            this.trail.push({x: gridX, y: gridY});
+                        }
+                    }
+                }
+
+                if (inOwnTerritory) {
+                    if (this.trail.length > 2) {
+                        this.captureArea();
+                    }
+                    this.state = 'IN_BASE';
+                    this.trail = [];
+                    return;
+                }
+
+                // Controlla se siamo sulla scia di un altro giocatore → uccidi il proprietario
+                for (var p = 0; p < allPlayers.length; p++) {
+                    var other = allPlayers[p];
+                    if (other === this || !other.isAlive || other.state !== 'IN_TRAIL') continue;
+                    for (var ti = 0; ti < other.trail.length; ti++) {
+                        if (other.trail[ti].x === gridX && other.trail[ti].y === gridY) {
+							other.isAlive = false;
+                            other.trail = [];
+                            createParticles(other.x, other.y, other.color, 80);
+                            break;
+                        }
+                    }
+                }
+
+                // Controlla se un altro giocatore è sulla NOSTRA scia → noi moriamo
+                for (var p = 0; p < allPlayers.length; p++) {
+                    var other = allPlayers[p];
+                    if (other === this || !other.isAlive) continue;
+                    var otherGX = Math.floor(other.x / CELL_SIZE);
+                    var otherGY = Math.floor(other.y / CELL_SIZE);
+                    for (var ti = 1; ti < this.trail.length; ti++) { // skip trail[0] (è nel territorio)
+                        if (this.trail[ti].x === otherGX && this.trail[ti].y === otherGY) {
+							this.isAlive = false;
+                            this.trail = [];
+                            createParticles(this.x, this.y, this.color, 80);
+                            return;
+                        }
+                    }
+                }
+            }
+        };
+		
+        Player.prototype.captureArea = function() {
+            if (this.trail.length === 0) return;
+
+            for (var i = 0; i < this.trail.length; i++) {
+                var p = this.trail[i];
+                if (p.x >= 0 && p.x < GRID_WIDTH && p.y >= 0 && p.y < GRID_HEIGHT) {
+                    gridMap[p.y][p.x] = this.colorIndex;
+                }
+            }
+
+            var visited = [];
+            for (var y = 0; y < GRID_HEIGHT; y++) {
+                visited.push(new Array(GRID_WIDTH).fill(false));
+            }
+            var queue = [];
+
+            for (var x = 0; x < GRID_WIDTH; x++) {
+                if (gridMap[0][x] !== this.colorIndex) { queue.push({x: x, y: 0}); visited[0][x] = true; }
+                if (gridMap[GRID_HEIGHT - 1][x] !== this.colorIndex) { queue.push({x: x, y: GRID_HEIGHT - 1}); visited[GRID_HEIGHT - 1][x] = true; }
+            }
+            for (var y = 0; y < GRID_HEIGHT; y++) {
+                if (gridMap[y][0] !== this.colorIndex) { queue.push({x: 0, y: y}); visited[y][0] = true; }
+                if (gridMap[y][GRID_WIDTH - 1] !== this.colorIndex) { queue.push({x: GRID_WIDTH - 1, y: y}); visited[y][GRID_WIDTH - 1] = true; }
+            }
+
+            var dx = [0, 0, 1, -1];
+            var dy = [1, -1, 0, 0];
+
+            while (queue.length > 0) {
+                var curr = queue.shift();
+                for (var d = 0; d < 4; d++) {
+                    var nx = curr.x + dx[d];
+                    var ny = curr.y + dy[d];
+                    if (nx >= 0 && nx < GRID_WIDTH && ny >= 0 && ny < GRID_HEIGHT) {
+                        if (!visited[ny][nx] && gridMap[ny][nx] !== this.colorIndex) {
+                            visited[ny][nx] = true;
+                            queue.push({x: nx, y: ny});
+                        }
+                    }
+                }
+            }
+
+            for (var y = 0; y < GRID_HEIGHT; y++) {
+                for (var x = 0; x < GRID_WIDTH; x++) {
+                    if (!visited[y][x] && gridMap[y][x] !== this.colorIndex) {
+                        gridMap[y][x] = this.colorIndex;
+                    }
+                }
+            }
+            
+            for (var i = 0; i < allPlayers.length; i++) {
+                var other = allPlayers[i];
+				
+				if (other === this || !other.isAlive) continue;
+				
+                var otherGridX = Math.floor(other.x / CELL_SIZE);
+                var otherGridY = Math.floor(other.y / CELL_SIZE);
+                    
+                if (gridMap[otherGridY][otherGridX] === this.colorIndex) {
+					other.isAlive = false;
+                    createParticles(other.x, other.y, other.color, 100);
+                    
+                    for (var r = 0; r < GRID_HEIGHT; r++) {
+                        for (var c = 0; c < GRID_WIDTH; c++) {
+                            if (gridMap[r][c] === other.colorIndex) {
+                                gridMap[r][c] = this.colorIndex;
+                            }
+                        }
+                    }
+                    other.trail = [];
+                }
+            }
+            updateTerritoryPercentages();
+			drawTerritory();
+        };
+
+        Player.prototype.draw = function() {
+            if (!this.isAlive) return;
+
+			if (this.state === 'IN_TRAIL' && this.trail.length > 0) {
+                ctx.strokeStyle = this.color;
+                ctx.lineWidth = TRAIL_WIDTH;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+                ctx.shadowColor = this.color;
+                ctx.shadowBlur = 10;
+
+                ctx.beginPath();
+                ctx.moveTo(this.trail[0].x * CELL_SIZE + CELL_SIZE * 0.5,  
+						   this.trail[0].y * CELL_SIZE + CELL_SIZE * 0.5);
+                for (var i = 1; i < this.trail.length; i++) {
+                    ctx.lineTo(this.trail[i].x * CELL_SIZE + CELL_SIZE * 0.5,  
+							   this.trail[i].y * CELL_SIZE + CELL_SIZE * 0.5);
+                }
+				ctx.lineTo(this.x, this.y);
+				ctx.stroke();
+                ctx.shadowBlur = 0;
+            }
+			
+			
+			// Calcola angolo di direzione
+			var angle = Math.atan2(this.vy, this.vx);
+			ctx.save();
+			ctx.translate(this.x, this.y);
+			ctx.rotate(angle);
+
+			if (this.colorIndex === 0) {
+				// SNAKE HEAD
+				var s = CELL_SIZE * 1.5;
+				ctx.shadowColor = this.color;
+				ctx.shadowBlur = 10;
+				// Testa ovale
+				ctx.fillStyle = '#282';
+				ctx.beginPath();
+				ctx.ellipse(0, 0, s * 1.4, s * 0.9, 0, 0, Math.PI * 2);
+				ctx.fill();
+				// Squame scure
+				ctx.fillStyle = '#151';
+				ctx.beginPath();
+				ctx.arc(s * 0.9, -s * 0.2, s * 0.2, 0, Math.PI * 2);
+				ctx.fill();
+				ctx.beginPath();
+				ctx.arc(s * 0.9, s * 0.2, s * 0.2, 0, Math.PI * 2);
+				ctx.fill();
+				// Occhi
+				ctx.fillStyle = '#fd0';
+				ctx.beginPath();
+				ctx.arc(s * 0.3, -s * 0.35, s * 0.28, 0, Math.PI * 2);
+				ctx.fill();
+				ctx.arc(s * 0.3, s * 0.35, s * 0.28, 0, Math.PI * 2);
+				ctx.fill();
+				// Pupille verticali
+				ctx.fillStyle = '#000';
+				ctx.beginPath();
+				ctx.ellipse(s * 0.35, -s * 0.35, s * 0.08, s * 0.2, 0, 0, Math.PI * 2);
+				ctx.fill();
+				ctx.beginPath();
+				ctx.ellipse(s * 0.35, s * 0.35, s * 0.08, s * 0.2, 0, 0, Math.PI * 2);
+				ctx.fill();
+				// Lingua biforcuta
+				ctx.strokeStyle = '#f00';
+				ctx.lineWidth = 1.5;
+				ctx.beginPath();
+				ctx.moveTo(s * 1.3, 0);
+				ctx.lineTo(s * 1.8, 0);
+				ctx.lineTo(s * 2.1, -s * 0.25);
+				ctx.moveTo(s * 1.8, 0);
+				ctx.lineTo(s * 2.1, s * 0.25);
+				ctx.stroke();
+				ctx.shadowBlur = 0;
+
+			} else if (this.colorIndex === 2) {
+				// WATERMELON TRIANGLE SLICE
+                var s = CELL_SIZE * 1.5;
+
+                ctx.shadowColor = this.color;
+                ctx.shadowBlur = 10;
+
+                // centro della circonferenza (spostato verso la punta)
+                var cx = s * 1.2;
+                var cy = 0;
+                var radius = s * 2.0;
+
+                // angoli dell'arco
+                var a1 = Math.PI * 0.85;
+                var a2 = Math.PI * 1.15;
+
+                // Polpa rossa
+                ctx.beginPath();
+                ctx.moveTo(cx, cy);
+                ctx.arc(cx, cy, radius, a1, a2, false);
+                ctx.closePath();
+
+                ctx.fillStyle = '#f25';
+                ctx.fill();
+
+                // Buccia bianca
+                ctx.beginPath();
+                ctx.arc(cx, cy, radius, a1, a2, false);
+                ctx.lineWidth = s * 0.25;
+                ctx.strokeStyle = '#efe';
+                ctx.stroke();
+
+                // Bordo esterno verde
+                ctx.beginPath();
+                ctx.arc(cx, cy, radius + s * 0.12, a1, a2, false);
+                ctx.lineWidth = s * 0.2;
+                ctx.strokeStyle = '#191';
+                ctx.stroke();
+
+
+                // Semi
+                ctx.fillStyle = '#222';
+
+                ctx.beginPath();
+                ctx.ellipse(s * 0.1, -s * 0.2, s * 0.1, s * 0.06, -0.3, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.beginPath();
+                ctx.ellipse(s * 0.3, s * 0.15, s * 0.1, s * 0.06, 0.2, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.beginPath();
+                ctx.ellipse(-s * 0.15, s * 0.3, s * 0.1, s * 0.06, 0.5, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.shadowBlur = 0;
+
+			} else if (this.colorIndex === 1) {
+				// RISK TANK
+				var s = CELL_SIZE * 1.5;
+				ctx.shadowColor = this.color;
+				ctx.shadowBlur = 10;
+				// Corpo del carro (rettangolo arrotondato)
+				ctx.fillStyle = '#257';
+				ctx.beginPath();
+				ctx.roundRect(-s * 0.9, -s * 0.5, s * 1.6, s * 1.0, s * 0.15);
+				ctx.fill();
+				ctx.strokeStyle = '#28b';
+				ctx.lineWidth = 1.5;
+				ctx.stroke();
+				// Torretta (cerchio sopra)
+				ctx.fillStyle = '#27a';
+				ctx.beginPath();
+				ctx.arc(0, 0, s * 0.45, 0, Math.PI * 2);
+				ctx.fill();
+				ctx.strokeStyle = '#5dade2';
+				ctx.lineWidth = 1;
+				ctx.stroke();
+				// Cannone
+				ctx.fillStyle = '#567';
+				ctx.fillRect(s * 0.3, -s * 0.1, s * 1.1, s * 0.2);
+				ctx.strokeStyle = '#899';
+				ctx.lineWidth = 1;
+				ctx.strokeRect(s * 0.3, -s * 0.1, s * 1.1, s * 0.2);
+				// Bocca del cannone
+				ctx.fillStyle = '#235';
+				ctx.beginPath();
+				ctx.arc(s * 1.4, 0, s * 0.12, 0, Math.PI * 2);
+				ctx.fill();
+				// Cingoli (rettangoli sotto)
+				ctx.fillStyle = '#235';
+				ctx.fillRect(-s * 0.85, -s * 0.6, s * 1.5, s * 0.15);
+				ctx.fillRect(-s * 0.85, s * 0.45, s * 1.5, s * 0.15);
+				// Ruote dei cingoli
+				ctx.fillStyle = '#567';
+				for (var w = 0; w < 4; w++) {
+					ctx.beginPath();
+					ctx.arc(-s * 0.6 + w * s * 0.4, -s * 0.6, s * 0.07, 0, Math.PI * 2);
+					ctx.fill();
+					ctx.beginPath();
+					ctx.arc(-s * 0.6 + w * s * 0.4, s * 0.6, s * 0.07, 0, Math.PI * 2);
+					ctx.fill();
+				}
+				ctx.shadowBlur = 0;
+			} else if (this.colorIndex === 4) {
+				// DONUT
+				var s = CELL_SIZE * 1.5;
+
+				ctx.shadowColor = this.color;
+				ctx.shadowBlur = 12;
+
+				// Ciambella esterna
+				ctx.fillStyle = '#d84'; // impasto
+				ctx.beginPath();
+				ctx.arc(0, 0, s * 1.0, 0, Math.PI * 2);
+				ctx.fill();
+
+				// Bordo tostato
+				ctx.strokeStyle = '#841';
+				ctx.lineWidth = s * 0.12;
+				ctx.stroke();
+
+
+				// Buco centrale
+				ctx.fillStyle = '#123'; // colore dello sfondo
+				ctx.beginPath();
+				ctx.arc(0, 0, s * 0.38, 0, Math.PI * 2);
+				ctx.fill();
+
+
+				// Glassa colorata
+				ctx.fillStyle = '#f6b';
+				ctx.beginPath();
+				ctx.arc(0, 0, s * 0.82, 0, Math.PI * 2);
+				ctx.fill();
+
+				// Ritaglio del buco dopo la glassa
+				ctx.fillStyle = '#123';
+				ctx.beginPath();
+				ctx.arc(0, 0, s * 0.35, 0, Math.PI * 2);
+				ctx.fill();
+
+
+				// Confettini
+				var sprinkles = [
+					[-0.45, -0.45, 0.3],
+					[0.35, -0.55, -0.4],
+					[0.55, 0.15, 0.5],
+					[-0.25, 0.45, -0.2],
+					[0.1, 0.65, 0.8]
+				];
+
+				var sprinkleColors = [
+					'#0ff',
+					'#fd0',
+					'#0f4',
+					'#f06',
+					'#83e'
+				];
+
+				for (var i = 0; i < sprinkles.length; i++) {
+					var sp = sprinkles[i];
+
+					ctx.save();
+					ctx.translate(sp[0] * s, sp[1] * s);
+					ctx.rotate(sp[2]);
+
+					ctx.fillStyle = sprinkleColors[i];
+					ctx.fillRect(
+						-s * 0.08,
+						-s * 0.02,
+						s * 0.16,
+						s * 0.05
+					);
+
+					ctx.restore();
+				}
+
+
+				// Riflesso glassa
+				ctx.strokeStyle = 'rgba(255,255,255,0.45)';
+				ctx.lineWidth = s * 0.05;
+				ctx.beginPath();
+				ctx.arc(
+					-s * 0.1,
+					-s * 0.15,
+					s * 0.65,
+					Math.PI * 1.15,
+					Math.PI * 1.75
+				);
+				ctx.stroke();
+
+
+				ctx.shadowBlur = 0;
+			} else if (this.colorIndex === 3) {
+				// HAMBURGER TOP VIEW
+				var s = CELL_SIZE * 1.5;
+
+				ctx.shadowColor = this.color;
+				ctx.shadowBlur = 12;
+
+				// Pane inferiore
+				ctx.fillStyle = '#c72';
+				ctx.beginPath();
+				ctx.arc(0, s * 0.18, s * 0.9, 0, Math.PI * 2);
+				ctx.fill();
+
+				// Formaggio che sporge
+				ctx.fillStyle = '#fd0';
+				ctx.beginPath();
+				ctx.arc(0, 0, s * 0.82, 0, Math.PI * 2);
+				ctx.fill();
+
+				// Insalata verde (anello irregolare)
+				ctx.strokeStyle = '#7f0';
+				ctx.lineWidth = s * 0.22;
+				ctx.beginPath();
+				ctx.arc(
+					0,
+					-s * 0.02,
+					s * 0.72,
+					0,
+					Math.PI * 2
+				);
+				ctx.stroke();
+
+				// Carne
+				ctx.fillStyle = '#521';
+				ctx.beginPath();
+				ctx.arc(0, 0, s * 0.62, 0, Math.PI * 2);
+				ctx.fill();
+
+				// Insalata che sborda in punti casuali
+				ctx.strokeStyle = '#9f0';
+				ctx.lineWidth = s * 0.12;
+				ctx.beginPath();
+				ctx.arc(
+					0,
+					0,
+					s * 0.78,
+					Math.PI * 0.15,
+					Math.PI * 0.75
+				);
+				ctx.stroke();
+
+				ctx.beginPath();
+				ctx.arc(
+					0,
+					0,
+					s * 0.78,
+					Math.PI * 1.2,
+					Math.PI * 1.75
+				);
+				ctx.stroke();
+
+				// Pane superiore
+				ctx.fillStyle = '#ea4';
+				ctx.beginPath();
+				ctx.arc(0, -s * 0.12, s * 0.95, 0, Math.PI * 2);
+				ctx.fill();
+
+				// Bordo tostato
+				ctx.strokeStyle = '#841';
+				ctx.lineWidth = s * 0.08;
+				ctx.stroke();
+
+				// Semi di sesamo
+				ctx.fillStyle = '#ffb';
+
+				var sesame = [
+					[-0.45,-0.45],
+					[-0.15,-0.65],
+					[0.25,-0.55],
+					[0.55,-0.25],
+					[-0.55,0.05],
+					[0.15,0.2]
+				];
+
+				for (var i = 0; i < sesame.length; i++) {
+					ctx.beginPath();
+					ctx.ellipse(
+						sesame[i][0] * s,
+						sesame[i][1] * s,
+						s * 0.07,
+						s * 0.025,
+						Math.random(),
+						0,
+						Math.PI * 2
+					);
+					ctx.fill();
+				}
+			ctx.shadowBlur = 0;
+			}
+
+			ctx.restore();
+            
+        };
+
+        // --- NUOVA IA STRATEGICA PER I NEMICI ---
+        function Enemy(x, y, colorIndex) {
+            Player.call(this, x, y, colorIndex, true);
+            this.speed = ENEMY_SPEED;
+            this.dir = Math.floor(Math.random() * 4);
+            this.vx = this.speed;
+            this.vy = 0;
+            this.side1 = 0;
+            this.side2 = 0;
+            this.phase = 0;
+            this.trailSteps = 0;
+            this.maxTrailSteps = Math.floor(Math.random() * 30) + 20;
+            this.thinkCooldown = 0; // frames prima di ripensare la direzione in base
+            // Set initial direction
+            switch (this.dir) {
+                case 0: this.vx = this.speed; this.vy = 0; break;
+                case 1: this.vx = 0; this.vy = this.speed; break;
+                case 2: this.vx = -this.speed; this.vy = 0; break;
+                case 3: this.vx = 0; this.vy = -this.speed; break;
+            }
+        }
+
+        Enemy.prototype = Object.create(Player.prototype);
+        Enemy.prototype.constructor = Enemy;
+
+        Enemy.prototype.setDirection = function(dir) {
+            if (dir === this.dir) return;
+            this.dir = dir;
+            switch (dir) {
+                case 0: this.vx = this.speed; this.vy = 0; break;
+                case 1: this.vx = 0; this.vy = this.speed; break;
+                case 2: this.vx = -this.speed; this.vy = 0; break;
+                case 3: this.vx = 0; this.vy = -this.speed; break;
+            }
+            fixPlayerPosition(this);
+        };
+
+        Enemy.prototype.pickNewDirection = function() {
+            var dirs = [0, 1, 2, 3];
+            // Evita inversione a U
+            dirs = dirs.filter(function(d) { return d !== (this.dir + 2) % 4; }.bind(this));
+            this.setDirection(dirs[Math.floor(Math.random() * dirs.length)]);
+        };
+
+        // Trova direzione verso il proprio territorio
+        Enemy.prototype.findDirectionToBase = function(gridX, gridY) {
+            var dirs = [[1,0],[0,1],[-1,0],[0,-1]];
+            var bestDir = this.dir;
+            var bestDist = 9999;
+
+            for (var d = 0; d < 4; d++) {
+                // No inversione a U
+                if (d === (this.dir + 2) % 4) continue;
+                for (var s = 1; s < 50; s++) {
+                    var x = gridX + dirs[d][0] * s;
+                    var y = gridY + dirs[d][1] * s;
+                    if (x < 0 || y < 0 || x >= GRID_WIDTH || y >= GRID_HEIGHT) break;
+                    if (gridMap[y][x] === this.colorIndex) {
+                        if (s < bestDist) {
+                            bestDist = s;
+                            bestDir = d;
+                        }
+                        break;
+                    }
+                }
+            }
+            return bestDir;
+        };
+
+        Enemy.prototype.update = function() {
+            if (!this.isAlive) return;
+
+            var gridX = Math.floor(this.x / CELL_SIZE);
+            var gridY = Math.floor(this.y / CELL_SIZE);
+            var dirs = [[1,0],[0,1],[-1,0],[0,-1]];
+
+            // Conta passi fuori dal territorio
+            if (this.state === 'IN_TRAIL') {
+                this.trailSteps++;
+            } else {
+                this.trailSteps = 0;
+            }
+
+            //============================================================
+            // STATO: IN_BASE - Dentro il proprio territorio
+            //============================================================
+            if (this.state === 'IN_BASE') {
+
+                // Cerca scia nemica vicina per cacciare
+                var bestTrail = null;
+                var bestDist = 999;
+                for (var p = 0; p < allPlayers.length; p++) {
+                    var other = allPlayers[p];
+                    if (other === this || !other.isAlive || other.state !== 'IN_TRAIL') continue;
+                    for (var t = 0; t < other.trail.length; t++) {
+                        var cell = other.trail[t];
+                        var d = Math.abs(cell.x - gridX) + Math.abs(cell.y - gridY);
+                        if (d < bestDist) { bestDist = d; bestTrail = cell; }
+                    }
+                }
+
+                if (bestTrail && bestDist < 15) {
+                    // HUNT: vai verso la scia nemica
+                    if (Math.abs(bestTrail.x - gridX) > Math.abs(bestTrail.y - gridY))
+                        this.setDirection(bestTrail.x > gridX ? 0 : 2);
+                    else
+                        this.setDirection(bestTrail.y > gridY ? 1 : 3);
+                    this.thinkCooldown = 0;
+                } else {
+                    // EXPAND: cerca il confine del territorio e vai verso di esso
+                    // Controlla se la direzione corrente porta ancora fuori dal territorio
+                    var currentDirLeadsOut = false;
+                    for (var s = 1; s < 50; s++) {
+                        var cx = gridX + dirs[this.dir][0] * s;
+                        var cy = gridY + dirs[this.dir][1] * s;
+                        if (cx < 2 || cy < 2 || cx >= GRID_WIDTH - 2 || cy >= GRID_HEIGHT - 2) break;
+                        if (gridMap[cy][cx] !== this.colorIndex) {
+                            currentDirLeadsOut = true;
+                            break;
+                        }
+                    }
+
+                    if (currentDirLeadsOut) {
+                        // Direzione buona, mantienila - prepara i parametri per l'uscita
+                        if (this.thinkCooldown <= 0) {
+                            this.side1 = Math.floor(Math.random() * 14) + 8;
+                            this.side2 = Math.floor(Math.random() * 14) + 8;
+                            this.phase = 0;
+                            this.maxTrailSteps = Math.floor(Math.random() * 35) + 20;
+                            this.thinkCooldown = 999; // non cambiare finché non esci
+                        }
+                    } else {
+                        // Direzione corrente non porta fuori, cerca una nuova
+                        var searchDirs = [0, 1, 2, 3];
+                        var bestDir = -1;
+                        var bestS = 9999;
+                        for (var di = 0; di < 4; di++) {
+                            var dd = searchDirs[di];
+                            if (dd === (this.dir + 2) % 4) continue; // no U-turn
+                            for (var s = 1; s < 50; s++) {
+                                var sx = gridX + dirs[dd][0] * s;
+                                var sy = gridY + dirs[dd][1] * s;
+                                if (sx < 2 || sy < 2 || sx >= GRID_WIDTH - 2 || sy >= GRID_HEIGHT - 2) break;
+                                if (gridMap[sy][sx] !== this.colorIndex) {
+                                    if (s < bestS) { bestS = s; bestDir = dd; }
+                                    break;
+                                }
+                            }
+                        }
+                        if (bestDir !== -1) {
+                            this.setDirection(bestDir);
+                            this.side1 = Math.floor(Math.random() * 14) + 8;
+                            this.side2 = Math.floor(Math.random() * 14) + 8;
+                            this.phase = 0;
+                            this.maxTrailSteps = Math.floor(Math.random() * 35) + 20;
+                            this.thinkCooldown = 999;
+                        } else {
+                            // Territorio copre tutto? Gira a caso
+                            this.pickNewDirection();
+                            this.thinkCooldown = 30;
+                        }
+                    }
+                }
+
+                // Dentro il territorio: unico controllo = non uscire dal canvas
+                var bnx = gridX + dirs[this.dir][0];
+                var bny = gridY + dirs[this.dir][1];
+                if (bnx <= 0 || bny <= 0 || bnx >= GRID_WIDTH - 1 || bny >= GRID_HEIGHT - 1) {
+                    // Gira verso l'interno
+                    var safeDirs = [];
+                    for (var d = 0; d < 4; d++) {
+                        var tx = gridX + dirs[d][0] * 2;
+                        var ty = gridY + dirs[d][1] * 2;
+                        if (tx > 0 && ty > 0 && tx < GRID_WIDTH - 1 && ty < GRID_HEIGHT - 1) {
+                            safeDirs.push(d);
+                        }
+                    }
+                    if (safeDirs.length > 0) {
+                        this.setDirection(safeDirs[Math.floor(Math.random() * safeDirs.length)]);
+                        this.thinkCooldown = 0; // forza ricalcolo al prossimo frame
+                    }
+                }
+            }
+
+            //============================================================
+            // STATO: IN_TRAIL - Fuori dal territorio
+            //============================================================
+            else if (this.state === 'IN_TRAIL') {
+
+                // Priorità 1: se troppi passi, torna a casa SUBITO
+                if (this.trailSteps > this.maxTrailSteps) {
+                    this.phase = 2; // forza fase di ritorno
+                }
+
+                // Logica a fasi: rettangolo e ritorno
+                if (this.phase === 0) {
+                    this.side1--;
+                    if (this.side1 <= 0) {
+                        var turnDir = (this.dir + (Math.random() < 0.5 ? 1 : 3)) % 4;
+                        this.setDirection(turnDir);
+                        this.phase = 1;
+                    }
+                } else if (this.phase === 1) {
+                    this.side2--;
+                    if (this.side2 <= 0) {
+                        this.phase = 2;
+                    }
+                } else {
+                    // Fase 2: torna a casa
+                    var returnDir = this.findDirectionToBase(gridX, gridY);
+                    this.setDirection(returnDir);
+                }
+
+                // Evita il bordo del canvas
+                var nx = gridX + dirs[this.dir][0];
+                var ny = gridY + dirs[this.dir][1];
+                if (nx <= 1 || ny <= 1 || nx >= GRID_WIDTH - 2 || ny >= GRID_HEIGHT - 2) {
+                    var safeDirs = [];
+                    for (var d = 0; d < 4; d++) {
+                        if (d === (this.dir + 2) % 4) continue;
+                        var tx = gridX + dirs[d][0] * 3;
+                        var ty = gridY + dirs[d][1] * 3;
+                        if (tx > 1 && ty > 1 && tx < GRID_WIDTH - 2 && ty < GRID_HEIGHT - 2) {
+                            safeDirs.push(d);
+                        }
+                    }
+                    if (safeDirs.length > 0) {
+                        this.setDirection(safeDirs[Math.floor(Math.random() * safeDirs.length)]);
+                    }
+                }
+
+
+            }
+
+            Player.prototype.update.call(this);
+        };
+
+		
+		
+		function drawTerritory() { 
+			territoryCtx.clearRect( 0, 0, territoryCanvas.width, territoryCanvas.height );
+
+			territoryCtx.lineWidth = 0.5; 
+			for (var y = 0; y < GRID_HEIGHT; y++) { 
+				for (var x = 0; x < GRID_WIDTH; x++) { 
+					var ownerIndex = gridMap[y][x]; 
+					if (ownerIndex !== -1) { 
+						let cx = x * CELL_SIZE;
+						let cy = y * CELL_SIZE;
+						
+						territoryCtx.globalAlpha = 0.5; 
+						territoryCtx.fillStyle = colors[ownerIndex]; 
+						territoryCtx.fillRect(cx, cy, CELL_SIZE, CELL_SIZE); 
+						
+						territoryCtx.globalAlpha = 0.2; 
+						territoryCtx.strokeStyle = colors[ownerIndex]; 
+						territoryCtx.strokeRect(cx, cy, CELL_SIZE, CELL_SIZE); 
+						territoryCtx.globalAlpha = 1;
+					}
+				}
+			}
+		}
+        
+		
+        function buildStats(p) {
+            if (!p) return '';
+			let res = "<span style='color:"+colors[p.colorIndex]+"'>";
+			res += (!p.isEnemy ? 'Player: ' : 'Enemy: ');
+            if (!p.isAlive) res += '💀';
+            else {
+				if (p.colorIndex === 0) res += '🐍';//serpentone
+				else if (p.colorIndex === 1) res += '🪖';//tank risiko
+				else if (p.colorIndex === 2) res += '🍉';//cocomero				
+				else if (p.colorIndex === 3) res += '🍔';//panino
+				else if (p.colorIndex === 4) res += '🍩';//donut				
+				//res += ' ' + p.state;
+			}
+			res += ' ' + p.percentage.toFixed(1) + '%';
+			res += '</span>';
+            return res;
+        }
+
+        function updateHUD() {
+            document.getElementById('score').innerHTML = 
+				buildStats(allPlayers[0]) + '<br/>'
+                + buildStats(allPlayers[1]) + '<br/>'
+                + buildStats(allPlayers[2]) + '<br/>'
+				+ buildStats(allPlayers[3]) + '<br/>'
+				+ buildStats(allPlayers[4])
+        }
+        
+        function updateTerritoryPercentages() {
+            var totalCells = GRID_WIDTH * GRID_HEIGHT;
+            if (totalCells === 0) return;
+            var counts = {};
+
+            for (var i = 0; i < allPlayers.length; i++) {
+                counts[allPlayers[i].colorIndex] = 0;
+            }
+
+            for (var r = 0; r < GRID_HEIGHT; r++) {
+                for (var c = 0; c < GRID_WIDTH; c++) {
+                    var cellOwner = gridMap[r][c];
+                    if (counts[cellOwner] !== undefined) {
+                        counts[cellOwner]++;
+                    }
+                }
+            }
+
+            for (var i = 0; i < allPlayers.length; i++) {
+                var p = allPlayers[i];
+                p.cellCount = counts[p.colorIndex] || 0;
+                p.percentage = 100 * p.cellCount / totalCells;
+            }
+
+            // Morte se territorio = 0
+            for (var i = 0; i < allPlayers.length; i++) {
+                var p = allPlayers[i];
+                if (p.isAlive && p.cellCount === 0) {
+                    p.isAlive = false;
+                    p.trail = [];
+                    createParticles(p.x, p.y, p.color, 80);
+                }
+            }
+        }
+
+        function gameLoop() {
+			if (!gameRunning) {
+				gameBlocking=gameBlocking-1;
+				if(gameBlocking < 0) return;
+			}
+			
+            // Background
+            var gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+            gradient.addColorStop(0, '#234');
+            gradient.addColorStop(1, '#012');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Grid lines
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+            ctx.lineWidth = 1;
+            for (var i = 0; i < canvas.width; i += CELL_SIZE * 4) {
+                ctx.beginPath();
+                ctx.moveTo(i, 0);
+                ctx.lineTo(i, canvas.height);
+                ctx.stroke();
+            }
+            for (var j = 0; j < canvas.height; j += CELL_SIZE * 4) {
+                ctx.beginPath();
+                ctx.moveTo(0, j);
+                ctx.lineTo(canvas.width, j);
+                ctx.stroke();
+            }
+
+            //drawTerritory();
+			ctx.drawImage( territoryCanvas, 0, 0 );
+			
+            // Particles
+            for (var p = particles.length - 1; p >= 0; p--) {
+                particles[p].update();
+                particles[p].draw();
+                if (particles[p].life <= 0) {
+                    particles.splice(p, 1);
+                }
+            }
+			
+            // Players
+            for (var pp = 0; pp < allPlayers.length; pp++) {
+                allPlayers[pp].update();
+                allPlayers[pp].draw();
+            }
+
+            updateHUD();
+
+            if (player && !player.isAlive && gameRunning) {
+				gameRunning = false;
+                gameBlocking = 150;
+				document.getElementById('endTitle').textContent = 'GAME OVER';
+                document.getElementById('gameOver').style.display = 'block';
+            }
+
+            // Controlla vittoria: player vivo e tutti gli enemy morti
+            if (player && player.isAlive) {
+                var allEnemiesDead = true;
+                for (var i = 1; i < allPlayers.length; i++) {
+                    if (allPlayers[i].isAlive) { allEnemiesDead = false; break; }
+                }
+                if (allEnemiesDead && gameRunning) {
+                    gameRunning = false;
+					gameBlocking = 150;
+					document.getElementById('endTitle').textContent = 'YOU WIN';
+                    document.getElementById('endTitle').style.background = 'linear-gradient(90deg, #00FF41, #00D4FF)';
+                    document.getElementById('endTitle').style.webkitBackgroundClip = 'text';
+                    document.getElementById('endTitle').style.webkitTextFillColor = 'transparent';
+                    document.getElementById('gameOver').style.display = 'block';
+                    document.getElementById('gameOver').style.borderColor = '#00FF41';
+                    document.getElementById('gameOver').style.boxShadow = '0 0 40px rgba(0, 255, 65, 0.8)';
+                }
+            }
+
+            animId = requestAnimationFrame(gameLoop);
+        }
+
+        // Input handling - Touch
+        var touchActive = false;
+        var touchStartX = 0;
+        var touchStartY = 0;
+
+        canvas.addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            touchActive = true;
+            var touch = e.touches[0];
+            touchStartX = touch.clientX - canvas.getBoundingClientRect().left;
+            touchStartY = touch.clientY - canvas.getBoundingClientRect().top;
+        }, false);
+
+        canvas.addEventListener('touchmove', function(e) {
+            e.preventDefault();
+            if (!touchActive || !player) return;
+
+            var touch = e.touches[0];
+            var currentX = touch.clientX - canvas.getBoundingClientRect().left;
+            var currentY = touch.clientY - canvas.getBoundingClientRect().top;
+
+            var dx = currentX - touchStartX;
+            var dy = currentY - touchStartY;
+            var distance = Math.sqrt(dx * dx + dy * dy);
+
+            if (distance > 5) {
+                var angle = Math.atan2(dy, dx);
+                player.vx = Math.cos(angle) * PLAYER_SPEED;
+                player.vy = Math.sin(angle) * PLAYER_SPEED;
+				fixPlayerPosition(player);
+            }
+        }, false);
+
+        canvas.addEventListener('touchend', function(e) {
+            e.preventDefault();
+            touchActive = false;
+        }, false);
+
+        // Keyboard - con blocco inversione a U
+        document.addEventListener('keydown', function(e) {
+            if (!player) return;
+            var speed = PLAYER_SPEED;
+            if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
+                if (player.vy > 0) return; // blocca U-turn
+                player.vy = -speed;
+                player.vx = 0;
+				fixPlayerPosition(player);
+            }
+            if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') {
+                if (player.vy < 0) return; // blocca U-turn
+                player.vy = speed;
+                player.vx = 0;
+				fixPlayerPosition(player);
+            }
+            if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
+                if (player.vx > 0) return; // blocca U-turn
+                player.vx = -speed;
+                player.vy = 0;
+				fixPlayerPosition(player);
+            }
+            if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
+                if (player.vx < 0) return; // blocca U-turn
+                player.vx = speed;
+                player.vy = 0;
+				fixPlayerPosition(player);
+            }
+        });
+		
+		//alberto!
+		function fixPlayerPosition(p) {
+			p.x = Math.floor(p.x / CELL_SIZE) * CELL_SIZE + CELL_SIZE * 0.5;
+            p.y = Math.floor(p.y / CELL_SIZE) * CELL_SIZE + CELL_SIZE * 0.5;
+		}
+
+        // Initialize with dynamic dimensions and neon border
+        function init() {
+            if (animId) {
+                cancelAnimationFrame(animId);
+            }
+
+            // Calcola margine dinamico: più sottile per smartphone, visibile e staccato per PC
+            var isMobile = window.innerWidth <= 600;
+            var margin = isMobile ? 10 : 20;
+
+            // Rendi il canvas grande quasi tutto lo schermo ma permettendo al bordo neon del container di brillare
+            canvas.width = window.innerWidth - (margin * 2);
+            canvas.height = window.innerHeight - (margin * 2);
+			
+            // Assicurati che le misure del canvas siano un multiplo perfetto della griglia per non spezzare le celle
+            canvas.width -= canvas.width % CELL_SIZE;
+            canvas.height -= canvas.height % CELL_SIZE;
+			
+			territoryCanvas.width = canvas.width;
+			territoryCanvas.height = canvas.height;
+            
+
+            // Adatta le misure esterne del container affinché avvolga perfettamente il canvas e mostri il glow
+            container.style.width = canvas.width + "px";
+            container.style.height = canvas.height + "px";
+
+            GRID_WIDTH = Math.floor(canvas.width / CELL_SIZE);
+            GRID_HEIGHT = Math.floor(canvas.height / CELL_SIZE);
+			
+            gameRunning = true;
+			allPlayers = [];
+            particles = [];
+            document.getElementById('gameOver').style.display = 'none';
+
+            initGrid();
+            
+            var baseX = Math.floor(GRID_WIDTH / 2);
+            var baseY = Math.floor(GRID_HEIGHT / 2);
+            
+			let currentColorIndex = new Date().getSeconds();//colore del player casuale
+			
+			let baseSIZE = 3;
+			
+			fillTerritory(baseX, baseY, baseSIZE, currentColorIndex % 5);
+			
+			player = new Player(
+                baseX * CELL_SIZE + CELL_SIZE * 0.5,
+                baseY * CELL_SIZE + CELL_SIZE * 0.5,
+                currentColorIndex % 5,
+                false
+            );
+            player.vx = PLAYER_SPEED;
+            allPlayers.push(player);
+
+            var enemyPositions = [
+                {x: GRID_WIDTH / 5, y: GRID_HEIGHT / 5, idx: (currentColorIndex + 1) % 5},
+                {x: 4 * GRID_WIDTH / 5, y: 4 * GRID_HEIGHT / 5, idx: (currentColorIndex + 2) % 5},
+				{x: GRID_WIDTH / 5, y: 4 * GRID_HEIGHT / 5, idx: (currentColorIndex + 3) % 5},
+				{x: 4 * GRID_WIDTH / 5, y: GRID_HEIGHT / 5, idx: (currentColorIndex + 4) % 5},
+            ];
+
+            for (var b = 0; b < enemyPositions.length; b++) {
+                var bp = enemyPositions[b];
+                var bx = Math.floor(bp.x);
+                var by = Math.floor(bp.y);
+                
+				fillTerritory(bx, by, baseSIZE, bp.idx);
+				
+                var enemy = new Enemy(
+                    bx * CELL_SIZE + CELL_SIZE * 0.5,
+                    by * CELL_SIZE + CELL_SIZE * 0.5,
+                    bp.idx
+                );
+                allPlayers.push(enemy);
+            }
+			
+            updateTerritoryPercentages();
+			drawTerritory();
+			
+            gameLoop();
+        }
+
+        window.addEventListener('resize', function() {
+            init();
+        });
+		
+		function fillTerritory(bx, by, baseSIZE, col) {
+			for (var yy = by - baseSIZE; yy < by + baseSIZE; yy++) {
+                    for (var xx = bx - baseSIZE; xx < bx + baseSIZE; xx++) {
+                        if (xx >= 0 && xx < GRID_WIDTH && yy >= 0 && yy < GRID_HEIGHT) {
+                            gridMap[yy][xx] = col;
+                    }
+                }
+            }
+		}
+
+        init();
+    </script>
+</body>
+</html>
