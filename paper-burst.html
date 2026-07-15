@@ -1509,30 +1509,38 @@
 
             var dx = currentX - touchStartX;
             var dy = currentY - touchStartY;
-            var distance = Math.sqrt(dx * dx + dy * dy);
+            var distance = dx * dx + dy * dy;
 
-			if (distance < CELL_SIZE) return;
+			if (distance <= CELL_SIZE * CELL_SIZE) return;
 
-            if (distance > 5) {
-                /*
-				//angolo libero è problematico!
-				var angle = Math.atan2(dy, dx);
-                player.vx = Math.cos(angle) * PLAYER_SPEED;
-                player.vy = Math.sin(angle) * PLAYER_SPEED;
+            /*
+			//angolo libero è problematico!
+			var angle = Math.atan2(dy, dx);
+            player.vx = Math.cos(angle) * PLAYER_SPEED;
+            player.vy = Math.sin(angle) * PLAYER_SPEED;
+			fixPlayerPosition(player);
+			*/
+			
+			if (Math.abs(dx) > Math.abs(dy)) {
+				// orizzontale
+				if (player.vx > 0 && dx < 0) return;
+				if (player.vx < 0 && dx > 0) return;
+				
+				player.vx = dx > 0 ? PLAYER_SPEED : -PLAYER_SPEED;
+				player.vy = 0;
+				
 				fixPlayerPosition(player);
-				*/
-				if (Math.abs(dx) > Math.abs(dy)) {
-					// orizzontale
-					player.vx = dx > 0 ? PLAYER_SPEED : -PLAYER_SPEED;
-					player.vy = 0;
-				} else {
-					// verticale
-					player.vx = 0;
-					player.vy = dy > 0 ? PLAYER_SPEED : -PLAYER_SPEED;
-				}
-
+				
+			} else if (player.vy === 0) {
+				// verticale
+				if (player.vy > 0 && dy < 0) return;
+				if (player.vy < 0 && dy > 0) return;
+				
+				player.vx = 0;
+				player.vy = dy > 0 ? PLAYER_SPEED : -PLAYER_SPEED;
+				
 				fixPlayerPosition(player);
-            }
+			}
         }, false);
 
         canvas.addEventListener('touchend', function(e) {
