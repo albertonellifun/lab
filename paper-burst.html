@@ -215,7 +215,17 @@
             this.state = 'IN_BASE';
             this.lastBaseX = Math.floor(x / CELL_SIZE);
             this.lastBaseY = Math.floor(y / CELL_SIZE);
+			this.killReason = '';
         }
+
+		Player.prototype.kill = function(reason) {
+			if (!this.isAlive) return;
+			
+			this.isAlive = false;
+			this.trail = [];
+			createParticles(this.x, this.y, this.color, 80);
+			this.killReason = reason;
+		}
 
         Player.prototype.update = function() {
             if (!this.isAlive) return;
@@ -245,14 +255,10 @@
                     var thisInOwn = inOwnTerritory;
                     var otherInOwn = (gridMap[otherGY][otherGX] === other.colorIndex);
                     if (!thisInOwn) {
-					    this.isAlive = false;
-                        this.trail = [];
-                        createParticles(this.x, this.y, this.color, 80);
+					    this.kill('HEAD-ON COLLISION');
                     }
                     if (!otherInOwn) {
-					    other.isAlive = false;
-                        other.trail = [];
-                        createParticles(other.x, other.y, other.color, 80);
+						other.kill('HEAD-ON COLLISION');
                     }
                     if (!this.isAlive) return;
                 }
@@ -276,9 +282,7 @@
                     var startCell = this.trail[0];
                     if (startCell.x >= 0 && startCell.x < GRID_WIDTH && startCell.y >= 0 && startCell.y < GRID_HEIGHT) {
                         if (gridMap[startCell.y][startCell.x] !== this.colorIndex) {
-							this.isAlive = false;
-                            this.trail = [];
-                            createParticles(this.x, this.y, this.color, 80);
+							this.kill('HIT ENEMY TRAIL');
                             return;
                         }
                     }
@@ -321,11 +325,9 @@
                 for (var p = 0; p < allPlayers.length; p++) {
                     var other = allPlayers[p];
                     if (other === this || !other.isAlive || other.state !== 'IN_TRAIL') continue;
-                    for (var ti = 0; ti < other.trail.length; ti++) {
+                    for (var ti = 1; ti < other.trail.length; ti++) {
                         if (other.trail[ti].x === gridX && other.trail[ti].y === gridY) {
-							other.isAlive = false;
-                            other.trail = [];
-                            createParticles(other.x, other.y, other.color, 80);
+							other.kill('TRAIL INTERCEPTED');
                             break;
                         }
                     }
@@ -339,9 +341,7 @@
                     var otherGY = Math.floor(other.y / CELL_SIZE);
                     for (var ti = 1; ti < this.trail.length; ti++) { // skip trail[0] (è nel territorio)
                         if (this.trail[ti].x === otherGX && this.trail[ti].y === otherGY) {
-							this.isAlive = false;
-                            this.trail = [];
-                            createParticles(this.x, this.y, this.color, 80);
+							this.kill('BASE CAPTURED');
                             return;
                         }
                     }
@@ -406,11 +406,11 @@
 				
                 var otherGridX = Math.floor(other.x / CELL_SIZE);
                 var otherGridY = Math.floor(other.y / CELL_SIZE);
-                    
-                if (gridMap[otherGridY][otherGridX] === this.colorIndex) {
-					other.isAlive = false;
-                    createParticles(other.x, other.y, other.color, 100);
-                    
+                
+				var enemyWasOutside = other.state === 'IN_TRAIL';
+				
+				if (enemyWasOutside && gridMap[otherGridY][otherGridX] === this.colorIndex) {
+					other.kill('CAPTURED INSIDE TERRITORY');
                     for (var r = 0; r < GRID_HEIGHT; r++) {
                         for (var c = 0; c < GRID_WIDTH; c++) {
                             if (gridMap[r][c] === other.colorIndex) {
@@ -418,7 +418,6 @@
                             }
                         }
                     }
-                    other.trail = [];
                 }
             }
             updateTerritoryPercentages();
@@ -465,7 +464,7 @@
 				ctx.beginPath();
 				ctx.ellipse(0, 0, s * 1.1, s * 0.9, 0, 0, Math.PI * 2);
 				ctx.fill();
-				// Squame scure
+				// naso scuro
 				ctx.fillStyle = '#151';
 				ctx.beginPath();
 				ctx.arc(s * 0.9, -s * 0.2, s * 0.2, 0, Math.PI * 2);
@@ -483,10 +482,10 @@
 				// Pupille verticali
 				ctx.fillStyle = '#000';
 				ctx.beginPath();
-				ctx.ellipse(s * 0.35, -s * 0.35, s * 0.08, s * 0.2, 0, 0, Math.PI * 2);
+				ctx.ellipse(s * 0.35, -s * 0.35, s * 0.16, s * 0.08, 0, 0, Math.PI * 2);
 				ctx.fill();
 				ctx.beginPath();
-				ctx.ellipse(s * 0.35, s * 0.35, s * 0.08, s * 0.2, 0, 0, Math.PI * 2);
+				ctx.ellipse(s * 0.35, s * 0.35, s * 0.16, s * 0.08, 0, 0, Math.PI * 2);
 				ctx.fill();
 				// Lingua biforcuta
 				ctx.strokeStyle = '#f00';
@@ -850,7 +849,7 @@
 				ctx.fill();
 
 				// Bordo tostato
-				ctx.strokeStyle = '#841';
+				ctx.strokeStyle = '#222';
 				ctx.lineWidth = s * 0.08;
 				ctx.stroke();
 
@@ -860,7 +859,7 @@
 				ctx.stroke();
 				
 				//Occhi
-				ctx.fillStyle = '#841';
+				ctx.fillStyle = '#222';
 				ctx.beginPath();
 				ctx.arc(-s*0.25, -s*0.3, s*0.2, 0, Math.PI * 2);
 				ctx.fill();
@@ -960,6 +959,13 @@
 
 				ctx.shadowColor = this.color;
 				ctx.shadowBlur = 12;
+				
+				// buccia
+				ctx.strokeStyle = '#841';
+				ctx.lineWidth = s * 0.2;
+				ctx.beginPath();
+				ctx.arc(-s*0.1, 0, s, 0, Math.PI * 2);
+				ctx.stroke();
 
 				// kiwi body
 				ctx.fillStyle = this.color;
@@ -967,15 +973,10 @@
 				ctx.arc(0, 0, s, 0, Math.PI * 2);
 				ctx.fill();
 				
-				// buccia
-				ctx.strokeStyle = '#841';
-				ctx.lineWidth = s * 0.1;
-				ctx.stroke();
-				
 				// kiwi centro
 				ctx.fillStyle = '#9d9';
 				ctx.beginPath();
-				ctx.arc(0, 0, s * 0.45, 0, Math.PI * 2);
+				ctx.arc(0, 0, s * 0.35, 0, Math.PI * 2);
 				ctx.fill();			
 
 				// Semi
@@ -988,7 +989,7 @@
 					let y = Math.cos(angle) * dist;
 					
 					ctx.beginPath();
-					ctx.arc(x, y, s * 0.1, 0, Math.PI * 2);
+					ctx.ellipse(x, y, s * 0.05, s*0.1, -angle,  0, Math.PI * 2);
 					ctx.fill();
 				}
 				ctx.shadowBlur = 0;
@@ -1042,8 +1043,7 @@
             this.phase = 0;
             this.trailSteps = 0;
             this.maxTrailSteps = Math.floor(Math.random() * 10) + 5;
-            this.thinkCooldown = 0; // frames prima di ripensare la direzione in base
-			this.cellsSinceTurn = 0; //celle attraversate dall'ultima svolta
+            this.cellsSinceTurn = 0; //celle attraversate dall'ultima svolta
 			this.lastGridX = -1;//ultima cella visitata
 			this.lastGridY = -1;//ultima cella visitata
             // Set initial direction
@@ -1151,7 +1151,6 @@
                         this.setDirection(bestTrail.y > gridY ? 1 : 3);
 						this.cellsSinceTurn = 0;
 					}
-                    this.thinkCooldown = 0;
                 } else {
                     // EXPAND: cerca il confine del territorio e vai verso di esso
                     // Controlla se la direzione corrente porta ancora fuori dal territorio
@@ -1168,13 +1167,10 @@
 
                     if (currentDirLeadsOut) {
                         // Direzione buona, mantienila - prepara i parametri per l'uscita
-                        if (this.thinkCooldown <= 0) {
-                            this.side1 = Math.floor(Math.random() * 14) + 8;
-                            this.side2 = Math.floor(Math.random() * 14) + 8;
-                            this.phase = 0;
-                            this.maxTrailSteps = Math.floor(Math.random() * 35) + 20;
-                            this.thinkCooldown = 999; // non cambiare finché non esci
-                        }
+                        this.side1 = Math.floor(Math.random() * 10) + 5;
+                        this.side2 = Math.floor(Math.random() * 10) + 5;
+                        this.phase = 0;
+                        this.maxTrailSteps = Math.floor(Math.random() * 35) + 20;
                     } else {
                         // Direzione corrente non porta fuori, cerca una nuova
                         var searchDirs = [0, 1, 2, 3];
@@ -1196,16 +1192,14 @@
                         if (bestDir !== -1          && this.cellsSinceTurn >= 2) {
                             this.setDirection(bestDir);
 							this.cellsSinceTurn = 0;
-                            this.side1 = Math.floor(Math.random() * 14) + 8;
-                            this.side2 = Math.floor(Math.random() * 14) + 8;
+                            this.side1 = Math.floor(Math.random() * 10) + 5;
+                            this.side2 = Math.floor(Math.random() * 10) + 5;
                             this.phase = 0;
                             this.maxTrailSteps = Math.floor(Math.random() * 35) + 20;
-                            this.thinkCooldown = 999;
                         } else if (this.cellsSinceTurn >= 2) {
                             // Territorio copre tutto? Gira a caso
                             this.pickNewDirection();
 							this.cellsSinceTurn = 0;
-                            this.thinkCooldown = 30;
                         }
                     }
                 }
@@ -1226,8 +1220,10 @@
                     if (safeDirs.length > 0        && this.cellsSinceTurn >= 2) {
                         this.setDirection(safeDirs[Math.floor(Math.random() * safeDirs.length)]);
 						this.cellsSinceTurn = 0;
-                        this.thinkCooldown = 0; // forza ricalcolo al prossimo frame
-                    }
+                    } else {
+						this.setDirection((this.dir + 1) % 4);
+						this.cellsSinceTurn = 0;
+					}
                 }
             }
 
@@ -1281,7 +1277,10 @@
                     if (safeDirs.length > 0    && this.cellsSinceTurn >= 2) {
                         this.setDirection(safeDirs[Math.floor(Math.random() * safeDirs.length)]);
 						this.cellsSinceTurn = 0;
-                    }
+                    } else {
+						this.setDirection( (this.dir + 1)%4 );
+						this.cellsSinceTurn = 0;
+					}
                 }
 
 
@@ -1363,7 +1362,7 @@
             if (!p) return '';
 			let res = "<span style='color:"+colors[p.colorIndex]+"'>";
 			res += (!p.isEnemy ? 'Player: ' : 'Enemy: ');
-            if (!p.isAlive) res += '💀';
+            if (!p.isAlive) res += '💀' + ' ' + p.killReason;
             else res += emojis[p.colorIndex];
 			res += ' ' + p.percentage.toFixed(1) + '%';
 			res += '</span>';
@@ -1404,9 +1403,7 @@
             for (var i = 0; i < allPlayers.length; i++) {
                 var p = allPlayers[i];
                 if (p.isAlive && p.cellCount === 0) {
-                    p.isAlive = false;
-                    p.trail = [];
-                    createParticles(p.x, p.y, p.color, 80);
+                    p.kill('OUT OF BOUNDS');
                 }
             }
         }
@@ -1452,11 +1449,11 @@
                 }
             }
 			
-            // Players
-            for (var pp = 0; pp < allPlayers.length; pp++) {
-                allPlayers[pp].update();
-                allPlayers[pp].draw();
-            }
+            //update
+            for (var pp = 0; pp < allPlayers.length; pp++) allPlayers[pp].update();
+			
+			//redraw
+			for (var pp = 0; pp < allPlayers.length; pp++) allPlayers[pp].draw();
 
             updateHUD();
 
