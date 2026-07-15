@@ -1670,7 +1670,8 @@
             init();
         });
 		
-		function fillTerritory(bx, by, baseSIZE, col) {
+		//crea un quadrato di lato baseSIZE * 2
+		function fillTerritorySQUARE(bx, by, baseSIZE, col) {
 			for (var yy = by - baseSIZE; yy < by + baseSIZE; yy++) {
                     for (var xx = bx - baseSIZE; xx < bx + baseSIZE; xx++) {
                         if (xx >= 0 && xx < GRID_WIDTH && yy >= 0 && yy < GRID_HEIGHT) {
@@ -1678,6 +1679,25 @@
                     }
                 }
             }
+		}
+		// Crea un territorio ""quasi circolare"" di raggio baseSIZE
+		function fillTerritory(bx, by, baseSIZE, col) {
+			var r2 = baseSIZE * baseSIZE;
+
+			for (var yy = by - baseSIZE; yy <= by + baseSIZE; yy++) {
+				for (var xx = bx - baseSIZE; xx <= bx + baseSIZE; xx++) {
+
+					if (xx >= 0 && xx < GRID_WIDTH && yy >= 0 && yy < GRID_HEIGHT) {
+
+						var dx = xx - bx;
+						var dy = yy - by;
+
+						if ((dx * dx + dy * dy) <= (r2 + Math.random()*2)) {
+							gridMap[yy][xx] = col;
+						}
+					}
+				}
+			}
 		}
 
         init();
