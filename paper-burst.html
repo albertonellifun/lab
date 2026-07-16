@@ -25,7 +25,7 @@
         .container {
             position: relative;
             border: 4px solid #00FF41;
-            box-shadow: 0 0 35px rgba(0, 255, 255, 0.8), inset 0 0 15px rgba(0, 255, 255, 0.3);
+            box-shadow: 0 0 35px rgba(0, 255, 255, 0.8);
             border-radius: 12px;
             overflow: hidden;
             background: #0a0e27;
@@ -46,9 +46,9 @@
             font-size: 16px;
             font-weight: 700;
             z-index: 10;
-            border: 2px solid #00D4FF;
-            box-shadow: 0 0 15px rgba(0, 255, 255, 0.4);
-			filter: opacity(0.5);
+            border: 4px solid #00FF41;
+            box-shadow: 0 0 35px rgba(0, 255, 255, 0.8);
+			xxxfilter: opacity(0.5);
         }
                 
         .game-over {
@@ -57,19 +57,18 @@
             left: 50%;
             transform: translate(-50%, -50%);
             background: rgba(0, 0, 0, 0.7);
-            padding: 50px;
-            border-radius: 15px;
+            padding: 32px;
+            border-radius: 12px;
             text-align: center;
             z-index: 100;
             display: none;
             min-width: 350px;
-            border: 3px solid #FF006E;
-            box-shadow: 0 0 40px rgba(255, 0, 110, 0.8);
+            border: 4px solid #00FF41;
+            box-shadow: 0 0 35px rgba(0, 255, 255, 0.8);
         }
         
         .game-over h1 {
-            font-size: 48px;
-            margin-bottom: 20px;
+            font-size: 32px;
             background: linear-gradient(90deg, #FF006E, #FFB703);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -77,9 +76,9 @@
         }
         
         .game-over button {
-            margin-top: 25px;
-            padding: 16px 32px;
-            font-size: 18px;
+            margin-top: 32px;
+            padding: 12px 24px;
+            font-size: 16px;
             background: linear-gradient(90deg, #00FF41, #00D4FF);
             color: #000;
             border: none;
@@ -134,8 +133,8 @@
         var allPlayers = [];
         var animId = null;
         // VIBRANT Color palette
-        var colors = 		['#00ff22', '#00ddff', '#ff0066', '#ffee00', '#cc55cc', '#aa7733', '#ccee66', '#ff8800', '#773300','#44dd55','#444444'];//verde, azzurro, rosso, giallo, violetto, biscotto, giallino, aranzulla, marrò, verdino
-        var colorsBright = 	['#00ff44', '#00ffff', '#ff1188', '#ffff00', '#dd77dd', '#cc9955', '#eeff88', '#ffaa00', '#994411','#66dd77','#777777'];//verde, azzurro, rosso, giallo, violetto, biscotto, giallino, aranzulla, marrò, verdino
+        var colors = 		['#00ff22', '#00ddff', '#ff0066', '#ffee00', '#cc55cc', '#aa7733', '#ccee66', '#ff8800', '#773300','#44dd55','#444444','#aa0000','#dddddd','#2233dd'];//verde, azzurro, rosso, giallo, violetto, biscotto, giallino, aranzulla, marrò, verdino, rossone, bianco, blu
+        var colorsBright = 	['#00ff44', '#00ffff', '#ff1188', '#ffff00', '#dd77dd', '#cc9955', '#eeff88', '#ffaa00', '#994411','#66dd77','#777777','#cc2222','#eeeeee','#3344ff'];//verde, azzurro, rosso, giallo, violetto, biscotto, giallino, aranzulla, marrò, verdino, rossone, bianco, blu
 		var emojis = [ 	'🐍',//serpentone
 						'🪖',//tank risiko
 						'🍉',//cocomero				
@@ -147,6 +146,9 @@
 						'🏈​',//football
 						'🥝​',//kiwi
 						'🎱​',//8 ball
+						'🍎',//apple
+						'🥥',//cocco
+						'🧿',//occhio di allah
 						];
 
         function initGrid() {
@@ -1025,6 +1027,104 @@
 				ctx.arc(0, s*0.1, s*0.1, 0, Math.PI * 2);
 				ctx.stroke();
 				ctx.shadowBlur = 0;
+			} else if (this.colorIndex === 11) {
+				//apple
+				var s = CELL_SIZE * 1.5;
+
+				ctx.shadowColor = this.color;
+				ctx.shadowBlur = 12;
+
+				//corpo gradiente radiale rosso luccicoso
+				ctx.fillStyle = this.color;
+				ctx.strokeStyle = '#600';
+				ctx.lineWidth = s * 0.1;
+				//melazza
+				ctx.beginPath();
+				ctx.ellipse(0, 0, s, s*0.75, 0, 0, Math.PI * 2);//schiacciata
+				ctx.closePath();
+				ctx.fill();
+				ctx.stroke();
+				
+				//picciolo
+				ctx.strokeStyle = '#3e3';
+				ctx.lineWidth = 2;
+				ctx.beginPath();
+				ctx.moveTo(0, 0 - s);
+				ctx.lineTo(0, 0 - s + 4);
+				ctx.stroke();
+
+				//foglietta
+				ctx.fillStyle = '#3e3';
+				ctx.beginPath();
+				ctx.moveTo(0, 0 - s - 1);
+				ctx.quadraticCurveTo(0 + 4, 0 - s - 2, 
+					   0 + 9, 0 - s + 2);
+				ctx.quadraticCurveTo(0 + 4, 0 - s + 6, 
+					   0, 0 - s - 1);
+				ctx.fill();
+				ctx.shadowBlur = 0;
+			} else if (this.colorIndex === 12) {
+				// cocco
+				var s = CELL_SIZE * 1.5;
+
+				ctx.shadowColor = this.color;
+				ctx.shadowBlur = 12;
+
+				// buccia
+				ctx.strokeStyle = '#841';
+				ctx.lineWidth = s * 0.2;
+				ctx.beginPath();
+				ctx.arc(-s*0.1, 0, s, 0, Math.PI * 2);
+				ctx.stroke();
+
+				// body
+				ctx.fillStyle = this.color;
+				ctx.beginPath();
+				ctx.arc(0, 0, s, 0, Math.PI * 2);
+				ctx.fill();
+				
+				// centro scuro
+				ctx.fillStyle = '#ccc';
+				ctx.beginPath();
+				ctx.arc(s*0.2, 0, s * 0.7, 0, Math.PI * 2);
+				ctx.fill();
+				ctx.fillStyle = '#c5c5c5';
+				ctx.beginPath();
+				ctx.arc(s*0.4, 0, s * 0.5, 0, Math.PI * 2);
+				ctx.fill();
+			} else if (this.colorIndex === 13) {
+				// occhio di allah
+				var s = CELL_SIZE * 1.5;
+
+				ctx.shadowColor = this.color;
+				ctx.shadowBlur = 12;
+
+				// bordo
+				ctx.strokeStyle = '#009';
+				ctx.lineWidth = s * 0.2;
+				ctx.beginPath();
+				ctx.arc(0, 0, s, 0, Math.PI * 2);
+				ctx.stroke();
+
+				// body
+				ctx.fillStyle = this.color;
+				ctx.beginPath();
+				ctx.arc(0, 0, s, 0, Math.PI * 2);
+				ctx.fill();
+				
+				// bianco
+				ctx.fillStyle = '#eee';
+				ctx.beginPath();
+				ctx.arc(0, 0, s * 0.7, 0, Math.PI * 2);
+				ctx.fill();
+				//nero
+				ctx.strokeStyle = '#0ef';
+				ctx.lineWidth = s * 0.1;
+				ctx.fillStyle = '#222';
+				ctx.beginPath();
+				ctx.arc(0, 0, s * 0.3, 0, Math.PI * 2);
+				ctx.fill();
+				ctx.stroke();
 			}
 
 			ctx.restore();
@@ -1474,12 +1574,7 @@
                     gameRunning = false;
 					gameBlocking = 150;
 					document.getElementById('endTitle').textContent = 'YOU WIN';
-                    document.getElementById('endTitle').style.background = 'linear-gradient(90deg, #00FF41, #00D4FF)';
-                    document.getElementById('endTitle').style.webkitBackgroundClip = 'text';
-                    document.getElementById('endTitle').style.webkitTextFillColor = 'transparent';
                     document.getElementById('gameOver').style.display = 'block';
-                    document.getElementById('gameOver').style.borderColor = '#00FF41';
-                    document.getElementById('gameOver').style.boxShadow = '0 0 40px rgba(0, 255, 65, 0.8)';
                 }
             }
 
