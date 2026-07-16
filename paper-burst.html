@@ -17,18 +17,17 @@
             width: 100vw;
             height: 100vh;
             overflow: hidden;
-            background: #050814;
-            font-family: 'Arial', sans-serif;
+            background: rgba(255, 255, 238, 0.5);
+            font-family: 'Courier New', monospace;
             color: #fff;
         }
         
         .container {
             position: relative;
-            border: 4px solid #00FF41;
-            box-shadow: 0 0 35px rgba(0, 255, 255, 0.8);
+            border: 2px solid #44b;
             border-radius: 12px;
             overflow: hidden;
-            background: #0a0e27;
+            background: #ffe
         }
         
         canvas {
@@ -40,15 +39,13 @@
             position: absolute;
             top: 16px;
             left: 16px;
-            background: rgba(0, 0, 0, 0.7);
-            padding: 8px;
-            border-radius: 8px;
+            xbackground: rgba(255, 255, 238, 0.5);
+            xpadding: 8px;
+            xborder-radius: 8px;
+			xborder: 2px solid #44b;
             font-size: 16px;
             font-weight: 700;
-            z-index: 10;
-            border: 4px solid #00FF41;
-            box-shadow: 0 0 35px rgba(0, 255, 255, 0.8);
-			xxxfilter: opacity(0.5);
+            z-index: 10;			
         }
                 
         .game-over {
@@ -56,36 +53,31 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.7);
+            background: rgba(255, 255, 238, 0.5);
             padding: 32px;
             border-radius: 12px;
             text-align: center;
             z-index: 100;
             display: none;
             min-width: 350px;
-            border: 4px solid #00FF41;
-            box-shadow: 0 0 35px rgba(0, 255, 255, 0.8);
+			border: 2px solid #44b;
         }
         
         .game-over h1 {
             font-size: 32px;
-            background: linear-gradient(90deg, #FF006E, #FFB703);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+			color: #f00;
         }
         
         .game-over button {
             margin-top: 32px;
             padding: 12px 24px;
             font-size: 16px;
-            background: linear-gradient(90deg, #00FF41, #00D4FF);
-            color: #000;
-            border: none;
-            border-radius: 8px;
+            background: transparent;
+            color: #44b;
+            border: 2px solid #44b;
+			border-radius: 4px;
             cursor: pointer;
             font-weight: bold;
-            box-shadow: 0 0 20px rgba(0, 255, 255, 0.6);
             transition: all 0.3s;
         }
         
@@ -119,7 +111,9 @@
         var GRID_HEIGHT = 0;
         var PLAYER_SPEED = CELL_SIZE * 0.25;
         var ENEMY_SPEED = CELL_SIZE * 0.25;
-        var TRAIL_WIDTH = CELL_SIZE;
+        var TRAIL_WIDTH = CELL_SIZE * 1;
+		
+		var ENABLE_BLUR = false;
 		
 		var ENEMIES = 8;
 		
@@ -163,12 +157,13 @@
         }
 
         // Particle system
-        function Particle(x, y, vx, vy, color, life) {
+        function Particle(x, y, vx, vy, color, colorBright, life) {
             this.x = x;
             this.y = y;
             this.vx = vx;
             this.vy = vy;
             this.color = color;
+			this.colorBright = colorBright;
             this.life = life;
             this.maxLife = life;
             this.size = Math.random() * 4 + 2;
@@ -184,20 +179,26 @@
         Particle.prototype.draw = function() {
             var alpha = this.life / this.maxLife;
             ctx.globalAlpha = alpha;
-            ctx.fillStyle = this.color;
-            ctx.beginPath();
+            ctx.fillStyle = this.colorBright;
+			ctx.strokeStyle = this.color;
+            /*
+			ctx.beginPath();
             ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
             ctx.fill();
+			ctx.stroke();
+			*/
+			ctx.fillRect(this.x-this.size, this.y-this.size, this.size*2, this.size*2);
+			ctx.strokeRect(this.x-this.size, this.y-this.size, this.size*2, this.size*2);
             ctx.globalAlpha = 1;
         };
 
-        function createParticles(x, y, color, count) {
+        function createParticles(x, y, color, colorBright, count) {
             for (var i = 0; i < count; i++) {
                 var angle = (Math.PI * 2 * i) / count;
                 var speed = Math.random() * 5 + 2;
                 var vx = Math.cos(angle) * speed;
                 var vy = Math.sin(angle) * speed;
-                particles.push(new Particle(x, y, vx, vy, color, 50));
+                particles.push(new Particle(x, y, vx, vy, color, colorBright, 50));
             }
         }
 
@@ -225,7 +226,7 @@
 			
 			this.isAlive = false;
 			this.trail = [];
-			createParticles(this.x, this.y, this.color, 80);
+			createParticles(this.x, this.y, this.color, this.colorBright, 80);
 			this.killReason = reason;
 		}
 
@@ -435,7 +436,7 @@
                 ctx.lineCap = 'round';
                 ctx.lineJoin = 'round';
                 ctx.shadowColor = this.color;
-                ctx.shadowBlur = 10;
+                ctx.shadowBlur = ENABLE_BLUR ? 10 : 0;
 
                 ctx.beginPath();
                 ctx.moveTo(this.trail[0].x * CELL_SIZE + CELL_SIZE * 0.5,  
@@ -460,7 +461,7 @@
 				// SNAKE HEAD
 				var s = CELL_SIZE * 1.5;
 				ctx.shadowColor = this.color;
-				ctx.shadowBlur = 10;
+				ctx.shadowBlur = ENABLE_BLUR ? 10 : 0;
 				// Testa ovale
 				ctx.fillStyle = '#282';
 				ctx.beginPath();
@@ -506,7 +507,7 @@
                 var s = CELL_SIZE * 1.5;
 
                 ctx.shadowColor = this.color;
-                ctx.shadowBlur = 10;
+                ctx.shadowBlur = ENABLE_BLUR ? 10 : 0;
 
                 // centro della circonferenza (spostato verso la punta)
                 var cx = s * 1.2;
@@ -562,7 +563,7 @@
 				// RISK TANK
 				var s = CELL_SIZE * 1.5;
 				ctx.shadowColor = this.color;
-				ctx.shadowBlur = 10;
+				ctx.shadowBlur = ENABLE_BLUR ? 10 : 0;
 				// Corpo del carro (rettangolo arrotondato)
 				ctx.fillStyle = '#257';
 				ctx.beginPath();
@@ -608,7 +609,7 @@
 				var s = CELL_SIZE * 1.5;
 
 				ctx.shadowColor = this.color;
-				ctx.shadowBlur = 12;
+				ctx.shadowBlur = ENABLE_BLUR ? 10 : 0;
 
 				// Ciambella esterna
 				ctx.fillStyle = '#d84'; // impasto
@@ -698,7 +699,7 @@
 				var s = CELL_SIZE * 1.5;
 
 				ctx.shadowColor = this.color;
-				ctx.shadowBlur = 12;
+				ctx.shadowBlur = ENABLE_BLUR ? 10 : 0;
 
 				// Pane inferiore
 				ctx.fillStyle = '#c72';
@@ -796,7 +797,7 @@
 				var s = CELL_SIZE * 1.5;
 
 				ctx.shadowColor = this.color;
-				ctx.shadowBlur = 12;
+				ctx.shadowBlur = ENABLE_BLUR ? 10 : 0;
 
 				// biscottone
 				ctx.fillStyle = this.color;
@@ -842,7 +843,7 @@
 				var s = CELL_SIZE * 1.5;
 
 				ctx.shadowColor = this.color;
-				ctx.shadowBlur = 12;
+				ctx.shadowBlur = ENABLE_BLUR ? 10 : 0;
 
 				// smile!
 				ctx.fillStyle = '#ff4';
@@ -876,7 +877,7 @@
 				var r = s * 0.95;
 
 				ctx.shadowColor = this.color;
-				ctx.shadowBlur = 12;
+				ctx.shadowBlur = ENABLE_BLUR ? 10 : 0;
 
 				// Palla
 				ctx.fillStyle = this.color;
@@ -928,7 +929,7 @@
 				ctx.rotate(Math.PI / 4);
 
 				ctx.shadowColor = this.color;
-				ctx.shadowBlur = 12;
+				ctx.shadowBlur = ENABLE_BLUR ? 10 : 0;
 
 				// Corpo
 				ctx.fillStyle = "#8B4513";
@@ -960,7 +961,7 @@
 				var s = CELL_SIZE * 1.5;
 
 				ctx.shadowColor = this.color;
-				ctx.shadowBlur = 12;
+				ctx.shadowBlur = ENABLE_BLUR ? 10 : 0;
 				
 				// buccia
 				ctx.strokeStyle = '#841';
@@ -1000,7 +1001,7 @@
 				var s = CELL_SIZE * 1.5;
 
 				ctx.shadowColor = this.color;
-				ctx.shadowBlur = 12;
+				ctx.shadowBlur = ENABLE_BLUR ? 10 : 0;
 
 				// body black
 				ctx.fillStyle = this.color;
@@ -1032,7 +1033,7 @@
 				var s = CELL_SIZE * 1.5;
 
 				ctx.shadowColor = this.color;
-				ctx.shadowBlur = 12;
+				ctx.shadowBlur = ENABLE_BLUR ? 10 : 0;
 
 				//corpo gradiente radiale rosso luccicoso
 				ctx.fillStyle = this.color;
@@ -1068,7 +1069,7 @@
 				var s = CELL_SIZE * 1.5;
 
 				ctx.shadowColor = this.color;
-				ctx.shadowBlur = 12;
+				ctx.shadowBlur = ENABLE_BLUR ? 10 : 0;
 
 				// buccia
 				ctx.strokeStyle = '#841';
@@ -1090,14 +1091,14 @@
 				ctx.fill();
 				ctx.fillStyle = '#c5c5c5';
 				ctx.beginPath();
-				ctx.arc(s*0.4, 0, s * 0.5, 0, Math.PI * 2);
+				ctx.arc(s*0.4, 0, s * 0.4, 0, Math.PI * 2);
 				ctx.fill();
 			} else if (this.colorIndex === 13) {
 				// occhio di allah
 				var s = CELL_SIZE * 1.5;
 
 				ctx.shadowColor = this.color;
-				ctx.shadowBlur = 12;
+				ctx.shadowBlur = ENABLE_BLUR ? 10 : 0;
 
 				// bordo
 				ctx.strokeStyle = '#009';
@@ -1402,7 +1403,7 @@
 						let cy = y * CELL_SIZE;
 						
 						//territoryCtx.globalAlpha = 0.5; 
-						var alpha = (((x + y) & 1) ? 0.40 : 0.60);//scacchiera base
+						//var alpha = (((x + y) & 1) ? 0.40 : 0.60);//scacchiera base
 						//var alpha = (((x + y) & 2) ? 0.40 : 0.60);//scacchiera diagonale larga
 						//var alpha = (((x + y) & 3) ? 0.40 : 0.60);//scacchiera diagonale stretta
 						//var alpha = (((x + y) & 4) ? 0.40 : 0.60);//scacchiera diagonale larghissima
@@ -1410,9 +1411,20 @@
 						//var alpha = (((x + y) & 6) ? 0.40 : 0.60);//scacchiera diagonale a strisce compatte
 						//var alpha = (((x + y) & 7) ? 0.40 : 0.60);//righe diagonali
 						//var alpha = (0.40 + ((x ^ y) & 3) * 0.03);//scacchiera concentrica
-						territoryCtx.globalAlpha = alpha;
-						territoryCtx.fillStyle = colors[ownerIndex]; 
-						territoryCtx.fillRect(cx, cy, CELL_SIZE, CELL_SIZE); 
+						//territoryCtx.globalAlpha = alpha;
+						//territoryCtx.fillStyle = colors[ownerIndex]; 
+						//territoryCtx.fillRect(cx, cy, CELL_SIZE, CELL_SIZE); 
+						territoryCtx.lineWidth = 1;
+						territoryCtx.strokeStyle = colors[ownerIndex]; 
+						territoryCtx.beginPath();
+						if(ownerIndex%2) {
+							territoryCtx.moveTo(cx, cy);
+							territoryCtx.lineTo(cx + CELL_SIZE, cy + CELL_SIZE);
+						} else {
+							territoryCtx.moveTo(cx, cy + CELL_SIZE);
+							territoryCtx.lineTo(cx + CELL_SIZE, cy);
+						}
+						territoryCtx.stroke();
 						
 						/*
 						//bordo di ogni quadrato
@@ -1460,18 +1472,18 @@
 		
         function buildStats(p) {
             if (!p) return '';
-			let res = "<span style='color:"+colors[p.colorIndex]+"'>";
+			let res = "<p style='color:"+colors[p.colorIndex]+"'>";
 			res += (!p.isEnemy ? 'Player: ' : 'Enemy: ');
             if (!p.isAlive) res += '💀' + ' ' + p.killReason;
             else res += emojis[p.colorIndex];
 			res += ' ' + p.percentage.toFixed(1) + '%';
-			res += '</span>';
+			res += '</p>';
             return res;
         }
 
         function updateHUD() {
 			let stats = '';
-			for (let i = 0; i < allPlayers.length; i++) stats += buildStats(allPlayers[i]) + (i!==allPlayers.length-1?'<br/>':'');
+			for (let i = 0; i < allPlayers.length; i++) stats += buildStats(allPlayers[i]);
             document.getElementById('score').innerHTML = stats;
         }
         
@@ -1514,14 +1526,15 @@
 				if(gameBlocking < 0) return;
 			}
 			
+			/*
             // Background
             var gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
             gradient.addColorStop(0, '#234');
             gradient.addColorStop(1, '#012');
             ctx.fillStyle = gradient;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            // Grid lines
+			
+			// Grid lines
             ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
             ctx.lineWidth = 1;
             for (var i = 0; i < canvas.width; i += CELL_SIZE * 4) {
@@ -1536,7 +1549,54 @@
                 ctx.lineTo(canvas.width, j);
                 ctx.stroke();
             }
+			*/
+			
+			/* PAPER */
+			ctx.fillStyle = "#ffe";
+			ctx.fillRect(0,0,canvas.width, canvas.height);
 
+			ctx.strokeStyle = "#def";
+			ctx.lineWidth = 1;
+
+			for(let x=0;x<canvas.width;x+=CELL_SIZE*2){
+				ctx.beginPath();
+				ctx.moveTo(x,0);
+				ctx.lineTo(x,canvas.height);
+				ctx.stroke();
+			}
+
+			for(let y=0;y<canvas.height;y+=CELL_SIZE*2){
+				ctx.beginPath();
+				ctx.moveTo(0,y);
+				ctx.lineTo(canvas.width,y);
+				ctx.stroke();
+			}
+
+			// margine rosso a sx
+			ctx.strokeStyle="#f99";
+			ctx.beginPath();
+			ctx.moveTo(CELL_SIZE*3,0);
+			ctx.lineTo(CELL_SIZE*3,canvas.height);
+			ctx.stroke();
+			/*
+			// margine rosso a dx
+			ctx.beginPath();
+			ctx.moveTo((GRID_WIDTH - 3)*CELL_SIZE,0);
+			ctx.lineTo((GRID_WIDTH - 3)*CELL_SIZE,canvas.height);
+			ctx.stroke();
+			
+			// margine top
+			ctx.beginPath();
+			ctx.moveTo(0, CELL_SIZE*4);
+			ctx.lineTo(canvas.width, CELL_SIZE*4);
+			ctx.stroke();
+			// margine bottom
+			ctx.beginPath();
+			ctx.moveTo(0, (GRID_HEIGHT - 4)*CELL_SIZE);
+			ctx.lineTo(canvas.width, (GRID_HEIGHT - 4)*CELL_SIZE);
+			ctx.stroke();
+			*/
+			
             //drawTerritory();
 			ctx.drawImage( territoryCanvas, 0, 0 );
 			
