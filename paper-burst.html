@@ -19,7 +19,7 @@
             overflow: hidden;
             background: rgba(255, 255, 238, 0.5);
             font-family: 'Courier New', monospace;
-            color: #fff;
+            color: #44b;
         }
         
         .container {
@@ -61,6 +61,13 @@
             display: none;
             min-width: 350px;
 			border: 2px solid #44b;
+			xxxbackground-image: repeating-linear-gradient(
+				135deg,
+				#eee,
+				#eee 2px,
+				transparent 2px,
+				transparent 9px
+			  );
         }
         
         .game-over h1 {
@@ -73,12 +80,20 @@
             padding: 12px 24px;
             font-size: 16px;
             background: transparent;
+			xxxbackground: #fff;
             color: #44b;
             border: 2px solid #44b;
 			border-radius: 4px;
             cursor: pointer;
             font-weight: bold;
             transition: all 0.3s;
+			xxxbackground-image: repeating-linear-gradient(
+				135deg,
+				#eee,
+				#eee 2px,
+				transparent 2px,
+				transparent 9px
+			  );
         }
         
         .game-over button:hover {
@@ -90,6 +105,7 @@
     <div class="container" id="gameContainer">
         <canvas id="gameCanvas"></canvas>
         <div class="hud">
+			<div class="title" id="title">~ Paper Burst 1.0 ~</div>
             <div class="score" id="score"></div>
         </div>
         <div class="game-over" id="gameOver">
@@ -187,13 +203,7 @@
             ctx.fillStyle = this.colorBright;
 			ctx.strokeStyle = this.color;
 			ctx.lineWidth = CELL_SIZE * 0.1;
-            /*
-			ctx.beginPath();
-            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-            ctx.fill();
-			ctx.stroke();
-			*/
-			ctx.fillRect(this.x-this.size, this.y-this.size, this.size*2, this.size*2);
+            ctx.fillRect(this.x-this.size, this.y-this.size, this.size*2, this.size*2);
 			ctx.strokeRect(this.x-this.size, this.y-this.size, this.size*2, this.size*2);
             ctx.globalAlpha = 1;
         };
@@ -330,7 +340,7 @@
                     return;
                 }
 
-                // Controlla se siamo sulla scia di un altro giocatore → uccidi il proprietario
+                // Controlla se siamo sulla scia di un altro giocatore >>> uccidi il proprietario
                 for (var p = 0; p < allPlayers.length; p++) {
                     var other = allPlayers[p];
                     if (other === this || !other.isAlive || other.state !== 'IN_TRAIL') continue;
@@ -342,7 +352,7 @@
                     }
                 }
 
-                // Controlla se un altro giocatore è sulla NOSTRA scia → noi moriamo
+                // Controlla se un altro giocatore è sulla NOSTRA scia >>> noi moriamo
                 for (var p = 0; p < allPlayers.length; p++) {
                     var other = allPlayers[p];
                     if (other === this || !other.isAlive) continue;
@@ -476,10 +486,10 @@
 				// naso scuro
 				ctx.fillStyle = '#151';
 				ctx.beginPath();
-				ctx.arc(s * 0.9, -s * 0.2, s * 0.2, 0, Math.PI * 2);
+				ctx.arc(s * 0.9, -s * 0.2, s * 0.15, 0, Math.PI * 2);
 				ctx.fill();
 				ctx.beginPath();
-				ctx.arc(s * 0.9, s * 0.2, s * 0.2, 0, Math.PI * 2);
+				ctx.arc(s * 0.9, s * 0.2, s * 0.15, 0, Math.PI * 2);
 				ctx.fill();
 				// Occhi
 				ctx.fillStyle = '#fd0';
@@ -498,9 +508,9 @@
 				ctx.fill();
 				// Lingua biforcuta
 				ctx.strokeStyle = '#f00';
-				ctx.lineWidth = 1.5;
+				ctx.lineWidth = CELL_SIZE * 0.15;
 				ctx.beginPath();
-				ctx.moveTo(s * 1.3, 0);
+				ctx.moveTo(s * 1.2, 0);
 				ctx.lineTo(s * 1.8, 0);
 				ctx.lineTo(s * 2.1, -s * 0.25);
 				ctx.moveTo(s * 1.8, 0);
@@ -612,20 +622,20 @@
 				ctx.beginPath();
 				ctx.roundRect(-s * 0.9, -s * 0.5, s * 1.6, s * 1.0, s * 0.15);
 				ctx.fill();
-				ctx.strokeStyle = '#28b';
-				ctx.lineWidth = 1.5;
+				ctx.strokeStyle = '#293';
+				ctx.lineWidth = CELL_SIZE * 0.15;
 				ctx.stroke();
 				// Torretta (quadrato sopra)
 				ctx.fillStyle = this.colorBright;
 				ctx.strokeStyle = '#666';
-				ctx.lineWidth = 1;
+				ctx.lineWidth = CELL_SIZE * 0.1;
 				ctx.fillRect(-s*0.25, -s*0.25, s*0.5, s*0.5);
 				ctx.strokeRect(-s*0.25, -s*0.25, s*0.5, s*0.5);
 				// Cannone
 				ctx.fillStyle = '#666';
 				ctx.fillRect(s * 0.3, -s * 0.1, s * 1.1, s * 0.2);
-				ctx.strokeStyle = '#899';
-				ctx.lineWidth = 1;
+				ctx.strokeStyle = '#999';
+				ctx.lineWidth = CELL_SIZE * 0.1;
 				ctx.strokeRect(s * 0.3, -s * 0.1, s * 1.1, s * 0.2);
 				// Bocca del cannone
 				ctx.fillStyle = '#222';
@@ -637,7 +647,7 @@
 				ctx.fillRect(-s * 0.85, -s * 0.6, s * 1.5, s * 0.15);
 				ctx.fillRect(-s * 0.85, s * 0.45, s * 1.5, s * 0.15);
 				// Ruote dei cingoli
-				ctx.fillStyle = '#567';
+				ctx.fillStyle = '#586';
 				for (var w = 0; w < 4; w++) {
 					ctx.beginPath();
 					ctx.arc(-s * 0.6 + w * s * 0.4, -s * 0.6, s * 0.07, 0, Math.PI * 2);
@@ -1091,11 +1101,11 @@
 				// centro scuro
 				ctx.fillStyle = '#ccc';
 				ctx.beginPath();
-				ctx.arc(s*0.2, 0, s * 0.7, 0, Math.PI * 2);
+				ctx.arc(s*0.1, 0, s * 0.75, 0, Math.PI * 2);
 				ctx.fill();
 				ctx.fillStyle = '#c5c5c5';
 				ctx.beginPath();
-				ctx.arc(s*0.4, 0, s * 0.4, 0, Math.PI * 2);
+				ctx.arc(s*0.2, 0, s * 0.65, 0, Math.PI * 2);
 				ctx.fill();
 			} else if (this.colorIndex === 13) {
 				// occhio di allah
@@ -1400,7 +1410,7 @@
 			paperCtx.fillRect(0,0,canvas.width, canvas.height);
 
 			paperCtx.strokeStyle = "#def";
-			paperCtx.lineWidth = 1;
+			paperCtx.lineWidth = CELL_SIZE * 0.1;
 
 			for(let x=0;x<paperCanvas.width;x+=CELL_SIZE*2){
 				paperCtx.beginPath();
@@ -1467,7 +1477,7 @@
 						//territoryCtx.globalAlpha = alpha;
 						//territoryCtx.fillStyle = colors[ownerIndex]; 
 						//territoryCtx.fillRect(cx, cy, CELL_SIZE, CELL_SIZE); 
-						territoryCtx.lineWidth = 1;
+						territoryCtx.lineWidth = CELL_SIZE * 0.1;
 						territoryCtx.strokeStyle = colors[ownerIndex]; 
 						territoryCtx.beginPath();
 						if(ownerIndex%2) {
@@ -1481,13 +1491,13 @@
 						
 						/*
 						//bordo di ogni quadrato
-						territoryCtx.lineWidth = 0.5; 
+						territoryCtx.lineWidth = CELL_SIZE * 0.05; 
 						territoryCtx.globalAlpha = 0.2; 
 						territoryCtx.strokeStyle = colors[ownerIndex]; 
 						territoryCtx.strokeRect(cx, cy, CELL_SIZE, CELL_SIZE); 
 						*/
 						
-						territoryCtx.lineWidth = 2;
+						territoryCtx.lineWidth = CELL_SIZE * 0.2;
 						territoryCtx.globalAlpha = 1;					
 						territoryCtx.strokeStyle = colorsBright[ownerIndex];
 						territoryCtx.beginPath();
@@ -1724,7 +1734,7 @@
             p.y = Math.floor(p.y / CELL_SIZE) * CELL_SIZE + CELL_SIZE * 0.5;
 		}
 
-        // Initialize with dynamic dimensions and neon border
+        // Initialize with dynamic dimensions
         function init() {
             if (animId) {
                 cancelAnimationFrame(animId);
@@ -1734,10 +1744,10 @@
             var isMobile = window.innerWidth <= 600;
             var margin = isMobile ? 10 : 20;
 			
-			ENEMIES = 1 + (window.innerWidth * window.innerHeight * 0.000005)|0;
-			console.log(ENEMIES,window.innerWidth*window.innerHeight);
+			ENEMIES = Math.min(1 + (window.innerWidth * window.innerHeight * 0.000005)|0, emojis.length);//min=1, max=numero di emoji/colori
+			//console.log(ENEMIES,window.innerWidth*window.innerHeight);
 
-            // Rendi il canvas grande quasi tutto lo schermo ma permettendo al bordo neon del container di brillare
+            // Rendi il canvas grande quasi tutto lo schermo ma permettendo al bordo del container di brillare
             canvas.width = window.innerWidth - (margin * 2);
             canvas.height = window.innerHeight - (margin * 2);
 			
@@ -1752,8 +1762,8 @@
 			paperCanvas.height = canvas.height;
 
             // Adatta le misure esterne del container affinché avvolga perfettamente il canvas e mostri il glow
-            container.style.width = canvas.width + "px";
-            container.style.height = canvas.height + "px";
+            container.style.width = canvas.width + 4 + "px";//4px = 2px + 2px di border
+            container.style.height = canvas.height + 4 + "px";
 
             GRID_WIDTH = Math.floor(canvas.width / CELL_SIZE);
             GRID_HEIGHT = Math.floor(canvas.height / CELL_SIZE);
@@ -1783,30 +1793,17 @@
             player.vx = PLAYER_SPEED;
             allPlayers.push(player);
 
-			//a seconda delle dimensioni dello schermo, compaiono piu distanziati possibile
-            var enemyPositions = [
-                {x: 6 * GRID_WIDTH / 8, 	y: 1 * GRID_HEIGHT / 8, 	idx: (currentColorIndex + 1) % emojis.length},//alto dx
-				{x: 2 * GRID_WIDTH / 8, 	y: 7 * GRID_HEIGHT / 8, 	idx: (currentColorIndex + 6) % emojis.length},//basso sx
-				{x: 6 * GRID_WIDTH / 8, 	y: 7 * GRID_HEIGHT / 8, 	idx: (currentColorIndex + 3) % emojis.length},//basso dx
-				{x: 2 * GRID_WIDTH / 8, 	y: 1 * GRID_HEIGHT / 8, 	idx: (currentColorIndex + 4) % emojis.length},//alto sx
-				{x: 4 * GRID_WIDTH / 8, 	y: 1 * GRID_HEIGHT / 8, 	idx: (currentColorIndex + 7) % emojis.length},//alto cx
-				{x: 4 * GRID_WIDTH / 8, 	y: 7 * GRID_HEIGHT / 8, 	idx: (currentColorIndex + 8) % emojis.length},//basso cx
-				{x: 7 * GRID_WIDTH / 8, 	y: 4 * GRID_HEIGHT / 8, 	idx: (currentColorIndex + 2) % emojis.length},//medio dx
-				{x: 1 * GRID_WIDTH / 8, 	y: 4 * GRID_HEIGHT / 8, 	idx: (currentColorIndex + 5) % emojis.length},//medio sx
-            ];
-
-            for (var b = 0; b < enemyPositions.length && b < ENEMIES; b++) {
-                var bp = enemyPositions[b];
-                var bx = Math.floor(bp.x);
-                var by = Math.floor(bp.y);
-                
-				fillTerritory(bx, by, baseSIZE, bp.idx);
+            for (var b = 0; b < ENEMIES; b++) {
+				//li distribuisco lungo una ellisse
+				var theta = b * 6.28 / ENEMIES - Math.PI * 0.25;//parto da alto sx
+				var bx = (GRID_WIDTH * 0.5   +  GRID_WIDTH * 0.45 * Math.cos(theta))|0;//centrata in width
+				var by = (GRID_HEIGHT * 0.5  +  GRID_HEIGHT * 0.45 * Math.sin(theta))|0;//centrata in height
+				var idx = (currentColorIndex + b + 1) % emojis.length;
 				
-                var enemy = new Enemy(
-                    bx * CELL_SIZE + CELL_SIZE * 0.5,
-                    by * CELL_SIZE + CELL_SIZE * 0.5,
-                    bp.idx
-                );
+				fillTerritory(bx, by, baseSIZE, idx);
+				
+				var enemy = new Enemy( bx * CELL_SIZE + CELL_SIZE * 0.5, by * CELL_SIZE + CELL_SIZE * 0.5, idx );				
+				
                 allPlayers.push(enemy);
             }
 			
@@ -1831,6 +1828,7 @@
                 }
             }
 		}
+		
 		// Crea un territorio ""quasi circolare"" di raggio baseSIZE
 		function fillTerritory(bx, by, baseSIZE, col) {
 			var r2 = baseSIZE * baseSIZE;
