@@ -102,8 +102,12 @@
         var canvas = document.getElementById('gameCanvas');
         var container = document.getElementById('gameContainer');
         var ctx = canvas.getContext('2d');
+		//territorio, ottimizzazione
 		var territoryCanvas = document.createElement('canvas');
 		var territoryCtx = territoryCanvas.getContext('2d');
+		//paper/background, ottimizzazione
+		var paperCanvas = document.createElement('canvas');
+		var paperCtx = paperCanvas.getContext('2d');
 
         // Constants
         var CELL_SIZE = 10;
@@ -127,10 +131,10 @@
         var allPlayers = [];
         var animId = null;
         // VIBRANT Color palette
-        var colors = 		['#00ff22', '#00ddff', '#ff0066', '#ffee00', '#cc55cc', '#aa7733', '#ccee66', '#ff8800', '#773300','#44dd55','#444444','#aa0000','#dddddd','#2233dd'];//verde, azzurro, rosso, giallo, violetto, biscotto, giallino, aranzulla, marrò, verdino, rossone, bianco, blu
-        var colorsBright = 	['#00ff44', '#00ffff', '#ff1188', '#ffff00', '#dd77dd', '#cc9955', '#eeff88', '#ffaa00', '#994411','#66dd77','#777777','#cc2222','#eeeeee','#3344ff'];//verde, azzurro, rosso, giallo, violetto, biscotto, giallino, aranzulla, marrò, verdino, rossone, bianco, blu
+        var colors = 		['#33aa33', '#00ddff', '#ff0066', '#eeaa44', '#cc55cc', '#ccaa77', '#eedd55', '#ff8800', '#773300','#44dd55','#444444','#cc1100','#dddddd','#2233dd','#227744'];//verde, azzurro, rosso, giallo, violetto, biscotto, giallino, aranzulla, marrò, verdino, rossone, bianco, blu, militare
+        var colorsBright = 	['#44cc44', '#00ffff', '#ff1188', '#ffbb55', '#dd77dd', '#ddbb88', '#ffee66', '#ffaa00', '#994411','#66dd77','#777777','#dd2211','#eeeeee','#3344ff','#338855'];//verde, azzurro, rosso, giallo, violetto, biscotto, giallino, aranzulla, marrò, verdino, rossone, bianco, blu, militare
 		var emojis = [ 	'🐍',//serpentone
-						'🪖',//tank risiko
+						'💎​',//diamante
 						'🍉',//cocomero				
 						'🍔',//panino
 						'🍩',//donut				
@@ -143,6 +147,7 @@
 						'🍎',//apple
 						'🥥',//cocco
 						'🧿',//occhio di allah
+						'🪖',//tank risiko
 						];
 
         function initGrid() {
@@ -181,6 +186,7 @@
             ctx.globalAlpha = alpha;
             ctx.fillStyle = this.colorBright;
 			ctx.strokeStyle = this.color;
+			ctx.lineWidth = CELL_SIZE * 0.1;
             /*
 			ctx.beginPath();
             ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
@@ -463,7 +469,7 @@
 				ctx.shadowColor = this.color;
 				ctx.shadowBlur = ENABLE_BLUR ? 10 : 0;
 				// Testa ovale
-				ctx.fillStyle = '#282';
+				ctx.fillStyle = this.color;
 				ctx.beginPath();
 				ctx.ellipse(0, 0, s * 1.1, s * 0.9, 0, 0, Math.PI * 2);
 				ctx.fill();
@@ -558,14 +564,51 @@
                 ctx.fill();
 
                 ctx.shadowBlur = 0;
-
 			} else if (this.colorIndex === 1) {
+				//diamante
+				var s = CELL_SIZE * 1.5;
+				ctx.shadowColor = this.color;
+				ctx.shadowBlur = ENABLE_BLUR ? 10 : 0;
+				ctx.fillStyle = this.color;
+				ctx.strokeStyle = this.colorBright;
+				ctx.lineWidth = s*0.1;
+				ctx.beginPath();
+				ctx.moveTo(-s*0.6,-s*0.5);
+				ctx.lineTo(s*0.6,-s*0.5);
+				ctx.lineTo(s*1.0,-s*0.1);
+				ctx.lineTo(s*0.0,s);
+				ctx.lineTo(-s*1.0,-s*0.1);
+				ctx.lineTo(-s*0.6,-s*0.5);
+				ctx.closePath();
+				ctx.fill();
+				ctx.stroke();
+				
+				//orizz
+				ctx.beginPath();
+				ctx.moveTo(-s*1.0,-s*0.1);
+				ctx.lineTo(s*1.0,-s*0.1);
+				ctx.stroke();
+				
+				//vert sx
+				ctx.beginPath();
+				ctx.moveTo(-s*0.2,-s*0.5);
+				ctx.lineTo(-s*0.4,-s*0.1);
+				ctx.lineTo(s*0.0,s);
+				ctx.lineTo(s*0.4,-s*0.1);
+				ctx.lineTo(s*0.2,-s*0.5);
+				ctx.closePath();
+				ctx.stroke();
+				ctx.fillStyle = '#ffffff33';
+				ctx.fill();
+				
+				ctx.shadowBlur = 0;
+			} else if (this.colorIndex === 14) {
 				// RISK TANK
 				var s = CELL_SIZE * 1.5;
 				ctx.shadowColor = this.color;
 				ctx.shadowBlur = ENABLE_BLUR ? 10 : 0;
 				// Corpo del carro (rettangolo arrotondato)
-				ctx.fillStyle = '#257';
+				ctx.fillStyle = this.color;
 				ctx.beginPath();
 				ctx.roundRect(-s * 0.9, -s * 0.5, s * 1.6, s * 1.0, s * 0.15);
 				ctx.fill();
@@ -573,24 +616,24 @@
 				ctx.lineWidth = 1.5;
 				ctx.stroke();
 				// Torretta (quadrato sopra)
-				ctx.fillStyle = '#27a';
-				ctx.strokeStyle = '#5dade2';
+				ctx.fillStyle = this.colorBright;
+				ctx.strokeStyle = '#666';
 				ctx.lineWidth = 1;
 				ctx.fillRect(-s*0.25, -s*0.25, s*0.5, s*0.5);
 				ctx.strokeRect(-s*0.25, -s*0.25, s*0.5, s*0.5);
 				// Cannone
-				ctx.fillStyle = '#567';
+				ctx.fillStyle = '#666';
 				ctx.fillRect(s * 0.3, -s * 0.1, s * 1.1, s * 0.2);
 				ctx.strokeStyle = '#899';
 				ctx.lineWidth = 1;
 				ctx.strokeRect(s * 0.3, -s * 0.1, s * 1.1, s * 0.2);
 				// Bocca del cannone
-				ctx.fillStyle = '#235';
+				ctx.fillStyle = '#222';
 				ctx.beginPath();
 				ctx.arc(s * 1.4, 0, s * 0.12, 0, Math.PI * 2);
 				ctx.fill();
 				// Cingoli (rettangoli sotto)
-				ctx.fillStyle = '#235';
+				ctx.fillStyle = '#222';
 				ctx.fillRect(-s * 0.85, -s * 0.6, s * 1.5, s * 0.15);
 				ctx.fillRect(-s * 0.85, s * 0.45, s * 1.5, s * 0.15);
 				// Ruote dei cingoli
@@ -701,64 +744,23 @@
 				ctx.shadowColor = this.color;
 				ctx.shadowBlur = ENABLE_BLUR ? 10 : 0;
 
-				// Pane inferiore
-				ctx.fillStyle = '#c72';
-				ctx.beginPath();
-				ctx.arc(0, s * 0.18, s * 0.9, 0, Math.PI * 2);
-				ctx.fill();
-
-				// Formaggio che sporge
-				ctx.fillStyle = '#fd0';
-				ctx.beginPath();
-				ctx.arc(0, 0, s * 0.82, 0, Math.PI * 2);
-				ctx.fill();
-
-				// Insalata verde (anello irregolare)
-				ctx.strokeStyle = '#7f0';
-				ctx.lineWidth = s * 0.22;
-				ctx.beginPath();
-				ctx.arc(
-					0,
-					-s * 0.02,
-					s * 0.72,
-					0,
-					Math.PI * 2
-				);
-				ctx.stroke();
-
-				// Carne
+				// Carne che sborda
 				ctx.fillStyle = '#521';
 				ctx.beginPath();
-				ctx.arc(0, 0, s * 0.62, 0, Math.PI * 2);
+				ctx.arc(s*0.1, s*0.1, s, 0, Math.PI * 2);
 				ctx.fill();
 
-				// Insalata che sborda in punti casuali
+				// Insalata che sborda
 				ctx.strokeStyle = '#9f0';
 				ctx.lineWidth = s * 0.12;
 				ctx.beginPath();
-				ctx.arc(
-					0,
-					0,
-					s * 0.78,
-					Math.PI * 0.15,
-					Math.PI * 0.75
-				);
-				ctx.stroke();
-
-				ctx.beginPath();
-				ctx.arc(
-					0,
-					0,
-					s * 0.78,
-					Math.PI * 1.2,
-					Math.PI * 1.75
-				);
+				ctx.arc(-s*0.08, 0, s, 0, Math.PI * 2 );
 				ctx.stroke();
 
 				// Pane superiore
-				ctx.fillStyle = '#ea4';
+				ctx.fillStyle = this.color;
 				ctx.beginPath();
-				ctx.arc(0, -s * 0.12, s * 0.95, 0, Math.PI * 2);
+				ctx.arc(0, s * 0.1, s, 0, Math.PI * 2);
 				ctx.fill();
 
 				// Bordo tostato
@@ -770,12 +772,12 @@
 				ctx.fillStyle = '#ffb';
 
 				var sesame = [
-					[-0.45,-0.45],
-					[-0.15,-0.65],
-					[0.25,-0.55],
-					[0.55,-0.25],
-					[-0.55,0.05],
-					[0.15,0.2]
+					[-0.45,-0.35],
+					[-0.15,-0.55],
+					[0.25,-0.45],
+					[0.55,-0.15],
+					[-0.55,0.15],
+					[0.15,0.3]
 				];
 
 				for (var i = 0; i < sesame.length; i++) {
@@ -810,7 +812,7 @@
 				ctx.lineWidth = s * 0.08;
 				ctx.stroke();
 
-				// Semi di sesamo
+				// cioccolato
 				ctx.fillStyle = '#840';
 
 				var choco = [
@@ -846,7 +848,7 @@
 				ctx.shadowBlur = ENABLE_BLUR ? 10 : 0;
 
 				// smile!
-				ctx.fillStyle = '#ff4';
+				ctx.fillStyle = this.color;
 				ctx.beginPath();
 				ctx.arc(0, -s * 0.12, s * 0.95, 0, Math.PI * 2);
 				ctx.fill();
@@ -858,7 +860,7 @@
 
 				//bocca
 				ctx.beginPath();
-				ctx.arc(0, 0, s*0.5, 0.5, 2.6);
+				ctx.arc(0, -s*0.1, s*0.5, 0.5, 2.6);
 				ctx.stroke();
 				
 				//Occhi
@@ -1039,29 +1041,31 @@
 				ctx.fillStyle = this.color;
 				ctx.strokeStyle = '#600';
 				ctx.lineWidth = s * 0.1;
+				
+				let rx = s;
+				let ry = s * 0.8;
 				//melazza
 				ctx.beginPath();
-				ctx.ellipse(0, 0, s, s*0.75, 0, 0, Math.PI * 2);//schiacciata
+				ctx.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2);//schiacciata
 				ctx.closePath();
 				ctx.fill();
 				ctx.stroke();
 				
 				//picciolo
 				ctx.strokeStyle = '#3e3';
-				ctx.lineWidth = 2;
+				ctx.lineWidth = s * 0.2;
 				ctx.beginPath();
-				ctx.moveTo(0, 0 - s);
-				ctx.lineTo(0, 0 - s + 4);
+				ctx.moveTo(0, -ry);
+				ctx.lineTo(0, -ry - CELL_SIZE*0.7);
 				ctx.stroke();
 
 				//foglietta
 				ctx.fillStyle = '#3e3';
 				ctx.beginPath();
-				ctx.moveTo(0, 0 - s - 1);
-				ctx.quadraticCurveTo(0 + 4, 0 - s - 2, 
-					   0 + 9, 0 - s + 2);
-				ctx.quadraticCurveTo(0 + 4, 0 - s + 6, 
-					   0, 0 - s - 1);
+				ctx.moveTo(CELL_SIZE*0.0, -ry - CELL_SIZE*0.5);
+				ctx.lineTo(CELL_SIZE*0.9, -ry - CELL_SIZE*0.4);
+				ctx.lineTo(CELL_SIZE*0.5, -ry - CELL_SIZE*0.2);
+				ctx.closePath();
 				ctx.fill();
 				ctx.shadowBlur = 0;
 			} else if (this.colorIndex === 12) {
@@ -1391,6 +1395,55 @@
         };
 
 		
+		function drawPaper() {
+			paperCtx.fillStyle = "#ffe";
+			paperCtx.fillRect(0,0,canvas.width, canvas.height);
+
+			paperCtx.strokeStyle = "#def";
+			paperCtx.lineWidth = 1;
+
+			for(let x=0;x<paperCanvas.width;x+=CELL_SIZE*2){
+				paperCtx.beginPath();
+				paperCtx.moveTo(x,0);
+				paperCtx.lineTo(x,paperCanvas.height);
+				paperCtx.stroke();
+			}
+
+			for(let y=0;y<paperCanvas.height;y+=CELL_SIZE*2){
+				paperCtx.beginPath();
+				paperCtx.moveTo(0,y);
+				paperCtx.lineTo(paperCanvas.width,y);
+				paperCtx.stroke();
+			}
+
+			// margine rosso a sx
+			paperCtx.strokeStyle="#f99";
+			paperCtx.beginPath();
+			paperCtx.moveTo(CELL_SIZE*4,0);
+			paperCtx.lineTo(CELL_SIZE*4,paperCanvas.height);
+			paperCtx.stroke();
+			
+			// margine rosso a dx
+			paperCtx.strokeStyle="#f99";
+			paperCtx.beginPath();
+			paperCtx.moveTo((GRID_WIDTH - (GRID_WIDTH%2?3:4))*CELL_SIZE,0);
+			paperCtx.lineTo((GRID_WIDTH - (GRID_WIDTH%2?3:4))*CELL_SIZE,paperCanvas.height);
+			paperCtx.stroke();
+			
+			// margine top
+			paperCtx.strokeStyle="#99f";
+			paperCtx.beginPath();
+			paperCtx.moveTo(0, CELL_SIZE*4);
+			paperCtx.lineTo(paperCanvas.width, CELL_SIZE*4);
+			paperCtx.stroke();
+			
+			// margine bottom
+			paperCtx.strokeStyle="#99f";
+			paperCtx.beginPath();
+			paperCtx.moveTo(0, (GRID_HEIGHT - (GRID_HEIGHT%2?3:4))*CELL_SIZE);
+			paperCtx.lineTo(paperCanvas.width, (GRID_HEIGHT - (GRID_HEIGHT%2?3:4))*CELL_SIZE);
+			paperCtx.stroke();
+		}
 		
 		function drawTerritory() { 
 			territoryCtx.clearRect( 0, 0, territoryCanvas.width, territoryCanvas.height );
@@ -1470,10 +1523,10 @@
 		}
         
 		
-        function buildStats(p) {
+        function buildStats(p,i) {
             if (!p) return '';
 			let res = "<p style='color:"+colors[p.colorIndex]+"'>";
-			res += (!p.isEnemy ? 'Player: ' : 'Enemy: ');
+			res += (!p.isEnemy ? 'Player: ' : ('Enemy'+i+': '));
             if (!p.isAlive) res += '💀' + ' ' + p.killReason;
             else res += emojis[p.colorIndex];
 			res += ' ' + p.percentage.toFixed(1) + '%';
@@ -1483,7 +1536,7 @@
 
         function updateHUD() {
 			let stats = '';
-			for (let i = 0; i < allPlayers.length; i++) stats += buildStats(allPlayers[i]);
+			for (let i = 0; i < allPlayers.length; i++) stats += buildStats(allPlayers[i],i);
             document.getElementById('score').innerHTML = stats;
         }
         
@@ -1526,78 +1579,10 @@
 				if(gameBlocking < 0) return;
 			}
 			
-			/*
-            // Background
-            var gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-            gradient.addColorStop(0, '#234');
-            gradient.addColorStop(1, '#012');
-            ctx.fillStyle = gradient;
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-			
-			// Grid lines
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
-            ctx.lineWidth = 1;
-            for (var i = 0; i < canvas.width; i += CELL_SIZE * 4) {
-                ctx.beginPath();
-                ctx.moveTo(i, 0);
-                ctx.lineTo(i, canvas.height);
-                ctx.stroke();
-            }
-            for (var j = 0; j < canvas.height; j += CELL_SIZE * 4) {
-                ctx.beginPath();
-                ctx.moveTo(0, j);
-                ctx.lineTo(canvas.width, j);
-                ctx.stroke();
-            }
-			*/
-			
 			/* PAPER */
-			ctx.fillStyle = "#ffe";
-			ctx.fillRect(0,0,canvas.width, canvas.height);
-
-			ctx.strokeStyle = "#def";
-			ctx.lineWidth = 1;
-
-			for(let x=0;x<canvas.width;x+=CELL_SIZE*2){
-				ctx.beginPath();
-				ctx.moveTo(x,0);
-				ctx.lineTo(x,canvas.height);
-				ctx.stroke();
-			}
-
-			for(let y=0;y<canvas.height;y+=CELL_SIZE*2){
-				ctx.beginPath();
-				ctx.moveTo(0,y);
-				ctx.lineTo(canvas.width,y);
-				ctx.stroke();
-			}
-
-			// margine rosso a sx
-			ctx.strokeStyle="#f99";
-			ctx.beginPath();
-			ctx.moveTo(CELL_SIZE*3,0);
-			ctx.lineTo(CELL_SIZE*3,canvas.height);
-			ctx.stroke();
-			/*
-			// margine rosso a dx
-			ctx.beginPath();
-			ctx.moveTo((GRID_WIDTH - 3)*CELL_SIZE,0);
-			ctx.lineTo((GRID_WIDTH - 3)*CELL_SIZE,canvas.height);
-			ctx.stroke();
+			ctx.drawImage( paperCanvas, 0, 0 );
 			
-			// margine top
-			ctx.beginPath();
-			ctx.moveTo(0, CELL_SIZE*4);
-			ctx.lineTo(canvas.width, CELL_SIZE*4);
-			ctx.stroke();
-			// margine bottom
-			ctx.beginPath();
-			ctx.moveTo(0, (GRID_HEIGHT - 4)*CELL_SIZE);
-			ctx.lineTo(canvas.width, (GRID_HEIGHT - 4)*CELL_SIZE);
-			ctx.stroke();
-			*/
-			
-            //drawTerritory();
+			//territory
 			ctx.drawImage( territoryCanvas, 0, 0 );
 			
             // Particles
@@ -1763,6 +1748,8 @@
 			territoryCanvas.width = canvas.width;
 			territoryCanvas.height = canvas.height;
             
+			paperCanvas.width = canvas.width;
+			paperCanvas.height = canvas.height;
 
             // Adatta le misure esterne del container affinché avvolga perfettamente il canvas e mostri il glow
             container.style.width = canvas.width + "px";
@@ -1825,6 +1812,7 @@
 			
             updateTerritoryPercentages();
 			drawTerritory();
+			drawPaper();
 			
             gameLoop();
         }
