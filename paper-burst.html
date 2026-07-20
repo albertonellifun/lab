@@ -147,23 +147,39 @@
         var allPlayers = [];
         var animId = null;
         // VIBRANT Color palette
-        var colors = 		['#33aa33', '#00ddff', '#ff0066', '#eeaa44', '#cc55cc', '#ccaa77', '#eedd55', '#ff8800', '#773300','#44dd55','#444444','#cc1100','#dddddd','#2233dd','#227744'];//verde, azzurro, rosso, giallo, violetto, biscotto, giallino, aranzulla, marrò, verdino, rossone, bianco, blu, militare
-        var colorsBright = 	['#44cc44', '#00ffff', '#ff1188', '#ffbb55', '#dd77dd', '#ddbb88', '#ffee66', '#ffaa00', '#994411','#66dd77','#777777','#dd2211','#eeeeee','#3344ff','#338855'];//verde, azzurro, rosso, giallo, violetto, biscotto, giallino, aranzulla, marrò, verdino, rossone, bianco, blu, militare
+        var colors = 		[	'#33aa33', '#00ddff', '#ff0066', 
+								'#eeaa44', '#cc55cc', '#ccaa77', 
+								'#eedd55', '#ff8800', '#773300',
+								'#44dd55', '#444444', '#cc1100',
+								'#dddddd', '#2233dd', '#227744',
+								'#999999',];//verde, azzurro, rosso, giallo, violetto, biscotto, giallino, aranzulla, marrò, verdino, rossone, bianco, blu, militare, grigione
+        var colorsBright = 	[	'#44cc44', '#00ffff', '#ff1188', 
+								'#ffbb55', '#dd77dd', '#ddbb88', 
+								'#ffee66', '#ffaa00', '#994411',
+								'#66dd77', '#777777', '#dd2211',
+								'#eeeeee', '#3344ff', '#338855',
+								'#aaaaaa',];//verde, azzurro, rosso, giallo, violetto, biscotto, giallino, aranzulla, marrò, verdino, rossone, bianco, blu, militare, grigione
 		var emojis = [ 	'🐍',//serpentone
 						'💎​',//diamante
-						'🍉',//cocomero				
+						'🍉',//cocomero	
+						
 						'🍔',//panino
 						'🍩',//donut				
 						'🍪',//cookie
+
 						'🙂',//smile
 						'🏀​',//basket
 						'🏈​',//football
+
 						'🥝​',//kiwi
 						'🎱​',//8 ball
 						'🍎',//apple
+
 						'🥥',//cocco
 						'🧿',//occhio di allah
 						'🪖',//tank risiko
+
+						'🪦',//tombstone
 						];
 
         function initGrid() {
@@ -235,6 +251,7 @@
             this.lastBaseX = Math.floor(x / CELL_SIZE);
             this.lastBaseY = Math.floor(y / CELL_SIZE);
 			this.killReason = '';
+			this.killTime = null;
         }
 
 		Player.prototype.kill = function(reason) {
@@ -244,6 +261,7 @@
 			this.trail = [];
 			createParticles(this.x, this.y, this.color, this.colorBright, 80);
 			this.killReason = reason;
+			this.killTime = performance.now();
 		}
 
         Player.prototype.update = function() {
@@ -274,10 +292,10 @@
                     var thisInOwn = inOwnTerritory;
                     var otherInOwn = (gridMap[otherGY][otherGX] === other.colorIndex);
                     if (!thisInOwn) {
-					    this.kill('HEAD-ON COLLISION');
+					    this.kill('HEAD-ON COLLISION OUTSIDE');
                     }
                     if (!otherInOwn) {
-						other.kill('HEAD-ON COLLISION');
+						other.kill('HEAD-ON COLLISION OUTSIDE');
                     }
                     if (!this.isAlive) return;
                 }
@@ -347,6 +365,7 @@
                     for (var ti = 1; ti < other.trail.length; ti++) {
                         if (other.trail[ti].x === gridX && other.trail[ti].y === gridY) {
 							other.kill('TRAIL INTERCEPTED');
+							stealTerritory(other.colorIndex, this.colorIndex); //rubarubaruba
                             break;
                         }
                     }
@@ -361,12 +380,26 @@
                     for (var ti = 1; ti < this.trail.length; ti++) { // skip trail[0] (è nel territorio)
                         if (this.trail[ti].x === otherGX && this.trail[ti].y === otherGY) {
 							this.kill('BASE CAPTURED');
+							stealTerritory(this.colorIndex, other.colorIndex); //rubarubaruba
                             return;
                         }
                     }
                 }
             }
         };
+		
+		// Ruba tutto il territorio del giocatore eliminato e lo assegna al vincitore
+		function stealTerritory(loserColorIndex, winnerColorIndex) {
+			for (var r = 0; r < GRID_HEIGHT; r++) {
+				for (var c = 0; c < GRID_WIDTH; c++) {
+					if (gridMap[r][c] === loserColorIndex) {
+						gridMap[r][c] = winnerColorIndex;
+					}
+				}
+			}
+			updateTerritoryPercentages();
+			drawTerritory();
+		}
 		
         Player.prototype.captureArea = function() {
             if (this.trail.length === 0) return;
@@ -612,51 +645,6 @@
 				ctx.fill();
 				
 				ctx.shadowBlur = 0;
-			} else if (this.colorIndex === 14) {
-				// RISK TANK
-				var s = CELL_SIZE * 1.5;
-				ctx.shadowColor = this.color;
-				ctx.shadowBlur = ENABLE_BLUR ? 10 : 0;
-				// Corpo del carro (rettangolo arrotondato)
-				ctx.fillStyle = this.color;
-				ctx.beginPath();
-				ctx.roundRect(-s * 0.9, -s * 0.5, s * 1.6, s * 1.0, s * 0.15);
-				ctx.fill();
-				ctx.strokeStyle = '#293';
-				ctx.lineWidth = CELL_SIZE * 0.15;
-				ctx.stroke();
-				// Torretta (quadrato sopra)
-				ctx.fillStyle = this.colorBright;
-				ctx.strokeStyle = '#666';
-				ctx.lineWidth = CELL_SIZE * 0.1;
-				ctx.fillRect(-s*0.25, -s*0.25, s*0.5, s*0.5);
-				ctx.strokeRect(-s*0.25, -s*0.25, s*0.5, s*0.5);
-				// Cannone
-				ctx.fillStyle = '#666';
-				ctx.fillRect(s * 0.3, -s * 0.1, s * 1.1, s * 0.2);
-				ctx.strokeStyle = '#999';
-				ctx.lineWidth = CELL_SIZE * 0.1;
-				ctx.strokeRect(s * 0.3, -s * 0.1, s * 1.1, s * 0.2);
-				// Bocca del cannone
-				ctx.fillStyle = '#222';
-				ctx.beginPath();
-				ctx.arc(s * 1.4, 0, s * 0.12, 0, Math.PI * 2);
-				ctx.fill();
-				// Cingoli (rettangoli sotto)
-				ctx.fillStyle = '#222';
-				ctx.fillRect(-s * 0.85, -s * 0.6, s * 1.5, s * 0.15);
-				ctx.fillRect(-s * 0.85, s * 0.45, s * 1.5, s * 0.15);
-				// Ruote dei cingoli
-				ctx.fillStyle = '#586';
-				for (var w = 0; w < 4; w++) {
-					ctx.beginPath();
-					ctx.arc(-s * 0.6 + w * s * 0.4, -s * 0.6, s * 0.07, 0, Math.PI * 2);
-					ctx.fill();
-					ctx.beginPath();
-					ctx.arc(-s * 0.6 + w * s * 0.4, s * 0.6, s * 0.07, 0, Math.PI * 2);
-					ctx.fill();
-				}
-				ctx.shadowBlur = 0;
 			} else if (this.colorIndex === 4) {
 				// DONUT
 				var s = CELL_SIZE * 1.5;
@@ -874,12 +862,19 @@
 				ctx.stroke();
 				
 				//Occhi
-				ctx.fillStyle = '#222';
+				ctx.fillStyle = '#fff';
 				ctx.beginPath();
 				ctx.arc(-s*0.25, -s*0.3, s*0.2, 0, Math.PI * 2);
 				ctx.fill();
 				ctx.beginPath();
 				ctx.arc(s*0.25, -s*0.3, s*0.2, 0, Math.PI * 2);
+				ctx.fill();
+				ctx.fillStyle = '#222';
+				ctx.beginPath();
+				ctx.arc(-s*0.25, -s*0.3, s*0.1, 0, Math.PI * 2);
+				ctx.fill();
+				ctx.beginPath();
+				ctx.arc(s*0.25, -s*0.3, s*0.1, 0, Math.PI * 2);
 				ctx.fill();
 				
 			ctx.shadowBlur = 0;
@@ -1140,6 +1135,90 @@
 				ctx.arc(0, 0, s * 0.3, 0, Math.PI * 2);
 				ctx.fill();
 				ctx.stroke();
+			}  else if (this.colorIndex === 14) {
+				// RISK TANK
+				var s = CELL_SIZE * 1.5;
+				ctx.shadowColor = this.color;
+				ctx.shadowBlur = ENABLE_BLUR ? 10 : 0;
+				// Corpo del carro (rettangolo arrotondato)
+				ctx.fillStyle = this.color;
+				ctx.beginPath();
+				ctx.roundRect(-s * 0.9, -s * 0.5, s * 1.6, s * 1.0, s * 0.15);
+				ctx.fill();
+				ctx.strokeStyle = '#293';
+				ctx.lineWidth = CELL_SIZE * 0.15;
+				ctx.stroke();
+				// Torretta (quadrato sopra)
+				ctx.fillStyle = this.colorBright;
+				ctx.strokeStyle = '#666';
+				ctx.lineWidth = CELL_SIZE * 0.1;
+				ctx.fillRect(-s*0.25, -s*0.25, s*0.5, s*0.5);
+				ctx.strokeRect(-s*0.25, -s*0.25, s*0.5, s*0.5);
+				// Cannone
+				ctx.fillStyle = '#666';
+				ctx.fillRect(s * 0.3, -s * 0.1, s * 1.1, s * 0.2);
+				ctx.strokeStyle = '#999';
+				ctx.lineWidth = CELL_SIZE * 0.1;
+				ctx.strokeRect(s * 0.3, -s * 0.1, s * 1.1, s * 0.2);
+				// Bocca del cannone
+				ctx.fillStyle = '#222';
+				ctx.beginPath();
+				ctx.arc(s * 1.4, 0, s * 0.12, 0, Math.PI * 2);
+				ctx.fill();
+				// Cingoli (rettangoli sotto)
+				ctx.fillStyle = '#222';
+				ctx.fillRect(-s * 0.85, -s * 0.6, s * 1.5, s * 0.15);
+				ctx.fillRect(-s * 0.85, s * 0.45, s * 1.5, s * 0.15);
+				// Ruote dei cingoli
+				ctx.fillStyle = '#586';
+				for (var w = 0; w < 4; w++) {
+					ctx.beginPath();
+					ctx.arc(-s * 0.6 + w * s * 0.4, -s * 0.6, s * 0.07, 0, Math.PI * 2);
+					ctx.fill();
+					ctx.beginPath();
+					ctx.arc(-s * 0.6 + w * s * 0.4, s * 0.6, s * 0.07, 0, Math.PI * 2);
+					ctx.fill();
+				}
+				ctx.shadowBlur = 0;
+			} else if (this.colorIndex === 15) {
+				// tombstone
+				var s = CELL_SIZE * 1.5;
+				
+				ctx.shadowColor = this.color;
+				ctx.shadowBlur = ENABLE_BLUR ? 10 : 0;
+
+				// corpo di pietra con cima arcuata
+				ctx.fillStyle = this.colorBright;
+				ctx.strokeStyle = this.color;
+				ctx.lineWidth = s * 0.08;
+				ctx.beginPath();
+				ctx.moveTo(-s * 0.6, -s * 0.5);
+				ctx.lineTo(-s * 0.4, -s * 0.5);
+				ctx.arc(0, -s*0.5, s*0.4, Math.PI, Math.PI*2);
+				ctx.lineTo(s * 0.6, -s*0.5);
+				ctx.lineTo(s * 0.6, s*0.5);
+				ctx.lineTo(-s*0.6, s*0.5);
+				ctx.closePath();
+				ctx.fill();
+				ctx.stroke();
+				
+				//RIP
+				ctx.fillStyle = this.color;
+				ctx.fillRect(-s*0.3, -s*0.15,s*0.6,s*0.1);
+				ctx.fillRect(-s*0.3, s*0.00,s*0.6,s*0.1);
+				ctx.fillRect(-s*0.3, s*0.15,s*0.6,s*0.1);				
+
+				// erbetta sotto
+				ctx.fillStyle = '#0c2';
+				ctx.beginPath();
+				ctx.moveTo(-s * 0.7, s*0.5);
+				ctx.lineTo(s * 0.7, s*0.5);
+				ctx.lineTo(s * 0.8, s*0.7);
+				ctx.lineTo(-s * 0.8, s*0.7);
+				ctx.closePath();
+				ctx.fill();
+
+				ctx.shadowBlur = 0;
 			}
 
 			ctx.restore();
@@ -1535,11 +1614,15 @@
 		
         function buildStats(p,i) {
             if (!p) return '';
+			if (!p.isAlive && p.killTime && (performance.now() - p.killTime) > 3000) return ''; //rimuovi i morti
+    			
 			let res = "<p style='color:"+colors[p.colorIndex]+"'>";
-			res += (!p.isEnemy ? 'Player: ' : ('Enemy'+i+': '));
-            if (!p.isAlive) res += '💀' + ' ' + p.killReason;
-            else res += emojis[p.colorIndex];
-			res += ' ' + p.percentage.toFixed(1) + '%';
+			res += emojis[p.colorIndex];
+			res += p.isEnemy ? ' Enemy'+i : ' Player';
+			
+			if (!p.isAlive) res += ': ' + p.killReason + ' 💀';
+			else res += ': ' + p.percentage.toFixed(1) + '%';
+			
 			res += '</p>';
             return res;
         }
@@ -1681,6 +1764,9 @@
 				
 				fixPlayerPosition(player);
 				
+				touchStartX = currentX; //FIX
+				touchStartY = currentY; //FIX
+				
 			} else if (player.vy === 0) {
 				// verticale
 				if (player.vy > 0 && dy < 0) return;
@@ -1690,6 +1776,9 @@
 				player.vy = dy > 0 ? PLAYER_SPEED : -PLAYER_SPEED;
 				
 				fixPlayerPosition(player);
+				
+				touchStartX = currentX; //FIX
+				touchStartY = currentY; //FIX
 			}
         }, false);
 
@@ -1780,7 +1869,7 @@
             
 			let currentColorIndex = new Date().getSeconds();//colore del player casuale
 			
-			let baseSIZE = 3;
+			let baseSIZE = 2 + ((GRID_WIDTH * GRID_HEIGHT) * 0.00005)|0;//aumenta col crescere della risoluzione
 			
 			fillTerritory(baseX, baseY, baseSIZE, currentColorIndex % emojis.length);
 			
@@ -1791,6 +1880,7 @@
                 false
             );
             player.vx = PLAYER_SPEED;
+			player.vy = 0;
             allPlayers.push(player);
 
             for (var b = 0; b < ENEMIES; b++) {
@@ -1802,7 +1892,12 @@
 				
 				fillTerritory(bx, by, baseSIZE, idx);
 				
-				var enemy = new Enemy( bx * CELL_SIZE + CELL_SIZE * 0.5, by * CELL_SIZE + CELL_SIZE * 0.5, idx );				
+				var enemy = new Enemy( 
+					bx * CELL_SIZE + CELL_SIZE * 0.5, 
+					by * CELL_SIZE + CELL_SIZE * 0.5, 
+					idx,
+					true
+				);				
 				
                 allPlayers.push(enemy);
             }
@@ -1841,7 +1936,7 @@
 						var dx = xx - bx;
 						var dy = yy - by;
 
-						if ((dx * dx + dy * dy) <= (r2 + Math.random()*2)) {
+						if ((dx * dx + dy * dy) <= (r2 + Math.random()*baseSIZE*2)) {
 							gridMap[yy][xx] = col;
 						}
 					}
