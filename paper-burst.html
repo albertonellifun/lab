@@ -137,50 +137,110 @@
 		
 		var ENEMIES = 8;
 		
-        // Game state
-        var gameRunning = true;
-		var gameBlocking = 0;
-		
         var gridMap = [];
         var player = null;
         var particles = [];
         var allPlayers = [];
         var animId = null;
-        // VIBRANT Color palette
-        var colors = 		[	'#33aa33', '#00ddff', '#ff0066', 
-								'#eeaa44', '#cc55cc', '#ccaa77', 
-								'#eedd55', '#ff8800', '#773300',
-								'#44dd55', '#444444', '#cc1100',
-								'#dddddd', '#2233dd', '#227744',
-								'#999999',];//verde, azzurro, rosso, giallo, violetto, biscotto, giallino, aranzulla, marrò, verdino, rossone, bianco, blu, militare, grigione
-        var colorsBright = 	[	'#44cc44', '#00ffff', '#ff1188', 
-								'#ffbb55', '#dd77dd', '#ddbb88', 
-								'#ffee66', '#ffaa00', '#994411',
-								'#66dd77', '#777777', '#dd2211',
-								'#eeeeee', '#3344ff', '#338855',
-								'#aaaaaa',];//verde, azzurro, rosso, giallo, violetto, biscotto, giallino, aranzulla, marrò, verdino, rossone, bianco, blu, militare, grigione
-		var emojis = [ 	'🐍',//serpentone
-						'💎​',//diamante
-						'🍉',//cocomero	
 						
-						'🍔',//panino
-						'🍩',//donut				
-						'🍪',//cookie
-
-						'🙂',//smile
-						'🏀​',//basket
-						'🏈​',//football
-
-						'🥝​',//kiwi
-						'🎱​',//8 ball
-						'🍎',//apple
-
-						'🥥',//cocco
-						'🧿',//occhio di allah
-						'🪖',//tank risiko
-
-						'🪦',//tombstone
-						];
+		var characters = [{
+						id: 'snake',
+						emoji: '🐍',//serpentone
+						color: '#33aa33',
+						colorBright: '#44cc44',
+						colorIndex: 0,
+					},{
+						id: 'diamond',
+						emoji: '💎​',//diamante
+						color: '#00ddff',
+						colorBright: '#00ffff',
+						colorIndex: 1,
+					},{
+						id: 'watermelon',
+						emoji: '🍉',//cocomero	
+						color:  '#ff0066', 
+						colorBright:  '#ff1188', 
+						colorIndex: 2,
+					},{
+						id: 'hamburger',
+						emoji: '🍔',//panino
+						color: '#eeaa44',
+						colorBright: '#ffbb55',
+						colorIndex: 3,
+					},{
+						id: 'donut',
+						emoji: '🍩',//donut				
+						color:  '#cc55cc',
+						colorBright: '#dd77dd',
+						colorIndex: 4,
+					},{
+						id: 'cookie',
+						emoji: '🍪',//cookie
+						color:  '#ccaa77',
+						colorBright:  '#ddbb88', 
+						colorIndex: 5,
+					},{
+						id: 'smile',
+						emoji: '🙂',//smile
+						color: '#eedd55',
+						colorBright: '#ffee66',
+						colorIndex: 6,
+					},{
+						id: 'basket',
+						emoji: '🏀​',//basket
+						color:  '#ff8800',
+						colorBright:  '#ffaa00',
+						colorIndex: 7,
+					},{
+						id: 'football',
+						emoji: '🏈​',//football
+						color:  '#773300',
+						colorBright:  '#994411',
+						colorIndex: 8,
+					},{
+						id: 'kiwi',
+						emoji: '🥝​',//kiwi
+						color: '#44dd55',
+						colorBright: '#66dd77',
+						colorIndex: 9,
+					},{
+						id: '8ball',
+						emoji: '🎱​',//8 ball
+						color:  '#444444',
+						colorBright:  '#777777',
+						colorIndex: 10,
+					},{
+						id: 'apple',
+						emoji: '🍎',//apple
+						color:  '#cc1100',
+						colorBright:  '#dd2211',
+						colorIndex: 11,
+					},{
+						id: 'coconut',
+						emoji: '🥥',//cocco
+						color: '#dddddd',
+						colorBright: '#eeeeee',
+						colorIndex: 12,
+					},{
+						id: 'allah',
+						emoji: '🧿',//occhio di allah
+						color:  '#2233dd',
+						colorBright:  '#3344ff',
+						colorIndex: 13,
+					},{
+						id: 'risiko',
+						emoji: '🪖',//tank risiko
+						color:  '#227744',
+						colorBright:  '#338855',
+						colorIndex: 14,
+					},{
+						id: 'tombstone',
+						emoji: '🪦',//tombstone
+						color: '#999999',
+						colorBright: '#aaaaaa',
+						colorIndex: 15,
+					}
+		];
 
         function initGrid() {
             gridMap = [];
@@ -194,16 +254,15 @@
         }
 
         // Particle system
-        function Particle(x, y, vx, vy, color, colorBright, life) {
+        function Particle(x, y, vx, vy, character, life) {
             this.x = x;
             this.y = y;
             this.vx = vx;
             this.vy = vy;
-            this.color = color;
-			this.colorBright = colorBright;
+            this.character = character;
             this.life = life;
             this.maxLife = life;
-            this.size = Math.random() * 4 + 2;
+            this.size = CELL_SIZE * 0.5;
         }
 
         Particle.prototype.update = function() {
@@ -216,33 +275,31 @@
         Particle.prototype.draw = function() {
             var alpha = this.life / this.maxLife;
             ctx.globalAlpha = alpha;
-            ctx.fillStyle = this.colorBright;
-			ctx.strokeStyle = this.color;
+            ctx.fillStyle = this.character.colorBright;
+			ctx.strokeStyle = this.character.color;
 			ctx.lineWidth = CELL_SIZE * 0.1;
             ctx.fillRect(this.x-this.size, this.y-this.size, this.size*2, this.size*2);
 			ctx.strokeRect(this.x-this.size, this.y-this.size, this.size*2, this.size*2);
             ctx.globalAlpha = 1;
         };
 
-        function createParticles(x, y, color, colorBright, count) {
+        function createParticles(x, y, character, count) {
             for (var i = 0; i < count; i++) {
                 var angle = (Math.PI * 2 * i) / count;
                 var speed = Math.random() * 5 + 2;
                 var vx = Math.cos(angle) * speed;
                 var vy = Math.sin(angle) * speed;
-                particles.push(new Particle(x, y, vx, vy, color, colorBright, 50));
+                particles.push(new Particle(x, y, vx, vy, character, 60));
             }
         }
 
         // Player class
-        function Player(x, y, colorIndex, isEnemy) {
+        function Player(x, y, character, isEnemy) {
             this.x = x;
             this.y = y;
             this.vx = PLAYER_SPEED;
             this.vy = 0;
-            this.colorIndex = colorIndex;
-            this.color = colors[colorIndex];
-            this.colorBright = colorsBright[colorIndex];
+            this.character = character;
             this.trail = [];
             this.isAlive = true;
             this.isEnemy = isEnemy || false;
@@ -259,7 +316,7 @@
 			
 			this.isAlive = false;
 			this.trail = [];
-			createParticles(this.x, this.y, this.color, this.colorBright, 80);
+			createParticles(this.x, this.y, this.character, 80);
 			this.killReason = reason;
 			this.killTime = performance.now();
 		}
@@ -279,7 +336,7 @@
             if (gridY < 0 || gridY >= GRID_HEIGHT || gridX < 0 || gridX >= GRID_WIDTH) return;
 
             var currentCell = gridMap[gridY][gridX];
-            var inOwnTerritory = (currentCell === this.colorIndex);
+            var inOwnTerritory = (currentCell === this.character.colorIndex);
 
             // Collisione testa-a-testa: se due giocatori sono sulla stessa cella
             for (var p = 0; p < allPlayers.length; p++) {
@@ -290,7 +347,7 @@
                 if (otherGX === gridX && otherGY === gridY) {
                     // Chi è nel proprio territorio sopravvive
                     var thisInOwn = inOwnTerritory;
-                    var otherInOwn = (gridMap[otherGY][otherGX] === other.colorIndex);
+                    var otherInOwn = (gridMap[otherGY][otherGX] === other.character.colorIndex);
                     if (!thisInOwn) {
 					    this.kill('HEAD-ON COLLISION OUTSIDE');
                     }
@@ -318,7 +375,7 @@
                 if (this.trail.length > 0) {
                     var startCell = this.trail[0];
                     if (startCell.x >= 0 && startCell.x < GRID_WIDTH && startCell.y >= 0 && startCell.y < GRID_HEIGHT) {
-                        if (gridMap[startCell.y][startCell.x] !== this.colorIndex) {
+                        if (gridMap[startCell.y][startCell.x] !== this.character.colorIndex) {
 							this.kill('HIT ENEMY TRAIL');
                             return;
                         }
@@ -365,7 +422,7 @@
                     for (var ti = 1; ti < other.trail.length; ti++) {
                         if (other.trail[ti].x === gridX && other.trail[ti].y === gridY) {
 							other.kill('TRAIL INTERCEPTED');
-							stealTerritory(other.colorIndex, this.colorIndex); //rubarubaruba
+							stealTerritory(other.character.colorIndex, this.character.colorIndex); //rubarubaruba (loser, winner)
                             break;
                         }
                     }
@@ -380,7 +437,7 @@
                     for (var ti = 1; ti < this.trail.length; ti++) { // skip trail[0] (è nel territorio)
                         if (this.trail[ti].x === otherGX && this.trail[ti].y === otherGY) {
 							this.kill('BASE CAPTURED');
-							stealTerritory(this.colorIndex, other.colorIndex); //rubarubaruba
+							stealTerritory(this.character.colorIndex, other.character.colorIndex); //rubarubaruba (loser, winner)
                             return;
                         }
                     }
@@ -407,7 +464,7 @@
             for (var i = 0; i < this.trail.length; i++) {
                 var p = this.trail[i];
                 if (p.x >= 0 && p.x < GRID_WIDTH && p.y >= 0 && p.y < GRID_HEIGHT) {
-                    gridMap[p.y][p.x] = this.colorIndex;
+                    gridMap[p.y][p.x] = this.character.colorIndex;
                 }
             }
 
@@ -418,12 +475,12 @@
             var queue = [];
 
             for (var x = 0; x < GRID_WIDTH; x++) {
-                if (gridMap[0][x] !== this.colorIndex) { queue.push({x: x, y: 0}); visited[0][x] = true; }
-                if (gridMap[GRID_HEIGHT - 1][x] !== this.colorIndex) { queue.push({x: x, y: GRID_HEIGHT - 1}); visited[GRID_HEIGHT - 1][x] = true; }
+                if (gridMap[0][x] !== this.character.colorIndex) { queue.push({x: x, y: 0}); visited[0][x] = true; }
+                if (gridMap[GRID_HEIGHT - 1][x] !== this.character.colorIndex) { queue.push({x: x, y: GRID_HEIGHT - 1}); visited[GRID_HEIGHT - 1][x] = true; }
             }
             for (var y = 0; y < GRID_HEIGHT; y++) {
-                if (gridMap[y][0] !== this.colorIndex) { queue.push({x: 0, y: y}); visited[y][0] = true; }
-                if (gridMap[y][GRID_WIDTH - 1] !== this.colorIndex) { queue.push({x: GRID_WIDTH - 1, y: y}); visited[y][GRID_WIDTH - 1] = true; }
+                if (gridMap[y][0] !== this.character.colorIndex) { queue.push({x: 0, y: y}); visited[y][0] = true; }
+                if (gridMap[y][GRID_WIDTH - 1] !== this.character.colorIndex) { queue.push({x: GRID_WIDTH - 1, y: y}); visited[y][GRID_WIDTH - 1] = true; }
             }
 
             var dx = [0, 0, 1, -1];
@@ -435,7 +492,7 @@
                     var nx = curr.x + dx[d];
                     var ny = curr.y + dy[d];
                     if (nx >= 0 && nx < GRID_WIDTH && ny >= 0 && ny < GRID_HEIGHT) {
-                        if (!visited[ny][nx] && gridMap[ny][nx] !== this.colorIndex) {
+                        if (!visited[ny][nx] && gridMap[ny][nx] !== this.character.colorIndex) {
                             visited[ny][nx] = true;
                             queue.push({x: nx, y: ny});
                         }
@@ -445,8 +502,8 @@
 
             for (var y = 0; y < GRID_HEIGHT; y++) {
                 for (var x = 0; x < GRID_WIDTH; x++) {
-                    if (!visited[y][x] && gridMap[y][x] !== this.colorIndex) {
-                        gridMap[y][x] = this.colorIndex;
+                    if (!visited[y][x] && gridMap[y][x] !== this.character.colorIndex) {
+                        gridMap[y][x] = this.character.colorIndex;
                     }
                 }
             }
@@ -461,12 +518,12 @@
                 
 				var enemyWasOutside = other.state === 'IN_TRAIL';
 				
-				if (enemyWasOutside && gridMap[otherGridY][otherGridX] === this.colorIndex) {
+				if (enemyWasOutside && gridMap[otherGridY][otherGridX] === this.character.colorIndex) {
 					other.kill('CAPTURED INSIDE TERRITORY');
                     for (var r = 0; r < GRID_HEIGHT; r++) {
                         for (var c = 0; c < GRID_WIDTH; c++) {
-                            if (gridMap[r][c] === other.colorIndex) {
-                                gridMap[r][c] = this.colorIndex;
+                            if (gridMap[r][c] === other.character.colorIndex) {
+                                gridMap[r][c] = this.character.colorIndex;
                             }
                         }
                     }
@@ -480,11 +537,11 @@
             if (!this.isAlive) return;
 
 			if (this.state === 'IN_TRAIL' && this.trail.length > 0) {
-                ctx.strokeStyle = this.color;
+                ctx.strokeStyle = this.character.color;
                 ctx.lineWidth = TRAIL_WIDTH;
                 ctx.lineCap = 'round';
                 ctx.lineJoin = 'round';
-                ctx.shadowColor = this.color;
+                ctx.shadowColor = this.character.color;
                 ctx.shadowBlur = ENABLE_BLUR ? 10 : 0;
 
                 ctx.beginPath();
@@ -506,13 +563,16 @@
 			ctx.translate(this.x, this.y);
 			ctx.rotate(angle);
 
-			if (this.colorIndex === 0) {
-				// SNAKE HEAD
-				var s = CELL_SIZE * 1.5;
-				ctx.shadowColor = this.color;
-				ctx.shadowBlur = ENABLE_BLUR ? 10 : 0;
+			//comune a tutte le emojis
+			var s = CELL_SIZE * 1.5;
+			ctx.shadowColor = this.character.color;
+            ctx.shadowBlur = ENABLE_BLUR ? 10 : 0;
+
+			//per me si va nella citta dolente...
+			if (this.character.id === 'snake') {
+				// SNAKE
 				// Testa ovale
-				ctx.fillStyle = this.color;
+				ctx.fillStyle = this.character.color;
 				ctx.beginPath();
 				ctx.ellipse(0, 0, s * 1.1, s * 0.9, 0, 0, Math.PI * 2);
 				ctx.fill();
@@ -549,15 +609,8 @@
 				ctx.moveTo(s * 1.8, 0);
 				ctx.lineTo(s * 2.1, s * 0.25);
 				ctx.stroke();
-				ctx.shadowBlur = 0;
-
-			} else if (this.colorIndex === 2) {
+			} else if (this.character.id === 'watermelon') {
 				// WATERMELON TRIANGLE SLICE
-                var s = CELL_SIZE * 1.5;
-
-                ctx.shadowColor = this.color;
-                ctx.shadowBlur = ENABLE_BLUR ? 10 : 0;
-
                 // centro della circonferenza (spostato verso la punta)
                 var cx = s * 1.2;
                 var cy = 0;
@@ -605,15 +658,10 @@
                 ctx.beginPath();
                 ctx.ellipse(-s * 0.15, s * 0.3, s * 0.1, s * 0.06, 0.5, 0, Math.PI * 2);
                 ctx.fill();
-
-                ctx.shadowBlur = 0;
-			} else if (this.colorIndex === 1) {
+			} else if (this.character.id === 'diamond') {
 				//diamante
-				var s = CELL_SIZE * 1.5;
-				ctx.shadowColor = this.color;
-				ctx.shadowBlur = ENABLE_BLUR ? 10 : 0;
-				ctx.fillStyle = this.color;
-				ctx.strokeStyle = this.colorBright;
+				ctx.fillStyle = this.character.color;
+				ctx.strokeStyle = this.character.colorBright;
 				ctx.lineWidth = s*0.1;
 				ctx.beginPath();
 				ctx.moveTo(-s*0.6,-s*0.5);
@@ -643,45 +691,29 @@
 				ctx.stroke();
 				ctx.fillStyle = '#ffffff33';
 				ctx.fill();
-				
-				ctx.shadowBlur = 0;
-			} else if (this.colorIndex === 4) {
+			} else if (this.character.id === 'donut') {
 				// DONUT
-				var s = CELL_SIZE * 1.5;
-
-				ctx.shadowColor = this.color;
-				ctx.shadowBlur = ENABLE_BLUR ? 10 : 0;
-
-				// Ciambella esterna
-				ctx.fillStyle = '#d84'; // impasto
-				ctx.beginPath();
-				ctx.arc(0, 0, s * 1.0, 0, Math.PI * 2);
-				ctx.fill();
-
-				// Bordo tostato
-				ctx.strokeStyle = '#841';
-				ctx.lineWidth = s * 0.12;
-				ctx.stroke();
-
-
-				// Buco centrale
-				ctx.fillStyle = '#123'; // colore dello sfondo
-				ctx.beginPath();
-				ctx.arc(0, 0, s * 0.38, 0, Math.PI * 2);
-				ctx.fill();
-
-
 				// Glassa colorata
 				ctx.fillStyle = '#f6b';
 				ctx.beginPath();
-				ctx.arc(0, 0, s * 0.82, 0, Math.PI * 2);
-				ctx.fill();
+				ctx.arc(0, 0, s * 0.90, 0, Math.PI * 2);
+				ctx.arc(0, 0, s * 0.25, 0, Math.PI * 2);
+				ctx.fill('evenodd');
+				
+				// Ciambella esterna
+				ctx.strokeStyle = '#a63';
+				ctx.lineWidth = s * 0.15;
+				ctx.beginPath();
+				ctx.arc(0, 0, s * 1.0, 0, Math.PI * 2);
+				ctx.closePath();
+				ctx.stroke();
 
 				// Ritaglio del buco dopo la glassa
-				ctx.fillStyle = '#123';
+				ctx.strokeStyle = '#a63';
+				ctx.lineWidth = s * 0.10;
 				ctx.beginPath();
-				ctx.arc(0, 0, s * 0.35, 0, Math.PI * 2);
-				ctx.fill();
+				ctx.arc(0, 0, s * 0.25, 0, Math.PI * 2);
+				ctx.stroke();
 
 
 				// Confettini
@@ -719,7 +751,6 @@
 					ctx.restore();
 				}
 
-
 				// Riflesso glassa
 				ctx.strokeStyle = 'rgba(255,255,255,0.45)';
 				ctx.lineWidth = s * 0.05;
@@ -732,16 +763,8 @@
 					Math.PI * 1.75
 				);
 				ctx.stroke();
-
-
-				ctx.shadowBlur = 0;
-			} else if (this.colorIndex === 3) {
+			} else if (this.character.id === 'hamburger') {
 				// HAMBURGER TOP VIEW
-				var s = CELL_SIZE * 1.5;
-
-				ctx.shadowColor = this.color;
-				ctx.shadowBlur = ENABLE_BLUR ? 10 : 0;
-
 				// Carne che sborda
 				ctx.fillStyle = '#521';
 				ctx.beginPath();
@@ -756,7 +779,7 @@
 				ctx.stroke();
 
 				// Pane superiore
-				ctx.fillStyle = this.color;
+				ctx.fillStyle = this.character.color;
 				ctx.beginPath();
 				ctx.arc(0, s * 0.1, s, 0, Math.PI * 2);
 				ctx.fill();
@@ -791,16 +814,10 @@
 					);
 					ctx.fill();
 				}
-			ctx.shadowBlur = 0;
-			} else if (this.colorIndex === 5) {
+			} else if (this.character.id === 'cookie') {
 				// cookie
-				var s = CELL_SIZE * 1.5;
-
-				ctx.shadowColor = this.color;
-				ctx.shadowBlur = ENABLE_BLUR ? 10 : 0;
-
 				// biscottone
-				ctx.fillStyle = this.color;
+				ctx.fillStyle = this.character.color;
 				ctx.beginPath();
 				ctx.arc(0, -s * 0.12, s * 0.95, 0, Math.PI * 2);
 				ctx.fill();
@@ -837,16 +854,9 @@
 					);
 					ctx.fill();
 				}
-			ctx.shadowBlur = 0;
-			} else if (this.colorIndex === 6) {
-				// smile
-				var s = CELL_SIZE * 1.5;
-
-				ctx.shadowColor = this.color;
-				ctx.shadowBlur = ENABLE_BLUR ? 10 : 0;
-
+			} else if (this.character.id === 'smile') {
 				// smile!
-				ctx.fillStyle = this.color;
+				ctx.fillStyle = this.character.color;
 				ctx.beginPath();
 				ctx.arc(0, -s * 0.12, s * 0.95, 0, Math.PI * 2);
 				ctx.fill();
@@ -876,18 +886,11 @@
 				ctx.beginPath();
 				ctx.arc(s*0.25, -s*0.3, s*0.1, 0, Math.PI * 2);
 				ctx.fill();
-				
-			ctx.shadowBlur = 0;
-			} else if (this.colorIndex === 7) {
+			} else if (this.character.id === 'basket') {
 				// Basket
-				var s = CELL_SIZE * 1.5;
-				var r = s * 0.95;
-
-				ctx.shadowColor = this.color;
-				ctx.shadowBlur = ENABLE_BLUR ? 10 : 0;
-
+				var r = s * 1;//0.95;
 				// Palla
-				ctx.fillStyle = this.color;
+				ctx.fillStyle = this.character.color;
 				ctx.beginPath();
 				ctx.arc(0, 0, r, 0, Math.PI * 2);
 				ctx.fill();
@@ -925,7 +928,7 @@
 				ctx.stroke();
 
 				ctx.stroke();
-			} else if (this.colorIndex === 8) {
+			} else if (this.character.id === 'football') {
 				//football
 				var w = CELL_SIZE * 2.0;
 				var h = CELL_SIZE * 1.2;
@@ -935,7 +938,7 @@
 				// Rotazione come l'emoji 🏈
 				ctx.rotate(Math.PI / 4);
 
-				ctx.shadowColor = this.color;
+				ctx.shadowColor = this.character.color;
 				ctx.shadowBlur = ENABLE_BLUR ? 10 : 0;
 
 				// Corpo
@@ -963,13 +966,8 @@
 				ctx.fillRect(w * 0.13,  -h * 0.3, w * 0.05, h * 0.6);
 
 				ctx.restore();
-			} else if (this.colorIndex === 9) {
+			} else if (this.character.id === 'kiwi') {
 				// kiwi
-				var s = CELL_SIZE * 1.5;
-
-				ctx.shadowColor = this.color;
-				ctx.shadowBlur = ENABLE_BLUR ? 10 : 0;
-				
 				// buccia
 				ctx.strokeStyle = '#841';
 				ctx.lineWidth = s * 0.2;
@@ -978,7 +976,7 @@
 				ctx.stroke();
 
 				// kiwi body
-				ctx.fillStyle = this.color;
+				ctx.fillStyle = this.character.color;
 				ctx.beginPath();
 				ctx.arc(0, 0, s, 0, Math.PI * 2);
 				ctx.fill();
@@ -1002,16 +1000,10 @@
 					ctx.ellipse(x, y, s * 0.05, s*0.1, -angle,  0, Math.PI * 2);
 					ctx.fill();
 				}
-				ctx.shadowBlur = 0;
-			} else if (this.colorIndex === 10) {
+			} else if (this.character.id === '8ball') {
 				// 8 ball
-				var s = CELL_SIZE * 1.5;
-
-				ctx.shadowColor = this.color;
-				ctx.shadowBlur = ENABLE_BLUR ? 10 : 0;
-
 				// body black
-				ctx.fillStyle = this.color;
+				ctx.fillStyle = this.character.color;
 				ctx.strokeStyle = '#666';
 				ctx.lineWidth = s * 0.05;
 				ctx.beginPath();
@@ -1026,7 +1018,7 @@
 				ctx.fill();			
 
 				// 8!
-				ctx.strokeStyle = this.color;
+				ctx.strokeStyle = this.character.color;
 				ctx.lineWidth = s * 0.1;
 				ctx.beginPath();
 				ctx.arc(0, -s*0.1, s*0.1, 0, Math.PI * 2);
@@ -1034,16 +1026,10 @@
 				ctx.beginPath();
 				ctx.arc(0, s*0.1, s*0.1, 0, Math.PI * 2);
 				ctx.stroke();
-				ctx.shadowBlur = 0;
-			} else if (this.colorIndex === 11) {
+			} else if (this.character.id === 'apple') {
 				//apple
-				var s = CELL_SIZE * 1.5;
-
-				ctx.shadowColor = this.color;
-				ctx.shadowBlur = ENABLE_BLUR ? 10 : 0;
-
 				//corpo gradiente radiale rosso luccicoso
-				ctx.fillStyle = this.color;
+				ctx.fillStyle = this.character.color;
 				ctx.strokeStyle = '#600';
 				ctx.lineWidth = s * 0.1;
 				
@@ -1072,14 +1058,8 @@
 				ctx.lineTo(CELL_SIZE*0.5, -ry - CELL_SIZE*0.2);
 				ctx.closePath();
 				ctx.fill();
-				ctx.shadowBlur = 0;
-			} else if (this.colorIndex === 12) {
+			} else if (this.character.id === 'coconut') {
 				// cocco
-				var s = CELL_SIZE * 1.5;
-
-				ctx.shadowColor = this.color;
-				ctx.shadowBlur = ENABLE_BLUR ? 10 : 0;
-
 				// buccia
 				ctx.strokeStyle = '#841';
 				ctx.lineWidth = s * 0.2;
@@ -1088,7 +1068,7 @@
 				ctx.stroke();
 
 				// body
-				ctx.fillStyle = this.color;
+				ctx.fillStyle = this.character.color;
 				ctx.beginPath();
 				ctx.arc(0, 0, s, 0, Math.PI * 2);
 				ctx.fill();
@@ -1102,13 +1082,8 @@
 				ctx.beginPath();
 				ctx.arc(s*0.2, 0, s * 0.65, 0, Math.PI * 2);
 				ctx.fill();
-			} else if (this.colorIndex === 13) {
+			} else if (this.character.id === 'allah') {
 				// occhio di allah
-				var s = CELL_SIZE * 1.5;
-
-				ctx.shadowColor = this.color;
-				ctx.shadowBlur = ENABLE_BLUR ? 10 : 0;
-
 				// bordo
 				ctx.strokeStyle = '#009';
 				ctx.lineWidth = s * 0.2;
@@ -1117,7 +1092,7 @@
 				ctx.stroke();
 
 				// body
-				ctx.fillStyle = this.color;
+				ctx.fillStyle = this.character.color;
 				ctx.beginPath();
 				ctx.arc(0, 0, s, 0, Math.PI * 2);
 				ctx.fill();
@@ -1135,13 +1110,10 @@
 				ctx.arc(0, 0, s * 0.3, 0, Math.PI * 2);
 				ctx.fill();
 				ctx.stroke();
-			}  else if (this.colorIndex === 14) {
+			}  else if (this.character.id === 'risiko') {
 				// RISK TANK
-				var s = CELL_SIZE * 1.5;
-				ctx.shadowColor = this.color;
-				ctx.shadowBlur = ENABLE_BLUR ? 10 : 0;
 				// Corpo del carro (rettangolo arrotondato)
-				ctx.fillStyle = this.color;
+				ctx.fillStyle = this.character.color;
 				ctx.beginPath();
 				ctx.roundRect(-s * 0.9, -s * 0.5, s * 1.6, s * 1.0, s * 0.15);
 				ctx.fill();
@@ -1149,11 +1121,11 @@
 				ctx.lineWidth = CELL_SIZE * 0.15;
 				ctx.stroke();
 				// Torretta (quadrato sopra)
-				ctx.fillStyle = this.colorBright;
+				ctx.fillStyle = this.character.colorBright;
 				ctx.strokeStyle = '#666';
 				ctx.lineWidth = CELL_SIZE * 0.1;
-				ctx.fillRect(-s*0.25, -s*0.25, s*0.5, s*0.5);
-				ctx.strokeRect(-s*0.25, -s*0.25, s*0.5, s*0.5);
+				ctx.fillRect(-s*0.28, -s*0.28, s*0.56, s*0.56);
+				ctx.strokeRect(-s*0.28, -s*0.28, s*0.56, s*0.56);
 				// Cannone
 				ctx.fillStyle = '#666';
 				ctx.fillRect(s * 0.3, -s * 0.1, s * 1.1, s * 0.2);
@@ -1179,17 +1151,11 @@
 					ctx.arc(-s * 0.6 + w * s * 0.4, s * 0.6, s * 0.07, 0, Math.PI * 2);
 					ctx.fill();
 				}
-				ctx.shadowBlur = 0;
-			} else if (this.colorIndex === 15) {
+			} else if (this.character.id === 'tombstone') {
 				// tombstone
-				var s = CELL_SIZE * 1.5;
-				
-				ctx.shadowColor = this.color;
-				ctx.shadowBlur = ENABLE_BLUR ? 10 : 0;
-
 				// corpo di pietra con cima arcuata
-				ctx.fillStyle = this.colorBright;
-				ctx.strokeStyle = this.color;
+				ctx.fillStyle = this.character.colorBright;
+				ctx.strokeStyle = this.character.color;
 				ctx.lineWidth = s * 0.08;
 				ctx.beginPath();
 				ctx.moveTo(-s * 0.6, -s * 0.5);
@@ -1203,10 +1169,14 @@
 				ctx.stroke();
 				
 				//RIP
-				ctx.fillStyle = this.color;
-				ctx.fillRect(-s*0.3, -s*0.15,s*0.6,s*0.1);
-				ctx.fillRect(-s*0.3, s*0.00,s*0.6,s*0.1);
-				ctx.fillRect(-s*0.3, s*0.15,s*0.6,s*0.1);				
+				ctx.fillStyle = this.character.color;
+				ctx.beginPath();
+				ctx.ellipse(0, -s*0.45, s*0.20, s*0.15, 0, 0, Math.PI*2);
+				ctx.closePath();
+				ctx.fill();
+				ctx.fillRect(-s*0.3, -s*0.25,s*0.6,s*0.1);
+				ctx.fillRect(-s*0.3, -s*0.10,s*0.6,s*0.1);
+				ctx.fillRect(-s*0.3, s*0.05,s*0.6,s*0.1);				
 
 				// erbetta sotto
 				ctx.fillStyle = '#0c2';
@@ -1217,17 +1187,16 @@
 				ctx.lineTo(-s * 0.8, s*0.7);
 				ctx.closePath();
 				ctx.fill();
-
-				ctx.shadowBlur = 0;
 			}
 
+			ctx.shadowBlur = 0;
 			ctx.restore();
             
         };
 
         // --- NUOVA IA STRATEGICA PER I NEMICI ---
-        function Enemy(x, y, colorIndex) {
-            Player.call(this, x, y, colorIndex, true);
+        function Enemy(x, y, character) {
+            Player.call(this, x, y, character, true);
             this.speed = ENEMY_SPEED;
             this.dir = Math.floor(Math.random() * 4);
             this.vx = this.speed;
@@ -1284,7 +1253,7 @@
                     var x = gridX + dirs[d][0] * s;
                     var y = gridY + dirs[d][1] * s;
                     if (x < 0 || y < 0 || x >= GRID_WIDTH || y >= GRID_HEIGHT) break;
-                    if (gridMap[y][x] === this.colorIndex) {
+                    if (gridMap[y][x] === this.character.colorIndex) {
                         if (s < bestDist) {
                             bestDist = s;
                             bestDir = d;
@@ -1353,7 +1322,7 @@
                         var cx = gridX + dirs[this.dir][0] * s;
                         var cy = gridY + dirs[this.dir][1] * s;
                         if (cx < 2 || cy < 2 || cx >= GRID_WIDTH - 2 || cy >= GRID_HEIGHT - 2) break;
-                        if (gridMap[cy][cx] !== this.colorIndex) {
+                        if (gridMap[cy][cx] !== this.character.colorIndex) {
                             currentDirLeadsOut = true;
                             break;
                         }
@@ -1377,7 +1346,7 @@
                                 var sx = gridX + dirs[dd][0] * s;
                                 var sy = gridY + dirs[dd][1] * s;
                                 if (sx < 2 || sy < 2 || sx >= GRID_WIDTH - 2 || sy >= GRID_HEIGHT - 2) break;
-                                if (gridMap[sy][sx] !== this.colorIndex) {
+                                if (gridMap[sy][sx] !== this.character.colorIndex) {
                                     if (s < bestS) { bestS = s; bestDir = dd; }
                                     break;
                                 }
@@ -1556,8 +1525,10 @@
 						//territoryCtx.globalAlpha = alpha;
 						//territoryCtx.fillStyle = colors[ownerIndex]; 
 						//territoryCtx.fillRect(cx, cy, CELL_SIZE, CELL_SIZE); 
+						let ch = characters.filter(c => c.colorIndex === ownerIndex)[0];
+						
 						territoryCtx.lineWidth = CELL_SIZE * 0.1;
-						territoryCtx.strokeStyle = colors[ownerIndex]; 
+						territoryCtx.strokeStyle = ch.colorBright;//characters[ownerIndex].colorBright; 
 						territoryCtx.beginPath();
 						if(ownerIndex%2) {
 							territoryCtx.moveTo(cx, cy);
@@ -1578,7 +1549,7 @@
 						
 						territoryCtx.lineWidth = CELL_SIZE * 0.2;
 						territoryCtx.globalAlpha = 1;					
-						territoryCtx.strokeStyle = colorsBright[ownerIndex];
+						territoryCtx.strokeStyle = ch.color;//characters[ownerIndex].color;
 						territoryCtx.beginPath();
 
 						// sopra
@@ -1616,8 +1587,8 @@
             if (!p) return '';
 			if (!p.isAlive && p.killTime && (performance.now() - p.killTime) > 3000) return ''; //rimuovi i morti
     			
-			let res = "<p style='color:"+colors[p.colorIndex]+"'>";
-			res += emojis[p.colorIndex];
+			let res = "<p style='color:"+p.character.color+"'>";
+			res += p.character.emoji;
 			res += p.isEnemy ? ' Enemy'+i : ' Player';
 			
 			if (!p.isAlive) res += ': ' + p.killReason + ' 💀';
@@ -1639,7 +1610,7 @@
             var counts = {};
 
             for (var i = 0; i < allPlayers.length; i++) {
-                counts[allPlayers[i].colorIndex] = 0;
+                counts[allPlayers[i].character.colorIndex] = 0;
             }
 
             for (var r = 0; r < GRID_HEIGHT; r++) {
@@ -1653,7 +1624,7 @@
 
             for (var i = 0; i < allPlayers.length; i++) {
                 var p = allPlayers[i];
-                p.cellCount = counts[p.colorIndex] || 0;
+                p.cellCount = counts[p.character.colorIndex] || 0;
                 p.percentage = 100 * p.cellCount / totalCells;
             }
 
@@ -1667,11 +1638,6 @@
         }
 
         function gameLoop() {
-			if (!gameRunning) {
-				gameBlocking=gameBlocking-1;
-				if(gameBlocking < 0) return;
-			}
-			
 			/* PAPER */
 			ctx.drawImage( paperCanvas, 0, 0 );
 			
@@ -1695,9 +1661,7 @@
 
             updateHUD();
 
-            if (player && !player.isAlive && gameRunning) {
-				gameRunning = false;
-                gameBlocking = 150;
+            if (player && !player.isAlive) {
 				document.getElementById('endTitle').textContent = 'GAME OVER';
                 document.getElementById('gameOver').style.display = 'block';
             }
@@ -1708,10 +1672,8 @@
                 for (var i = 1; i < allPlayers.length; i++) {
                     if (allPlayers[i].isAlive) { allEnemiesDead = false; break; }
                 }
-                if (allEnemiesDead && gameRunning) {
-                    gameRunning = false;
-					gameBlocking = 150;
-					document.getElementById('endTitle').textContent = 'YOU WIN';
+                if (allEnemiesDead) {
+                    document.getElementById('endTitle').textContent = 'YOU WIN';
                     document.getElementById('gameOver').style.display = 'block';
                 }
             }
@@ -1732,9 +1694,13 @@
             touchStartY = touch.clientY - canvas.getBoundingClientRect().top;
         }, false);
 
+		let lastTouchMove = 0;
         canvas.addEventListener('touchmove', function(e) {
             e.preventDefault();
             if (!touchActive || !player) return;
+			
+			if (Date.now() - lastTouchMove < 100) return;
+			lastTouchMove = Date.now();
 			
             var touch = e.touches[0];
             var currentX = touch.clientX - canvas.getBoundingClientRect().left;
@@ -1833,7 +1799,7 @@
             var isMobile = window.innerWidth <= 600;
             var margin = isMobile ? 10 : 20;
 			
-			ENEMIES = Math.min(1 + (window.innerWidth * window.innerHeight * 0.000005)|0, emojis.length);//min=1, max=numero di emoji/colori
+			ENEMIES = Math.min(1 + (window.innerWidth * window.innerHeight * 0.000005)|0, characters.length);//min=1, max=numero di emoji/colori
 			//console.log(ENEMIES,window.innerWidth*window.innerHeight);
 
             // Rendi il canvas grande quasi tutto lo schermo ma permettendo al bordo del container di brillare
@@ -1857,8 +1823,7 @@
             GRID_WIDTH = Math.floor(canvas.width / CELL_SIZE);
             GRID_HEIGHT = Math.floor(canvas.height / CELL_SIZE);
 			
-            gameRunning = true;
-			allPlayers = [];
+            allPlayers = [];
             particles = [];
             document.getElementById('gameOver').style.display = 'none';
 
@@ -1867,16 +1832,18 @@
             var baseX = Math.floor(GRID_WIDTH / 2);
             var baseY = Math.floor(GRID_HEIGHT / 2);
             
-			let currentColorIndex = new Date().getSeconds();//colore del player casuale
+			characters = [...characters].sort(() => Math.random() - 0.5);//rimischia tutto
+			
+			let currentColorIndex = new Date().getSeconds() % characters.length;//colore del player casuale
 			
 			let baseSIZE = 2 + ((GRID_WIDTH * GRID_HEIGHT) * 0.00005)|0;//aumenta col crescere della risoluzione
 			
-			fillTerritory(baseX, baseY, baseSIZE, currentColorIndex % emojis.length);
+			fillTerritory(baseX, baseY, baseSIZE, characters[currentColorIndex].colorIndex);
 			
 			player = new Player(
                 baseX * CELL_SIZE + CELL_SIZE * 0.5,
                 baseY * CELL_SIZE + CELL_SIZE * 0.5,
-                currentColorIndex % emojis.length,
+                characters[currentColorIndex % characters.length],
                 false
             );
             player.vx = PLAYER_SPEED;
@@ -1888,14 +1855,14 @@
 				var theta = b * 6.28 / ENEMIES - Math.PI * 0.25;//parto da alto sx
 				var bx = (GRID_WIDTH * 0.5   +  GRID_WIDTH * 0.45 * Math.cos(theta))|0;//centrata in width
 				var by = (GRID_HEIGHT * 0.5  +  GRID_HEIGHT * 0.45 * Math.sin(theta))|0;//centrata in height
-				var idx = (currentColorIndex + b + 1) % emojis.length;
+				var idx = (currentColorIndex + b + 1) % characters.length;
 				
-				fillTerritory(bx, by, baseSIZE, idx);
+				fillTerritory(bx, by, baseSIZE, characters[idx].colorIndex);
 				
 				var enemy = new Enemy( 
 					bx * CELL_SIZE + CELL_SIZE * 0.5, 
 					by * CELL_SIZE + CELL_SIZE * 0.5, 
-					idx,
+					characters[idx],
 					true
 				);				
 				
@@ -1927,7 +1894,7 @@
 		// Crea un territorio ""quasi circolare"" di raggio baseSIZE
 		function fillTerritory(bx, by, baseSIZE, col) {
 			var r2 = baseSIZE * baseSIZE;
-
+			
 			for (var yy = by - baseSIZE; yy <= by + baseSIZE; yy++) {
 				for (var xx = bx - baseSIZE; xx <= bx + baseSIZE; xx++) {
 
@@ -1943,6 +1910,7 @@
 				}
 			}
 		}
+
 
         init();
     </script>
