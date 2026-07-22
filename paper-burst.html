@@ -37,13 +37,9 @@
         
         .hud {
             position: absolute;
-            top: 16px;
-            left: 16px;
-            xbackground: rgba(255, 255, 238, 0.5);
-            xpadding: 8px;
-            xborder-radius: 8px;
-			xborder: 2px solid #44b;
-            font-size: 16px;
+            top: 2.5vh;
+            left: 2.5vh;
+            font-size: 2.5vh;
             font-weight: 700;
             z-index: 10;			
         }
@@ -54,13 +50,12 @@
             left: 50%;
             transform: translate(-50%, -50%);
             background: rgba(255, 255, 238, 0.5);
-            padding: 32px;
+            padding: 6vh 12vh;
             border-radius: 12px;
             text-align: center;
             z-index: 100;
             display: none;
-            min-width: 350px;
-			border: 2px solid #44b;
+            border: 2px solid #44b;
 			xxxbackground-image: repeating-linear-gradient(
 				135deg,
 				#eee,
@@ -71,14 +66,15 @@
         }
         
         .game-over h1 {
-            font-size: 32px;
+            font-size: 4vh;
 			color: #f00;
+			white-space: nowrap;
         }
         
         .game-over button {
             margin-top: 32px;
             padding: 12px 24px;
-            font-size: 16px;
+            font-size: 3vh;
             background: transparent;
 			xxxbackground: #fff;
             color: #44b;
@@ -176,14 +172,14 @@
 					},{
 						id: 'cookie',
 						emoji: '🍪',//cookie
-						color:  '#ccaa77',
-						colorBright:  '#ddbb88', 
+						color:  '#eecc99',
+						colorBright:  '#ffddaa', 
 						colorIndex: 5,
 					},{
 						id: 'smile',
 						emoji: '🙂',//smile
-						color: '#eedd55',
-						colorBright: '#ffee66',
+						color: '#eedd33',
+						colorBright: '#ffee44',
 						colorIndex: 6,
 					},{
 						id: 'basket',
@@ -212,8 +208,8 @@
 					},{
 						id: 'apple',
 						emoji: '🍎',//apple
-						color:  '#cc1100',
-						colorBright:  '#dd2211',
+						color:  '#dd1100',
+						colorBright:  '#ee2211',
 						colorIndex: 11,
 					},{
 						id: 'coconut',
@@ -332,6 +328,8 @@
 
             var gridX = Math.floor(this.x / CELL_SIZE);
             var gridY = Math.floor(this.y / CELL_SIZE);
+			
+			fixPlayerSpeed(this);
             
             if (gridY < 0 || gridY >= GRID_HEIGHT || gridX < 0 || gridX >= GRID_WIDTH) return;
 
@@ -817,7 +815,10 @@
 			} else if (this.character.id === 'cookie') {
 				// cookie
 				// biscottone
-				ctx.fillStyle = this.character.color;
+				const grad = ctx.createLinearGradient(-s,s,s,-s);
+				grad.addColorStop(0, '#841');
+				grad.addColorStop(1, this.character.color);
+				ctx.fillStyle = grad;//this.character.color;
 				ctx.beginPath();
 				ctx.arc(0, -s * 0.12, s * 0.95, 0, Math.PI * 2);
 				ctx.fill();
@@ -856,17 +857,21 @@
 				}
 			} else if (this.character.id === 'smile') {
 				// smile!
-				ctx.fillStyle = this.character.color;
+				const grad = ctx.createLinearGradient(-s,s,s,-s);
+				grad.addColorStop(0, '#f80');
+				grad.addColorStop(1, this.character.color);
+				ctx.fillStyle = grad;//this.character.color;
 				ctx.beginPath();
 				ctx.arc(0, -s * 0.12, s * 0.95, 0, Math.PI * 2);
 				ctx.fill();
 
-				// Bordo tostato
-				ctx.strokeStyle = '#222';
+				// Bordo arancio
+				ctx.strokeStyle = '#a60';
 				ctx.lineWidth = s * 0.08;
 				ctx.stroke();
 
 				//bocca
+				ctx.lineWidth = s * 0.1;
 				ctx.beginPath();
 				ctx.arc(0, -s*0.1, s*0.5, 0.5, 2.6);
 				ctx.stroke();
@@ -874,10 +879,10 @@
 				//Occhi
 				ctx.fillStyle = '#fff';
 				ctx.beginPath();
-				ctx.arc(-s*0.25, -s*0.3, s*0.2, 0, Math.PI * 2);
+				ctx.arc(-s*0.25, -s*0.3, s*0.24, 0, Math.PI * 2);
 				ctx.fill();
 				ctx.beginPath();
-				ctx.arc(s*0.25, -s*0.3, s*0.2, 0, Math.PI * 2);
+				ctx.arc(s*0.25, -s*0.3, s*0.24, 0, Math.PI * 2);
 				ctx.fill();
 				ctx.fillStyle = '#222';
 				ctx.beginPath();
@@ -890,7 +895,10 @@
 				// Basket
 				var r = s * 1;//0.95;
 				// Palla
-				ctx.fillStyle = this.character.color;
+				const grad = ctx.createLinearGradient(-s,s,s,-s);
+				grad.addColorStop(0, '#a62');
+				grad.addColorStop(1, this.character.color);
+				ctx.fillStyle = grad;//this.character.color;
 				ctx.beginPath();
 				ctx.arc(0, 0, r, 0, Math.PI * 2);
 				ctx.fill();
@@ -1029,7 +1037,10 @@
 			} else if (this.character.id === 'apple') {
 				//apple
 				//corpo gradiente radiale rosso luccicoso
-				ctx.fillStyle = this.character.color;
+				const grad = ctx.createLinearGradient(-s,s,s,-s);
+				grad.addColorStop(0, '#600');
+				grad.addColorStop(1, this.character.color);
+				ctx.fillStyle = grad;//this.character.color;
 				ctx.strokeStyle = '#600';
 				ctx.lineWidth = s * 0.1;
 				
@@ -1061,27 +1072,31 @@
 			} else if (this.character.id === 'coconut') {
 				// cocco
 				// buccia
-				ctx.strokeStyle = '#841';
-				ctx.lineWidth = s * 0.2;
+				ctx.fillStyle = '#841';
 				ctx.beginPath();
 				ctx.arc(-s*0.1, 0, s, 0, Math.PI * 2);
-				ctx.stroke();
+				ctx.fill();
 
 				// body
 				ctx.fillStyle = this.character.color;
 				ctx.beginPath();
-				ctx.arc(0, 0, s, 0, Math.PI * 2);
+				ctx.arc(s*0.10, 0, s*0.85, 0, Math.PI * 2);
 				ctx.fill();
 				
 				// centro scuro
-				ctx.fillStyle = '#ccc';
+				const grad = ctx.createLinearGradient(-s,s,s,-s);
+				grad.addColorStop(0,'#aaa');
+				grad.addColorStop(1, this.character.color);
+				ctx.fillStyle = grad;//'#ccc';
 				ctx.beginPath();
-				ctx.arc(s*0.1, 0, s * 0.75, 0, Math.PI * 2);
+				ctx.arc(s*0.10, 0, s * 0.7, 0, Math.PI * 2);
 				ctx.fill();
+				/*
 				ctx.fillStyle = '#c5c5c5';
 				ctx.beginPath();
 				ctx.arc(s*0.2, 0, s * 0.65, 0, Math.PI * 2);
 				ctx.fill();
+				*/
 			} else if (this.character.id === 'allah') {
 				// occhio di allah
 				// bordo
@@ -1712,13 +1727,17 @@
 
 			if (distance <= CELL_SIZE * CELL_SIZE) return;
 
-            /*
+            
 			//angolo libero è problematico!
 			var angle = Math.atan2(dy, dx);
             player.vx = Math.cos(angle) * PLAYER_SPEED;
             player.vy = Math.sin(angle) * PLAYER_SPEED;
 			fixPlayerPosition(player);
-			*/
+			
+			touchStartX = currentX; //FIX
+			touchStartY = currentY; //FIX
+			return;
+			
 			
 			if (Math.abs(dx) > Math.abs(dy)) {
 				// orizzontale
@@ -1787,6 +1806,58 @@
 		function fixPlayerPosition(p) {
 			p.x = Math.floor(p.x / CELL_SIZE) * CELL_SIZE + CELL_SIZE * 0.5;
             p.y = Math.floor(p.y / CELL_SIZE) * CELL_SIZE + CELL_SIZE * 0.5;
+		}
+		
+		function fixPlayerSpeed(p) {
+			const halfWidth = GRID_WIDTH * CELL_SIZE * 0.5;
+			const halfHeight = GRID_HEIGHT * CELL_SIZE * 0.5;
+
+			const muroLeft = CELL_SIZE * 0.5;
+			const muroRight = (GRID_WIDTH - 0.5) * CELL_SIZE;
+			const muroUp = CELL_SIZE * 0.5;
+			const muroDown = (GRID_HEIGHT - 0.5) * CELL_SIZE;
+			
+			if (!p.isEnemy) console.log(p.x, p.y, muroUp, muroRight, muroDown, muroLeft);
+			
+			// 1) Muro destro
+			if (p.x >= muroRight && p.vx > 0) {
+				p.vx = 0;
+				// Se già si muoveva verticalmente, mantieni il suo verso; altrimenti usa la regola della metà
+				if (p.vy !== 0) {
+					// Mantiene il verso attuale di vy
+					p.vy = p.vy > 0 ? PLAYER_SPEED : -PLAYER_SPEED;
+				} else {
+					p.vy = p.y < halfHeight ? PLAYER_SPEED : -PLAYER_SPEED;
+				}
+			} 
+			// 3) Muro sinistro
+			else if (p.x <= muroLeft && p.vx < 0) {
+				p.vx = 0;
+				if (p.vy !== 0) {
+					p.vy = p.vy > 0 ? PLAYER_SPEED : -PLAYER_SPEED;
+				} else {
+					p.vy = p.y < halfHeight ? PLAYER_SPEED : -PLAYER_SPEED;
+				}
+			}
+
+			// 2) Muro inferiore
+			if (p.y >= muroDown && p.vy > 0) {
+				p.vy = 0;
+				if (p.vx !== 0) {
+					p.vx = p.vx > 0 ? PLAYER_SPEED : -PLAYER_SPEED;
+				} else {
+					p.vx = p.x < halfWidth ? PLAYER_SPEED : -PLAYER_SPEED;
+				}
+			} 
+			// 4) Muro superiore
+			else if (p.y <= muroUp && p.vy < 0) {
+				p.vy = 0;
+				if (p.vx !== 0) {
+					p.vx = p.vx > 0 ? PLAYER_SPEED : -PLAYER_SPEED;
+				} else {
+					p.vx = p.x < halfWidth ? PLAYER_SPEED : -PLAYER_SPEED;
+				}
+			}
 		}
 
         // Initialize with dynamic dimensions
