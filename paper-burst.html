@@ -2,7 +2,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Paper Burst</title>
+    <title>Paper Burst 1.0</title>
     <style>
         * {
             margin: 0;
@@ -127,9 +127,9 @@
         var GRID_HEIGHT = 0;
         var PLAYER_SPEED = CELL_SIZE * 0.25;
         var ENEMY_SPEED = CELL_SIZE * 0.25;
-        var TRAIL_WIDTH = CELL_SIZE * 1;
+        var TRAIL_WIDTH = CELL_SIZE;
 		
-		var ENABLE_BLUR = false;
+		var BLUR_SIZE = 0;//0 oppure CELL_SIZE
 		
 		var ENEMIES = 8;
 		
@@ -220,8 +220,8 @@
 					},{
 						id: 'allah',
 						emoji: '🧿',//occhio di allah
-						color:  '#2233dd',
-						colorBright:  '#3344ff',
+						color:  '#2277dd',
+						colorBright:  '#3388ff',
 						colorIndex: 13,
 					},{
 						id: 'risiko',
@@ -235,6 +235,36 @@
 						color: '#999999',
 						colorBright: '#aaaaaa',
 						colorIndex: 15,
+					},{
+						id: 'floppy',
+						emoji: '💾​',//floppy
+						color: '#2222bb',
+						colorBright: '#3333cc',
+						colorIndex: 16,
+					},{
+						id: 'bomb',
+						emoji: '💣​',//bomb
+						color: '#333333',
+						colorBright: '#444444',
+						colorIndex: 17,
+					},{
+						id: 'heart',
+						emoji: '❤️​',//heart
+						color: '#ee1144',
+						colorBright: '#ff3366',
+						colorIndex: 18,
+					},{
+						id: 'warning',
+						emoji: '⚠️​',//warning
+						color: '#cc9900',
+						colorBright: '#ffcc00',
+						colorIndex: 19,
+					},{
+						id: 'funghetto',
+						emoji: '🍄​',//mushroom
+						color: '#cc1122',
+						colorBright: '#ee3344',
+						colorIndex: 20,
 					}
 		];
 
@@ -530,8 +560,8 @@
             updateTerritoryPercentages();
 			drawTerritory();
         };
-
-        Player.prototype.draw = function() {
+		
+		Player.prototype.draw = function() {
             if (!this.isAlive) return;
 
 			if (this.state === 'IN_TRAIL' && this.trail.length > 0) {
@@ -540,7 +570,7 @@
                 ctx.lineCap = 'round';
                 ctx.lineJoin = 'round';
                 ctx.shadowColor = this.character.color;
-                ctx.shadowBlur = ENABLE_BLUR ? 10 : 0;
+                ctx.shadowBlur = BLUR_SIZE;
 
                 ctx.beginPath();
                 ctx.moveTo(this.trail[0].x * CELL_SIZE + CELL_SIZE * 0.5,  
@@ -564,7 +594,7 @@
 			//comune a tutte le emojis
 			var s = CELL_SIZE * 1.5;
 			ctx.shadowColor = this.character.color;
-            ctx.shadowBlur = ENABLE_BLUR ? 10 : 0;
+            ctx.shadowBlur = BLUR_SIZE;
 
 			//per me si va nella citta dolente...
 			if (this.character.id === 'snake') {
@@ -662,29 +692,29 @@
 				ctx.strokeStyle = this.character.colorBright;
 				ctx.lineWidth = s*0.1;
 				ctx.beginPath();
-				ctx.moveTo(-s*0.6,-s*0.5);
-				ctx.lineTo(s*0.6,-s*0.5);
-				ctx.lineTo(s*1.0,-s*0.1);
-				ctx.lineTo(s*0.0,s);
-				ctx.lineTo(-s*1.0,-s*0.1);
-				ctx.lineTo(-s*0.6,-s*0.5);
+				ctx.moveTo(-s*0.5,s*0.6,-s*0.5);
+				ctx.lineTo(-s*0.5,-s*0.6);
+				ctx.lineTo(-s*0.1,-s*1.0);
+				ctx.lineTo(s,0);
+				ctx.lineTo(-s*0.1,s*1.0,);
+				ctx.lineTo(-s*0.5,s*0.6);
 				ctx.closePath();
 				ctx.fill();
 				ctx.stroke();
 				
 				//orizz
 				ctx.beginPath();
-				ctx.moveTo(-s*1.0,-s*0.1);
-				ctx.lineTo(s*1.0,-s*0.1);
+				ctx.moveTo(-s*0.1,s);
+				ctx.lineTo(-s*0.1,-s);
 				ctx.stroke();
 				
 				//vert sx
 				ctx.beginPath();
-				ctx.moveTo(-s*0.2,-s*0.5);
-				ctx.lineTo(-s*0.4,-s*0.1);
-				ctx.lineTo(s*0.0,s);
-				ctx.lineTo(s*0.4,-s*0.1);
-				ctx.lineTo(s*0.2,-s*0.5);
+				ctx.moveTo(-s*0.5,s*0.2);
+				ctx.lineTo(-s*0.1,s*0.4);
+				ctx.lineTo(s,0);
+				ctx.lineTo(-s*0.1,-s*0.4);
+				ctx.lineTo(-s*0.5,-s*0.2);
 				ctx.closePath();
 				ctx.stroke();
 				ctx.fillStyle = '#ffffff33';
@@ -947,7 +977,7 @@
 				ctx.rotate(Math.PI / 4);
 
 				ctx.shadowColor = this.character.color;
-				ctx.shadowBlur = ENABLE_BLUR ? 10 : 0;
+				ctx.shadowBlur = BLUR_SIZE;
 
 				// Corpo
 				ctx.fillStyle = "#8B4513";
@@ -1100,7 +1130,7 @@
 			} else if (this.character.id === 'allah') {
 				// occhio di allah
 				// bordo
-				ctx.strokeStyle = '#009';
+				ctx.strokeStyle = '#00b';
 				ctx.lineWidth = s * 0.2;
 				ctx.beginPath();
 				ctx.arc(0, 0, s, 0, Math.PI * 2);
@@ -1202,8 +1232,149 @@
 				ctx.lineTo(-s * 0.8, s*0.7);
 				ctx.closePath();
 				ctx.fill();
-			}
+			} else if (this.character.id === 'floppy') {
+				// --- FLOPPY DISK ---
+				//corpo
+				ctx.fillStyle = this.character.color;
+				ctx.strokeStyle = this.character.colorBright;
+				ctx.lineWidth = s * 0.1;
+				ctx.beginPath();
+				ctx.roundRect(-s, -s, s * 2, s * 2, [0,0,s*0.3,0]);
+				ctx.closePath();
+				ctx.fill();
+				ctx.stroke();
 
+				// 2. Etichetta bianca sx
+				ctx.fillStyle = '#fff';
+				ctx.fillRect(-s * 0.95, -s * 0.8, s * 1.1, s * 1.6);
+				ctx.fillStyle = '#f00';
+				ctx.fillRect(s * 0.05, -s * 0.8, s * 0.1, s * 1.6);
+				
+				// 3. Metallino scorrevole (la piastrina di chiusura in alto a destra)
+				ctx.fillStyle = '#ccc';
+				ctx.fillRect(s * 0.4, -s * 0.4, s * 0.6, s);
+				
+				// 4. Dettaglio finestrella sul metallino
+				ctx.fillStyle = '#111';
+				ctx.fillRect(s * 0.5, s * 0.2, s * 0.4, s * 0.25);
+			} else if (this.character.id === 'bomb') {
+				//bomb
+				//corpo
+				ctx.fillStyle = this.character.color;
+				ctx.strokeStyle = this.character.colorBright;
+				ctx.lineWidth = s * 0.08;
+				ctx.beginPath();
+				ctx.arc(0, 0, s * 0.8, 0, Math.PI * 2);
+				ctx.fill();
+				ctx.stroke();
+
+				//collare miccia
+				ctx.save();
+				ctx.translate(s * 0.56, -s * 0.56); // Posizionato a 45° sul bordo (0.8 * cos(-45°) ≈ 0.56)
+				ctx.rotate(Math.PI / 4); // Inclina il collare lungo la diagonale
+				ctx.fillStyle = '#888';
+				ctx.fillRect(-s * 0.1, -s * 0.2, s * 0.2, s * 0.25);
+				ctx.restore();
+
+				//miccia
+				ctx.strokeStyle = '#d4a373'; // Colore corda/miccia
+				ctx.lineWidth = s * 0.1;
+				ctx.beginPath();
+				ctx.moveTo(s * 0.65, -s * 0.65);
+				ctx.quadraticCurveTo(s * 0.9, -s * 0.8, s * 0.9, -s * 1.0);
+				ctx.stroke();
+
+				//scintillone
+				ctx.fillStyle = '#f40';//fuego!
+				ctx.beginPath();
+				ctx.arc(s * 0.9, -s * 1.0, s * 0.12, 0, Math.PI * 2);
+				ctx.fill();
+			} else if (this.character.id === 'heart') {
+				// Cuoricini cuoricini...
+				ctx.fillStyle = this.character.color;
+				ctx.strokeStyle = this.character.colorBright;
+				ctx.lineWidth = s * 0.1;
+				ctx.beginPath();
+				// Spostiamo il punto di partenza al centro inferiore del cuore
+				ctx.moveTo(s, 0);
+				// Prima curva bezier (ex sinistra)
+				ctx.bezierCurveTo(s * 0.4, -s * 1.4, -s * 0.9, -s * 1.4, -s * 0.3, 0);
+				// Seconda curva bezier (ex destra)
+				ctx.bezierCurveTo(-s * 0.9, s * 1.4, s * 0.4, s * 1.4, s, 0);
+				ctx.closePath();
+				ctx.fill();
+				ctx.stroke();
+			} else if (this.character.id === 'warning') {
+				//warning == triangolo di avvertimento
+				ctx.fillStyle = this.character.colorBright;//'#ffcc00';
+				ctx.strokeStyle = this.character.color;//'#cc9900';
+				ctx.lineWidth = s * 0.1;
+				ctx.beginPath();
+				ctx.moveTo(s * 0.9, 0); // Punta a destra
+				ctx.lineTo(-s * 0.7, s); // Angolo in basso
+				ctx.lineTo(-s * 0.7, -s); // Angolo in alto
+				ctx.closePath();
+				ctx.fill();
+				ctx.stroke();
+
+				ctx.fillStyle = '#000';
+				ctx.fillRect(-s * 0.1, -s * 0.05, s*0.5, s * 0.1);
+				ctx.beginPath();
+				ctx.arc(-s*0.4, 0, s * 0.09, 0, Math.PI * 2);
+				ctx.fill();
+			} else if (this.character.id === 'funghetto') {
+				//mushroom === weee funghetto - cit. ottodisk
+				ctx.fillStyle = '#ffd';// Beige chiaro
+				ctx.strokeStyle = '#cb9';
+				ctx.lineWidth = s * 0.1;
+				
+				ctx.beginPath();
+				// Disegniamo la base del gambo leggermente più stretta in alto e più larga in basso
+				ctx.moveTo(-s * 1.0,s * 0.35);
+				ctx.lineTo(-s * 1.0,-s * 0.35);
+				ctx.lineTo(-s * 0.3,-s * 0.25);
+				ctx.lineTo(-s * 0.3,s * 0.25);
+				ctx.closePath();
+				ctx.fill();
+				ctx.stroke();
+
+				//cappella
+				ctx.fillStyle = this.character.colorBright;
+				ctx.strokeStyle = this.character.color;
+				ctx.lineWidth = s * 0.1;
+
+				ctx.beginPath();
+				// Usiamo una curva per creare la cupola del cappello
+				ctx.arc(-s * 0.3, 0, s * 1.0, 3 * Math.PI * 0.5, 5 * Math.PI * 0.5);
+				ctx.closePath();
+				ctx.fill();
+				ctx.stroke();
+
+				//punti bianchi sulla cappella (bwuhauhauha)
+				ctx.fillStyle = '#fff';
+
+				//pois centrale
+				ctx.beginPath();
+				ctx.arc(s * 0.10, -s*0.05, s * 0.22, 0, Math.PI * 2);
+				ctx.fill();
+
+				// Pois sinistro
+				ctx.beginPath();
+				ctx.arc(s * 0.40, -s * 0.45, s * 0.10, 0, Math.PI * 2);
+				ctx.fill();
+				ctx.beginPath();
+				ctx.arc(s * 0.05, -s * 0.65, s * 0.15, 0, Math.PI * 2);
+				ctx.fill();
+
+				// Pois destro
+				ctx.beginPath();
+				ctx.arc(s * 0.35, s * 0.35, s * 0.15, 0, Math.PI * 2);
+				ctx.fill();
+				ctx.beginPath();
+				ctx.arc(s * 0.00, s * 0.65, s * 0.20, 0, Math.PI * 2);
+				ctx.fill();
+			}
+				
 			ctx.shadowBlur = 0;
 			ctx.restore();
             
@@ -1527,23 +1698,11 @@
 					if (ownerIndex !== -1) { 
 						let cx = x * CELL_SIZE;
 						let cy = y * CELL_SIZE;
-						
-						//territoryCtx.globalAlpha = 0.5; 
-						//var alpha = (((x + y) & 1) ? 0.40 : 0.60);//scacchiera base
-						//var alpha = (((x + y) & 2) ? 0.40 : 0.60);//scacchiera diagonale larga
-						//var alpha = (((x + y) & 3) ? 0.40 : 0.60);//scacchiera diagonale stretta
-						//var alpha = (((x + y) & 4) ? 0.40 : 0.60);//scacchiera diagonale larghissima
-						//var alpha = (((x + y) & 5) ? 0.40 : 0.60);//scacchiera diagonale a strisce sparse
-						//var alpha = (((x + y) & 6) ? 0.40 : 0.60);//scacchiera diagonale a strisce compatte
-						//var alpha = (((x + y) & 7) ? 0.40 : 0.60);//righe diagonali
-						//var alpha = (0.40 + ((x ^ y) & 3) * 0.03);//scacchiera concentrica
-						//territoryCtx.globalAlpha = alpha;
-						//territoryCtx.fillStyle = colors[ownerIndex]; 
-						//territoryCtx.fillRect(cx, cy, CELL_SIZE, CELL_SIZE); 
 						let ch = characters.filter(c => c.colorIndex === ownerIndex)[0];
 						
+						//diagonali semplici
 						territoryCtx.lineWidth = CELL_SIZE * 0.1;
-						territoryCtx.strokeStyle = ch.colorBright;//characters[ownerIndex].colorBright; 
+						territoryCtx.strokeStyle = ch.colorBright;
 						territoryCtx.beginPath();
 						if(ownerIndex%2) {
 							territoryCtx.moveTo(cx, cy);
@@ -1555,13 +1714,30 @@
 						territoryCtx.stroke();
 						
 						/*
+						territoryCtx.globalAlpha = 0.5; 
+						//var alpha = (((x + y) & 1) ? 0.30 : 0.70);//scacchiera base
+						//var alpha = (((x + y) & 2) ? 0.30 : 0.70);//scacchiera diagonale larga
+						//var alpha = (((x + y) & 3) ? 0.30 : 0.70);//scacchiera diagonale stretta
+						//var alpha = (((x + y) & 4) ? 0.30 : 0.70);//scacchiera diagonale larghissima
+						//var alpha = (((x + y) & 5) ? 0.30 : 0.70);//scacchiera diagonale a strisce sparse
+						//var alpha = (((x + y) & 6) ? 0.30 : 0.70);//scacchiera diagonale a strisce compatte
+						//var alpha = (((x + y) & 7) ? 0.30 : 0.70);//righe diagonali
+						//var alpha = (0.3 + ((x ^ y) & 3) * 0.4);//scacchiera concentrica
+						territoryCtx.globalAlpha = alpha;
+						territoryCtx.fillStyle = ch.colorBright; 
+						territoryCtx.fillRect(cx, cy, CELL_SIZE, CELL_SIZE); 
+						*/
+						
+						
+						/*
 						//bordo di ogni quadrato
 						territoryCtx.lineWidth = CELL_SIZE * 0.05; 
 						territoryCtx.globalAlpha = 0.2; 
-						territoryCtx.strokeStyle = colors[ownerIndex]; 
+						territoryCtx.strokeStyle = ch.colorBright;
 						territoryCtx.strokeRect(cx, cy, CELL_SIZE, CELL_SIZE); 
 						*/
 						
+						//borda il territorio
 						territoryCtx.lineWidth = CELL_SIZE * 0.2;
 						territoryCtx.globalAlpha = 1;					
 						territoryCtx.strokeStyle = ch.color;//characters[ownerIndex].color;
@@ -1870,7 +2046,7 @@
             var isMobile = window.innerWidth <= 600;
             var margin = isMobile ? 10 : 20;
 			
-			ENEMIES = Math.min(1 + (window.innerWidth * window.innerHeight * 0.000005)|0, characters.length);//min=1, max=numero di emoji/colori
+			ENEMIES = Math.min(1 + (window.innerWidth * window.innerHeight * 0.000005)|0, characters.length - 1);//min=1, max=numero di emoji/colori
 			//console.log(ENEMIES,window.innerWidth*window.innerHeight);
 
             // Rendi il canvas grande quasi tutto lo schermo ma permettendo al bordo del container di brillare
@@ -1951,16 +2127,6 @@
             init();
         });
 		
-		//crea un quadrato di lato baseSIZE * 2
-		function fillTerritorySQUARE(bx, by, baseSIZE, col) {
-			for (var yy = by - baseSIZE; yy < by + baseSIZE; yy++) {
-                    for (var xx = bx - baseSIZE; xx < bx + baseSIZE; xx++) {
-                        if (xx >= 0 && xx < GRID_WIDTH && yy >= 0 && yy < GRID_HEIGHT) {
-                            gridMap[yy][xx] = col;
-                    }
-                }
-            }
-		}
 		
 		// Crea un territorio ""quasi circolare"" di raggio baseSIZE
 		function fillTerritory(bx, by, baseSIZE, col) {
@@ -1971,6 +2137,7 @@
 
 					if (xx >= 0 && xx < GRID_WIDTH && yy >= 0 && yy < GRID_HEIGHT) {
 
+						//gridMap[yy][xx] = col;//quadrato
 						var dx = xx - bx;
 						var dy = yy - by;
 
