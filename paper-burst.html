@@ -139,7 +139,8 @@
         var allPlayers = [];
         var animId = null;
 						
-		var characters = [{
+		var characters = [
+					{
 						id: 'snake',
 						emoji: '🐍',//serpentone
 						color: '#33aa33',
@@ -265,6 +266,18 @@
 						color: '#cc1122',
 						colorBright: '#ee3344',
 						colorIndex: 20,
+					},{
+						id: 'email',
+						emoji: '✉️​',//email
+						color: '#eedddd',
+						colorBright: '#ffeeee',
+						colorIndex: 21,
+					},{
+						id: 'nuclear',
+						emoji: '☢️',//nuclear
+						color: '#111111',
+						colorBright: '#eecc00',
+						colorIndex: 22,
 					}
 		];
 
@@ -1373,6 +1386,67 @@
 				ctx.beginPath();
 				ctx.arc(s * 0.00, s * 0.65, s * 0.20, 0, Math.PI * 2);
 				ctx.fill();
+			} else if (this.character.id === 'email') {
+				//email == lettera
+				ctx.fillStyle = this.character.colorBright;
+				ctx.strokeStyle = this.character.color;
+				ctx.lineWidth = s * 0.08;
+				
+				//corpo
+				ctx.fillRect(-s,-s*0.6,2*s,s*1.2);
+				
+				//triangolo sotto
+				ctx.beginPath();
+				ctx.moveTo(-s,s*0.6);
+				ctx.lineTo(0,-s*0.1);
+				ctx.lineTo(s,s*0.6);
+				ctx.closePath();
+				ctx.fill();
+				ctx.stroke();
+								
+				//triangolo sopra
+				ctx.beginPath();
+				ctx.moveTo(-s,-s*0.6);
+				ctx.lineTo(0,s*0.1);
+				ctx.lineTo(s,-s*0.6);
+				ctx.closePath();
+				ctx.fill();
+				ctx.stroke();				
+			} else if (this.character.id === 'nuclear') {
+				//nuclear radiation, thank you president trump
+				ctx.fillStyle = this.character.colorBright;
+				ctx.strokeStyle = this.character.color;
+				ctx.lineWidth = s * 0.08;
+				
+				//cerchio giallo
+				ctx.beginPath();
+				ctx.arc(0,0,s,0,Math.PI*2);
+				ctx.fill();
+				ctx.stroke();
+				
+				//per disegnare 3 triangoli, divido il cerchio in 6 parti
+				ctx.fillStyle = this.character.color;
+				let ang = Math.PI * 0.33;
+				let dist = s * 0.90;	
+				
+				for(let i = 0; i < 3; i++) {
+					let ang0 = (1+i*2) * ang;
+					let ang1 = (2+i*2) * ang;
+					ctx.beginPath();
+					ctx.moveTo(Math.cos(ang0) * dist, Math.sin(ang0) * dist);
+					ctx.lineTo(Math.cos(ang1) * dist, Math.sin(ang1) * dist);
+					ctx.lineTo(0, 0);
+					ctx.closePath();
+					ctx.fill();
+				}
+				
+				//palla nera centrale
+				ctx.fillStyle = this.character.color;
+				ctx.strokeStyle = this.character.colorBright;
+				ctx.beginPath();
+				ctx.arc(0,0,s*0.2,0,Math.PI*2);
+				ctx.fill();
+				ctx.stroke();
 			}
 				
 			ctx.shadowBlur = 0;
