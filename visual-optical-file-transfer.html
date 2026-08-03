@@ -159,12 +159,14 @@
         }
 		
 		#txa {
-			width: 100%;
+			width: 90%;
 			height: 50%;
 			position: absolute;
 			top: 25%;
+			left: 5%;
 			z-index: 999999;
 			display: none;
+			overflow: auto;
 		}
     </style>
 </head>
@@ -828,16 +830,25 @@
             for (let i = 0; i < DATA_CELLS; i++) {
                 const cell = DATA_CELL_COORDS[i];
                 const [px, py] = applyAffine(T, cell.x + 0.5, cell.y + 0.5);
+				//DEBUG
+				overlayCtx.fillStyle = "red";
+				overlayCtx.beginPath();
+				overlayCtx.arc(px, py, 2, 0, Math.PI * 2);
+				overlayCtx.fill();
+				
                 const [r, g, b] = sampleColorAt(imgData, w, h, px, py, radius);
                 indices[i] = classifyColor(r, g, b);
             }
+			
+			//DEBUG
+			document.getElementById('txa').innerText += 'INDICES: ' + (indices.slice(0,20)) + '\n'; 
 
             const bytes = colorIndicesToBytes(indices);
             if (bytes.length < HEADER_SIZE) return;
 			
 			
 			//DEBUG!!!
-			document.getElementById('txa').innerText += [...bytes.slice(0,16)] .map(x=>x.toString(16).padStart(2,'0')) .join(' ')+'\n';
+			document.getElementById('txa').innerText += 'BYTES: ' + ([...bytes.slice(0,16)] .map(x=>x.toString(16).padStart(2,'0')) .join(' '))+'\n';
 			
 			
             if (bytes[0] !== MAGIC0 || bytes[1] !== MAGIC1) {
