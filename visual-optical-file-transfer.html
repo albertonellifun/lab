@@ -838,6 +838,9 @@
 				
                 const [r, g, b] = sampleColorAt(imgData, w, h, px, py, radius);
                 indices[i] = classifyColor(r, g, b);
+				
+				//DEBUG
+				if (i<5) document.getElementById("txa").value += `CLASSIFY: ${i}: ${Math.round(r)},${Math.round(g)},${Math.round(b)} -> ${classifyColor(r,g,b)}\n`;
             }
 			
 			//DEBUG
@@ -848,7 +851,7 @@
 			
 			
 			//DEBUG!!!
-			document.getElementById('txa').value += 'BYTES: ' + ([...bytes.slice(0,16)] .map(x=>x.toString(16).padStart(2,'0')) .join(' '))+'\n';
+			document.getElementById('txa').value += 'BYTES: ' + ([...bytes.slice(0,16)] .map(x=>x.toString(16).padStart(2,'0')) .join(' '))+'\n\n';
 			
 			
             if (bytes[0] !== MAGIC0 || bytes[1] !== MAGIC1) {
