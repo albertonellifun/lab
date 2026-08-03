@@ -711,7 +711,7 @@
             const um = GRID_SIZE - MARKER_SIZE; // distanza (in moduli) tra i centri dei marker
             const a = (TR.x - TL.x) / um, c = (TR.y - TL.y) / um;
             const b = (BL.x - TL.x) / um, d = (BL.y - TL.y) / um;
-            const off = MARKER_SIZE >> 1; // indice del centro del marker (2 per MARKER_SIZE=5)
+            const off = MARKER_SIZE * 0.5; //era MARKER_SIZE >> 2
             const e = TL.x - a * off - b * off;
             const f = TL.y - c * off - d * off;
             return { a, b, c, d, e, f };
@@ -841,14 +841,14 @@
             }
 			
 			//DEBUG
-			document.getElementById('txa').innerText += 'INDICES: ' + (indices.slice(0,20)) + '\n'; 
+			document.getElementById('txa').value += 'INDICES: ' + (indices.slice(0,20)) + '\n'; 
 
             const bytes = colorIndicesToBytes(indices);
             if (bytes.length < HEADER_SIZE) return;
 			
 			
 			//DEBUG!!!
-			document.getElementById('txa').innerText += 'BYTES: ' + ([...bytes.slice(0,16)] .map(x=>x.toString(16).padStart(2,'0')) .join(' '))+'\n';
+			document.getElementById('txa').value += 'BYTES: ' + ([...bytes.slice(0,16)] .map(x=>x.toString(16).padStart(2,'0')) .join(' '))+'\n';
 			
 			
             if (bytes[0] !== MAGIC0 || bytes[1] !== MAGIC1) {
