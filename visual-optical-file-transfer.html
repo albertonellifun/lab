@@ -799,6 +799,36 @@
             document.getElementById('stStatus').innerText = 'TRANSFER COMPLETED!';
             stopReceiving();
         }
+		
+		
+		//colore medio dei 3 marker
+		function avg(samples){
+			let r=0,g=0,b=0;
+			for(const s of samples){
+				r+=s[0];
+				g+=s[1];
+				b+=s[2];
+			}
+			const n=samples.length;
+			return [r/n,g/n,b/n];
+		}
+		
+		//normalizza i colori visti dalla fotocamera
+		function normalizeColor(rgb, black, white){
+			const out=[0,0,0];
+			for(let i=0;i<3;i++){
+				const d=white[i]-black[i];
+				if(d<10){
+					out[i]=0;
+				}else{
+					let v=(rgb[i]-black[i])/d;
+					if(v<0)v=0;
+					if(v>1)v=1;
+					out[i]=v*255;
+				}
+			}
+			return out;
+		}
 
         function decodeCurrentFrame() {
             const w = captureCanvas.width, h = captureCanvas.height;
@@ -825,10 +855,32 @@
                 document.getElementById('stStatus').innerText = 'LOOKING FOR MARKERS...';
                 return;
             }
-
+			
             const T = computeAffine(triple.TL, triple.TR, triple.BL);
             const moduleSizePx = (Math.hypot(T.a, T.c) + Math.hypot(T.b, T.d)) / 2;
             const radius = Math.max(1, moduleSizePx * 0.3);
+			
+			
+			
+			//DEBUG
+			const whiteSamples = [];
+			const blackSamples = [];
+			
+			for(const m of [triple.TL, triple.TR, triple.BL]){
+				// Centro bianco
+				let [x,y]=applyAffine(T,m.gx+2.5,m.gy+2.5);
+				whiteSamples.push(sampleColorAt(imgData,w,h,x,y,radius));
+
+				// Anello nero
+				[x,y]=applyAffine(T,m.gx+1.5,m.gy+1.5);
+				blackSamples.push(sampleColorAt(imgData,w,h,x,y,radius));
+			}
+			const whiteRef=avg(whiteSamples);
+			const blackRef=avg(blackSamples);
+			
+			document.getElementById("txa").value = '';
+			
+			
 
             const indices = new Array(DATA_CELLS);
             for (let i = 0; i < DATA_CELLS; i++) {
@@ -841,10 +893,18 @@
 				overlayCtx.fill();
 				
                 const [r, g, b] = sampleColorAt(imgData, w, h, px, py, radius);
+				
+				//DEBUG
+				const [r,g,b]=normalizeColor(rgb, blackRef, whiteRef);
+				
                 indices[i] = classifyColor(r, g, b);
 				
 				//DEBUG
-				if (i<5) document.getElementById("txa").value += `CLASSIFY: ${i}: ${Math.round(r)},${Math.round(g)},${Math.round(b)} -> ${classifyColor(r,g,b)}\n`;
+				if(i<5){
+					document.getElementById("txa").value +=
+						`RAW  : ${rgb[0].toFixed(0)},${rgb[1].toFixed(0)},${rgb[2].toFixed(0)}\n`+
+						`NORM : ${r.toFixed(0)},${g.toFixed(0)},${b.toFixed(0)} -> ${indices[i]}\n`;
+				}
             }
 			
 			//DEBUG
