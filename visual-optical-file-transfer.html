@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Visual Optical File Transfer</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            background-color: #000000;
+            color: #ffffff;
+            font-family: monospace;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #topBar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            min-height: 40px;
+            xxxbackground: rgba(0, 0, 0, 0.85);
+            display: flex;
+            flex-direction: column;
+            z-index: 10;
+        }
+
+        .topRow {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 5px 10px;
+        }
+
+        .btn-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .set-label {
+            font-size: 0.7rem;
+            color: #888;
+        }
+
+        button, label.btn, select.btn {
+            background: #222;
+            color: #fff;
+            border: 1px solid #555;
+            padding: 5px 10px;
+            font-size: 0.75rem;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        button:active, label.btn:active {
+            background: #444;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        #viewport {
+            flex: 1;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        canvas, video {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            object-fit: contain;
+        }
+
+        #videoElement, #overlayCanvas {
+            max-width: 95vw;
+            max-height: calc(100vh - 150px);
+        }
+
+        #overlayCanvas {
+            pointer-events: none;
+            display: none;
+        }
+
+        #receivedImg {
+            position: absolute;
+            max-width: 90%;
+            max-height: 90%;
+            border: 2px solid #00ff00;
+            display: none;
+            z-index: 5;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        #downloadLink {
+            display: none;
+            position: absolute;
+            bottom: 55px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #0a0;
+            color: #fff;
+            padding: 10px 16px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 0.8rem;
+            z-index: 20;
+            white-space: nowrap;
+        }
+
+        #debugOverlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            border-top: 1px solid #333;
+            padding: 5px 10px;
+            font-size: 0.7rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 5px;
+            z-index: 10;
+        }
+
+        .stat {
+            white-space: nowrap;
+        }
+
+        .stat span {
+            color: #888;
+        }
+
+        .stat strong {
+            color: #00ffcc;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="topBar">
+        <div class="topRow">
+            <div class="btn-group">
+                <label class="btn" for="fileInput">📁 SELECT FILE</label>
+                <input type="file" id="fileInput" accept="image/*">
+                <button id="sendBtn" disabled>▶️ SEND</button>
+            </div>
+			
+			<div class="btn-group">
+                <span class="set-label">GRID</span>
+                <select id="gridSizeSelect" class="btn">
+                    <option value="4">4</option>
+                    <option value="9">9</option>
+                    <option value="16" selected>16</option>
+                    <option value="25">25</option>
+                    <option value="36">36</option>
+                    <option value="49">49</option>
+                    <option value="64">64</option>
+                    <option value="81">81</option>
+                </select>
+                <span class="set-label">COLORI</span>
+                <select id="colorCountSelect" class="btn">
+                    <option value="2">2</option>
+                    <option value="4" selected>4</option>
+                    <option value="8">8</option>
+                </select>
+                <span class="set-label">FPS</span>
+                <select id="fpsSelect" class="btn">
+                    <option value="15">15</option>
+                    <option value="10" selected>10</option>
+                    <option value="5">5</option>
+                    <option value="4">4</option>
+                    <option value="2">2</option>
+                    <option value="1">1</option>
+                </select>
+            </div>
+			
+            <div class="btn-group">
+                <button id="recvBtn">📷 RECEIVE</button>
+            </div>
+        </div>
+
+    </div>
+
+    <div id="viewport">
+        <canvas id="mainCanvas"></canvas>
+        <video id="videoElement" autoplay playsinline muted style="display:none;"></video>
+        <canvas id="overlayCanvas"></canvas>
+        <img id="receivedImg" alt="RECEIVED FILE">
+        <a id="downloadLink" download>💾 DOWNLOAD</a>
+    </div>
+
+    <div id="debugOverlay">
+        <div class="stat"><span>GRID:</span> <strong id="stGrid">-</strong></div>
+        <div class="stat"><span>TX CHUNK:</span> <strong id="stChunks">0/0</strong></div>
+        <div class="stat"><span>FILE SIZE:</span> <strong id="stTotalSize">0 KB</strong></div>
+        <div class="stat"><span>SENT:</span> <strong id="stSentSize">0 KB</strong></div>
+        <div class="stat"><span>RX CHUNK:</span> <strong id="stRxChunks">0/0</strong></div>
+        <div class="stat"><span>RECEIVED:</span> <strong id="stRecvSize">0 KB</strong></div>
+        <div class="stat"><span>MARKER:</span> <strong id="stMarkers">0/3</strong></div>
+        <div class="stat"><span>FPS:</span> <strong id="stFPS">0</strong></div>
+        <div class="stat"><span>STATUS:</span> <strong id="stStatus">READY</strong></div>
+    </div>
+
+    <script>
+        /* =========================================================================
+         * PROTOCOLLO
+         * -------------------------------------------------------------------------
+         * Ogni "frame" trasmesso e' un buffer di BYTES_PER_FRAME byte cosi' composto:
+         *   [0-1]   MAGIC (0xA5, 0x5A) -> per riconoscere un decode valido
+         *   [2-3]   frameIndex   (uint16 BE)
+         *   [4-5]   totalChunks  (uint16 BE)
+         *   [6-9]   totalFileSize(uint32 BE)
+         *   [10-11] payloadLen   (uint16 BE) -> byte di payload validi in QUESTO frame
+         *   [12]    checksum     (somma di tutti gli altri byte del frame, mod 256)
+         *   [13..]  payload (fino a PAYLOAD_CAPACITY byte)
+         *
+         * Il frame viene convertito in indici colore (bytesToColorIndices) e
+         * disegnato sulla griglia; il ricevitore fa l'operazione inversa
+         * (colorIndicesToBytes) dopo aver letto i colori via fotocamera, quindi
+         * valida MAGIC + checksum prima di accettare il frame.
+         *
+         * GRID_SIZE, numero di colori e FPS sono ora configurabili a caldo dai
+         * 3 dropdown in alto: cambiarli ricalcola tutte le costanti derivate
+         * (recomputeDerivedConstants) e riavvia la geometria del frame.
+         * ========================================================================= */
+
+        // CONFIGURAZIONE GRIGLIA (modificabile a caldo dai dropdown)
+        let GRID_SIZE = 16; // valori ammessi dal dropdown: 4,9,16,25,36,49,64,81
+        const MARKER_SIZE = 5; // dimensione fissa dei marker d'angolo: NON cambiare
+        // insieme a GRID_SIZE, e' calibrata per il pattern di rilevamento
+        // W-B-W-B-W usato in decodeCurrentFrame/findHorizontalCandidates.
+
+        const FULL_PALETTE = [
+            '#FFFFFF', '#000000', '#FF0000', '#0000FF',
+            '#00FF00', '#FFFF00', '#FF00FF', '#00FFFF'
+        ];
+        let COLOR_PALETTE = FULL_PALETTE.slice(0, 4); // numero colori dal dropdown: 2, 4 o 8
+
+        let NUM_COLORS = COLOR_PALETTE.length;
+        let BITS_PER_CELL = Math.log2(NUM_COLORS);
+        let BIT_MASK = NUM_COLORS - 1;
+
+        let TARGET_FPS = 1000 / 10; // intervallo invio (ms), derivato dal FPS scelto nel dropdown
+
+        // CONTROLLO CELLE RISERVATE AI MARKER
+        function isMarkerCell(x, y) {
+            if (x < MARKER_SIZE && y < MARKER_SIZE) return true;                              // Top-Left
+            if (x >= GRID_SIZE - MARKER_SIZE && y < MARKER_SIZE) return true;                  // Top-Right
+            if (x < MARKER_SIZE && y >= GRID_SIZE - MARKER_SIZE) return true;                  // Bottom-Left
+            return false;
+        }
+
+        const MAGIC0 = 0xA5;
+        const MAGIC1 = 0x5A;
+        const HEADER_SIZE = 13;
+
+        // ORDINE CANONICO DELLE CELLE DATI + costanti derivate (dipendono da
+        // GRID_SIZE/COLOR_PALETTE, quindi vengono ricalcolate ogni volta che
+        // l'utente cambia una delle impostazioni)
+        let DATA_CELL_COORDS = [];
+        let DATA_CELLS = 0;
+        let BYTES_PER_FRAME = 0;
+        let PAYLOAD_CAPACITY = 0;
+        let PALETTE_RGB = [];
+
+        function recomputeDerivedConstants() {
+            NUM_COLORS = COLOR_PALETTE.length;
+            BITS_PER_CELL = Math.log2(NUM_COLORS);
+            BIT_MASK = NUM_COLORS - 1;
+
+            DATA_CELL_COORDS = [];
+            for (let y = 0; y < GRID_SIZE; y++) {
+                for (let x = 0; x < GRID_SIZE; x++) {
+                    if (!isMarkerCell(x, y)) DATA_CELL_COORDS.push({ x, y });
+                }
+            }
+            DATA_CELLS = DATA_CELL_COORDS.length;
+            BYTES_PER_FRAME = Math.floor((DATA_CELLS * BITS_PER_CELL) / 8);
+            PAYLOAD_CAPACITY = BYTES_PER_FRAME - HEADER_SIZE;
+
+            PALETTE_RGB = COLOR_PALETTE.map(hex => [
+                parseInt(hex.substr(1, 2), 16),
+                parseInt(hex.substr(3, 2), 16),
+                parseInt(hex.substr(5, 2), 16)
+            ]);
+        }
+
+        recomputeDerivedConstants();
+
+        // ---------------------------------------------------------------------
+        // BIT PACKING (simmetrico: usato sia per codificare che decodificare)
+        // ---------------------------------------------------------------------
+        function colorIndicesToBytes(indices) {
+            const byteCount = Math.floor((indices.length * BITS_PER_CELL) / 8);
+            const bytes = new Uint8Array(byteCount);
+            let bitBuffer = 0, pendingBits = 0, outIdx = 0;
+            for (let i = 0; i < indices.length; i++) {
+                bitBuffer = (bitBuffer << BITS_PER_CELL) | (indices[i] & BIT_MASK);
+                pendingBits += BITS_PER_CELL;
+                while (pendingBits >= 8) {
+                    const shift = pendingBits - 8;
+                    if (outIdx < byteCount) bytes[outIdx++] = (bitBuffer >> shift) & 0xFF;
+                    bitBuffer &= (1 << shift) - 1;
+                    pendingBits = shift;
+                }
+            }
+            return bytes;
+        }
+
+        function bytesToColorIndices(bytes, count) {
+            const indices = new Array(count).fill(0);
+            const len = bytes ? bytes.length : 0;
+            let bitBuffer = 0, availableBits = 0, byteIdx = 0;
+            for (let i = 0; i < count; i++) {
+                while (availableBits < BITS_PER_CELL && byteIdx < len) {
+                    bitBuffer = (bitBuffer << 8) | bytes[byteIdx++];
+                    availableBits += 8;
+                }
+                if (availableBits >= BITS_PER_CELL) {
+                    const shift = availableBits - BITS_PER_CELL;
+                    indices[i] = (bitBuffer >> shift) & BIT_MASK;
+                    bitBuffer &= (1 << shift) - 1;
+                    availableBits = shift;
+                } else {
+                    indices[i] = 0;
+                    bitBuffer = 0; availableBits = 0;
+                }
+            }
+            return indices;
+        }
+
+        function computeChecksum(bytes, excludeIndex) {
+            let sum = 0;
+            for (let i = 0; i < bytes.length; i++) {
+                if (i === excludeIndex) continue;
+                sum = (sum + bytes[i]) & 0xFF;
+            }
+            return sum;
+        }
+
+        // STATO
+        let tx = { fileBuffer: null, payloadChunks: [], currentIdx: 0, displayedIdx: 0, interval: null, totalBytes: 0, sentBytes: 0, sending: false };
+        let rx = {
+            active: false, totalChunks: 0, totalFileSize: 0, chunks: [],
+            receivedCount: 0, receivedBytes: 0, errorCount: 0,
+            lastFrameTime: performance.now(), decodeTimer: null
+        };
+
+        const canvas = document.getElementById('mainCanvas');
+        const ctx = canvas.getContext('2d');
+        const video = document.getElementById('videoElement');
+        const overlayCanvas = document.getElementById('overlayCanvas');
+        const overlayCtx = overlayCanvas.getContext('2d');
+
+        const captureCanvas = document.createElement('canvas');
+        const captureCtx = captureCanvas.getContext('2d', { willReadFrequently: true });
+
+        // RIDIMENSIONAMENTO AUTOMATICO AL MASSIMO SQUARE
+        function resizeCanvas() {
+            const topBarHeight = document.getElementById('topBar').offsetHeight;
+            const debugHeight = document.getElementById('debugOverlay').offsetHeight;
+            const availableWidth = window.innerWidth;
+            const availableHeight = window.innerHeight - topBarHeight - debugHeight;
+
+            const size = Math.min(availableWidth, availableHeight);
+            canvas.width = size;
+            canvas.height = size;
+
+            if (tx.payloadChunks.length > 0) {
+                renderChunk(tx.currentIdx);
+            } else {
+                ctx.fillStyle = '#000';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                drawMarkers(canvas.width / GRID_SIZE);
+            }
+            syncOverlaySize();
+        }
+        window.addEventListener('resize', resizeCanvas);
+
+        // =====================================================================
+        // LOGICA SENDER
+        // =====================================================================
+        function buildFrameBuffer(idx) {
+            const payload = tx.payloadChunks[idx];
+            const frame = new Uint8Array(BYTES_PER_FRAME);
+            const dv = new DataView(frame.buffer);
+            frame[0] = MAGIC0; frame[1] = MAGIC1;
+            dv.setUint16(2, idx, false);
+            dv.setUint16(4, tx.payloadChunks.length, false);
+            dv.setUint32(6, tx.totalBytes, false);
+            dv.setUint16(10, payload.length, false);
+            frame.set(payload, HEADER_SIZE);
+            frame[12] = computeChecksum(frame, 12);
+            return frame;
+        }
+
+        function chunkFileForSend() {
+            if (!tx.fileBuffer) return;
+            tx.payloadChunks = [];
+            for (let i = 0; i < tx.fileBuffer.length; i += PAYLOAD_CAPACITY) {
+                tx.payloadChunks.push(tx.fileBuffer.subarray(i, i + PAYLOAD_CAPACITY));
+            }
+            if (tx.payloadChunks.length === 0) tx.payloadChunks.push(new Uint8Array(0));
+            tx.currentIdx = 0;
+            tx.displayedIdx = 0;
+
+            document.getElementById('sendBtn').disabled = false;
+            resetSendingState();
+            document.getElementById('stTotalSize').innerText = (tx.totalBytes / 1024).toFixed(1) + ' KB';
+            document.getElementById('stChunks').innerText = `0/${tx.payloadChunks.length}`;
+            document.getElementById('stStatus').innerText = `File pronto (${tx.payloadChunks.length} frame)`;
+            updateGridInfoDisplay();
+            renderChunk(0);
+        }
+
+        document.getElementById('fileInput').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (evt) => {
+                tx.fileBuffer = new Uint8Array(evt.target.result);
+                tx.totalBytes = tx.fileBuffer.length;
+                chunkFileForSend();
+            };
+            reader.readAsArrayBuffer(file);
+        });
+
+        function stopSendingInterval() {
+            if (tx.interval) { clearInterval(tx.interval); tx.interval = null; }
+        }
+
+        // Stop "duro": azzera anche lo stato invio/pausa e riporta il bottone a SEND.
+        // Usato quando cambia il file o la configurazione (griglia/colori/fps).
+        function resetSendingState() {
+            stopSendingInterval();
+            tx.sending = false;
+            document.getElementById('sendBtn').textContent = '▶️ SEND';
+        }
+
+        function startSending() {
+            if (!tx.payloadChunks.length) return;
+            stopSendingInterval();
+            tx.sending = true;
+            document.getElementById('sendBtn').textContent = '⏸️ PAUSE';
+            document.getElementById('stStatus').innerText = 'In trasmissione...';
+
+            tx.interval = setInterval(() => {
+                tx.displayedIdx = tx.currentIdx;
+                renderChunk(tx.currentIdx);
+                tx.sentBytes = Math.min(tx.totalBytes, (tx.currentIdx + 1) * PAYLOAD_CAPACITY);
+
+                document.getElementById('stChunks').innerText = `${tx.currentIdx + 1}/${tx.payloadChunks.length}`;
+                document.getElementById('stSentSize').innerText = (tx.sentBytes / 1024).toFixed(1) + ' KB';
+
+                tx.currentIdx = (tx.currentIdx + 1) % tx.payloadChunks.length;
+            }, TARGET_FPS);
+        }
+
+        // Pausa "morbida": ferma il ciclo ma mantiene tx.currentIdx, cosi'
+        // il frame resta bloccato sullo schermo e la ripresa riparte da li'.
+        function pauseSending() {
+            stopSendingInterval();
+            tx.sending = false;
+            document.getElementById('sendBtn').textContent = '▶️ RESUME';
+            document.getElementById('stStatus').innerText =
+                `In pausa sul frame ${tx.displayedIdx + 1}/${tx.payloadChunks.length}`;
+        }
+
+        document.getElementById('sendBtn').addEventListener('click', () => {
+            if (!tx.payloadChunks.length) return;
+            if (tx.sending) pauseSending(); else startSending();
+        });
+
+        function renderChunk(idx) {
+            const cellSize = canvas.width / GRID_SIZE;
+            ctx.fillStyle = '#000';
+            ctx.strokeStyle = 'rgba(0,0,0,0.2)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            const frame = buildFrameBuffer(idx);
+            const indices = bytesToColorIndices(frame, DATA_CELLS);
+
+            for (let i = 0; i < DATA_CELLS; i++) {
+                const { x, y } = DATA_CELL_COORDS[i];
+                ctx.fillStyle = COLOR_PALETTE[indices[i]];
+                ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+                ctx.strokeRect(x * cellSize, y * cellSize, cellSize, cellSize);
+            }
+
+            drawMarkers(cellSize);
+        }
+
+        function drawSingleMarker(x, y, cellSize) {
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect(x * cellSize, y * cellSize, MARKER_SIZE * cellSize, MARKER_SIZE * cellSize);
+            ctx.fillStyle = '#000000';
+            ctx.fillRect((x + 1) * cellSize, (y + 1) * cellSize, (MARKER_SIZE - 2) * cellSize, (MARKER_SIZE - 2) * cellSize);
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect((x + 2) * cellSize, (y + 2) * cellSize, cellSize, cellSize);
+        }
+
+        function drawMarkers(cellSize) {
+            drawSingleMarker(0, 0, cellSize);
+            drawSingleMarker(GRID_SIZE - MARKER_SIZE, 0, cellSize);
+            drawSingleMarker(0, GRID_SIZE - MARKER_SIZE, cellSize);
+        }
+
+        // =====================================================================
+        // LOGICA RECEIVER
+        // =====================================================================
+        function syncOverlaySize() {
+            if (!video.clientWidth) return;
+            overlayCanvas.style.width = video.clientWidth + 'px';
+            overlayCanvas.style.height = video.clientHeight + 'px';
+        }
+
+        function sniffFileType(bytes) {
+            if (bytes.length >= 8 && bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4E && bytes[3] === 0x47)
+                return { mime: 'image/png', ext: 'png' };
+            if (bytes.length >= 3 && bytes[0] === 0xFF && bytes[1] === 0xD8 && bytes[2] === 0xFF)
+                return { mime: 'image/jpeg', ext: 'jpg' };
+            if (bytes.length >= 6 && bytes[0] === 0x47 && bytes[1] === 0x49 && bytes[2] === 0x46)
+                return { mime: 'image/gif', ext: 'gif' };
+            if (bytes.length >= 12 && bytes[8] === 0x57 && bytes[9] === 0x45 && bytes[10] === 0x42 && bytes[11] === 0x50)
+                return { mime: 'image/webp', ext: 'webp' };
+            return { mime: 'application/octet-stream', ext: 'bin' };
+        }
+
+        function buildDarkMap(imgData, width, height) {
+            const n = width * height;
+            const lum = new Float32Array(n);
+            let sum = 0;
+            for (let i = 0, p = 0; i < n; i++, p += 4) {
+                const l = 0.299 * imgData[p] + 0.587 * imgData[p + 1] + 0.114 * imgData[p + 2];
+                lum[i] = l;
+                sum += l;
+            }
+            const threshold = sum / n;
+            const dark = new Uint8Array(n);
+            for (let i = 0; i < n; i++) dark[i] = lum[i] < threshold ? 1 : 0;
+            return dark;
+        }
+
+        // Cerca il pattern Bianco-Nero-Bianco-Nero-Bianco (5 run di lunghezza simile)
+        function findHorizontalCandidates(dark, width, height) {
+            const candidates = [];
+            for (let y = 0; y < height; y++) {
+                const rowOff = y * width;
+                let runs = [];
+                let curColor = dark[rowOff];
+                let runStart = 0;
+                for (let x = 1; x <= width; x++) {
+                    const c = x < width ? dark[rowOff + x] : -1;
+                    if (c !== curColor) {
+                        runs.push({ color: curColor, start: runStart, len: x - runStart });
+                        if (runs.length > 5) runs.shift();
+                        if (runs.length === 5 &&
+                            runs[0].color === 0 && runs[1].color === 1 && runs[2].color === 0 &&
+                            runs[3].color === 1 && runs[4].color === 0) {
+                            const lens = runs.map(r => r.len);
+                            const minL = Math.min(...lens), maxL = Math.max(...lens);
+                            if (minL > 0 && maxL / minL <= 2.2) {
+                                const span = (runs[4].start + runs[4].len) - runs[0].start;
+                                candidates.push({ x: runs[0].start + span / 2, y, module: span / 5 });
+                            }
+                        }
+                        curColor = c;
+                        runStart = x;
+                    }
+                }
+            }
+            return candidates;
+        }
+
+        function findVerticalCandidates(dark, width, height) {
+            const candidates = [];
+            for (let x = 0; x < width; x++) {
+                let runs = [];
+                let curColor = dark[x];
+                let runStart = 0;
+                for (let y = 1; y <= height; y++) {
+                    const c = y < height ? dark[y * width + x] : -1;
+                    if (c !== curColor) {
+                        runs.push({ color: curColor, start: runStart, len: y - runStart });
+                        if (runs.length > 5) runs.shift();
+                        if (runs.length === 5 &&
+                            runs[0].color === 0 && runs[1].color === 1 && runs[2].color === 0 &&
+                            runs[3].color === 1 && runs[4].color === 0) {
+                            const lens = runs.map(r => r.len);
+                            const minL = Math.min(...lens), maxL = Math.max(...lens);
+                            if (minL > 0 && maxL / minL <= 2.2) {
+                                const span = (runs[4].start + runs[4].len) - runs[0].start;
+                                candidates.push({ x, y: runs[0].start + span / 2, module: span / 5 });
+                            }
+                        }
+                        curColor = c;
+                        runStart = y;
+                    }
+                }
+            }
+            return candidates;
+        }
+
+        // conferma incrociata orizzontale+verticale -> centro marker
+        function pairCandidates(hCands, vCands) {
+            const confirmed = [];
+            for (const h of hCands) {
+                let bestV = null, bestD = Infinity;
+                for (const v of vCands) {
+                    const d = Math.hypot(h.x - v.x, h.y - v.y);
+                    const tol = Math.max(h.module, v.module) * 1.5 + 2;
+                    if (d < tol && d < bestD) { bestD = d; bestV = v; }
+                }
+                if (bestV) confirmed.push({ x: (h.x + bestV.x) / 2, y: (h.y + bestV.y) / 2, module: (h.module + bestV.module) / 2 });
+            }
+            return confirmed;
+        }
+
+        function clusterPoints(points) {
+            const clusters = [];
+            for (const p of points) {
+                let found = null;
+                for (const c of clusters) {
+                    if (Math.hypot(c.x - p.x, c.y - p.y) < Math.max(c.module, p.module) * 2) { found = c; break; }
+                }
+                if (found) {
+                    found.sumX += p.x; found.sumY += p.y; found.sumM += p.module; found.count++;
+                    found.x = found.sumX / found.count; found.y = found.sumY / found.count; found.module = found.sumM / found.count;
+                } else {
+                    clusters.push({ x: p.x, y: p.y, module: p.module, sumX: p.x, sumY: p.y, sumM: p.module, count: 1 });
+                }
+            }
+            return clusters;
+        }
+
+        // Trova tra i blob rilevati la terna TL/TR/BL geometricamente coerente
+        function findMarkerTriple(blobs) {
+            if (blobs.length < 3) return null;
+            let best = null, bestScore = Infinity;
+            for (let i = 0; i < blobs.length; i++) {
+                for (let j = 0; j < blobs.length; j++) {
+                    for (let k = 0; k < blobs.length; k++) {
+                        if (i === j || j === k || i === k) continue;
+                        const TL = blobs[i], A = blobs[j], B = blobs[k];
+                        const v1x = A.x - TL.x, v1y = A.y - TL.y;
+                        const v2x = B.x - TL.x, v2y = B.y - TL.y;
+                        const len1 = Math.hypot(v1x, v1y), len2 = Math.hypot(v2x, v2y);
+                        if (len1 < TL.module * 2 || len2 < TL.module * 2) continue;
+                        const cos = (v1x * v2x + v1y * v2y) / (len1 * len2);
+                        const angleDeviation = Math.abs(cos);
+                        const ratioDeviation = Math.abs(len1 - len2) / Math.max(len1, len2);
+                        if (angleDeviation < 0.5 && ratioDeviation < 0.4) {
+                            const score = angleDeviation * 3 + ratioDeviation;
+                            if (score < bestScore) {
+                                bestScore = score;
+                                let TR, BL;
+                                if (Math.abs(v1x) > Math.abs(v1y)) { TR = A; BL = B; } else { TR = B; BL = A; }
+                                best = { TL, TR, BL };
+                            }
+                        }
+                    }
+                }
+            }
+            return best;
+        }
+
+        function computeAffine(TL, TR, BL) {
+            const um = GRID_SIZE - MARKER_SIZE; // distanza (in moduli) tra i centri dei marker
+            const a = (TR.x - TL.x) / um, c = (TR.y - TL.y) / um;
+            const b = (BL.x - TL.x) / um, d = (BL.y - TL.y) / um;
+            const off = MARKER_SIZE >> 1; // indice del centro del marker (2 per MARKER_SIZE=5)
+            const e = TL.x - a * off - b * off;
+            const f = TL.y - c * off - d * off;
+            return { a, b, c, d, e, f };
+        }
+
+        function applyAffine(T, u, v) {
+            return [T.a * u + T.b * v + T.e, T.c * u + T.d * v + T.f];
+        }
+
+        function sampleColorAt(imgData, width, height, px, py, radius) {
+            let rSum = 0, gSum = 0, bSum = 0, count = 0;
+            const x0 = Math.max(0, Math.round(px - radius)), x1 = Math.min(width - 1, Math.round(px + radius));
+            const y0 = Math.max(0, Math.round(py - radius)), y1 = Math.min(height - 1, Math.round(py + radius));
+            for (let yy = y0; yy <= y1; yy++) {
+                for (let xx = x0; xx <= x1; xx++) {
+                    const idx = (yy * width + xx) * 4;
+                    rSum += imgData[idx]; gSum += imgData[idx + 1]; bSum += imgData[idx + 2];
+                    count++;
+                }
+            }
+            if (count === 0) return [0, 0, 0];
+            return [rSum / count, gSum / count, bSum / count];
+        }
+
+        function classifyColor(r, g, b) {
+            let best = 0, bestDist = Infinity;
+            for (let i = 0; i < PALETTE_RGB.length; i++) {
+                const [pr, pg, pb] = PALETTE_RGB[i];
+                const dist = (r - pr) ** 2 + (g - pg) ** 2 + (b - pb) ** 2;
+                if (dist < bestDist) { bestDist = dist; best = i; }
+            }
+            return best;
+        }
+
+        function drawOverlay(blobs, triple, w, h) {
+            overlayCtx.clearRect(0, 0, w, h);
+            overlayCtx.lineWidth = 2;
+            overlayCtx.strokeStyle = '#ffff00';
+            for (const b of blobs) {
+                overlayCtx.beginPath();
+                overlayCtx.arc(b.x, b.y, 6, 0, Math.PI * 2);
+                overlayCtx.stroke();
+            }
+            if (triple) {
+                const T = computeAffine(triple.TL, triple.TR, triple.BL);
+                const corners = [[0, 0], [GRID_SIZE, 0], [GRID_SIZE, GRID_SIZE], [0, GRID_SIZE]].map(([u, v]) => applyAffine(T, u, v));
+                overlayCtx.strokeStyle = '#00ff00';
+                overlayCtx.beginPath();
+                overlayCtx.moveTo(corners[0][0], corners[0][1]);
+                for (let i = 1; i < 4; i++) overlayCtx.lineTo(corners[i][0], corners[i][1]);
+                overlayCtx.closePath();
+                overlayCtx.stroke();
+            }
+        }
+
+        function tryCompleteReception() {
+            if (!rx.totalChunks) return;
+            for (let i = 0; i < rx.totalChunks; i++) if (!rx.chunks[i]) return;
+
+            const out = new Uint8Array(rx.totalFileSize);
+            let offset = 0;
+            for (let i = 0; i < rx.totalChunks; i++) {
+                out.set(rx.chunks[i], offset);
+                offset += rx.chunks[i].length;
+            }
+
+            const info = sniffFileType(out);
+            const blob = new Blob([out], { type: info.mime });
+            const url = URL.createObjectURL(blob);
+
+            const imgEl = document.getElementById('receivedImg');
+            if (info.mime.startsWith('image/')) {
+                imgEl.onload = () => { imgEl.style.display = 'block'; };
+                imgEl.onerror = () => { imgEl.style.display = 'none'; };
+                imgEl.src = url;
+            }
+
+            const link = document.getElementById('downloadLink');
+            link.href = url;
+            link.download = 'ricevuto.' + info.ext;
+            link.textContent = `💾 Scarica (${(out.length / 1024).toFixed(1)} KB)`;
+            link.style.display = 'inline-block';
+
+            document.getElementById('stStatus').innerText = 'Trasferimento completato!';
+            stopReceiving();
+        }
+
+        function decodeCurrentFrame() {
+            const w = captureCanvas.width, h = captureCanvas.height;
+            if (!w || !h) return;
+            captureCtx.drawImage(video, 0, 0, w, h);
+            const imgData = captureCtx.getImageData(0, 0, w, h).data;
+
+            const dark = buildDarkMap(imgData, w, h);
+            const hC = findHorizontalCandidates(dark, w, h);
+            const vC = findVerticalCandidates(dark, w, h);
+            const confirmed = pairCandidates(hC, vC);
+            const blobs = clusterPoints(confirmed);
+
+            document.getElementById('stMarkers').innerText = `${Math.min(blobs.length, 3)}/3`;
+
+            const triple = findMarkerTriple(blobs);
+            drawOverlay(blobs, triple, w, h);
+
+            if (!triple) {
+                document.getElementById('stStatus').innerText = 'Cerco i marker...';
+                return;
+            }
+
+            const T = computeAffine(triple.TL, triple.TR, triple.BL);
+            const moduleSizePx = (Math.hypot(T.a, T.c) + Math.hypot(T.b, T.d)) / 2;
+            const radius = Math.max(1, moduleSizePx * 0.3);
+
+            const indices = new Array(DATA_CELLS);
+            for (let i = 0; i < DATA_CELLS; i++) {
+                const cell = DATA_CELL_COORDS[i];
+                const [px, py] = applyAffine(T, cell.x + 0.5, cell.y + 0.5);
+                const [r, g, b] = sampleColorAt(imgData, w, h, px, py, radius);
+                indices[i] = classifyColor(r, g, b);
+            }
+
+            const bytes = colorIndicesToBytes(indices);
+            if (bytes.length < HEADER_SIZE) return;
+            if (bytes[0] !== MAGIC0 || bytes[1] !== MAGIC1) {
+                rx.errorCount++;
+                document.getElementById('stStatus').innerText = 'ALIGNMENT IN PROGRESS...';
+                return;
+            }
+
+            const checksum = computeChecksum(bytes, 12);
+            if (checksum !== bytes[12]) {
+                rx.errorCount++;
+                document.getElementById('stStatus').innerText = 'WRONG CHECKSUN, RETRY...';
+                return;
+            }
+
+            const dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+            const frameIndex = dv.getUint16(2, false);
+            const totalChunks = dv.getUint16(4, false);
+            const totalFileSize = dv.getUint32(6, false);
+            const payloadLen = dv.getUint16(10, false);
+            if (payloadLen > PAYLOAD_CAPACITY || frameIndex >= totalChunks) return;
+
+            if (!rx.totalChunks) {
+                rx.totalChunks = totalChunks;
+                rx.totalFileSize = totalFileSize;
+                rx.chunks = new Array(totalChunks);
+            }
+
+            if (!rx.chunks[frameIndex]) {
+                rx.chunks[frameIndex] = bytes.slice(HEADER_SIZE, HEADER_SIZE + payloadLen);
+                rx.receivedCount++;
+                rx.receivedBytes += payloadLen;
+                document.getElementById('stRxChunks').innerText = `${rx.receivedCount}/${rx.totalChunks}`;
+                document.getElementById('stRecvSize').innerText = (rx.receivedBytes / 1024).toFixed(1) + ' KB';
+                document.getElementById('stStatus').innerText = `Ricevuto chunk ${frameIndex + 1}/${rx.totalChunks}`;
+            }
+
+            tryCompleteReception();
+        }
+
+        async function startReceiving() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
+                });
+                video.srcObject = stream;
+                video.style.display = 'block';
+                try { await video.play(); } catch (e) { /* alcuni browser lo fanno gia' in automatico */ }
+
+                await new Promise(resolve => {
+                    if (video.videoWidth) return resolve();
+                    video.onloadedmetadata = () => resolve();
+                });
+
+                const scale = Math.min(1, 480 / video.videoWidth);
+                captureCanvas.width = Math.round(video.videoWidth * scale);
+                captureCanvas.height = Math.round(video.videoHeight * scale);
+                overlayCanvas.width = captureCanvas.width;
+                overlayCanvas.height = captureCanvas.height;
+                overlayCanvas.style.display = 'block';
+                syncOverlaySize();
+
+                document.getElementById('receivedImg').style.display = 'none';
+                document.getElementById('downloadLink').style.display = 'none';
+
+                rx = {
+                    active: true, totalChunks: 0, totalFileSize: 0, chunks: [],
+                    receivedCount: 0, receivedBytes: 0, errorCount: 0,
+                    lastFrameTime: performance.now(), decodeTimer: null
+                };
+                document.getElementById('stRxChunks').innerText = '0/0';
+                document.getElementById('stRecvSize').innerText = '0 KB';
+                document.getElementById('stMarkers').innerText = '0/3';
+                document.getElementById('stStatus').innerText = 'SCANNING...';
+                document.getElementById('recvBtn').innerText = '⏹ STOP';
+
+                rx.decodeTimer = setInterval(() => {
+                    const now = performance.now();
+                    document.getElementById('stFPS').innerText = Math.round(1000 / (now - rx.lastFrameTime));
+                    rx.lastFrameTime = now;
+                    decodeCurrentFrame();
+                }, 120);
+            } catch (err) {
+                alert('Errore Fotocamera: ' + err);
+            }
+        }
+
+        function stopReceiving() {
+            rx.active = false;
+            if (rx.decodeTimer) { clearInterval(rx.decodeTimer); rx.decodeTimer = null; }
+            if (video.srcObject) {
+                video.srcObject.getTracks().forEach(t => t.stop());
+                video.srcObject = null;
+            }
+            video.style.display = 'none';
+            overlayCanvas.style.display = 'none';
+            document.getElementById('recvBtn').innerText = '📷 RECEIVE';
+        }
+
+        document.getElementById('recvBtn').addEventListener('click', () => {
+            if (rx.active) stopReceiving(); else startReceiving();
+        });
+
+        // =====================================================================
+        // CONFIGURAZIONE A CALDO (i 3 dropdown: griglia, colori, fps)
+        // =====================================================================
+        function updateGridInfoDisplay() {
+            document.getElementById('stGrid').innerText =
+                `${GRID_SIZE}x${GRID_SIZE} (${COLOR_PALETTE.length} COLORS, ${PAYLOAD_CAPACITY}B/frame)`;
+        }
+
+        function applySettings(newGridSize, newColorCount, newFpsValue) {
+            // la geometria del frame sta per cambiare: fermiamo TX/RX in corso
+            resetSendingState();
+            stopReceiving();
+
+            const prevGridSize = GRID_SIZE;
+            const prevColorCount = COLOR_PALETTE.length;
+            const prevFpsValue = Math.round(1000 / TARGET_FPS);
+
+            GRID_SIZE = newGridSize;
+            COLOR_PALETTE = FULL_PALETTE.slice(0, newColorCount);
+            TARGET_FPS = 1000 / newFpsValue;
+            recomputeDerivedConstants();
+
+            if (PAYLOAD_CAPACITY <= 0) {
+                alert(`Griglia ${GRID_SIZE}x${GRID_SIZE} troppo piccola: i marker d'angolo occupano tutto lo spazio e non resta posto per i dati. Scegli una griglia piu' grande (16 o superiore).`);
+
+                // torna alla configurazione precedente, valida
+                GRID_SIZE = prevGridSize;
+                COLOR_PALETTE = FULL_PALETTE.slice(0, prevColorCount);
+                TARGET_FPS = 1000 / prevFpsValue;
+                recomputeDerivedConstants();
+
+                document.getElementById('gridSizeSelect').value = GRID_SIZE;
+                document.getElementById('colorCountSelect').value = COLOR_PALETTE.length;
+                document.getElementById('fpsSelect').value = prevFpsValue;
+
+                updateGridInfoDisplay();
+                return;
+            }
+
+            updateGridInfoDisplay();
+
+            // se c'era gia' un file caricato, ricalcola i chunk con la nuova capacita' di payload
+            if (tx.fileBuffer) {
+                chunkFileForSend();
+            } else {
+                resizeCanvas();
+            }
+        }
+
+        document.getElementById('gridSizeSelect').addEventListener('change', (e) => {
+            applySettings(
+                parseInt(e.target.value, 10),
+                parseInt(document.getElementById('colorCountSelect').value, 10),
+                parseInt(document.getElementById('fpsSelect').value, 10)
+            );
+        });
+
+        document.getElementById('colorCountSelect').addEventListener('change', (e) => {
+            applySettings(
+                parseInt(document.getElementById('gridSizeSelect').value, 10),
+                parseInt(e.target.value, 10),
+                parseInt(document.getElementById('fpsSelect').value, 10)
+            );
+        });
+
+        document.getElementById('fpsSelect').addEventListener('change', (e) => {
+            applySettings(
+                parseInt(document.getElementById('gridSizeSelect').value, 10),
+                parseInt(document.getElementById('colorCountSelect').value, 10),
+                parseInt(e.target.value, 10)
+            );
+        });
+
+        // Inizializza layout
+        updateGridInfoDisplay();
+        resizeCanvas();
+    </script>
+</body>
+</html>
