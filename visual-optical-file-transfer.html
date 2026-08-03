@@ -517,7 +517,7 @@
             const cellSize = canvas.width / GRID_SIZE;
             ctx.fillStyle = '#000';
             ctx.strokeStyle = '#000';
-			ctx.lineWidth = 128 / GRID_SIZE;
+			ctx.lineWidth = 2;//128 / GRID_SIZE;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
             const frame = buildFrameBuffer(idx);
@@ -804,6 +804,10 @@
             const w = captureCanvas.width, h = captureCanvas.height;
             if (!w || !h) return;
             captureCtx.drawImage(video, 0, 0, w, h);
+			
+			//DEBUG
+			overlayCtx.drawImage(captureCanvas, 0, 0);
+			
             const imgData = captureCtx.getImageData(0, 0, w, h).data;
 
             const dark = buildDarkMap(imgData, w, h);
