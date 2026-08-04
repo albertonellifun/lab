@@ -569,7 +569,7 @@
             return { mime: 'application/octet-stream', ext: 'bin' };
         }
 
-        function buildDarkMap(imgData, width, height) {
+        function buildDarkMapOLD(imgData, width, height) {
             const n = width * height;
             const lum = new Float32Array(n);
             let sum = 0;
@@ -579,6 +579,26 @@
                 sum += l;
             }
             const threshold = sum / n;
+            const dark = new Uint8Array(n);
+            for (let i = 0; i < n; i++) dark[i] = lum[i] < threshold ? 1 : 0;
+            return dark;
+        }
+		
+		function buildDarkMap(imgData, width, height) {
+            const n = width * height;
+            const lum = new Float32Array(n);
+            let minL = Infinity, maxL = -Infinity;
+            for (let i = 0, p = 0; i < n; i++, p += 4) {
+                const l = 0.299 * imgData[p] + 0.587 * imgData[p + 1] + 0.114 * imgData[p + 2];
+                lum[i] = l;
+                if (l < minL) minL = l;
+                if (l > maxL) maxL = l;
+            }
+            // Soglia ancorata al range min/max invece che alla media globale:
+            // la media si sposta ad ogni frame trasmesso (mix di colori diverso),
+            // mentre bianco/nero puri dei marker restano sempre gli estremi reali
+            // dell'immagine, quindi il punto medio min/max e' molto piu' stabile.
+            const threshold = (minL + maxL) / 2;
             const dark = new Uint8Array(n);
             for (let i = 0; i < n; i++) dark[i] = lum[i] < threshold ? 1 : 0;
             return dark;
