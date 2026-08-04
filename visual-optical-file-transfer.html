@@ -934,6 +934,12 @@
 					
 			document.getElementById("txa").value = '';
 			
+			document.getElementById("txa").value +=
+				`BLACKREF: ${blackRef.map(v=>v.toFixed(0))}\n` +
+				`WHITEREF: ${whiteRef.map(v=>v.toFixed(0))}\n` +
+				`MODULE_PX: ${moduleSizePx.toFixed(2)}  RADIUS: ${radius.toFixed(2)}\n\n`;
+			
+			
 
             const indices = new Array(DATA_CELLS);
             for (let i = 0; i < DATA_CELLS; i++) {
