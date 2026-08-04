@@ -736,7 +736,7 @@
             return [rSum / count, gSum / count, bSum / count];
         }
 
-        function classifyColor(r, g, b) {
+        function classifyColorOLD(r, g, b) {
             let best = 0;
 			let bestDist = Infinity;
             for (let i = 0; i < PALETTE_RGB.length; i++) {
@@ -746,6 +746,30 @@
             }
             return best;
         }
+		
+		function classifyColor(r,g,b,palette){
+
+			let best=0;
+			let bestDist=Infinity;
+
+			for(let i=0;i<palette.length;i++){
+
+				const [pr,pg,pb]=palette[i];
+
+				const d=
+					0.30*(r-pr)*(r-pr)+
+					0.55*(g-pg)*(g-pg)+
+					0.15*(b-pb)*(b-pb);
+
+				if(d<bestDist){
+					bestDist=d;
+					best=i;
+				}
+			}
+
+			return best;
+
+		}
 
         function drawOverlay(blobs, triple, w, h) {
             overlayCtx.clearRect(0, 0, w, h);
@@ -829,6 +853,20 @@
 			}
 			return out;
 		}
+		
+		function buildCalibratedPalette(black,white){
+
+			return PALETTE_RGB.map(([r,g,b])=>[
+
+				black[0]+(white[0]-black[0])*r/255,
+
+				black[1]+(white[1]-black[1])*g/255,
+
+				black[2]+(white[2]-black[2])*b/255
+
+			]);
+
+		}
 
         function decodeCurrentFrame() {
             const w = captureCanvas.width, h = captureCanvas.height;
@@ -865,21 +903,36 @@
 			//DEBUG
 			const whiteSamples = [];
 			const blackSamples = [];
-			
-			for(const m of [triple.TL, triple.TR, triple.BL]){
-				// Centro bianco
-				let [x,y]=applyAffine(T,m.gx+2.5,m.gy+2.5);
-				whiteSamples.push(sampleColorAt(imgData,w,h,x,y,radius));
 
-				// Anello nero
-				[x,y]=applyAffine(T,m.gx+1.5,m.gy+1.5);
-				blackSamples.push(sampleColorAt(imgData,w,h,x,y,radius));
+			//marker al centro è bianco
+			const markerWhite = [
+				[2.5,2.5],
+				[GRID_SIZE-MARKER_SIZE+2.5,2.5],
+				[2.5,GRID_SIZE-MARKER_SIZE+2.5]
+			];
+			//intorno è nero
+			const markerBlack = [
+				[1.5,1.5],
+				[GRID_SIZE-MARKER_SIZE+1.5,1.5],
+				[1.5,GRID_SIZE-MARKER_SIZE+1.5]
+			];
+			
+			for(let i=0;i<3;i++){
+				let [px,py]=applyAffine( T, markerWhite[i][0], markerWhite[i][1] );
+
+				whiteSamples.push( sampleColorAt(imgData,w,h,px,py,radius) );
+
+				[px,py]=applyAffine( T, markerBlack[i][0], markerBlack[i][1] );
+
+				blackSamples.push( sampleColorAt(imgData,w,h,px,py,radius) );
 			}
+
 			const whiteRef=avg(whiteSamples);
 			const blackRef=avg(blackSamples);
 			
+			const calibratedPalette = buildCalibratedPalette( blackRef, whiteRef );
+					
 			document.getElementById("txa").value = '';
-			
 			
 
             const indices = new Array(DATA_CELLS);
@@ -892,12 +945,10 @@
 				overlayCtx.arc(px, py, 2, 0, Math.PI * 2);
 				overlayCtx.fill();
 				
-                const [r, g, b] = sampleColorAt(imgData, w, h, px, py, radius);
-				
-				//DEBUG
-				const [r,g,b]=normalizeColor(rgb, blackRef, whiteRef);
-				
-                indices[i] = classifyColor(r, g, b);
+                
+				const rgb = sampleColorAt(imgData, w, h, px, py, radius);
+				const norm = normalizeColor( rgb, blackRef, whiteRef );
+				indices[i] = classifyColor( norm[0], norm[1], norm[2], calibratedPalette );
 				
 				//DEBUG
 				if(i<5){
