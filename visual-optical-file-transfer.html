@@ -546,6 +546,8 @@
             drawSingleMarker(0, 0, cellSize);
             drawSingleMarker(GRID_SIZE - MARKER_SIZE, 0, cellSize);
             drawSingleMarker(0, GRID_SIZE - MARKER_SIZE, cellSize);
+			//il quarto marker
+			//drawSingleMarker(GRID_SIZE - MARKER_SIZE, GRID_SIZE - MARKER_SIZE, cellSize);
         }
 
         // =====================================================================
@@ -902,15 +904,15 @@
             
 			
 			//rimuovi candidati fuori dal quadrato centrale
-			const roiSize = Math.min(w, h);
-			const roiX = (w - roiSize) >> 1;
-			const roiY = (h - roiSize) >> 1;
+			const roiSize = Math.min(w, h); //fotocamera: 1500x3000 -> diventa: 1500x1500
+			const roiX = (w - roiSize) >> 1;//diventa 0
+			const roiY = (h - roiSize) >> 1;//diventa 1500:2 == 750
 
 			const hC = findHorizontalCandidates(dark, w, h).filter(c =>
 				c.x >= roiX &&
-				c.x < roiX + roiSize &&
+				c.x < roiX + roiSize && //candidato X tra 0..1500
 				c.y >= roiY &&
-				c.y < roiY + roiSize
+				c.y < roiY + roiSize //candidato Y tra 750..2250
 			);
 
 			const vC = findVerticalCandidates(dark, w, h).filter(c =>
@@ -987,20 +989,20 @@
             const indices = new Array(DATA_CELLS);
             for (let i = 0; i < DATA_CELLS; i++) {
                 const cell = DATA_CELL_COORDS[i];
-                const [px, py] = applyAffine(T, cell.x + 0.5, cell.y + 0.5);
-				//DEBUG
-				overlayCtx.fillStyle = "red";
-				overlayCtx.beginPath();
-				overlayCtx.arc(px, py, 2, 0, Math.PI * 2);
-				overlayCtx.fill();
-				
                 
+				const [px, py] = applyAffine(T, cell.x + 0.5, cell.y + 0.5);
 				const rgb = sampleColorAt(imgData, w, h, px, py, radius);
+				
+				
 				const norm = normalizeColor( rgb, blackRef, whiteRef );
 				//indices[i] = classifyColor( norm[0], norm[1], norm[2], calibratedPalette );
 				indices[i] = classifyColor( rgb[0], rgb[1], rgb[2], calibratedPalette );
+
 				
 				//DEBUG
+				overlayCtx.fillStyle = FULL_PALETTE[indices[i]];//"red";
+				overlayCtx.fillRect(px-2,py-2,4,4);
+				
 				if(i<5){
 					document.getElementById("txa").value +=
 						`RAW  : ${rgb[0].toFixed(0)},${rgb[1].toFixed(0)},${rgb[2].toFixed(0)}\n`+
