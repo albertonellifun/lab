@@ -948,13 +948,14 @@
                 
 				const rgb = sampleColorAt(imgData, w, h, px, py, radius);
 				const norm = normalizeColor( rgb, blackRef, whiteRef );
-				indices[i] = classifyColor( norm[0], norm[1], norm[2], calibratedPalette );
+				//indices[i] = classifyColor( norm[0], norm[1], norm[2], calibratedPalette );
+				indices[i] = classifyColor( rgb[0], rgb[1], rgb[2], calibratedPalette );
 				
 				//DEBUG
 				if(i<5){
 					document.getElementById("txa").value +=
 						`RAW  : ${rgb[0].toFixed(0)},${rgb[1].toFixed(0)},${rgb[2].toFixed(0)}\n`+
-						`NORM : ${r.toFixed(0)},${g.toFixed(0)},${b.toFixed(0)} -> ${indices[i]}\n`;
+						`NORM : ${norm[0].toFixed(0)},${norm[1].toFixed(0)},${norm[2].toFixed(0)} -> ${indices[i]}\n`;
 				}
             }
 			
