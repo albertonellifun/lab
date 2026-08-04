@@ -1029,7 +1029,9 @@
                 document.getElementById('stRxChunks').innerText = `${rx.receivedCount}/${rx.totalChunks}`;
                 document.getElementById('stRecvSize').innerText = (rx.receivedBytes / 1024).toFixed(1) + ' KB';
                 document.getElementById('stStatus').innerText = `RECEIVED CHUNK ${frameIndex + 1}/${rx.totalChunks}`;
-            }
+            } else {
+				document.getElementById('stStatus').innerText = `DISCARDED CHUNK ${frameIndex + 1}/${rx.totalChunks}`;
+			}
 
             tryCompleteReception();
         }
