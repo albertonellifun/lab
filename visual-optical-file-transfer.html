@@ -606,14 +606,24 @@
 
         // Cerca il pattern Bianco-Nero-Bianco-Nero-Bianco (5 run di lunghezza simile)
         function findHorizontalCandidates(dark, width, height) {
+			const roiSize = Math.min(w, h);
+			const roiX = Math.floor((w - roiSize) / 2);
+			const roiY = Math.floor((h - roiSize) / 2);
+			const xEnd = roiX + roiSize;
+			const yEnd = roiY + roiSize;
+			
             const candidates = [];
-            for (let y = 0; y < height; y++) {
+            //for (let y = 0; y < height; y++) {
+			for (let y = roiY; y < yEnd; y++) {
                 const rowOff = y * width;
                 let runs = [];
-                let curColor = dark[rowOff];
+                //let curColor = dark[rowOff];
+				let curColor = dark[rowOff + roiX];
                 let runStart = 0;
-                for (let x = 1; x <= width; x++) {
-                    const c = x < width ? dark[rowOff + x] : -1;
+                //for (let x = 1; x <= width; x++) {
+				for (let x = roiX+1; x <= xEnd; x++) {
+                    //const c = x < width ? dark[rowOff + x] : -1;
+					const c = x < xEnd ? dark[rowOff + x] : -1;
                     if (c !== curColor) {
                         runs.push({ color: curColor, start: runStart, len: x - runStart });
                         if (runs.length > 5) runs.shift();
@@ -636,13 +646,23 @@
         }
 
         function findVerticalCandidates(dark, width, height) {
+			const roiSize = Math.min(w, h);
+			const roiX = Math.floor((w - roiSize) / 2);
+			const roiY = Math.floor((h - roiSize) / 2);
+			const xEnd = roiX + roiSize;
+			const yEnd = roiY + roiSize;
+			
             const candidates = [];
-            for (let x = 0; x < width; x++) {
+            //for (let x = 0; x < width; x++) {
+			 for (let x = roiX; x < xEnd; x++) {
                 let runs = [];
-                let curColor = dark[x];
+                //let curColor = dark[x];
+				let curColor = dark[roiY * width + x];
                 let runStart = 0;
-                for (let y = 1; y <= height; y++) {
-                    const c = y < height ? dark[y * width + x] : -1;
+                //for (let y = 1; y <= height; y++) {
+				for (let y = roiY + 1; y <= yEnd; y++) {
+                    //const c = y < height ? dark[y * width + x] : -1;
+					const c = y < yEnd ? dark[y * width + x] : -1;
                     if (c !== curColor) {
                         runs.push({ color: curColor, start: runStart, len: y - runStart });
                         if (runs.length > 5) runs.shift();
