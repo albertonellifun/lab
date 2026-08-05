@@ -193,7 +193,7 @@
 					<option value="75">75</option>
                     <option value="100">100</option>
                 </select>
-                <span class="set-label">COLORI</span>
+                <span class="set-label">COLORS</span>
                 <select id="colorCountSelect" class="btn">
                     <option value="2">2</option>
                     <option value="4" selected>4</option>
@@ -1250,7 +1250,7 @@
             COLOR_PALETTE = FULL_PALETTE.slice(0, newColorCount);
             TARGET_FPS = 1000 / newFpsValue;
             recomputeDerivedConstants();
-
+			
             if (PAYLOAD_CAPACITY <= 0) {
                 alert(`Griglia ${GRID_SIZE}x${GRID_SIZE} troppo piccola: i marker d'angolo occupano tutto lo spazio e non resta posto per i dati. Scegli una griglia piu' grande (16 o superiore).`);
 
