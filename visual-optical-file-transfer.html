@@ -853,7 +853,7 @@
         function drawOverlayOLD(blobs, triple, w, h) {
             overlayCtx.clearRect(0, 0, w, h);
             overlayCtx.lineWidth = 2;
-            overlayCtx.strokeStyle = '#ffff00';
+            overlayCtx.strokeStyle = '#ff00ff';
             for (const b of blobs) {
                 overlayCtx.strokeRect(b.x-3, b.y-3, 6, 6);
             }
@@ -872,7 +872,7 @@
 		function drawOverlay(blobs, T, w, h) {
 			overlayCtx.clearRect(0, 0, w, h);
 			overlayCtx.lineWidth = 2;
-			overlayCtx.strokeStyle = '#ffff00';
+			overlayCtx.strokeStyle = '#ff00ff';
 			for (const b of blobs) overlayCtx.strokeRect(b.x - 3, b.y - 3, 6, 6);
 			if (T) {
 				const corners = [[0,0],[GRID_SIZE,0],[GRID_SIZE,GRID_SIZE],[0,GRID_SIZE]].map(([u,v]) => applyHomography(T,u,v));
@@ -1103,7 +1103,7 @@
 				
 				//DEBUG
 				overlayCtx.fillStyle = FULL_PALETTE[indices[i]];//"red";
-				overlayCtx.strokeStyle = '#000';
+				overlayCtx.strokeStyle = '#ff00ff';
 				overlayCtx.lineWidth = 2;
 				overlayCtx.fillRect(px-4,py-4,8,8);
 				overlayCtx.strokeRect(px-4,py-4,8,8);
