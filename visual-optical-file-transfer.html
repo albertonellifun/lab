@@ -774,7 +774,7 @@
 		// Omografia griglia -> immagine dai 4 marker (8 g.d.l., vera prospettiva).
 		// Mappatura "quadrato unitario -> quadrilatero generico" (Heckbert).
 		function computeHomography(TL, TR, BR, BL) {
-			const off = 2;//MARKER_SIZE * 0.5;
+			const off = MARKER_SIZE * 0.5;
 			const um = GRID_SIZE - MARKER_SIZE;
 			const x0=TL.x,y0=TL.y, x1=TR.x,y1=TR.y, x2=BR.x,y2=BR.y, x3=BL.x,y3=BL.y;
 
