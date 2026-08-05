@@ -175,7 +175,7 @@
     <div id="topBar">
         <div class="topRow">
             <div class="btn-group">
-				0.16 | 
+				0.17 | 
                 <label class="btn" for="fileInput">📁 SELECT FILE</label>
                 <input type="file" id="fileInput" accept="image/*">
                 <button id="sendBtn" disabled>▶️ SEND</button>
@@ -1123,26 +1123,29 @@
             }
 			
 			//DEBUG
-			document.getElementById('txa').value += 'INDICES: ' + (indices.slice(0,20)) + '\n'; 
+			document.getElementById('txa').value += 'INDICES:\n';
+			document.getElementById('txa').value += (indices.slice(0,20)) + '\n\n'; 
 
             const bytes = colorIndicesToBytes(indices);
-            if (bytes.length < HEADER_SIZE) return;
-			
+            if (bytes.length < HEADER_SIZE) return;			
 			
 			//DEBUG!!!
-			document.getElementById('txa').value += 'BYTES: ' + ([...bytes.slice(0,16)] .map(x=>x.toString(16).padStart(2,'0')) .join(' '))+'\n\n';
+			document.getElementById('txa').value += 'BYTES:\n';
+			document.getElementById('txa').value += ([...bytes.slice(0,8)] .map(x=>x.toString(16).padStart(2,'0')) .join(' '))+'\n';
+			document.getElementById('txa').value += ([...bytes.slice(8,16)] .map(x=>x.toString(16).padStart(2,'0')) .join(' '))+'\n';
+			document.getElementById('txa').value += ([...bytes.slice(16,24)] .map(x=>x.toString(16).padStart(2,'0')) .join(' '))+'\n';
 			
 			
             if (bytes[0] !== MAGIC0 || bytes[1] !== MAGIC1) {
                 rx.errorCount++;
-                document.getElementById('stStatus').innerText = 'WRONG MAGIC, RETRY...';
+                document.getElementById('stStatus').innerText = 'WRONG MAGIC ('+bytes[0]+bytes[1]+'), RETRY...';
                 return;
             }
 
             const checksum = computeChecksum(bytes, 12);
             if (checksum !== bytes[12]) {
                 rx.errorCount++;
-                document.getElementById('stStatus').innerText = 'WRONG CHECKSUN, RETRY...';
+                document.getElementById('stStatus').innerText = 'WRONG CHECKSUM ('+checksum+'!='+bytes[12]+'), RETRY...';
                 return;
             }
 
