@@ -230,7 +230,7 @@
         <div class="stat"><span>SENT:</span> <strong id="stSentSize">0 KB</strong></div>
         <div class="stat"><span>RX CHUNK:</span> <strong id="stRxChunks">0/0</strong></div>
         <div class="stat"><span>RECEIVED:</span> <strong id="stRecvSize">0 KB</strong></div>
-        <div class="stat"><span>MARKER:</span> <strong id="stMarkers">0/3</strong></div>
+        <div class="stat"><span>MARKER:</span> <strong id="stMarkers">0/4</strong></div>
         <div class="stat"><span>FPS:</span> <strong id="stFPS">0</strong></div>
         <div class="stat"><span>STATUS:</span> <strong id="stStatus">READY</strong></div>
     </div>
@@ -278,12 +278,20 @@
         let TARGET_FPS = 1000 / 1; // intervallo invio (ms), derivato dal FPS scelto nel dropdown
 
         // CONTROLLO CELLE RISERVATE AI MARKER
-        function isMarkerCell(x, y) {
+        function isMarkerCellOLD(x, y) {
             if (x < MARKER_SIZE && y < MARKER_SIZE) return true;                              // Top-Left
             if (x >= GRID_SIZE - MARKER_SIZE && y < MARKER_SIZE) return true;                  // Top-Right
             if (x < MARKER_SIZE && y >= GRID_SIZE - MARKER_SIZE) return true;                  // Bottom-Left
             return false;
         }
+		
+		function isMarkerCell(x, y) {
+			if (x < MARKER_SIZE && y < MARKER_SIZE) return true;                              // Top-Left
+			if (x >= GRID_SIZE - MARKER_SIZE && y < MARKER_SIZE) return true;                  // Top-Right
+			if (x < MARKER_SIZE && y >= GRID_SIZE - MARKER_SIZE) return true;                  // Bottom-Left
+			if (x >= GRID_SIZE - MARKER_SIZE && y >= GRID_SIZE - MARKER_SIZE) return true;      // Bottom-Right
+			return false;
+		}
 
         const MAGIC0 = 0xA5;
         const MAGIC1 = 0x5A;
@@ -546,8 +554,8 @@
             drawSingleMarker(0, 0, cellSize);
             drawSingleMarker(GRID_SIZE - MARKER_SIZE, 0, cellSize);
             drawSingleMarker(0, GRID_SIZE - MARKER_SIZE, cellSize);
-			//il quarto marker
-			//drawSingleMarker(GRID_SIZE - MARKER_SIZE, GRID_SIZE - MARKER_SIZE, cellSize);
+			//il quarto marker serve per la prospettiva
+			drawSingleMarker(GRID_SIZE - MARKER_SIZE, GRID_SIZE - MARKER_SIZE, cellSize);
         }
 
         // =====================================================================
@@ -742,6 +750,53 @@
         function applyAffine(T, u, v) {
             return [T.a * u + T.b * v + T.e, T.c * u + T.d * v + T.f];
         }
+		
+		// Oltre alla terna TL/TR/BL, cerca anche il 4° marker BR.
+		// Usa la posizione prevista dal parallelogramma come ancora di ricerca:
+		// sotto prospettiva il marker reale sara' spostato, ma di poco.
+		function findMarkerQuad(blobs) {
+			const triple = findMarkerTriple(blobs);
+			if (!triple) return null;
+			const { TL, TR, BL } = triple;
+			const predBR = { x: TR.x + BL.x - TL.x, y: TR.y + BL.y - TL.y };
+			const searchRadius = Math.max(TL.module, TR.module, BL.module) * 6;
+			let best = null, bestDist = Infinity;
+			for (const b of blobs) {
+				if (b === TL || b === TR || b === BL) continue;
+				const d = Math.hypot(b.x - predBR.x, b.y - predBR.y);
+				if (d < searchRadius && d < bestDist) { bestDist = d; best = b; }
+			}
+			return best ? { TL, TR, BL, BR: best } : null;
+		}
+
+		// Omografia griglia -> immagine dai 4 marker (8 g.d.l., vera prospettiva).
+		// Mappatura "quadrato unitario -> quadrilatero generico" (Heckbert).
+		function computeHomography(TL, TR, BR, BL) {
+			const off = MARKER_SIZE * 0.5;
+			const um = GRID_SIZE - MARKER_SIZE;
+			const x0=TL.x,y0=TL.y, x1=TR.x,y1=TR.y, x2=BR.x,y2=BR.y, x3=BL.x,y3=BL.y;
+
+			const dx1=x1-x2, dx2=x3-x2, dx3=x0-x1+x2-x3;
+			const dy1=y1-y2, dy2=y3-y2, dy3=y0-y1+y2-y3;
+			const den = dx1*dy2 - dx2*dy1;
+			let a13=0, a23=0;
+			if (Math.abs(den) > 1e-9) {
+				a13 = (dx3*dy2 - dx2*dy3) / den;
+				a23 = (dx1*dy3 - dx3*dy1) / den;
+			}
+			const a11 = x1-x0+a13*x1, a21 = x3-x0+a23*x3, a31 = x0;
+			const a12 = y1-y0+a13*y1, a22 = y3-y0+a23*y3, a32 = y0;
+
+			return { a11,a21,a31, a12,a22,a32, a13,a23, off, um };
+		}
+
+		// (u,v) in coordinate griglia -> (x,y) pixel immagine
+		function applyHomography(H, u, v) {
+			const un = (u - H.off) / H.um;
+			const vn = (v - H.off) / H.um;
+			const w = H.a13*un + H.a23*vn + 1;
+			return [ (H.a11*un + H.a21*vn + H.a31) / w, (H.a12*un + H.a22*vn + H.a32) / w ];
+		}
 
         function sampleColorAt(imgData, width, height, px, py, radius) {
             let rSum = 0, gSum = 0, bSum = 0, count = 0;
@@ -793,14 +848,12 @@
 
 		}
 
-        function drawOverlay(blobs, triple, w, h) {
+        function drawOverlayOLD(blobs, triple, w, h) {
             overlayCtx.clearRect(0, 0, w, h);
             overlayCtx.lineWidth = 2;
             overlayCtx.strokeStyle = '#ffff00';
             for (const b of blobs) {
-                overlayCtx.beginPath();
-                overlayCtx.arc(b.x, b.y, 6, 0, Math.PI * 2);
-                overlayCtx.stroke();
+                overlayCtx.strokeRect(b.x-3, b.y-3, 6, 6);
             }
             if (triple) {
                 const T = computeAffine(triple.TL, triple.TR, triple.BL);
@@ -813,6 +866,22 @@
                 overlayCtx.stroke();
             }
         }
+		
+		function drawOverlay(blobs, T, w, h) {
+			overlayCtx.clearRect(0, 0, w, h);
+			overlayCtx.lineWidth = 2;
+			overlayCtx.strokeStyle = '#ffff00';
+			for (const b of blobs) overlayCtx.strokeRect(b.x - 3, b.y - 3, 6, 6);
+			if (T) {
+				const corners = [[0,0],[GRID_SIZE,0],[GRID_SIZE,GRID_SIZE],[0,GRID_SIZE]].map(([u,v]) => applyHomography(T,u,v));
+				overlayCtx.strokeStyle = '#00ff00';
+				overlayCtx.beginPath();
+				overlayCtx.moveTo(corners[0][0], corners[0][1]);
+				for (let i=1;i<4;i++) overlayCtx.lineTo(corners[i][0], corners[i][1]);
+				overlayCtx.closePath();
+				overlayCtx.stroke();
+			}
+		}
 
         function tryCompleteReception() {
             if (!rx.totalChunks) return;
@@ -929,7 +998,8 @@
             const confirmed = pairCandidates(hC, vC);
             const blobs = clusterPoints(confirmed);
 
-            document.getElementById('stMarkers').innerText = `${Math.min(blobs.length, 3)}/3`;
+            /*
+			document.getElementById('stMarkers').innerText = `${Math.min(blobs.length, 3)}/3`;
 
             const triple = findMarkerTriple(blobs);
             drawOverlay(blobs, triple, w, h);
@@ -942,6 +1012,22 @@
             const T = computeAffine(triple.TL, triple.TR, triple.BL);
             const moduleSizePx = (Math.hypot(T.a, T.c) + Math.hypot(T.b, T.d)) / 2;
             const radius = Math.max(1, moduleSizePx * 0.3);
+			*/
+			
+			const quad = findMarkerQuad(blobs);
+			document.getElementById('stMarkers').innerText = quad ? '4/4' : `${Math.min(blobs.length, 3)}/4`;
+
+			if (!quad) {
+				drawOverlay(blobs, null, w, h);
+				document.getElementById('stStatus').innerText = 'LOOKING FOR MARKERS...';
+				return;
+			}
+
+			const T = computeHomography(quad.TL, quad.TR, quad.BR, quad.BL);
+			drawOverlay(blobs, T, w, h);
+
+			const moduleSizePx = Math.hypot(quad.TR.x - quad.TL.x, quad.TR.y - quad.TL.y) / (GRID_SIZE - MARKER_SIZE);
+			const radius = Math.max(1, moduleSizePx * 0.3);
 			
 			
 			
@@ -953,21 +1039,35 @@
 			const markerWhite = [
 				[2.5,2.5],
 				[GRID_SIZE-MARKER_SIZE+2.5,2.5],
-				[2.5,GRID_SIZE-MARKER_SIZE+2.5]
+				[2.5,GRID_SIZE-MARKER_SIZE+2.5],
+				[GRID_SIZE-MARKER_SIZE+2.5, GRID_SIZE-MARKER_SIZE+2.5]//il quarto marker
 			];
 			//intorno è nero
 			const markerBlack = [
 				[1.5,1.5],
 				[GRID_SIZE-MARKER_SIZE+1.5,1.5],
-				[1.5,GRID_SIZE-MARKER_SIZE+1.5]
+				[1.5,GRID_SIZE-MARKER_SIZE+1.5],
+				[GRID_SIZE-MARKER_SIZE+1.5, GRID_SIZE-MARKER_SIZE+1.5]//il quarto marker
 			];
 			
+			/*
 			for(let i=0;i<3;i++){
 				let [px,py]=applyAffine( T, markerWhite[i][0], markerWhite[i][1] );
 
 				whiteSamples.push( sampleColorAt(imgData,w,h,px,py,radius) );
 
 				[px,py]=applyAffine( T, markerBlack[i][0], markerBlack[i][1] );
+
+				blackSamples.push( sampleColorAt(imgData,w,h,px,py,radius) );
+			}
+			*/
+			
+			for(let i=0;i<4;i++){
+				let [px,py]=applyHomography( T, markerWhite[i][0], markerWhite[i][1] );
+
+				whiteSamples.push( sampleColorAt(imgData,w,h,px,py,radius) );
+
+				[px,py]=applyHomography( T, markerBlack[i][0], markerBlack[i][1] );
 
 				blackSamples.push( sampleColorAt(imgData,w,h,px,py,radius) );
 			}
@@ -985,12 +1085,12 @@
 				`MODULE_PX: ${moduleSizePx.toFixed(2)}  RADIUS: ${radius.toFixed(2)}\n\n`;
 			
 			
-
-            const indices = new Array(DATA_CELLS);
+			const indices = new Array(DATA_CELLS);
             for (let i = 0; i < DATA_CELLS; i++) {
                 const cell = DATA_CELL_COORDS[i];
                 
-				const [px, py] = applyAffine(T, cell.x + 0.5, cell.y + 0.5);
+				////const [px, py] = applyAffine(T, cell.x + 0.5, cell.y + 0.5);
+				const [px, py] = applyHomography(T, cell.x + 0.5, cell.y + 0.5);
 				const rgb = sampleColorAt(imgData, w, h, px, py, radius);
 				
 				
@@ -1001,7 +1101,10 @@
 				
 				//DEBUG
 				overlayCtx.fillStyle = FULL_PALETTE[indices[i]];//"red";
-				overlayCtx.fillRect(px-2,py-2,4,4);
+				overlayCtx.strokeStyle = '#000';
+				overlayCtx.lineWidth = 2;
+				overlayCtx.fillRect(px-4,py-4,8,8);
+				overlayCtx.strokeRect(px-4,py-4,8,8);
 				
 				if(i<5){
 					document.getElementById("txa").value +=
@@ -1093,7 +1196,7 @@
                 };
                 document.getElementById('stRxChunks').innerText = '0/0';
                 document.getElementById('stRecvSize').innerText = '0 KB';
-                document.getElementById('stMarkers').innerText = '0/3';
+                document.getElementById('stMarkers').innerText = '0/4';
                 document.getElementById('stStatus').innerText = 'SCANNING...';
                 document.getElementById('recvBtn').innerText = '⏹ STOP';
 
