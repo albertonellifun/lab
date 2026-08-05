@@ -1138,7 +1138,9 @@
 			
             if (bytes[0] !== MAGIC0 || bytes[1] !== MAGIC1) {
                 rx.errorCount++;
-                document.getElementById('stStatus').innerText = 'WRONG MAGIC ('+bytes[0]+bytes[1]+'), RETRY...';
+				let b0 = bytes[0].toString(16).padStart(2,'0');
+				let b1 = bytes[1].toString(16).padStart(2,'0');
+                document.getElementById('stStatus').innerText = 'WRONG MAGIC ('+b0+' '+b1+'), RETRY...';
                 return;
             }
 
