@@ -167,6 +167,7 @@
 			z-index: 999999;
 			display: none;
 			overflow: auto;
+			background: rgba(255, 255, 255, 0.8);
 		}
     </style>
 </head>
@@ -874,7 +875,9 @@
 			overlayCtx.clearRect(0, 0, w, h);
 			overlayCtx.lineWidth = 1;
 			overlayCtx.strokeStyle = '#ff00ff';
-			for (const b of blobs) overlayCtx.strokeRect(b.x - 3, b.y - 3, 6, 6);
+			overlayCtx.fillStyle = '#00ff00';
+			for (const b of blobs) overlayCtx.fillRect(b.x - 3, b.y - 3, 6, 6);
+			
 			if (T) {
 				let extBorder = 0.1;
 				const corners = [
