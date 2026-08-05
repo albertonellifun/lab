@@ -175,7 +175,7 @@
     <div id="topBar">
         <div class="topRow">
             <div class="btn-group">
-				0.15 | 
+				0.16 | 
                 <label class="btn" for="fileInput">📁 SELECT FILE</label>
                 <input type="file" id="fileInput" accept="image/*">
                 <button id="sendBtn" disabled>▶️ SEND</button>
@@ -876,7 +876,7 @@
 			overlayCtx.strokeStyle = '#ff00ff';
 			for (const b of blobs) overlayCtx.strokeRect(b.x - 3, b.y - 3, 6, 6);
 			if (T) {
-				let extBorder = 0.15;
+				let extBorder = 0.1;
 				const corners = [
 					[0 - extBorder, 0 - extBorder],
 					[GRID_SIZE + extBorder, 0 - extBorder],
@@ -1027,7 +1027,7 @@
 			document.getElementById('stMarkers').innerText = quad ? '4/4' : `${Math.min(blobs.length, 3)}/4`;
 
 			if (!quad) {
-				drawOverlay(blobs, null, w, h);
+				//drawOverlay(blobs, null, w, h);
 				document.getElementById('stStatus').innerText = 'LOOKING FOR MARKERS...';
 				return;
 			}
