@@ -875,11 +875,12 @@
 			overlayCtx.strokeStyle = '#ff00ff';
 			for (const b of blobs) overlayCtx.strokeRect(b.x - 3, b.y - 3, 6, 6);
 			if (T) {
+				let extBorder = 0.5;
 				const corners = [
-					[-1,-1],
-					[GRID_SIZE-1,-1],
-					[GRID_SIZE-1,GRID_SIZE-1],
-					[-1,GRID_SIZE-1]
+					[0 - extBorder, 0 - extBorder],
+					[GRID_SIZE + extBorder, 0 - extBorder],
+					[GRID_SIZE + extBorder, GRID_SIZE + extBorder],
+					[0 - extBorder, GRID_SIZE - extBorder]
 				].map(([u,v]) => applyHomography(T,u,v));
 				overlayCtx.strokeStyle = '#00ff00';
 				overlayCtx.beginPath();
