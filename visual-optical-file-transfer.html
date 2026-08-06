@@ -829,27 +829,16 @@
         }
 		
 		function classifyColor(r,g,b,palette){
-
-			let best=0;
-			let bestDist=Infinity;
-
+			// YUV: chroma weighted 3x vs luma — better discrimination for saturated colours
+			let best=0, bestDist=Infinity;
+			const Y=0.299*r+0.587*g+0.114*b, U=b-Y, V=r-Y;
 			for(let i=0;i<palette.length;i++){
-
 				const [pr,pg,pb]=palette[i];
-
-				const d=
-					0.30*(r-pr)*(r-pr)+
-					0.55*(g-pg)*(g-pg)+
-					0.15*(b-pb)*(b-pb);
-
-				if(d<bestDist){
-					bestDist=d;
-					best=i;
-				}
+				const pY=0.299*pr+0.587*pg+0.114*pb, pU=pb-pY, pV=pr-pY;
+				const d=(Y-pY)**2+3*(U-pU)**2+3*(V-pV)**2;
+				if(d<bestDist){bestDist=d;best=i;}
 			}
-
 			return best;
-
 		}
 
         function drawOverlayOLD(blobs, triple, w, h) {
@@ -958,17 +947,28 @@
 		}
 		
 		function buildCalibratedPalette(black,white){
-
 			return PALETTE_RGB.map(([r,g,b])=>[
-
 				black[0]+(white[0]-black[0])*r/255,
-
 				black[1]+(white[1]-black[1])*g/255,
-
 				black[2]+(white[2]-black[2])*b/255
-
 			]);
+		}
 
+		// EMA calibration state — reset on startReceiving
+		let rxCal = { black: null, white: null };
+
+		// Vote across the last N captured frames: returns the most-common index per cell
+		function voteOnIndices(buffer) {
+			const tally = new Array(NUM_COLORS);
+			const voted = new Array(DATA_CELLS);
+			for (let i = 0; i < DATA_CELLS; i++) {
+				tally.fill(0);
+				for (const frame of buffer) tally[frame[i]]++;
+				let best = 0;
+				for (let c = 1; c < NUM_COLORS; c++) if (tally[c] > tally[best]) best = c;
+				voted[i] = best;
+			}
+			return voted;
 		}
 
         function decodeCurrentFrame() {
@@ -1030,6 +1030,7 @@
 			document.getElementById('stMarkers').innerText = quad ? '4/4' : `${Math.min(blobs.length, 3)}/4`;
 
 			if (!quad) {
+				rx.frameVoteBuffer = [];
 				//drawOverlay(blobs, null, w, h);
 				document.getElementById('stStatus').innerText = 'LOOKING FOR MARKERS...';
 				return;
@@ -1039,7 +1040,7 @@
 			drawOverlay(blobs, T, w, h);
 
 			const moduleSizePx = Math.hypot(quad.TR.x - quad.TL.x, quad.TR.y - quad.TL.y) / (GRID_SIZE - MARKER_SIZE);
-			const radius = Math.max(1, moduleSizePx * 0.3);
+			const radius = Math.max(1, moduleSizePx * 0.4);
 			
 			
 			
@@ -1084,8 +1085,17 @@
 				blackSamples.push( sampleColorAt(imgData,w,h,px,py,radius) );
 			}
 
-			const whiteRef=avg(whiteSamples);
-			const blackRef=avg(blackSamples);
+			const rawWhite=avg(whiteSamples);
+			const rawBlack=avg(blackSamples);
+			// EMA: smooth calibration refs across frames to resist flicker
+			const _a=0.25;
+			if(!rxCal.black){rxCal.black=rawBlack;rxCal.white=rawWhite;}
+			else{
+				rxCal.black=rxCal.black.map((v,i)=>_a*rawBlack[i]+(1-_a)*v);
+				rxCal.white=rxCal.white.map((v,i)=>_a*rawWhite[i]+(1-_a)*v);
+			}
+			const whiteRef=rxCal.white;
+			const blackRef=rxCal.black;
 			
 			const calibratedPalette = buildCalibratedPalette( blackRef, whiteRef );
 					
@@ -1127,10 +1137,15 @@
 			
 			//DEBUG
 			document.getElementById('txa').value += 'INDICES:\n';
-			document.getElementById('txa').value += (indices.slice(0,20)) + '\n\n'; 
+			document.getElementById('txa').value += (indices.slice(0,20)) + '\n\n';
 
-            const bytes = colorIndicesToBytes(indices);
-            if (bytes.length < HEADER_SIZE) return;			
+			// Multi-frame voting: accumulate up to 3 captures and pick the majority index per cell
+			rx.frameVoteBuffer.push([...indices]);
+			if(rx.frameVoteBuffer.length > 3) rx.frameVoteBuffer.shift();
+			const votedIndices = rx.frameVoteBuffer.length >= 2 ? voteOnIndices(rx.frameVoteBuffer) : indices;
+
+            const bytes = colorIndicesToBytes(votedIndices);
+            if (bytes.length < HEADER_SIZE) return;
 			
 			//DEBUG!!!
 			document.getElementById('txa').value += 'BYTES:\n';
@@ -1195,7 +1210,7 @@
                     video.onloadedmetadata = () => resolve();
                 });
 
-                const scale = Math.min(1, 480 / video.videoWidth);
+                const scale = Math.min(1, 720 / video.videoWidth);
                 captureCanvas.width = Math.round(video.videoWidth * scale);
                 captureCanvas.height = Math.round(video.videoHeight * scale);
                 overlayCanvas.width = captureCanvas.width;
@@ -1206,10 +1221,12 @@
                 document.getElementById('receivedImg').style.display = 'none';
                 document.getElementById('downloadLink').style.display = 'none';
 
+                rxCal = { black: null, white: null };
                 rx = {
                     active: true, totalChunks: 0, totalFileSize: 0, chunks: [],
                     receivedCount: 0, receivedBytes: 0, errorCount: 0,
-                    lastFrameTime: performance.now(), decodeTimer: null
+                    lastFrameTime: performance.now(), decodeTimer: null,
+                    frameVoteBuffer: []
                 };
                 document.getElementById('stRxChunks').innerText = '0/0';
                 document.getElementById('stRecvSize').innerText = '0 KB';
