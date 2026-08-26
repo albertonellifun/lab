@@ -1,0 +1,1263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Meowdoku (Rocky Graffietto Edition) — The Territorial Cats Puzzle</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpolygon points='18,46 34,6 52,40' fill='%233E2A22'/%3E%3Cpolygon points='82,46 66,6 48,40' fill='%233E2A22'/%3E%3Ccircle cx='50' cy='60' r='34' fill='%23F7E8CB'/%3E%3Cellipse cx='50' cy='62' rx='21' ry='19' fill='%233E2A22'/%3E%3Cellipse cx='41' cy='58' rx='6.4' ry='8.2' fill='%235BC8E8'/%3E%3Cellipse cx='59' cy='58' rx='6.4' ry='8.2' fill='%235BC8E8'/%3E%3C/svg%3E">
+<style>
+:root{
+  --cream:#FFF8EC;
+  --surface:#FFFFFF;
+  --sand:#F5E4C6;
+  --ink:#4A3B52;
+  --ink-soft:#8F82A0;
+  --ink-faint:#DCD3E6;
+  --line:rgba(74,59,82,0.10);
+  --line-strong:rgba(74,59,82,0.16);
+  --marmalade:#FF9A4D;
+  --marmalade-deep:#E77F2C;
+  --marmalade-soft:rgba(255,154,77,0.18);
+  --mint:#4FD6BE;
+  --mint-deep:#2FAE97;
+  --bubblegum:#FF6E93;
+  --bubblegum-deep:#E24C74;
+  --bubblegum-soft:rgba(255,110,147,0.18);
+  --periwinkle:#8C9BFF;
+  --periwinkle-deep:#6C7CE8;
+  --grout:#FFFFFF;
+  --shadow-color:rgba(74,59,82,0.16);
+  --shadow-lg:0 20px 44px -18px rgba(74,59,82,0.30);
+  --shadow-sm:0 8px 18px -10px rgba(74,59,82,0.20);
+  --radius:22px;
+  --radius-sm:14px;
+  --radius-xs:8px;
+  --font-display: ui-rounded, "SF Pro Rounded", "Segoe UI Rounded", "Nunito Sans", "Quicksand", system-ui, sans-serif;
+  --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", Roboto, system-ui, sans-serif;
+}
+
+*,*::before,*::after{ box-sizing:border-box; }
+html,body{ height:100%; }
+body{
+  margin:0;
+  font-family:var(--font-body);
+  color:var(--ink);
+  background:
+    radial-gradient(ellipse 800px 420px at 18% -12%, rgba(255,154,77,0.12), transparent 60%),
+    radial-gradient(ellipse 700px 420px at 105% 0%, rgba(140,155,255,0.10), transparent 55%),
+    var(--cream);
+  min-height:100vh;
+  -webkit-tap-highlight-color:transparent;
+  overscroll-behavior:contain;
+}
+button{ font-family:inherit; color:inherit; }
+h1,h2,h3,p{ margin:0; }
+.sr-only{ position:absolute; width:1px;height:1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; }
+
+#app{ position:relative; z-index:1; max-width:640px; margin:0 auto; min-height:100vh; display:flex; flex-direction:column; padding:20px 16px 40px; }
+
+.screen{ display:none; flex-direction:column; flex:1; animation:fadeUp .5s ease both; }
+.screen.active{ display:flex; justify-content: space-between; }
+@keyframes fadeUp{ from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);} }
+@keyframes fadeIn{ from{opacity:0;} to{opacity:1;} }
+@keyframes pop{ 0%{transform:scale(.6); opacity:0;} 60%{transform:scale(1.08); opacity:1;} 100%{transform:scale(1);} }
+@keyframes shake{ 10%,90%{transform:translateX(-1px);} 20%,80%{transform:translateX(2px);} 30%,50%,70%{transform:translateX(-4px);} 40%,60%{transform:translateX(4px);} }
+@keyframes fall{ from{ transform:translateY(-10vh) rotate(0deg); opacity:0; } 10%{opacity:1;} to{ transform:translateY(110vh) rotate(200deg); opacity:0.9; } }
+
+@media (prefers-reduced-motion: reduce){
+  *{ animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; }
+}
+
+/* ---------- Menu screen ---------- */
+.hero{ text-align:center; padding:28px 8px 8px; }
+.hero-mark{ width:88px; height:88px; margin:0 auto 14px; position:relative; }
+.hero-mark svg{ width:100%; height:100%; filter:drop-shadow(0 8px 16px rgba(74,59,82,.45)); animation:pop .6s ease both; }
+.hero h1{
+  font-family:var(--font-display);
+  font-weight:800;
+  font-size:clamp(2.1rem, 8vw, 2.7rem);
+  letter-spacing:0.5px;
+  background:linear-gradient(135deg, var(--marmalade), var(--bubblegum) 110%);
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+}
+.hero p.tagline{ margin-top:8px; color:var(--ink-soft); font-size:.98rem; }
+
+.diff-grid{ display:grid; grid-template-columns:1fr; gap:14px; margin:26px 0 8px; }
+.diff-card{
+  display:flex; align-items:center; gap:14px;
+  background:var(--surface); border:none; border-radius:var(--radius);
+  padding:16px 18px; text-align:left; cursor:pointer;
+  box-shadow:0 6px 0 var(--line-strong), var(--shadow-sm);
+  transition:transform .15s ease, box-shadow .15s ease;
+  animation:fadeUp .5s ease both;
+  border: 1px solid var(--marmalade);
+}
+.diff-card:hover, .diff-card:focus-visible{ transform:translateY(-3px); box-shadow:0 9px 0 var(--line-strong), var(--shadow-lg); }
+.diff-card:active{ transform:translateY(4px); box-shadow:0 2px 0 var(--line-strong); }
+.diff-card:nth-child(1){animation-delay:.10s;} 
+.diff-card:nth-child(2){animation-delay:.20s;}
+.diff-card:nth-child(3){animation-delay:.30s;}
+.diff-card:nth-child(4){animation-delay:.40s;}
+.diff-card:nth-child(5){animation-delay:.50s;}
+.diff-swatch{
+  flex:0 0 auto; width:52px; height:52px; border-radius:16px;
+  display:grid; place-items:center; font-family:var(--font-display); font-weight:800; font-size:1.02rem;
+  color:var(--ink); box-shadow:inset 0 -3px 0 rgba(0,0,0,0.08);
+}
+.diff-info{ flex:1; min-width:0; }
+.diff-name{ font-family:var(--font-display); font-weight:700; font-size:1.05rem; color:var(--ink); }
+.diff-sub{ color:var(--ink-soft); font-size:.85rem; margin-top:2px; }
+.diff-paws{ display:flex; gap:3px; margin-top:7px; }
+.diff-paws svg{ width:14px; height:14px; }
+.diff-paws .filled{ color:var(--marmalade); }
+.diff-paws .empty{ color:var(--ink-faint); }
+
+.menu-footer{ margin-top:auto; padding-top:24px; text-align:center; }
+.link-btn{
+  background:none; border:none; color:var(--ink-soft); font-size:.9rem; cursor:pointer;
+  text-decoration:underline; text-underline-offset:3px; padding:8px; font-weight:600;
+}
+.link-btn:hover{ color:var(--ink); }
+
+/* ---------- Game screen ---------- */
+.topbar{ display:flex; align-items:center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+.icon-btn{
+  width:44px; height:44px; border-radius:999px; border:none;
+  background:var(--surface); display:grid; place-items:center; cursor:pointer;
+  box-shadow:0 3px 0 var(--line-strong), 0 4px 10px -6px var(--shadow-color);
+  transition:background .15s ease, transform .1s ease, box-shadow .1s ease;
+  flex:0 0 auto; color:var(--ink);
+  
+  border: 1px solid var(--marmalade);
+}
+.icon-btn svg{ width:20px; height:20px; }
+.icon-btn:hover{ background:var(--cream); }
+.icon-btn:active{ transform:translateY(2px); box-shadow:0 1px 0 var(--line-strong); }
+.icon-btn:disabled{ opacity:.4; cursor:not-allowed; }
+.icon-btn:disabled:hover{ background:var(--surface); }
+
+.game-title{ xxxflex:1; xxxmin-width: 120px; display: flex; flex-direction: column; }
+.game-title .name{ font-family:var(--font-display); font-weight:800; font-size:1.15rem; color:var(--marmalade); margin-bottom: -20px;}
+.game-title .level{ color:var(--ink-soft); font-size:.8rem; }
+
+.status-row{ display:flex; align-items:center; gap:14px; justify-content: space-evenly; flex: 1; white-space: nowrap;}
+.hearts{ display:flex; gap:5px; }
+.hearts svg{ width:20px; height:20px; color:var(--bubblegum); transition:opacity .25s ease, filter .25s ease; }
+.hearts span.lost{ opacity:.25; filter:grayscale(1); }
+.heart-lost-anim{ animation:heartPop .5s ease; }
+@keyframes heartPop{ 0%{transform:scale(1);} 30%{transform:scale(1.4) rotate(-8deg);} 100%{transform:scale(1);} }
+.timer{
+  font-variant-numeric:tabular-nums; font-family:var(--font-display); font-weight:700;
+  color:var(--ink); font-size:.95rem; background:var(--surface);
+  box-shadow:0 3px 0 var(--line-strong);
+  padding:7px 12px; border-radius:999px;
+  border: 1px solid var(--marmalade);
+}
+.cats-counter{
+  display:flex; align-items:center; gap:6px;
+  font-variant-numeric:tabular-nums; font-family:var(--font-display); font-weight:700;
+  color:var(--ink); font-size:.95rem; background:var(--surface);
+  box-shadow:0 3px 0 var(--line-strong);
+  padding:7px 12px; border-radius:999px; xxxflex:1;
+  transition:background .2s ease, color .2s ease;
+  border: 1px solid var(--marmalade);
+}
+.cats-counter svg{ width:15px; height:15px; color:var(--marmalade); flex:0 0 auto; }
+.cats-counter.complete{ background:var(--mint); color:var(--ink); }
+.cats-counter.complete svg{ color:var(--ink); }
+
+.toolbar{ display:flex; gap:8px; margin:14px 0 4px; flex-wrap:wrap-reverse; justify-content: center; }
+.toolbar .icon-btn{ width:auto; padding:0 16px; gap:8px; display:flex; border-radius:999px; }
+.toolbar .icon-btn span { font-size:.85rem; font-weight:700; }
+.toolbar .icon-btn svg{ width:17px; height:17px; }
+.topbar .icon-btn{ width:auto; padding:0 16px; gap:8px; display:flex; border-radius:999px; }
+.topbar  .icon-btn span { font-size:.85rem; font-weight:700; }
+
+.board-wrap{ margin:32px auto; width:100%; max-width:480px; position:relative; }
+.board-frame{
+  position:relative; xxxbackground:var(--sand); background:var(--grout); border-radius:var(--radius); padding:var(--radius-xs);
+  box-shadow:var(--shadow-lg);
+  border: 1px solid var(--marmalade);
+}
+#board{
+  display:grid; width:100%; aspect-ratio:1/1; border-radius:calc(var(--radius) - 8px); overflow:hidden;
+  background:#FFFFFF;
+}
+.cell{
+  position:relative; border:none; padding:0; margin:1px; cursor:pointer;
+  display:grid; place-items:center; outline-offset:-3px;
+  transition:filter .12s ease;
+  
+  
+  border-radius:calc(var(--radius) - 8px);
+  
+  
+}
+.cell:hover{ filter:brightness(1.05) saturate(1.05); }
+.cell:focus-visible{ outline:3px solid var(--marmalade); z-index:2; }
+.cell.conflict{ animation:shake .5s ease; }
+.cell.conflict::after{
+  content:""; position:absolute; inset:0; background:var(--bubblegum); opacity:.4; pointer-events:none;
+}
+.cell .glyph{ width:88%; height:88%; pointer-events:none; }
+.cell .glyph.cat{ animation:pop .5s cubic-bezier(.3,1.5,.4,1) both; color:var(--ink); filter:drop-shadow(0 6px 6px rgba(74,59,82,.25)); }
+.cell .glyph.xmark{ animation:pop .25s ease both; color:rgba(74,59,82,0.75); width:46%; height:46%; }
+
+/* loading overlay */
+.loading-overlay{
+  position:absolute; inset:0; display:none; align-items:center; justify-content:center; flex-direction:column; gap:12px;
+  background:rgba(255,248,236,0.94); border-radius:calc(var(--radius) - 8px); z-index:5;
+}
+.loading-overlay.active{ display:flex; }
+.loading-cat{ width:44px; height:44px; animation:bounce 1s ease-in-out infinite; color:var(--marmalade); }
+@keyframes bounce{ 0%,100%{ transform:translateY(0) rotate(-4deg); } 50%{ transform:translateY(-10px) rotate(4deg); } }
+.loading-overlay p{ color:var(--ink-soft); font-size:.85rem; font-weight:600; }
+
+/* ---------- Modals ---------- */
+.modal-backdrop{
+  position:fixed; inset:0; background:rgba(74,59,82,0.38); backdrop-filter:blur(3px);
+  display:none; align-items:center; justify-content:center; padding:20px; z-index:50;
+  animation:fadeIn .25s ease;
+}
+.modal-backdrop.active{ display:flex; }
+.modal{
+  background:var(--surface); border:none; border-radius:var(--radius);
+  max-width:460px; width:100%; padding:26px 24px; box-shadow:var(--shadow-lg);
+  animation:pop .25s cubic-bezier(.3,1.2,.4,1) both; max-height:86vh; overflow-y:auto;
+}
+.modal h2{ font-family:var(--font-display); font-size:1.3rem; margin-bottom:4px; color:var(--ink); text-align: center; }
+.modal .modal-icon{ width:100%; xxxwidth:52px; height:52px; margin: 0 auto 10px; color:var(--marmalade); }
+.modal p{ color:var(--ink-soft); font-size:.92rem; line-height:1.5; margin-top:6px; text-align: center; }
+.rule-list{ list-style:none; padding:0; margin:16px 0 0; display:flex; flex-direction:column; gap:12px; }
+.rule-list li{ display:flex; gap:12px; align-items:flex-start; font-size:.88rem; color:var(--ink); line-height:1.4; }
+.rule-list svg{ width:22px; height:22px; flex:0 0 auto; color:var(--marmalade); margin-top:1px; }
+.rule-list b{ color:var(--ink); }
+.modal-stats{ display:flex; gap:10px; margin:18px 0; }
+.stat-box{ flex:1; background:var(--cream); border-radius:14px; padding:12px; text-align:center; }
+.stat-box .val{ font-family:var(--font-display); font-weight:800; font-size:1.3rem; color:var(--marmalade); }
+.stat-box .lbl{ font-size:.72rem; color:var(--ink-soft); margin:2px 0; font-weight:700; letter-spacing:.02em; }
+.modal-actions{ display:flex; gap:10px; margin-top:20px; }
+.btn{
+  flex:1; padding:14px 16px; border-radius:999px; border:none; cursor:pointer;
+  font-weight:700; font-size:.92rem; font-family:var(--font-body);
+  transition:transform .1s ease, box-shadow .1s ease;
+}
+.btn-primary{ background:var(--marmalade); color:var(--ink); box-shadow:0 4px 0 var(--marmalade-deep), 0 10px 18px -8px rgba(255,154,77,0.5); }
+.btn-primary:hover{ background:#ffa860; }
+.btn-primary:active{ transform:translateY(3px); box-shadow:0 1px 0 var(--marmalade-deep); }
+.btn-ghost{ background:var(--surface); color:var(--ink); box-shadow:0 4px 0 var(--line-strong); }
+.btn-ghost:hover{ background:var(--cream); }
+.btn-ghost:active{ transform:translateY(3px); box-shadow:0 1px 0 var(--line-strong); }
+.modal-close{ position:absolute; top:16px; right:16px; }
+
+.confetti-layer{ position:fixed; inset:0; pointer-events:none; z-index:60; overflow:hidden; }
+.confetti-layer span{ position:absolute; top:-5%; font-size:20px; animation:fall linear forwards; }
+
+small { position: relative; top: -14px; color: var(--ink-soft); font-size: 9.5px; font-weight: 400; }
+
+@media (max-width:380px){
+  .hero h1{ font-size:1.9rem; }
+  .toolbar .icon-btn span{ display:none; }
+  .toolbar .icon-btn { padding:0 12px; }
+  .topbar .icon-btn span{ display:none; }
+  .topbar .icon-btn { padding:0 12px; }
+}
+
+.topbar, .toolbar { 
+	margin: auto auto;
+    width: 100%;
+    max-width: 480px;
+    position: relative;
+}
+</style>
+</head>
+<body>
+
+<!-- Shared Siamese cat artwork, reused via <use> for the logo, modal icons,
+     and every in-game cat token (see catSvg() in the script below). One
+     source of truth for the character design. -->
+<svg style="display:none" aria-hidden="true">
+  <symbol id="cat-face" viewBox="0 0 100 100">
+    <polygon points="18,46 34,6 52,40" fill="#3E2A22"/>
+    <polygon points="82,46 66,6 48,40" fill="#3E2A22"/>
+    <circle cx="50" cy="60" r="34" fill="#F7E8CB"/>
+    <ellipse cx="50" cy="62" rx="30" ry="24" fill="#3E2A22"/>
+    <g stroke="#FAF0DC" stroke-width="2.0" stroke-linecap="round">
+      <line x1="13" y1="64" x2="31" y2="62.5"/>
+      <line x1="13" y1="71" x2="31" y2="69.5"/>
+      <line x1="87" y1="64" x2="69" y2="62.5"/>
+      <line x1="87" y1="71" x2="69" y2="69.5"/>
+    </g>
+    <ellipse cx="41" cy="58" rx="5.4" ry="8.3" fill="#5BC8E8" transform="rotate(-76 41 58)"/>
+    <ellipse cx="59" cy="58" rx="5.4" ry="8.3" fill="#5BC8E8" transform="rotate(76 59 58)"/>
+    <ellipse cx="41.3" cy="59.5" rx="2.3" ry="3.6" fill="#20140F"/>
+    <ellipse cx="58.7" cy="59.5" rx="2.3" ry="3.6" fill="#20140F"/>
+    <circle cx="39.6" cy="55.6" r="0.9" fill="#FFFFFF"/>
+    <circle cx="57.6" cy="55.6" r="0.9" fill="#FFFFFF"/>
+    <polygon points="50,74 45.5,68.8 54.5,68.8" fill="#E8929E"/>
+  </symbol>
+  <symbol id="cat-face-sad" viewBox="0 0 100 100">
+    <polygon points="18,46 34,6 52,40" fill="#3E2A22"/>
+    <polygon points="82,46 66,6 48,40" fill="#3E2A22"/>
+    <circle cx="50" cy="60" r="34" fill="#F7E8CB"/>
+    <ellipse cx="50" cy="62" rx="30" ry="24" fill="#3E2A22"/>
+    <g stroke="#FAF0DC" stroke-width="3.4" stroke-linecap="round">
+      <path d="M34 54 L45 65 M45 54 L34 65"/>
+      <path d="M66 54 L55 65 M55 54 L66 65"/>
+    </g>
+    <polygon points="50,74 45.5,68.8 54.5,68.8" fill="#E8929E"/>
+  </symbol>
+</svg>
+
+<div id="app">
+
+  <!-- ============ MENU SCREEN ============ -->
+  <section id="screen-menu" class="screen active" aria-label="Main menu">
+    <div class="hero">
+      <div class="hero-mark">
+        <svg viewBox="0 0 100 100" aria-hidden="true"><use href="#cat-face"/></svg>
+      </div>
+      <h1>Meowdoku</h1>
+	  <small>Rocky Graffietto Edition</small>
+      <p class="tagline">One cat per row. One cat per column.<br/>One cat per territory. Zero contact.</p>
+    </div>
+
+    <div class="diff-grid" id="diffGrid" role="list"></div>
+
+    <div class="menu-footer">
+      <button class="link-btn" id="btnHowMenu" type="button">How to play?</button>
+    </div>
+  </section>
+
+  <!-- ============ GAME SCREEN ============ -->
+  <section id="screen-game" class="screen" aria-label="Game in progress">
+    <div class="topbar">
+      <button class="icon-btn" id="btnBack" type="button" aria-label="Back to menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+		<span>Back</span>
+      </button>
+      <div class="game-title">
+        <div class="name" id="gameTitleName">Meowdoku<br/><small>Rocky Graffietto Edition</small></div>
+        <div class="level" id="gameTitleLevel">—</div>
+      </div>
+      <div class="status-row">
+        <div class="cats-counter" id="catsCounter" aria-label="Cats placed"></div>
+        <div class="hearts" id="hearts" aria-label="Lives remaining"></div>
+        <div class="timer" id="timer">00:00</div>
+      </div>
+    </div>
+
+    <div class="board-wrap">
+      <div class="board-frame">
+        <div id="board" role="grid" aria-label="Game grid"></div>
+        <div class="loading-overlay" id="loadingOverlay">
+          <svg class="loading-cat" viewBox="0 0 100 100" aria-hidden="true"><use href="#cat-face"/></svg>
+          <p>Rounding up the cats…</p>
+        </div>
+      </div>
+    </div>
+	
+	<div class="toolbar">
+      <button class="icon-btn" id="btnNew" type="button" title="New puzzle">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v6h-6"/></svg>
+        <span>New</span>
+      </button>
+      <button class="icon-btn" id="btnRestart" type="button" title="Restart">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 3v6h6"/></svg>
+        <span>Reset</span>
+      </button>
+      <button class="icon-btn" id="btnUndo" type="button" title="Undo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14l-4-4 4-4"/><path d="M5 10h9a5 5 0 0 1 0 10h-1"/></svg>
+        <span>Undo</span>
+      </button>
+      <button class="icon-btn" id="btnHint" type="button" title="Hint">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.2 1 2.3h6c0-1.1.4-1.8 1-2.3A7 7 0 0 0 12 2Z"/></svg>
+        <span>Hint</span>
+      </button>
+      <button class="icon-btn" id="btnHowGame" type="button" title="Rules">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.4 2.3c-.9.4-1.4 1-1.4 2"/><path d="M12 17h.01"/></svg>
+		<span>Rules</span>
+      </button>
+    </div>
+
+	
+  </section>
+
+</div>
+
+<!-- ============ MODALS ============ -->
+<div class="modal-backdrop" id="modalHow">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="howTitle">
+    <svg class="modal-icon" viewBox="0 0 100 100" aria-hidden="true"><use href="#cat-face"/></svg>
+    <h2 id="howTitle">How to play</h2>
+    <p>Every cat is territorial: it wants a home of its own, far from the others.</p>
+    <ul class="rule-list">
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 9h18M9 21V9"/></svg><span><b>One row, one cat.</b> Every row in the grid holds exactly one.</span></li>
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 9h18M9 21V9"/></svg><span><b>One column, one cat.</b> Same rule, vertically.</span></li>
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l3 6 6 1-4.5 4.5L17.5 21 12 17.5 6.5 21l1-6.5L3 10l6-1 3-6Z"/></svg><span><b>One colored area, one cat.</b> Every territory holds exactly one.</span></li>
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 8l8 8M16 8l-8 8"/></svg><span><b>Never touching.</b> Not even diagonally: cats need their space.</span></li>
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.2 1 2.3h6c0-1.1.4-1.8 1-2.3A7 7 0 0 0 12 2Z"/></svg><span><b>Tap to mark.</b> First tap: X (ruled out). Second: cat. Third: empty.</span></li>
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8Z"/></svg><span><b>3 lives.</b> Every cat placed in the wrong cell costs one.</span></li>
+    </ul>
+    <div class="modal-actions">
+      <button class="btn btn-primary" id="btnHowClose" type="button">Got it</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="modalWin">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="winTitle">
+    <svg class="modal-icon" viewBox="0 0 100 100" aria-hidden="true"><use href="#cat-face"/></svg>
+    <h2 id="winTitle">Territories claimed!</h2>
+    <p>Every cat has found its own corner of the world. Well done.</p>
+    <div class="modal-stats">
+      <div class="stat-box"><div class="lbl">TIME</div><div class="val" id="winTime">00:00</div></div>
+      <div class="stat-box"><div class="lbl">LEVEL</div><div class="val" id="winLevel">—</div></div>
+      <div class="stat-box"><div class="lbl">LIVES</div><div class="val" id="winLives">3</div></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="btnWinMenu" type="button">Menu</button>
+      <button class="btn btn-primary" id="btnWinNext" type="button">New puzzle</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="modalLose">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="loseTitle">
+    <svg class="modal-icon" viewBox="0 0 100 100" aria-hidden="true"><use href="#cat-face-sad"/></svg>
+    <h2 id="loseTitle">Out of lives</h2>
+    <p>You've used up all 3 lives. Take a breath and try again — the solution is still waiting for you.</p>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="btnLoseMenu" type="button">Menu</button>
+      <button class="btn btn-primary" id="btnLoseRetry" type="button">Try again</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ============================================================
+   1. PUZZLE GENERATOR
+   Queste funzioni sono scritte per essere riutilizzabili sia
+   nel thread principale (fallback sincrono) sia dentro un
+   Web Worker costruito dinamicamente da Function#toString(),
+   cosi' la logica esiste in un solo punto del file.
+   ============================================================ */
+const DIRS = [[-1,0],[1,0],[0,-1],[0,1]];
+
+function rndInt(n){ return Math.floor(Math.random() * n); }
+
+function shuffleArr(arr){
+  for (let i = arr.length - 1; i > 0; i--){
+    const j = rndInt(i + 1);
+    const tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
+  }
+  return arr;
+}
+
+function arraysEqual(a, b){
+  for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
+  return true;
+}
+
+// Valid permutation: 1 cat per row/column, adjacent rows can't have
+// columns at distance <=1 (otherwise they'd be touching).
+function generateSolution(n){
+  const cols = [];
+  function backtrack(row, usedCols, prevCol){
+    if (row === n) return true;
+    const order = shuffleArr(Array.from({length:n}, function(_,i){ return i; }));
+    for (let k = 0; k < order.length; k++){
+      const col = order[k];
+      if (usedCols.has(col)) continue;
+      if (prevCol !== null && Math.abs(col - prevCol) <= 1) continue;
+      usedCols.add(col);
+      cols[row] = col;
+      if (backtrack(row + 1, usedCols, col)) return true;
+      usedCols.delete(col);
+    }
+    return false;
+  }
+  const ok = backtrack(0, new Set(), null);
+  return ok ? cols.slice() : null;
+}
+
+// "Snake" growth of regions starting from the solution seeds: long,
+// irregular shapes constrain the solution more than compact BFS
+// growth does, drastically cutting down the number of attempts needed.
+//
+// forcedRegion/forcedSize: a randomly chosen region is excluded from
+// growth as soon as it reaches forcedSize cells. With forcedSize=1 that
+// region stays a single cell: the first move is forced (the cat can
+// only go there). With forcedSize=2 it stays a 2-cell "domino": the
+// first move is a genuine 50/50 until the other rules narrow it down.
+// -1 disables the constraint.
+function growRegions(n, solution, forcedRegion, forcedSize){
+  const region = Array.from({length:n}, function(){ return new Array(n).fill(-1); });
+  const cellsOf = Array.from({length:n}, function(){ return []; });
+  const lastCell = [];
+  for (let r = 0; r < n; r++){
+    region[r][solution[r]] = r;
+    cellsOf[r].push([r, solution[r]]);
+    lastCell[r] = [r, solution[r]];
+  }
+  let unassigned = n * n - n;
+
+  function isCapped(reg){ return reg === forcedRegion && cellsOf[reg].length >= forcedSize; }
+  function neighborsOf(r, c){
+    const out = [];
+    for (let i = 0; i < DIRS.length; i++){
+      const nr = r + DIRS[i][0], nc = c + DIRS[i][1];
+      if (nr >= 0 && nr < n && nc >= 0 && nc < n && region[nr][nc] === -1) out.push([nr, nc]);
+    }
+    return out;
+  }
+  function anyFrontier(reg){
+    for (let i = 0; i < cellsOf[reg].length; i++){
+      const f = neighborsOf(cellsOf[reg][i][0], cellsOf[reg][i][1]);
+      if (f.length) return f;
+    }
+    return [];
+  }
+
+  let guard = 0;
+  while (unassigned > 0){
+    guard++;
+    if (guard > n * n * 80) throw new Error("growRegions stuck");
+    const regionOrder = shuffleArr(Array.from({length:n}, function(_,i){ return i; }))
+      .sort(function(a,b){ return cellsOf[a].length - cellsOf[b].length; });
+    let placed = false;
+    for (let i = 0; i < regionOrder.length; i++){
+      const reg = regionOrder[i];
+      if (isCapped(reg)) continue;
+      let options = neighborsOf(lastCell[reg][0], lastCell[reg][1]);
+      if (options.length === 0) options = anyFrontier(reg);
+      if (options.length === 0) continue;
+      const pick = options[rndInt(options.length)];
+      region[pick[0]][pick[1]] = reg;
+      cellsOf[reg].push(pick);
+      lastCell[reg] = pick;
+      unassigned--;
+      placed = true;
+      break;
+    }
+    if (!placed){
+      let done = false;
+      for (let r = 0; r < n && !done; r++){
+        for (let c = 0; c < n && !done; c++){
+          if (region[r][c] !== -1) continue;
+          const neighborRegs = [];
+          for (let i = 0; i < DIRS.length; i++){
+            const nr = r + DIRS[i][0], nc = c + DIRS[i][1];
+            if (nr >= 0 && nr < n && nc >= 0 && nc < n && region[nr][nc] !== -1) neighborRegs.push(region[nr][nc]);
+          }
+          if (neighborRegs.length === 0) continue;
+          let chosen = -1;
+          for (let i = 0; i < neighborRegs.length; i++) if (!isCapped(neighborRegs[i])) { chosen = neighborRegs[i]; break; }
+          if (chosen === -1) chosen = neighborRegs[0]; // last resort: may violate the cap in rare geometric edge cases
+          region[r][c] = chosen; cellsOf[chosen].push([r,c]); lastCell[chosen] = [r,c];
+          unassigned--; done = true;
+        }
+      }
+      if (!done) throw new Error("growRegions truly stuck");
+    }
+  }
+  return region;
+}
+
+function collectSolutions(n, regionGrid, cap){
+  const found = [];
+  function backtrack(row, usedCols, usedRegions, prevCol, cur){
+    if (found.length >= cap) return;
+    if (row === n){ found.push(cur.slice()); return; }
+    for (let col = 0; col < n; col++){
+      if (found.length >= cap) return;
+      if (usedCols.has(col)) continue;
+      const reg = regionGrid[row][col];
+      if (usedRegions.has(reg)) continue;
+      if (prevCol !== null && Math.abs(col - prevCol) <= 1) continue;
+      usedCols.add(col); usedRegions.add(reg); cur.push(col);
+      backtrack(row + 1, usedCols, usedRegions, col, cur);
+      cur.pop(); usedCols.delete(col); usedRegions.delete(reg);
+    }
+  }
+  backtrack(0, new Set(), new Set(), null, []);
+  return found;
+}
+
+function getAlternate(n, regionGrid, solution){
+  const found = collectSolutions(n, regionGrid, 2);
+  for (let i = 0; i < found.length; i++) if (!arraysEqual(found[i], solution)) return found[i];
+  return null;
+}
+
+function buildCellsOf(n, regionGrid){
+  const cellsOf = Array.from({length:n}, function(){ return []; });
+  for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) cellsOf[regionGrid[r][c]].push([r,c]);
+  return cellsOf;
+}
+
+function wouldDisconnect(cellsOf, oldReg, r, c){
+  const cells = cellsOf[oldReg];
+  if (cells.length <= 1) return true;
+  const remaining = [];
+  for (let i = 0; i < cells.length; i++) if (!(cells[i][0] === r && cells[i][1] === c)) remaining.push(cells[i]);
+  const remainingSet = new Set(remaining.map(function(p){ return p[0] + ',' + p[1]; }));
+  const seen = new Set([remaining[0][0] + ',' + remaining[0][1]]);
+  const stack = [remaining[0]];
+  while (stack.length){
+    const cur = stack.pop();
+    for (let i = 0; i < DIRS.length; i++){
+      const nr = cur[0] + DIRS[i][0], nc = cur[1] + DIRS[i][1];
+      const key = nr + ',' + nc;
+      if (remainingSet.has(key) && !seen.has(key)){ seen.add(key); stack.push([nr,nc]); }
+    }
+  }
+  return seen.size !== remaining.length;
+}
+
+// Eliminates spurious solutions by moving single boundary cells to a
+// neighboring region, never touching the true solution cell and never
+// breaking a region's connectivity (territories stay compact).
+// Never touches the forced region: doesn't remove cells from it (that
+// would break the constraint) and never assigns it cells past the cap.
+function repairRegions(n, regionGrid, solution, maxRepairs, forcedRegion, forcedSize){
+  for (let iter = 0; iter < maxRepairs; iter++){
+    const alt = getAlternate(n, regionGrid, solution);
+    if (!alt) return iter;
+    const cellsOf = buildCellsOf(n, regionGrid);
+    const diffRows = [];
+    for (let r = 0; r < n; r++) if (alt[r] !== solution[r]) diffRows.push(r);
+    shuffleArr(diffRows);
+    let repaired = false;
+    for (let i = 0; i < diffRows.length; i++){
+      const r = diffRows[i], c = alt[r];
+      const oldReg = regionGrid[r][c];
+      if (oldReg === forcedRegion) continue;
+      if (wouldDisconnect(cellsOf, oldReg, r, c)) continue;
+      const candidates = [];
+      for (let d = 0; d < DIRS.length; d++){
+        const nr = r + DIRS[d][0], nc = c + DIRS[d][1];
+        if (nr >= 0 && nr < n && nc >= 0 && nc < n && regionGrid[nr][nc] !== oldReg){
+          const cr = regionGrid[nr][nc];
+          if (cr === forcedRegion && cellsOf[forcedRegion].length >= forcedSize) continue;
+          candidates.push(cr);
+        }
+      }
+      if (candidates.length === 0) continue;
+      shuffleArr(candidates);
+      regionGrid[r][c] = candidates[0];
+      repaired = true;
+      break;
+    }
+    if (!repaired) return -1;
+  }
+  return -2;
+}
+
+function regionSizes(n, regionGrid){
+  const sizes = new Array(n).fill(0);
+  for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) sizes[regionGrid[r][c]]++;
+  return sizes;
+}
+
+// One full attempt: solution + growth with a forced region + repair.
+function generatePuzzleOnce(n, forcedSize, maxGenAttempts, maxRepairs){
+  for (let attempt = 0; attempt < maxGenAttempts; attempt++){
+    const solution = generateSolution(n);
+    if (!solution) continue;
+    const forcedRegion = rndInt(n);
+    let regions;
+    try { regions = growRegions(n, solution, forcedRegion, forcedSize); } catch(e){ continue; }
+    const rep = repairRegions(n, regions, solution, maxRepairs, forcedRegion, forcedSize);
+    if (rep >= 0) return { n:n, solution:solution, regions:regions };
+  }
+  return null;
+}
+
+// Repair can rarely grow the forced region past its cap (rare geometric
+// edge cases): a handful of full attempts is almost always enough to
+// land the exact size, with a safe fallback if not.
+function generatePuzzleSync(n, forcedSize, maxGenAttempts, maxRepairs){
+  let fallback = null;
+  const K = 5;
+  for (let k = 0; k < K; k++){
+    const res = generatePuzzleOnce(n, forcedSize, maxGenAttempts, maxRepairs);
+    if (!res) continue;
+    if (!fallback) fallback = res;
+    const sizes = regionSizes(n, res.regions);
+    if (Math.min.apply(null, sizes) === forcedSize) return res;
+  }
+  return fallback;
+}
+
+/* ---- Web Worker costruito dal codice sopra, per non bloccare la UI ---- */
+let puzzleWorker = null;
+function getWorker(){
+  if (puzzleWorker) return puzzleWorker;
+  try{
+    const fns = [rndInt, shuffleArr, arraysEqual, generateSolution, growRegions,
+                 collectSolutions, getAlternate, buildCellsOf, wouldDisconnect,
+                 repairRegions, regionSizes, generatePuzzleOnce, generatePuzzleSync];
+    let src = "const DIRS=" + JSON.stringify(DIRS) + ";\n\n";
+    src += fns.map(function(f){ return f.toString(); }).join("\n\n");
+    src += "\n\nself.onmessage = function(e){\n" +
+           "  const n = e.data.n, forcedSize = e.data.forcedSize;\n" +
+           "  let result = null;\n" +
+           "  try { result = generatePuzzleSync(n, forcedSize, 300, 800); } catch(err) { result = null; }\n" +
+           "  self.postMessage(result);\n" +
+           "};";
+    const blob = new Blob([src], { type: "application/javascript" });
+    puzzleWorker = new Worker(URL.createObjectURL(blob));
+  } catch(e){
+    puzzleWorker = null;
+  }
+  return puzzleWorker;
+}
+
+function generatePuzzleAsync(n, forcedSize){
+  return new Promise(function(resolve){
+    const w = getWorker();
+    if (w){
+      const onMsg = function(e){
+        w.removeEventListener("message", onMsg);
+        w.removeEventListener("error", onErr);
+        resolve(e.data);
+      };
+      const onErr = function(){
+        w.removeEventListener("message", onMsg);
+        w.removeEventListener("error", onErr);
+        // synchronous fallback if the worker fails at runtime
+        setTimeout(function(){ resolve(generatePuzzleSync(n, forcedSize, 300, 800)); }, 10);
+      };
+      w.addEventListener("message", onMsg);
+      w.addEventListener("error", onErr);
+      w.postMessage({ n: n, forcedSize: forcedSize });
+    } else {
+      setTimeout(function(){ resolve(generatePuzzleSync(n, forcedSize, 300, 800)); }, 10);
+    }
+  });
+}
+
+/* ============================================================
+   2. THEME / REGION PALETTE
+   ============================================================ */
+function regionPalette(n){
+  const baseHue = rndInt(360);
+  const sats = [62, 50];
+  const lits = [83, 77];
+  const colors = [];
+  for (let i = 0; i < n; i++){
+    const hue = (baseHue + i * (360 / n) + (rndInt(9) - 4)) % 360;
+    const s = sats[i % 2];
+    const l = lits[Math.floor(i / 2) % 2];
+    colors.push("hsl(" + Math.round(hue) + "," + s + "%," + l + "%)");
+  }
+  return colors;
+}
+
+/* ============================================================
+   3. DIFFICULTY LEVELS
+   forcedSize=1 -> one region stays a single cell: the first move is
+                   always deducible with certainty, no guessing needed.
+   forcedSize=2 -> one region stays a 2-cell "domino": you start with
+                   a genuine 50/50, then logic takes over.
+   ============================================================ */
+const DIFFICULTIES = [
+  { n:4,  name:"Kitten", 		sub:"To warm-up the paws",	paws:1, forcedSize:1 },
+  { n:6,  name:"Tabby Cat",		sub:"Feline instinct",		paws:2, forcedSize:1 },
+  { n:8,  name:"Wildcat",		sub:"Complex territories",	paws:3, forcedSize:1 },
+  { n:10, name:"Panther",		sub:"Roof master",			paws:4, forcedSize:2 }
+];
+
+/* ============================================================
+   4. REUSABLE SVG ICONS
+   ============================================================ */
+function catSvg(cls){
+  return '<svg class="glyph ' + (cls||"") + '" viewBox="0 0 100 100" aria-hidden="true"><use href="#cat-face"/></svg>';
+}
+function xSvg(){
+  return '<svg class="glyph xmark" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="30" stroke-linecap="round" aria-hidden="true">' +
+    '<line x1="20" y1="20" x2="80" y2="80"/><line x1="80" y1="20" x2="20" y2="80"/>' +
+	'</svg>';
+}
+function pawSvg(cls){
+  return '<svg class="' + (cls||"") + '" viewBox="0 0 100 100" fill="currentColor" aria-hidden="true">' +
+    '<ellipse cx="50" cy="68" rx="27" ry="22"/>' +
+    '<circle cx="27" cy="34" r="12"/><circle cx="50" cy="22" r="12.5"/>' +
+    '<circle cx="73" cy="34" r="12"/></svg>';
+}
+
+/* ============================================================
+   5. GAME STATE
+   ============================================================ */
+const state = {
+  n: 0,
+  difficulty: null,
+  regions: null,     // regions[r][c] -> region index
+  solution: null,     // usato solo dai suggerimenti
+  grid: null,         // 'empty' | 'x' | 'cat'
+  hearts: 3,
+  hintsUsed: 0,
+  history: [],         // stack di snapshot { grid, hearts }
+  focusR: 0,
+  focusC: 0,
+  timerStart: 0,
+  timerElapsed: 0,
+  timerRunning: false,
+  timerHandle: null,
+  gameOver: false,
+  palette: null,
+  paletteDark: null
+};
+
+/* ============================================================
+   6. GAME UTILITIES
+   ============================================================ */
+function isAdjacent(r1,c1,r2,c2){
+  if (r1 === r2 && c1 === c2) return false;
+  return Math.abs(r1-r2) <= 1 && Math.abs(c1-c2) <= 1;
+}
+
+function cellsRelatedTo(r,c){
+  // every cell sharing row, column, or region with (r,c), or adjacent to it
+  const n = state.n;
+  const reg = state.regions[r][c];
+  const out = [];
+  for (let rr = 0; rr < n; rr++){
+    for (let cc = 0; cc < n; cc++){
+      if (rr === r && cc === c) continue;
+      if (rr === r || cc === c || state.regions[rr][cc] === reg || isAdjacent(r,c,rr,cc)) out.push([rr,cc]);
+    }
+  }
+  return out;
+}
+
+function findConflicts(r,c){
+  const related = cellsRelatedTo(r,c);
+  const conflicts = [];
+  for (let i = 0; i < related.length; i++){
+    const rr = related[i][0], cc = related[i][1];
+    if (state.grid[rr][cc] === 'cat') conflicts.push([rr,cc]);
+  }
+  return conflicts;
+}
+
+function snapshot(){
+  state.history.push({
+    grid: state.grid.map(function(row){ return row.slice(); }),
+    hearts: state.hearts
+  });
+  updateUndoBtn();
+}
+
+function restoreSnapshot(){
+  if (!state.history.length) return;
+  const snap = state.history.pop();
+  state.grid = snap.grid;
+  state.hearts = snap.hearts;
+  renderBoard();
+  renderHearts();
+  updateUndoBtn();
+  checkWin();
+}
+
+/* ============================================================
+   7. RENDER
+   ============================================================ */
+const els = {};
+function cacheEls(){
+  ["screen-menu","screen-game","diffGrid","board","loadingOverlay",
+   "gameTitleName","gameTitleLevel","hearts","timer","hintText","catsCounter",
+   "modalHow","modalWin","modalLose","winTime","winLevel","winLives"
+  ].forEach(function(id){ els[id] = document.getElementById(id); });
+}
+
+function renderMenu(){
+  let html = "";
+  DIFFICULTIES.forEach(function(d, idx){
+    const hue = (idx * 67) % 360;
+    let paws = "";
+    for (let i = 0; i < DIFFICULTIES.length; i++){
+      paws += '<span class="' + (i < d.paws ? "filled" : "empty") + '">' + pawSvg() + "</span>";
+    }
+    html += '<button class="diff-card" type="button" data-n="' + d.n + '" role="listitem">' +
+      '<div class="diff-swatch" style="background:hsl(' + hue + ',65%,72%)">' + d.n + '×' + d.n + '</div>' +
+      '<div class="diff-info"><div class="diff-name">' + d.name + '</div>' +
+      '<div class="diff-sub">' + d.sub + '</div>' +
+      '<div class="diff-paws">' + paws + '</div></div></button>';
+  });
+  els.diffGrid.innerHTML = html;
+  els.diffGrid.querySelectorAll(".diff-card").forEach(function(btn){
+    btn.addEventListener("click", function(){ startNewGame(parseInt(btn.dataset.n, 10)); });
+  });
+}
+
+function renderHearts(){
+  let html = "";
+  for (let i = 0; i < 3; i++){
+    html += '<span class="' + (i < state.hearts ? "" : "lost") + '" data-idx="' + i + '">' + pawSvg() + '</span>';
+  }
+  els.hearts.innerHTML = html;
+}
+
+function renderBoard(doFadeIn = false){
+  const n = state.n;
+  const hadFocusInBoard = els.board.contains(document.activeElement);
+  els.board.style.gridTemplateColumns = "repeat(" + n + ", 1fr)";
+  els.board.style.gridTemplateRows = "repeat(" + n + ", 1fr)";
+  let html = "";
+  for (let r = 0; r < n; r++){
+    for (let c = 0; c < n; c++){
+      const reg = state.regions[r][c];
+      const color = 'radial-gradient(circle, ' + state.palette[reg]+ ' 0%, '+state.paletteDark[reg]+' 100%)';//state.palette[reg];
+      const cellState = state.grid[r][c];
+      const topDiff = (r === 0) || (state.regions[r-1][c] !== reg);
+      const leftDiff = (c === 0) || (state.regions[r][c-1] !== reg);
+      const bottomDiff = (r === n-1) || (state.regions[r+1][c] !== reg);
+      const rightDiff = (c === n-1) || (state.regions[r][c+1] !== reg);
+      const bw = function(diff){ return diff ? "1" : "0"; };//////////xxxx
+      const bc = function(diff){ return diff ? "var(--grout)" : "rgba(74,59,82,0.10)"; };
+      let inner = "";
+      if (cellState === "cat") inner = catSvg("cat");
+      else if (cellState === "x") inner = xSvg();
+      else inner = '';
+	  let max = 5 * (c+1) * (r+1) / (n * n);
+      html += '<button class="cell" type="button" data-r="' + r + '" data-c="' + c + '" ' +
+        'role="gridcell" aria-label="row ' + (r+1) + ' column ' + (c+1) + '" ' +
+        'style="background:' + color + ';' +
+		(doFadeIn ? 'animation: fadeIn '+max+'s; ' : '') +
+        'border-top:' + bw(topDiff) + 'px solid ' + bc(topDiff) + ';' +
+        'border-left:' + bw(leftDiff) + 'px solid ' + bc(leftDiff) + ';' +
+        'border-bottom:' + bw(bottomDiff) + 'px solid ' + bc(bottomDiff) + ';' +
+        'border-right:' + bw(rightDiff) + 'px solid ' + bc(rightDiff) + ';">' +
+        inner + '</button>';
+    }
+  }
+  els.board.innerHTML = html;
+  els.board.querySelectorAll(".cell").forEach(function(cell){
+    cell.addEventListener("click", onCellClick);
+  });
+  applyRovingTabindex();
+  if (hadFocusInBoard){
+    const el = els.board.querySelector('.cell[data-r="' + state.focusR + '"][data-c="' + state.focusC + '"]');
+    if (el) el.focus();
+  }
+  updateCatsCounter();
+}
+
+// Always-visible counter of cats placed: keeps one extra click (which
+// cycles a cell from "cat" back to "empty") from going unnoticed and
+// making the board look complete when it's actually one cat short.
+function updateCatsCounter(){
+  const n = state.n;
+  let count = 0;
+  for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (state.grid[r][c] === "cat") count++;
+  els.catsCounter.innerHTML = pawSvg() + '<span>' + count + ' / ' + n + '</span>';
+  els.catsCounter.classList.toggle("complete", count === n);
+}
+
+// Roving tabindex: only one cell is Tab-reachable, arrow keys move
+// focus between cells without losing your place on every redraw.
+function applyRovingTabindex(){
+  els.board.querySelectorAll(".cell").forEach(function(cell){
+    const r = parseInt(cell.dataset.r, 10), c = parseInt(cell.dataset.c, 10);
+    cell.tabIndex = (r === state.focusR && c === state.focusC) ? 0 : -1;
+  });
+}
+
+function updateUndoBtn(){
+  document.getElementById("btnUndo").disabled = state.history.length === 0 || state.gameOver;
+}
+
+/* ============================================================
+   8. GAME LOGIC
+   ============================================================ */
+function onCellClick(e){
+  if (state.gameOver) return;
+  const r = parseInt(e.currentTarget.dataset.r, 10);
+  const c = parseInt(e.currentTarget.dataset.c, 10);
+  state.focusR = r; state.focusC = c;
+  const cur = state.grid[r][c];
+
+  if (cur === "empty"){
+    snapshot();
+    state.grid[r][c] = "x";
+    renderBoard();
+    return;
+  }
+  if (cur === "x"){
+    snapshot();
+    tryPlaceCat(r, c);
+    return;
+  }
+  if (cur === "cat"){
+    snapshot();
+    state.grid[r][c] = "empty";
+    renderBoard();
+    return;
+  }
+}
+
+function tryPlaceCat(r, c){
+  const conflicts = findConflicts(r, c);
+  if (conflicts.length > 0){
+    state.grid[r][c] = "cat";
+    renderBoard();
+    flashConflict(r, c, conflicts);
+    loseHeart();
+    return;
+  }
+  state.grid[r][c] = "cat";
+  autoMarkEliminated(r, c);
+  renderBoard();
+  checkWin();
+}
+
+function autoMarkEliminated(r, c){
+  const related = cellsRelatedTo(r, c);
+  for (let i = 0; i < related.length; i++){
+    const rr = related[i][0], cc = related[i][1];
+    if (state.grid[rr][cc] === "empty") state.grid[rr][cc] = "x";
+  }
+}
+
+function flashConflict(r, c, conflicts){
+  setTimeout(function(){
+    const cellEl = els.board.querySelector('.cell[data-r="' + r + '"][data-c="' + c + '"]');
+    const toFlash = [cellEl];
+    conflicts.forEach(function(p){
+      toFlash.push(els.board.querySelector('.cell[data-r="' + p[0] + '"][data-c="' + p[1] + '"]'));
+    });
+    toFlash.forEach(function(el){ if (el) el.classList.add("conflict"); });
+    setTimeout(function(){
+      // reset the just-placed cell back to empty (the mistake doesn't stay on the board)
+      state.grid[r][c] = "empty";
+      renderBoard();
+    }, 480);
+  }, 10);
+}
+
+function loseHeart(){
+  state.hearts = Math.max(0, state.hearts - 1);
+  renderHearts();
+  const lastPaw = els.hearts.querySelector('[data-idx="' + state.hearts + '"]');
+  if (lastPaw) { lastPaw.classList.add("heart-lost-anim"); setTimeout(function(){ lastPaw.classList.remove("heart-lost-anim"); }, 400); }
+  if (state.hearts <= 0){
+    setTimeout(function(){ endGame(false); }, 520);
+  }
+}
+
+function checkWin(){
+  const n = state.n;
+  let count = 0;
+  for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (state.grid[r][c] === "cat") count++;
+  if (count === n) endGame(true);
+}
+
+/* ============================================================
+   9. TIMER
+   ============================================================ */
+function timerStart(){
+  state.timerRunning = true;
+  state.timerStart = Date.now();
+  state.timerHandle = setInterval(updateTimerDisplay, 250);
+}
+function timerStop(){
+  if (state.timerHandle) clearInterval(state.timerHandle);
+  state.timerRunning = false;
+}
+function timerElapsedMs(){
+  return state.timerElapsed + (state.timerRunning ? Date.now() - state.timerStart : 0);
+}
+function updateTimerDisplay(){
+  const totalSec = Math.floor(timerElapsedMs() / 1000);
+  const mm = Math.floor(totalSec / 60).toString().padStart(2, "0");
+  const ss = (totalSec % 60).toString().padStart(2, "0");
+  els.timer.textContent = mm + ":" + ss;
+}
+function timerReset(){
+  timerStop();
+  state.timerElapsed = 0;
+  updateTimerDisplay();
+}
+
+/* ============================================================
+   10. GAME FLOW
+   ============================================================ */
+function startNewGame(n){
+  state.difficulty = DIFFICULTIES.find(function(d){ return d.n === n; });
+  showScreen("screen-game");
+  els.gameTitleLevel.textContent = state.difficulty.name + " · " + n + "×" + n;
+  els.loadingOverlay.classList.add("active");
+  els.board.innerHTML = "";
+  generatePuzzleAsync(n, state.difficulty.forcedSize).then(function(result){
+    els.loadingOverlay.classList.remove("active");
+    if (!result){
+      els.hintText.textContent = "Generation error \u2014 try \u00abNew\u00bb again.";
+      return;
+    }
+    state.n = n;
+    state.solution = result.solution;
+    state.regions = result.regions;
+    state.palette = regionPalette(n);
+	state.paletteDark = [...state.palette];
+	for (let i = 0; i < n; i++){
+		//hsl(121,50%,83%)
+		let x1 = state.palette[i].split(',')[0];
+		let x2 = state.palette[i].split(',')[1];
+		let x3 = state.palette[i].split(',')[2];
+		state.paletteDark[i] = x1 + ',' + x2 + ',' + x3.split('%')[0] * 0.8 + '%)';
+	}
+	
+    resetBoardState();
+    renderBoard(true);
+    els.hintText.textContent = "Touch a cell: first X, than Cat, then Empty.";
+  });
+}
+
+function resetBoardState(){
+  state.grid = Array.from({length: state.n}, function(){ return new Array(state.n).fill("empty"); });
+  state.hearts = 3;
+  state.hintsUsed = 0;
+  state.history = [];
+  state.gameOver = false;
+  state.focusR = 0;
+  state.focusC = 0;
+  renderHearts();
+  updateUndoBtn();
+  timerReset();
+  timerStart();
+}
+
+function restartSamePuzzle(){
+  if (!state.n) return;
+  resetBoardState();
+  renderBoard(true);
+}
+
+function endGame(won){
+  state.gameOver = true;
+  timerStop();
+  updateUndoBtn();
+  if (won){
+    document.getElementById("winTime").textContent = els.timer.textContent;
+    document.getElementById("winLevel").textContent = state.difficulty.name;
+    document.getElementById("winLives").textContent = state.hearts;
+    openModal("modalWin");
+    launchConfetti();
+  } else {
+    openModal("modalLose");
+  }
+}
+
+function giveHint(){
+  if (state.gameOver || !state.n) return;
+  const n = state.n;
+  const rowsWithoutCat = [];
+  for (let r = 0; r < n; r++){
+    let has = false;
+    for (let c = 0; c < n; c++) if (state.grid[r][c] === "cat") { has = true; break; }
+    if (!has) rowsWithoutCat.push(r);
+  }
+  if (rowsWithoutCat.length === 0) return;
+  const r = rowsWithoutCat[rndInt(rowsWithoutCat.length)];
+  const c = state.solution[r];
+  snapshot();
+  // clears any wrong X marks in the target cell, then places the cat with no penalty
+  state.grid[r][c] = "cat";
+  autoMarkEliminated(r, c);
+  state.hintsUsed++;
+  renderBoard();
+  checkWin();
+}
+
+/* ============================================================
+   11. MODALS & MISC UI
+   ============================================================ */
+function showScreen(id){
+  document.querySelectorAll(".screen").forEach(function(s){ s.classList.remove("active"); });
+  document.getElementById(id).classList.add("active");
+}
+function openModal(id){ document.getElementById(id).classList.add("active"); }
+function closeModal(id){ document.getElementById(id).classList.remove("active"); }
+
+function launchConfetti(){
+  if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const layer = document.createElement("div");
+  layer.className = "confetti-layer";
+  document.body.appendChild(layer);
+  const paws = ["🐾","🐱","⭐","🐾"];
+  for (let i = 0; i < 26; i++){
+    const s = document.createElement("span");
+    s.textContent = paws[rndInt(paws.length)];
+    s.style.left = rndInt(100) + "%";
+    s.style.animationDuration = (2 + Math.random()*2) + "s";
+    s.style.animationDelay = (Math.random()*0.6) + "s";
+    s.style.fontSize = (12 + rndInt(48)) + "px";
+    layer.appendChild(s);
+  }
+  setTimeout(function(){ layer.remove(); }, 4200);
+}
+
+/* ============================================================
+   12. KEYBOARD NAVIGATION ON THE GRID
+   ============================================================ */
+function onBoardKeydown(e){
+  const active = document.activeElement;
+  if (!active || !active.classList || !active.classList.contains("cell")) return;
+  const r = parseInt(active.dataset.r, 10), c = parseInt(active.dataset.c, 10);
+  let nr = r, nc = c;
+  if (e.key === "ArrowUp") nr = Math.max(0, r-1);
+  else if (e.key === "ArrowDown") nr = Math.min(state.n-1, r+1);
+  else if (e.key === "ArrowLeft") nc = Math.max(0, c-1);
+  else if (e.key === "ArrowRight") nc = Math.min(state.n-1, c+1);
+  else return;
+  e.preventDefault();
+  state.focusR = nr; state.focusC = nc;
+  applyRovingTabindex();
+  const next = els.board.querySelector('.cell[data-r="' + nr + '"][data-c="' + nc + '"]');
+  if (next) next.focus();
+}
+
+/* ============================================================
+   13. INIT & GLOBAL LISTENERS
+   ============================================================ */
+function init(){
+  cacheEls();
+  renderMenu();
+
+  document.getElementById("btnBack").addEventListener("click", function(){
+    timerStop();
+    showScreen("screen-menu");
+  });
+  document.getElementById("btnNew").addEventListener("click", function(){
+    if (state.n) startNewGame(state.n);
+  });
+  document.getElementById("btnRestart").addEventListener("click", restartSamePuzzle);
+  document.getElementById("btnUndo").addEventListener("click", restoreSnapshot);
+  document.getElementById("btnHint").addEventListener("click", giveHint);
+
+  document.getElementById("btnHowMenu").addEventListener("click", function(){ openModal("modalHow"); });
+  document.getElementById("btnHowGame").addEventListener("click", function(){ openModal("modalHow"); });
+  document.getElementById("btnHowClose").addEventListener("click", function(){ closeModal("modalHow"); });
+
+  document.getElementById("btnWinMenu").addEventListener("click", function(){ closeModal("modalWin"); showScreen("screen-menu"); });
+  document.getElementById("btnWinNext").addEventListener("click", function(){ closeModal("modalWin"); startNewGame(state.n); });
+  document.getElementById("btnLoseMenu").addEventListener("click", function(){ closeModal("modalLose"); showScreen("screen-menu"); });
+  document.getElementById("btnLoseRetry").addEventListener("click", function(){ closeModal("modalLose"); restartSamePuzzle(); });
+
+  document.querySelectorAll(".modal-backdrop").forEach(function(mb){
+    mb.addEventListener("click", function(e){ if (e.target === mb) mb.classList.remove("active"); });
+  });
+
+  els.board.addEventListener("keydown", onBoardKeydown);
+}
+
+document.addEventListener("DOMContentLoaded", init);
+})();
+</script>
+</body>
+</html>
