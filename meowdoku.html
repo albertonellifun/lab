@@ -17,14 +17,8 @@
   --line-strong:rgba(74,59,82,0.16);
   --marmalade:#FF9A4D;
   --marmalade-deep:#E77F2C;
-  --marmalade-soft:rgba(255,154,77,0.18);
   --mint:#4FD6BE;
-  --mint-deep:#2FAE97;
   --bubblegum:#FF6E93;
-  --bubblegum-deep:#E24C74;
-  --bubblegum-soft:rgba(255,110,147,0.18);
-  --periwinkle:#8C9BFF;
-  --periwinkle-deep:#6C7CE8;
   --grout:#FFFFFF;
   --shadow-color:rgba(74,59,82,0.16);
   --shadow-lg:0 20px 44px -18px rgba(74,59,82,0.30);
@@ -52,7 +46,6 @@ body{
 }
 button{ font-family:inherit; color:inherit; }
 h1,h2,h3,p{ margin:0; }
-.sr-only{ position:absolute; width:1px;height:1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; }
 
 #app{ position:relative; z-index:1; max-width:640px; margin:0 auto; min-height:100vh; display:flex; flex-direction:column; padding:20px 16px 40px; }
 
@@ -136,7 +129,7 @@ h1,h2,h3,p{ margin:0; }
 .icon-btn:disabled{ opacity:.4; cursor:not-allowed; }
 .icon-btn:disabled:hover{ background:var(--surface); }
 
-.game-title{ xxxflex:1; xxxmin-width: 120px; display: flex; flex-direction: column; }
+.game-title{ display: flex; flex-direction: column; }
 .game-title .name{ font-family:var(--font-display); font-weight:800; font-size:1.15rem; color:var(--marmalade); margin-bottom: -20px;}
 .game-title .level{ color:var(--ink-soft); font-size:.8rem; }
 
@@ -158,7 +151,7 @@ h1,h2,h3,p{ margin:0; }
   font-variant-numeric:tabular-nums; font-family:var(--font-display); font-weight:700;
   color:var(--ink); font-size:.95rem; background:var(--surface);
   box-shadow:0 3px 0 var(--line-strong);
-  padding:7px 12px; border-radius:999px; xxxflex:1;
+  padding:7px 12px; border-radius:999px; 
   transition:background .2s ease, color .2s ease;
   border: 1px solid var(--marmalade);
 }
@@ -175,7 +168,7 @@ h1,h2,h3,p{ margin:0; }
 
 .board-wrap{ margin:32px auto; width:100%; max-width:480px; position:relative; }
 .board-frame{
-  position:relative; xxxbackground:var(--sand); background:var(--grout); border-radius:var(--radius); padding:var(--radius-xs);
+  position:relative; background:var(--grout); border-radius:var(--radius); padding:var(--radius-xs);
   box-shadow:var(--shadow-lg);
   border: 1px solid var(--marmalade);
 }
@@ -202,7 +195,7 @@ h1,h2,h3,p{ margin:0; }
 .cell .glyph.cat{ animation:pop .5s cubic-bezier(.3,1.5,.4,1) both; color:var(--ink); filter:drop-shadow(0 6px 6px rgba(74,59,82,.25)); }
 .cell .glyph.xmark{ animation:pop .25s ease both; color:rgba(74,59,82,0.75); width:46%; height:46%; }
 
-.hint-text{ text-align:center; color:var(--text-faint); font-size:.8rem; margin-top:10px; min-height:1.2em; }
+.hint-text{ text-align:center; color:var(--ink-faint); font-size:.8rem; margin-top:10px; min-height:1.2em; }
 
 /* loading overlay */
 .loading-overlay{
@@ -227,7 +220,7 @@ h1,h2,h3,p{ margin:0; }
   animation:pop .25s cubic-bezier(.3,1.2,.4,1) both; max-height:86vh; overflow-y:auto;
 }
 .modal h2{ font-family:var(--font-display); font-size:1.3rem; margin-bottom:4px; color:var(--ink); text-align: center; }
-.modal .modal-icon{ width:100%; xxxwidth:52px; height:52px; margin: 0 auto 10px; color:var(--marmalade); }
+.modal .modal-icon{ width:100%; height:52px; margin: 0 auto 10px; color:var(--marmalade); }
 .modal p{ color:var(--ink-soft); font-size:.92rem; line-height:1.5; margin-top:6px; text-align: center; }
 .rule-list{ list-style:none; padding:0; margin:16px 0 0; display:flex; flex-direction:column; gap:12px; }
 .rule-list li{ display:flex; gap:12px; align-items:flex-start; font-size:.88rem; color:var(--ink); line-height:1.4; }
@@ -1244,7 +1237,7 @@ function endGame(won){
   }
 }
 
-function giveHint(){
+function giveHintOLD(){
   if (state.gameOver || !state.n) return;
   const n = state.n;
   const rowsWithoutCat = [];
@@ -1258,6 +1251,44 @@ function giveHint(){
   const c = state.solution[r];
   snapshot();
   // clears any wrong X marks in the target cell, then places the cat with no penalty
+  state.grid[r][c] = "cat";
+  autoMarkEliminated(r, c);
+  state.hintsUsed++;
+  renderBoard();
+  checkWin();
+}
+
+function giveHint(){
+  if (state.gameOver || !state.n) return;
+  const n = state.n;
+
+  // 1) c'è un gatto piazzato nella cella sbagliata? rimuovilo prima di tutto
+  const wrongCats = [];
+  for (let r = 0; r < n; r++){
+    for (let c = 0; c < n; c++){
+      if (state.grid[r][c] === "cat" && state.solution[r] !== c) wrongCats.push([r, c]);
+    }
+  }
+  if (wrongCats.length > 0){
+    const pick = wrongCats[rndInt(wrongCats.length)];
+    snapshot();
+    state.grid[pick[0]][pick[1]] = "x"; // ora sappiamo che qui il gatto non ci va
+    state.hintsUsed++;
+    renderBoard();
+    return;
+  }
+
+  // 2) nessun gatto sbagliato: comportamento originale, piazza il gatto giusto
+  const rowsWithoutCat = [];
+  for (let r = 0; r < n; r++){
+    let has = false;
+    for (let c = 0; c < n; c++) if (state.grid[r][c] === "cat") { has = true; break; }
+    if (!has) rowsWithoutCat.push(r);
+  }
+  if (rowsWithoutCat.length === 0) return;
+  const r = rowsWithoutCat[rndInt(rowsWithoutCat.length)];
+  const c = state.solution[r];
+  snapshot();
   state.grid[r][c] = "cat";
   autoMarkEliminated(r, c);
   state.hintsUsed++;
