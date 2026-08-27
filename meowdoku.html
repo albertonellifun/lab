@@ -198,7 +198,7 @@ h1,h2,h3,p{ margin:0; }
 .cell.conflict::after{
   content:""; position:absolute; inset:0; background:var(--bubblegum); opacity:.4; pointer-events:none;
 }
-.cell .glyph{ width:88%; height:88%; pointer-events:none; }
+.cell .glyph{ width:95%; height:95%; pointer-events:none; }
 .cell .glyph.cat{ animation:pop .5s cubic-bezier(.3,1.5,.4,1) both; color:var(--ink); filter:drop-shadow(0 6px 6px rgba(74,59,82,.25)); }
 .cell .glyph.xmark{ animation:pop .25s ease both; color:rgba(74,59,82,0.75); width:46%; height:46%; }
 
@@ -313,16 +313,25 @@ small { position: relative; top: -14px; color: var(--ink-soft); font-size: 9.5px
      source of truth for the character design. -->
 <svg style="display:none" aria-hidden="true">
   <symbol id="cat-face" viewBox="0 0 100 100">
-    <polygon points="18,46 34,6 52,40" fill="#3E2A22"/>
-    <polygon points="82,46 66,6 48,40" fill="#3E2A22"/>
-    <circle cx="50" cy="60" r="34" fill="#F7E8CB"/>
-    <ellipse cx="50" cy="62" rx="30" ry="24" fill="#3E2A22"/>
-    <g stroke="#FAF0DC" stroke-width="2.0" stroke-linecap="round">
+	<!-- orecchie -->
+    <polygon points="18,46 34,6 52,40" fill="var(--siamese-point, #432)"/>
+    <polygon points="82,46 66,6 48,40" fill="var(--siamese-point, #432)"/>
+	<!-- orecchie interno -->
+	<polygon points="24,46 34,12 48,40" fill="#9E6A62"/>
+    <polygon points="76,46 66,12 52,40" fill="#9E6A62"/>
+	
+	<!-- testa tonda -->
+	<circle cx="50" cy="60" r="34" fill="#F7E8CB"/>
+    <ellipse cx="50" cy="62" rx="30" ry="24" fill="var(--siamese-point, #432)"/>
+	
+	<!-- baffazzi -->
+    <g stroke="#FAF0DC" stroke-width="1.5" stroke-linecap="round">
       <line x1="13" y1="68" x2="31" y2="66.5"/>
       <line x1="13" y1="74" x2="31" y2="72.5"/>
       <line x1="87" y1="68" x2="69" y2="66.5"/>
       <line x1="87" y1="74" x2="69" y2="72.5"/>
     </g>
+	
 	<g class="eye eye-l">
 	  <ellipse cx="41" cy="58" rx="5.4" ry="8.3" fill="#5BC8E8" transform="rotate(-76 41 58)"/>
 	  <g class="pupil">
@@ -337,17 +346,34 @@ small { position: relative; top: -14px; color: var(--ink-soft); font-size: 9.5px
 		<circle cx="57.6" cy="55.6" r="0.9" fill="#FFFFFF"/>
 	  </g>
 	</g>
+	
+	<!-- naso -->
     <polygon points="50,74 45.5,68.8 54.5,68.8" fill="#E8929E"/>
+	
+	<!-- bocca -->
+	<path d="M50 72 L50 76 
+			 M50 76 Q46 80 42 76
+			 M50 75 Q53 81 57 76" stroke="#b98" stroke-width="1" fill="none"/>
   </symbol>
   <symbol id="cat-face-sad" viewBox="0 0 100 100">
-    <polygon points="18,46 34,6 52,40" fill="#3E2A22"/>
-    <polygon points="82,46 66,6 48,40" fill="#3E2A22"/>
-    <circle cx="50" cy="60" r="34" fill="#F7E8CB"/>
-    <ellipse cx="50" cy="62" rx="30" ry="24" fill="#3E2A22"/>
+    <!-- orecchie -->
+    <polygon points="18,46 34,6 52,40" fill="var(--siamese-point, #432)"/>
+    <polygon points="82,46 66,6 48,40" fill="var(--siamese-point, #432)"/>
+	<!-- orecchie interno -->
+	<polygon points="24,46 34,12 48,40" fill="#9E6A62"/>
+    <polygon points="76,46 66,12 52,40" fill="#9E6A62"/>
+	
+    <!-- testa tonda -->
+	<circle cx="50" cy="60" r="34" fill="#F7E8CB"/>
+    <ellipse cx="50" cy="62" rx="30" ry="24" fill="var(--siamese-point, #432)"/>
+	
+	<!-- occhi X -->
     <g stroke="#FAF0DC" stroke-width="3.4" stroke-linecap="round">
       <path d="M34 54 L45 65 M45 54 L34 65"/>
       <path d="M66 54 L55 65 M55 54 L66 65"/>
     </g>
+	
+	<!-- naso -->
     <polygon points="50,74 45.5,68.8 54.5,68.8" fill="#E8929E"/>
   </symbol>
 </svg>
@@ -398,7 +424,7 @@ small { position: relative; top: -14px; color: var(--ink-soft); font-size: 9.5px
           <p>Rounding up the cats…</p>
         </div>
       </div>
-	  <p class="hint-text" id="hintText">Touch a cell: before X, than Cat, than Empty.</p>
+	  <p class="hint-text" id="hintText">Touch a cell: before X, then Cat, then Empty.</p>
     </div>
 	
 	<div class="toolbar">
@@ -823,11 +849,19 @@ const DIFFICULTIES = [
 function catSvgOLD(cls){
   return '<svg class="glyph ' + (cls||"") + '" viewBox="0 0 100 100" aria-hidden="true"><use href="#cat-face"/></svg>';
 }
-function catSvg(cls){
+function catSvg(cls, row = 0, col = 0){
   const eyeDelay = (-(Math.random() * 5)).toFixed(2) + "s";
   const lookDelay = (-(Math.random() * 9)).toFixed(2) + "s";
+  const siamesePointColors = [
+	"#211",//seal
+	"#666",//blue
+	"#432",//choco
+	"#842",//red
+	"#987"//lilac
+  ];
+  const siamesePoint = siamesePointColors[row % siamesePointColors.length];
   return '<svg class="glyph ' + (cls||"") + '" viewBox="0 0 100 100" aria-hidden="true" ' +
-    'style="--eye-delay:' + eyeDelay + '; --look-delay:' + lookDelay + '">' +
+    'style="--eye-delay:' + eyeDelay + '; --look-delay:' + lookDelay + '; --siamese-point:' + siamesePoint+ ';">' +
     '<use href="#cat-face"/></svg>';
 }
 function xSvg(){
@@ -978,7 +1012,7 @@ function renderBoard(doFadeIn = false){
       const bw = function(diff){ return diff ? "1" : "0"; };//////////xxxx
       const bc = function(diff){ return diff ? "var(--grout)" : "rgba(74,59,82,0.10)"; };
       let inner = "";
-      if (cellState === "cat") inner = catSvg("cat");
+      if (cellState === "cat") inner = catSvg("cat",r,c);
       else if (cellState === "x") inner = xSvg();
       else inner = '';
 	  let max = 5 * (c+1) * (r+1) / (n * n);
