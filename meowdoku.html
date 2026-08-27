@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Meowdoku (Rocky Graffietto Edition) — The Territorial Cats Puzzle</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpolygon points='18,46 34,6 52,40' fill='%233E2A22'/%3E%3Cpolygon points='82,46 66,6 48,40' fill='%233E2A22'/%3E%3Ccircle cx='50' cy='60' r='34' fill='%23F7E8CB'/%3E%3Cellipse cx='50' cy='62' rx='21' ry='19' fill='%233E2A22'/%3E%3Cellipse cx='41' cy='58' rx='6.4' ry='8.2' fill='%235BC8E8'/%3E%3Cellipse cx='59' cy='58' rx='6.4' ry='8.2' fill='%235BC8E8'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpolygon%20points%3D%2218%2C46%2034%2C6%2052%2C40%22%20fill%3D%22%23432%22%2F%3E%3Cpolygon%20points%3D%2282%2C46%2066%2C6%2048%2C40%22%20fill%3D%22%23432%22%2F%3E%3Cpolygon%20points%3D%2224%2C46%2034%2C12%2048%2C40%22%20fill%3D%22%239E6A62%22%2F%3E%3Cpolygon%20points%3D%2276%2C46%2066%2C12%2052%2C40%22%20fill%3D%22%239E6A62%22%2F%3E%3Ccircle%20cx%3D%2250%22%20cy%3D%2260%22%20r%3D%2234%22%20fill%3D%22%23F7E8CB%22%2F%3E%3Cellipse%20cx%3D%2250%22%20cy%3D%2262%22%20rx%3D%2230%22%20ry%3D%2224%22%20fill%3D%22%23432%22%2F%3E%3Cg%20stroke%3D%22%23FAF0DC%22%20stroke-width%3D%221.5%22%20stroke-linecap%3D%22round%22%3E%3Cline%20x1%3D%2213%22%20y1%3D%2268%22%20x2%3D%2231%22%20y2%3D%2266.5%22%2F%3E%3Cline%20x1%3D%2213%22%20y1%3D%2274%22%20x2%3D%2231%22%20y2%3D%2272.5%22%2F%3E%3Cline%20x1%3D%2287%22%20y1%3D%2268%22%20x2%3D%2269%22%20y2%3D%2266.5%22%2F%3E%3Cline%20x1%3D%2287%22%20y1%3D%2274%22%20x2%3D%2269%22%20y2%3D%2272.5%22%2F%3E%3C%2Fg%3E%3Cg%20class%3D%22eye%20eye-l%22%3E%3Cellipse%20cx%3D%2241%22%20cy%3D%2258%22%20rx%3D%225.4%22%20ry%3D%228.3%22%20fill%3D%22%235BC8E8%22%20transform%3D%22rotate(-76%2041%2058)%22%2F%3E%3Cg%20class%3D%22pupil%22%3E%3Cellipse%20cx%3D%2241.3%22%20cy%3D%2259.5%22%20rx%3D%222.3%22%20ry%3D%223.6%22%20fill%3D%22%2320140F%22%2F%3E%3Ccircle%20cx%3D%2239.6%22%20cy%3D%2255.6%22%20r%3D%220.9%22%20fill%3D%22%23FFFFFF%22%2F%3E%3C%2Fg%3E%3C%2Fg%3E%3Cg%20class%3D%22eye%20eye-r%22%3E%3Cellipse%20cx%3D%2259%22%20cy%3D%2258%22%20rx%3D%225.4%22%20ry%3D%228.3%22%20fill%3D%22%235BC8E8%22%20transform%3D%22rotate(76%2059%2058)%22%2F%3E%3Cg%20class%3D%22pupil%22%3E%3Cellipse%20cx%3D%2258.7%22%20cy%3D%2259.5%22%20rx%3D%222.3%22%20ry%3D%223.6%22%20fill%3D%22%2320140F%22%2F%3E%3Ccircle%20cx%3D%2257.6%22%20cy%3D%2255.6%22%20r%3D%220.9%22%20fill%3D%22%23FFFFFF%22%2F%3E%3C%2Fg%3E%3C%2Fg%3E%3Cpolygon%20points%3D%2250%2C74%2045.5%2C68.8%2054.5%2C68.8%22%20fill%3D%22%23E8929E%22%2F%3E%3Cpath%20d%3D%22M50%2072%20L50%2076%20M50%2076%20Q46%2080%2042%2076%20M50%2075%20Q53%2081%2057%2076%22%20stroke%3D%22%23b98%22%20stroke-width%3D%221%22%20fill%3D%22none%22%2F%3E%3C/svg%3E">
 <style>
 :root{
   --cream:#FFF8EC;
@@ -70,8 +70,7 @@ h1,h2,h3,p{ margin:0; }
   font-weight:800;
   font-size:clamp(2.1rem, 8vw, 2.7rem);
   letter-spacing:0.5px;
-  background:linear-gradient(135deg, var(--marmalade), var(--bubblegum) 110%);
-  -webkit-background-clip:text; background-clip:text; color:transparent;
+  color:var(--marmalade);
 }
 .hero p.tagline{ margin-top:8px; color:var(--ink-soft); font-size:.98rem; }
 
@@ -297,6 +296,20 @@ small { position: relative; top: -14px; color: var(--ink-soft); font-size: 9.5px
   95%           { transform: translate(0, 0); }
   100%			{ transform: translate(0, 0); }
 }
+
+.game-title-container {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: center;
+}
+
+.game-logo {
+  width: 44px;
+  height: 44px;
+  filter:drop-shadow(0 8px 16px rgba(74,59,82,.45)); 
+  animation:pop .6s ease both;
+}
 </style>
 </head>
 <body>
@@ -398,10 +411,15 @@ small { position: relative; top: -14px; color: var(--ink-soft); font-size: 9.5px
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
 		<span>Back</span>
       </button>
-      <div class="game-title">
-        <div class="name" id="gameTitleName">Meowdoku<br/><small>Rocky Graffietto Edition</small></div>
-        <div class="level" id="gameTitleLevel">—</div>
-      </div>
+	  <div class="game-title-container">
+		  <div class="game-logo">
+		    <svg viewBox="0 0 100 100" aria-hidden="true"><use href="#cat-face"/></svg>
+		  </div>
+		  <div class="game-title">
+			<div class="name" id="gameTitleName">Meowdoku<br/><small>Rocky Graffietto Edition</small></div>
+			<div class="level" id="gameTitleLevel">—</div>
+		  </div>
+	  </div>
       <div class="status-row">
         <div class="cats-counter" id="catsCounter" aria-label="Cats placed"></div>
         <div class="hearts" id="hearts" aria-label="Lives remaining"></div>
