@@ -190,8 +190,7 @@ h1,h2,h3,p{ margin:0; }
   
   
   border-radius:calc(var(--radius) - 8px);
-  
-  
+  border-radius: 20%;   
 }
 .cell:hover{ filter:brightness(1.05) saturate(1.05); }
 .cell:focus-visible{ outline:3px solid var(--marmalade); z-index:2; }
@@ -202,6 +201,8 @@ h1,h2,h3,p{ margin:0; }
 .cell .glyph{ width:88%; height:88%; pointer-events:none; }
 .cell .glyph.cat{ animation:pop .5s cubic-bezier(.3,1.5,.4,1) both; color:var(--ink); filter:drop-shadow(0 6px 6px rgba(74,59,82,.25)); }
 .cell .glyph.xmark{ animation:pop .25s ease both; color:rgba(74,59,82,0.75); width:46%; height:46%; }
+
+.hint-text{ text-align:center; color:var(--text-faint); font-size:.8rem; margin-top:10px; min-height:1.2em; }
 
 /* loading overlay */
 .loading-overlay{
@@ -269,6 +270,40 @@ small { position: relative; top: -14px; color: var(--ink-soft); font-size: 9.5px
     max-width: 480px;
     position: relative;
 }
+
+/* BLINK BLINK ;) */
+.eye{
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: blink 5s ease-in-out infinite;
+  animation-delay: var(--eye-delay, 0s);
+}
+.eye-r{ animation-delay: .05s; } /* micro-sfasamento, più naturale */
+
+@keyframes blink{
+  0%			{ transform: scaleY(1); }
+  90%			{ transform: scaleY(1); }
+  92%           { transform: scaleY(0.08); }
+  96%           { transform: scaleY(1); }
+  100%          { transform: scaleY(1); }
+}
+
+/* LOOK */
+.pupil{
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: look 9s ease-in-out infinite;
+  animation-delay: var(--look-delay, 0s);
+}
+
+@keyframes look{
+  0%			{ transform: translate(0, 0); }
+  78%			{ transform: translate(0, 0); }
+  84%           { transform: translate(1.6px, -0.4px); } /* scatto rapido a destra/su */
+  90%           { transform: translate(-1.8px, 0.6px); } /* torna, passando un attimo in basso */
+  95%           { transform: translate(0, 0); }
+  100%			{ transform: translate(0, 0); }
+}
 </style>
 </head>
 <body>
@@ -283,17 +318,25 @@ small { position: relative; top: -14px; color: var(--ink-soft); font-size: 9.5px
     <circle cx="50" cy="60" r="34" fill="#F7E8CB"/>
     <ellipse cx="50" cy="62" rx="30" ry="24" fill="#3E2A22"/>
     <g stroke="#FAF0DC" stroke-width="2.0" stroke-linecap="round">
-      <line x1="13" y1="64" x2="31" y2="62.5"/>
-      <line x1="13" y1="71" x2="31" y2="69.5"/>
-      <line x1="87" y1="64" x2="69" y2="62.5"/>
-      <line x1="87" y1="71" x2="69" y2="69.5"/>
+      <line x1="13" y1="68" x2="31" y2="66.5"/>
+      <line x1="13" y1="74" x2="31" y2="72.5"/>
+      <line x1="87" y1="68" x2="69" y2="66.5"/>
+      <line x1="87" y1="74" x2="69" y2="72.5"/>
     </g>
-    <ellipse cx="41" cy="58" rx="5.4" ry="8.3" fill="#5BC8E8" transform="rotate(-76 41 58)"/>
-    <ellipse cx="59" cy="58" rx="5.4" ry="8.3" fill="#5BC8E8" transform="rotate(76 59 58)"/>
-    <ellipse cx="41.3" cy="59.5" rx="2.3" ry="3.6" fill="#20140F"/>
-    <ellipse cx="58.7" cy="59.5" rx="2.3" ry="3.6" fill="#20140F"/>
-    <circle cx="39.6" cy="55.6" r="0.9" fill="#FFFFFF"/>
-    <circle cx="57.6" cy="55.6" r="0.9" fill="#FFFFFF"/>
+	<g class="eye eye-l">
+	  <ellipse cx="41" cy="58" rx="5.4" ry="8.3" fill="#5BC8E8" transform="rotate(-76 41 58)"/>
+	  <g class="pupil">
+		<ellipse cx="41.3" cy="59.5" rx="2.3" ry="3.6" fill="#20140F"/>
+		<circle cx="39.6" cy="55.6" r="0.9" fill="#FFFFFF"/>
+	  </g>
+	</g>
+	<g class="eye eye-r">
+	  <ellipse cx="59" cy="58" rx="5.4" ry="8.3" fill="#5BC8E8" transform="rotate(76 59 58)"/>
+	  <g class="pupil">
+		<ellipse cx="58.7" cy="59.5" rx="2.3" ry="3.6" fill="#20140F"/>
+		<circle cx="57.6" cy="55.6" r="0.9" fill="#FFFFFF"/>
+	  </g>
+	</g>
     <polygon points="50,74 45.5,68.8 54.5,68.8" fill="#E8929E"/>
   </symbol>
   <symbol id="cat-face-sad" viewBox="0 0 100 100">
@@ -355,6 +398,7 @@ small { position: relative; top: -14px; color: var(--ink-soft); font-size: 9.5px
           <p>Rounding up the cats…</p>
         </div>
       </div>
+	  <p class="hint-text" id="hintText">Touch a cell: before X, than Cat, than Empty.</p>
     </div>
 	
 	<div class="toolbar">
@@ -766,17 +810,25 @@ function regionPalette(n){
                    a genuine 50/50, then logic takes over.
    ============================================================ */
 const DIFFICULTIES = [
-  { n:4,  name:"Kitten", 		sub:"To warm-up the paws",	paws:1, forcedSize:1 },
-  { n:6,  name:"Tabby Cat",		sub:"Feline instinct",		paws:2, forcedSize:1 },
-  { n:8,  name:"Wildcat",		sub:"Complex territories",	paws:3, forcedSize:1 },
-  { n:10, name:"Panther",		sub:"Roof master",			paws:4, forcedSize:2 }
+  { n:4,  name:"Kitten", 		sub:"To warm-up the paws",	  paws:1, forcedSize:1 },
+  { n:6,  name:"Tabby Cat",		sub:"Feline instinct",		  paws:2, forcedSize:1 },
+  { n:8,  name:"Wildcat",		sub:"Complex territories",	  paws:3, forcedSize:1 },
+  { n:10,  name:"Panther",		sub:"Roof master",			  paws:4, forcedSize:2 }
+  /*{ n:10, name:"Alpha Colony",  sub:"No mercy for beginners", paws:5, forcedSize:2 }*/
 ];
 
 /* ============================================================
    4. REUSABLE SVG ICONS
    ============================================================ */
-function catSvg(cls){
+function catSvgOLD(cls){
   return '<svg class="glyph ' + (cls||"") + '" viewBox="0 0 100 100" aria-hidden="true"><use href="#cat-face"/></svg>';
+}
+function catSvg(cls){
+  const eyeDelay = (-(Math.random() * 5)).toFixed(2) + "s";
+  const lookDelay = (-(Math.random() * 9)).toFixed(2) + "s";
+  return '<svg class="glyph ' + (cls||"") + '" viewBox="0 0 100 100" aria-hidden="true" ' +
+    'style="--eye-delay:' + eyeDelay + '; --look-delay:' + lookDelay + '">' +
+    '<use href="#cat-face"/></svg>';
 }
 function xSvg(){
   return '<svg class="glyph xmark" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="30" stroke-linecap="round" aria-hidden="true">' +
@@ -873,6 +925,11 @@ function cacheEls(){
    "gameTitleName","gameTitleLevel","hearts","timer","hintText","catsCounter",
    "modalHow","modalWin","modalLose","winTime","winLevel","winLives"
   ].forEach(function(id){ els[id] = document.getElementById(id); });
+  
+  //fix resize
+  new ResizeObserver(function(entries){
+    els.board.style.height = entries[0].contentRect.width + "px";
+  }).observe(els.board.parentElement); // .board-frame
 }
 
 function renderMenu(){
