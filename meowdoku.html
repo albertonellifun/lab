@@ -302,7 +302,10 @@ h1,h2,h3,p{ margin:0; }
   width:20px; height:20px; border-radius:50%;
   box-shadow:0 0 8px 1px currentColor;
 }
-.explosion-particle.emoji{ font-size:18px; line-height:1; }
+.explosion-particle.emoji{ 
+  font-size:48px;
+  line-height:1;
+}
 @keyframes explodeParticle{
   0%{ transform:translate(-50%,-50%) scale(1.0) rotate(0deg); opacity:1; }
   70%{ opacity:1; }
@@ -1212,7 +1215,7 @@ function spawnCatExplosion(cellEl){
   setTimeout(function(){ ring.remove(); }, 1000);
 
   // burst of glowing dots mixed with little paw/star emoji
-  const count = 12;
+  const count = 16;
   for (let i = 0; i < count; i++){
     const p = document.createElement("div");
     const useEmoji = i % 3 === 0;
