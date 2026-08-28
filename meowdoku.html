@@ -122,6 +122,10 @@ h1,h2,h3,p{ margin:0; }
 .diff-card:nth-child(3){animation-delay:.30s;}
 .diff-card:nth-child(4){animation-delay:.40s;}
 .diff-card:nth-child(5){animation-delay:.50s;}
+.diff-card:nth-child(6){animation-delay:.60s;}
+.diff-card:nth-child(7){animation-delay:.70s;}
+.diff-card:nth-child(8){animation-delay:.80s;}
+.diff-card:nth-child(9){animation-delay:.90s;}
 .diff-swatch{
   flex:0 0 auto; width:52px; height:52px; border-radius:16px;
   display:grid; place-items:center; font-family:var(--font-display); font-weight:800; font-size:1.02rem;
@@ -165,11 +169,13 @@ h1,h2,h3,p{ margin:0; }
 .icon-btn.btn-undo{ background:linear-gradient(155deg, #B9A8FF, #8F72F2); border-color:#6A4EDB; color:#241458; box-shadow:0 3px 0 #6A4EDB, 0 6px 14px -6px rgba(143,114,242,.6); }
 .icon-btn.btn-hint{ background:linear-gradient(155deg, #FFC876, var(--marmalade)); border-color:var(--marmalade-deep); color:#4A2A05; box-shadow:0 3px 0 var(--marmalade-deep), 0 6px 14px -6px rgba(255,154,77,.6); }
 .icon-btn.btn-rules{ background:linear-gradient(155deg, #7FD8F5, #43B7E0); border-color:#1F93C2; color:#0A2E3D; box-shadow:0 3px 0 #1F93C2, 0 6px 14px -6px rgba(67,183,224,.6); }
+.icon-btn.btn-music{ background:linear-gradient(155deg, #F57FD8, #E043B7); border-color:#C21F93; color:#3D0A2E; box-shadow:0 3px 0 #C21F93, 0 6px 14px -6px rgba(224,67,183,.6); }
 .icon-btn.btn-new:active{ box-shadow:0 1px 0 #2FBFA6; }
 .icon-btn.btn-reset:active{ box-shadow:0 1px 0 #E14E71; }
 .icon-btn.btn-undo:active{ box-shadow:0 1px 0 #6A4EDB; }
 .icon-btn.btn-hint:active{ box-shadow:0 1px 0 var(--marmalade-deep); }
 .icon-btn.btn-rules:active{ box-shadow:0 1px 0 #1F93C2; }
+.icon-btn.btn-music:active{ box-shadow:0 1px 0 #C21F93; }
 
 .game-title{ display: flex; flex-direction: column; }
 .game-title .name{ font-family:var(--font-display); font-weight:800; font-size:1.15rem; color:var(--marmalade); margin-bottom: -20px;}
@@ -463,6 +469,18 @@ small { position: relative; top: -14px; color: var(--ink-soft); font-size: 9.5px
 </svg>
 
 <div id="app">
+  <audio id="catSound" preload="auto">
+  	<source src="./meowdoku-cat.mp3" type="audio/mpeg">
+  </audio>
+  <audio id="purrSound" preload="auto">
+  	<source src="./meowdoku-purr.mp3" type="audio/mpeg">
+  </audio>
+  <audio id="errorSound" preload="auto">
+  	<source src="./meowdoku-error.mp3" type="audio/mpeg">
+  </audio>
+  <audio id="musicSound" loop preload="auto">
+  	<source src="./meowdoku-music.mp3" type="audio/mpeg">
+  </audio>
 
   <!-- ============ MENU SCREEN ============ -->
   <section id="screen-menu" class="screen active" aria-label="Main menu">
@@ -537,6 +555,10 @@ small { position: relative; top: -14px; color: var(--ink-soft); font-size: 9.5px
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.4 2.3c-.9.4-1.4 1-1.4 2"/><path d="M12 17h.01"/></svg>
 		<span>Rules</span>
       </button>
+	  <button class="icon-btn btn-music" id="btnMusic" type="button" title="Music">
+	    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10v4h4l5 4V6l-5 4H4z"/><path d="M16 9.5a4 4 0 0 1 0 5"/><path d="M18.5 7a7.5 7.5 0 0 1 0 10"/></svg>
+	    <span>Music</span>
+	  </button>
     </div>
 
 	
@@ -949,12 +971,22 @@ function regionPalette(n){
    forcedSize=2 -> one region stays a 2-cell "domino": you start with
                    a genuine 50/50, then logic takes over.
    ============================================================ */
-const DIFFICULTIES = [
+const DIFFICULTIES_OLD = [
   { n:4,  name:"Kitten", 		sub:"To warm-up the paws",	  paws:1, forcedSize:1 },
-  { n:6,  name:"Tabby Cat",		sub:"Feline instinct",		  paws:2, forcedSize:1 },
-  { n:8,  name:"Wildcat",		sub:"Complex territories",	  paws:3, forcedSize:1 },
-  { n:10,  name:"Panther",		sub:"Roof master",			  paws:4, forcedSize:2 }
-  /*{ n:10, name:"Alpha Colony",  sub:"No mercy for beginners", paws:5, forcedSize:2 }*/
+  { n:5,  name:"Tabby Cat",		sub:"Feline instinct",		  paws:2, forcedSize:1 },
+  { n:6,  name:"Wildcat",		sub:"Complex territories",	  paws:3, forcedSize:1 },
+  { n:8,  name:"Panther",		sub:"Roof master",			  paws:4, forcedSize:1 },
+  { n:10, name:"Alpha Colony",  sub:"No mercy for beginners", paws:5, forcedSize:2 }
+];
+
+const DIFFICULTIES = [
+	{ n:4,  name:"House Kitten",       sub:"The floor is lava, curtains are target dummy.",    paws:1, forcedSize:1 },
+	{ n:5,  name:"Living Room Ninja",  sub:"Special skill: Knocking glasses off tables.",      paws:2, forcedSize:1 },
+	{ n:6,  name:"3 AM Zoomies",       sub:"Singing the song of my people at midnight.",       paws:3, forcedSize:1 },
+	{ n:7,  name:"Roof Ruler",         sub:"King of the alley, terror of pigeons.",            paws:4, forcedSize:1 },
+	{ n:8,  name:"Keyboard Overlord",  sub:"I sleep on the keyboardfghjklòàù+*",                   paws:5, forcedSize:1 },
+	{ n:9,  name:"Schrödinger's Boss", sub:"Simultaneously beaten and unbeaten.",              paws:6, forcedSize:1 },
+	{ n:10, name:"Egyptian Deity",     sub:"Demand worship, golden cans, and zero mercy.",     paws:7, forcedSize:2 }
 ];
 
 /* ============================================================
@@ -1200,6 +1232,7 @@ const EXPLOSION_EMOJI = ["🐾","🐱","⭐", "🐾","🥊","😻", "🐈","🐈
 function spawnCatExplosion(cellEl){
   if (!cellEl) return;
   if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  
   const rect = cellEl.getBoundingClientRect();
   const x = rect.left + rect.width / 2;
   const y = rect.top + rect.height / 2;
@@ -1238,6 +1271,7 @@ function spawnCatExplosion(cellEl){
     layer.appendChild(p);
     setTimeout(function(){ p.remove(); }, 1000);
   }
+  playSound('purrSound');
 }
 
 /* ============================================================
@@ -1276,6 +1310,7 @@ function tryPlaceCat(r, c){
     renderBoard();
     flashConflict(r, c, conflicts);
     loseHeart();
+	playSound('errorSound');
     return;
   }
   state.grid[r][c] = "cat";
@@ -1357,6 +1392,12 @@ function timerReset(){
    10. GAME FLOW
    ============================================================ */
 function startNewGame(n){
+  
+  if (!isMusicStarted) {
+	playSound('musicSound', 0.5);
+	isMusicStarted = true;
+  }
+  
   state.difficulty = DIFFICULTIES.find(function(d){ return d.n === n; });
   showScreen("screen-game");
   els.gameTitleLevel.textContent = state.difficulty.name + " · " + n + "×" + n;
@@ -1420,6 +1461,7 @@ function endGame(won){
   } else {
     openModal("modalLose");
   }
+  playSound('catSound');
 }
 
 function giveHintOLD(){
@@ -1555,6 +1597,21 @@ function init(){
   document.getElementById("btnWinNext").addEventListener("click", function(){ closeModal("modalWin"); startNewGame(state.n); });
   document.getElementById("btnLoseMenu").addEventListener("click", function(){ closeModal("modalLose"); showScreen("screen-menu"); });
   document.getElementById("btnLoseRetry").addEventListener("click", function(){ closeModal("modalLose"); restartSamePuzzle(); });
+  
+  document.getElementById("btnMusic").addEventListener("click", function() {
+	isMute = !isMute; 
+	
+	const music = document.getElementById("musicSound");
+	
+	if(!isMute && music) {
+		music.volume = 0.5;
+		music.play();
+		isMusicStarted = true;
+	} else if (music) {
+		music.pause();
+		isMusicStarted = false;
+	}
+  });
 
   document.querySelectorAll(".modal-backdrop").forEach(function(mb){
     mb.addEventListener("click", function(e){ if (e.target === mb) mb.classList.remove("active"); });
@@ -1565,6 +1622,18 @@ function init(){
 
 document.addEventListener("DOMContentLoaded", init);
 })();
+
+let isMute = false;
+let isMusicStarted = false;
+function playSound(id, vol = 1) {
+  if (isMute) return;
+  const audio = document.getElementById(id);
+  if (audio) {
+	audio.currentTime = 0;
+	audio.volume = vol;
+	audio.play();
+  }
+}
 </script>
 </body>
 </html>
