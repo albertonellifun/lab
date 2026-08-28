@@ -302,10 +302,7 @@ h1,h2,h3,p{ margin:0; }
   width:20px; height:20px; border-radius:50%;
   box-shadow:0 0 8px 1px currentColor;
 }
-.explosion-particle.emoji{ 
-  font-size:48px;
-  line-height:1;
-}
+.explosion-particle.emoji{ font-size:18px; line-height:1; }
 @keyframes explodeParticle{
   0%{ transform:translate(-50%,-50%) scale(1.0) rotate(0deg); opacity:1; }
   70%{ opacity:1; }
@@ -568,7 +565,7 @@ small { position: relative; top: -14px; color: var(--ink-soft); font-size: 9.5px
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="winTitle">
     <svg class="modal-icon" viewBox="0 0 100 100" aria-hidden="true"><use href="#cat-face"/></svg>
     <h2 id="winTitle">Territories claimed!</h2>
-    <p>Every cat has found its own corner of the World. Well done.</p>
+    <p>Every cat has found its own corner of the world. Well done.</p>
     <div class="modal-stats">
       <div class="stat-box"><div class="lbl">TIME</div><div class="val" id="winTime">00:00</div></div>
       <div class="stat-box"><div class="lbl">LEVEL</div><div class="val" id="winLevel">—</div></div>
@@ -782,8 +779,14 @@ function wouldDisconnect(cellsOf, oldReg, r, c){
 // breaking a region's connectivity (territories stay compact).
 // Never touches the forced region: doesn't remove cells from it (that
 // would break the constraint) and never assigns it cells past the cap.
-function repairRegions(n, regionGrid, solution, maxRepairs, forcedRegion, forcedSize){
+// `deadline` (Date.now() ms) lets a slow grid (10x10) bail out of a
+// stuck repair instead of grinding through hundreds of full alternate-
+// solution searches; the attempt is simply discarded like any other
+// failed attempt, so correctness (only provably-unique puzzles are
+// ever returned) is unaffected.
+function repairRegions(n, regionGrid, solution, maxRepairs, forcedRegion, forcedSize, deadline){
   for (let iter = 0; iter < maxRepairs; iter++){
+    if (deadline && Date.now() > deadline) return -1;
     const alt = getAlternate(n, regionGrid, solution);
     if (!alt) return iter;
     const cellsOf = buildCellsOf(n, regionGrid);
@@ -823,27 +826,44 @@ function regionSizes(n, regionGrid){
 }
 
 // One full attempt: solution + growth with a forced region + repair.
-function generatePuzzleOnce(n, forcedSize, maxGenAttempts, maxRepairs){
+function generatePuzzleOnce(n, forcedSize, maxGenAttempts, maxRepairs, deadline){
   for (let attempt = 0; attempt < maxGenAttempts; attempt++){
+    if (deadline && Date.now() > deadline) return null;
     const solution = generateSolution(n);
     if (!solution) continue;
     const forcedRegion = rndInt(n);
     let regions;
     try { regions = growRegions(n, solution, forcedRegion, forcedSize); } catch(e){ continue; }
-    const rep = repairRegions(n, regions, solution, maxRepairs, forcedRegion, forcedSize);
+    const rep = repairRegions(n, regions, solution, maxRepairs, forcedRegion, forcedSize, deadline);
     if (rep >= 0) return { n:n, solution:solution, regions:regions };
   }
   return null;
 }
 
+// Generation cost grows fast with n (bigger board, slower uniqueness
+// checks, and Panther's forced 2-cell "domino" needs extra repair
+// work on top of that) so the same attempt/repair budget that's
+// instant on a 4x4 can take a very long time on a 10x10. Scale the
+// budget down for bigger grids and cap total wall-clock time so the
+// worst case is "a returned puzzle, maybe not perfectly tuned" rather
+// than "the user waits forever".
+function genParamsFor(n){
+  if (n <= 6) return { maxGenAttempts: 300, maxRepairs: 800, k: 5, timeBudgetMs: 4000 };
+  if (n === 8) return { maxGenAttempts: 150, maxRepairs: 300, k: 3, timeBudgetMs: 5000 };
+  return { maxGenAttempts: 60, maxRepairs: 120, k: 2, timeBudgetMs: 6000 }; // 10x10 / Panther
+}
+
 // Repair can rarely grow the forced region past its cap (rare geometric
 // edge cases): a handful of full attempts is almost always enough to
-// land the exact size, with a safe fallback if not.
-function generatePuzzleSync(n, forcedSize, maxGenAttempts, maxRepairs){
+// land the exact size, with a safe fallback if not. Bounded overall by
+// timeBudgetMs so a hard grid size never hangs the UI.
+function generatePuzzleSync(n, forcedSize, maxGenAttempts, maxRepairs, kAttempts, timeBudgetMs){
+  const deadline = timeBudgetMs ? (Date.now() + timeBudgetMs) : null;
+  const K = kAttempts || 5;
   let fallback = null;
-  const K = 5;
   for (let k = 0; k < K; k++){
-    const res = generatePuzzleOnce(n, forcedSize, maxGenAttempts, maxRepairs);
+    if (deadline && Date.now() > deadline) break;
+    const res = generatePuzzleOnce(n, forcedSize, maxGenAttempts, maxRepairs, deadline);
     if (!res) continue;
     if (!fallback) fallback = res;
     const sizes = regionSizes(n, res.regions);
@@ -859,13 +879,14 @@ function getWorker(){
   try{
     const fns = [rndInt, shuffleArr, arraysEqual, generateSolution, growRegions,
                  collectSolutions, getAlternate, buildCellsOf, wouldDisconnect,
-                 repairRegions, regionSizes, generatePuzzleOnce, generatePuzzleSync];
+                 repairRegions, regionSizes, genParamsFor, generatePuzzleOnce, generatePuzzleSync];
     let src = "const DIRS=" + JSON.stringify(DIRS) + ";\n\n";
     src += fns.map(function(f){ return f.toString(); }).join("\n\n");
     src += "\n\nself.onmessage = function(e){\n" +
            "  const n = e.data.n, forcedSize = e.data.forcedSize;\n" +
+           "  const p = genParamsFor(n);\n" +
            "  let result = null;\n" +
-           "  try { result = generatePuzzleSync(n, forcedSize, 300, 800); } catch(err) { result = null; }\n" +
+           "  try { result = generatePuzzleSync(n, forcedSize, p.maxGenAttempts, p.maxRepairs, p.k, p.timeBudgetMs); } catch(err) { result = null; }\n" +
            "  self.postMessage(result);\n" +
            "};";
     const blob = new Blob([src], { type: "application/javascript" });
@@ -877,6 +898,7 @@ function getWorker(){
 }
 
 function generatePuzzleAsync(n, forcedSize){
+  const p = genParamsFor(n);
   return new Promise(function(resolve){
     const w = getWorker();
     if (w){
@@ -889,13 +911,13 @@ function generatePuzzleAsync(n, forcedSize){
         w.removeEventListener("message", onMsg);
         w.removeEventListener("error", onErr);
         // synchronous fallback if the worker fails at runtime
-        setTimeout(function(){ resolve(generatePuzzleSync(n, forcedSize, 300, 800)); }, 10);
+        setTimeout(function(){ resolve(generatePuzzleSync(n, forcedSize, p.maxGenAttempts, p.maxRepairs, p.k, p.timeBudgetMs)); }, 10);
       };
       w.addEventListener("message", onMsg);
       w.addEventListener("error", onErr);
       w.postMessage({ n: n, forcedSize: forcedSize });
     } else {
-      setTimeout(function(){ resolve(generatePuzzleSync(n, forcedSize, 300, 800)); }, 10);
+      setTimeout(function(){ resolve(generatePuzzleSync(n, forcedSize, p.maxGenAttempts, p.maxRepairs, p.k, p.timeBudgetMs)); }, 10);
     }
   });
 }
@@ -1190,7 +1212,7 @@ function spawnCatExplosion(cellEl){
   setTimeout(function(){ ring.remove(); }, 1000);
 
   // burst of glowing dots mixed with little paw/star emoji
-  const count = 20;
+  const count = 12;
   for (let i = 0; i < count; i++){
     const p = document.createElement("div");
     const useEmoji = i % 3 === 0;
