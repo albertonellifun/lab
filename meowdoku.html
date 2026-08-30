@@ -47,8 +47,7 @@
           background-attachment:fixed;
           background-repeat:no-repeat;
           min-height:100vh;
-          min-height:calc(var(--vh, 1vh) * 100);
-		  min-height:100dvh; /* vince sui browser che lo supportano, ignorato dagli altri */
+          min-height:100dvh; /* vince sui browser che lo supportano, ignorato dagli altri */
           -webkit-tap-highlight-color:transparent;
           overscroll-behavior:contain;
           position:relative;
@@ -82,9 +81,8 @@
         button{ font-family:inherit; color:inherit; touch-action:manipulation; }
         h1,h2,h3,p{ margin:0; }
 
-        #app{ position:relative; z-index:1; max-width:640px; margin:0 auto; 
-		min-height:100vh; 
-		min-height:calc(var(--vh, 1vh) * 100); 
+        #app{ position:relative; z-index:1; max-width:640px; margin:0 auto;
+		min-height:100vh;
 		min-height:100dvh; /* vince sui browser che lo supportano, ignorato dagli altri */
 		display:flex; flex-direction:column; padding:20px 16px 40px; }
 
@@ -684,13 +682,17 @@
     (function(){
     "use strict";
 
-    // Fix del bug "100vh stantio dopo rotazione" tipico delle WebView Android:
-    // calcoliamo l'altezza reale della viewport via JS e la esponiamo come
-    // custom property, usata al posto di 100vh in CSS (vedi body/#app).
-    function setViewportHeightVar(){
-      document.documentElement.style.setProperty("--vh", (window.innerHeight * 0.01) + "px");
+    function resizeViewPort() {
+        const vv = window.visualViewport;
+        const w = vv ? Math.round(vv.width) : window.innerWidth;
+        const h = vv ? Math.round(vv.height) : window.innerHeight;
+        // px assoluti in inline style: sovrascrivono il CSS
+        document.body.style.minHeight = h + "px";
+        const app = document.getElementById("app");
+        if (app) app.style.minHeight = h + "px";
     }
-    setViewportHeightVar();
+
+    resizeViewPort();
 
     /* ============================================================
        1. PUZZLE GENERATOR
@@ -1863,27 +1865,11 @@
 
       els.board.addEventListener("keydown", onBoardKeydown);
 
-      // Alcune WebView Android non ricalcolano correttamente lo scroll/layout
-      // dopo una rotazione (la pagina resta "congelata" con le vecchie
-      // dimensioni, anche se il contenuto e' effettivamente cambiato). Forziamo
-      // un reflow esplicito quando cambia l'orientamento o la viewport, cosi'
-      // lo scroll torna reattivo anche se la WebView non se ne accorge da sola.
-      function nudgeReflow(){
-        document.body.style.display = "none";
-        void document.body.offsetHeight;
-        document.body.style.display = "";
-      }
       window.addEventListener("orientationchange", function(){
-        setTimeout(function(){
-          setViewportHeightVar();
-          ////nudgeReflow();
-        }, 250);
+      setTimeout(function(){resizeViewPort();},250);
       });
       window.addEventListener("resize", function(){
-        setTimeout(function(){
-          setViewportHeightVar();
-          ////nudgeReflow();
-        }, 250);
+      setTimeout(function(){resizeViewPort();},250);
       });
     }
 
