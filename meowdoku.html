@@ -1,1874 +1,1906 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Meowdoku (Rocky Graffietto Edition) — The Territorial Cats Puzzle</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpolygon%20points%3D%2218%2C46%2034%2C6%2052%2C40%22%20fill%3D%22%23432%22%2F%3E%3Cpolygon%20points%3D%2282%2C46%2066%2C6%2048%2C40%22%20fill%3D%22%23432%22%2F%3E%3Cpolygon%20points%3D%2224%2C46%2034%2C12%2048%2C40%22%20fill%3D%22%239E6A62%22%2F%3E%3Cpolygon%20points%3D%2276%2C46%2066%2C12%2052%2C40%22%20fill%3D%22%239E6A62%22%2F%3E%3Ccircle%20cx%3D%2250%22%20cy%3D%2260%22%20r%3D%2234%22%20fill%3D%22%23F7E8CB%22%2F%3E%3Cellipse%20cx%3D%2250%22%20cy%3D%2262%22%20rx%3D%2230%22%20ry%3D%2224%22%20fill%3D%22%23432%22%2F%3E%3Cg%20stroke%3D%22%23FAF0DC%22%20stroke-width%3D%221.5%22%20stroke-linecap%3D%22round%22%3E%3Cline%20x1%3D%2213%22%20y1%3D%2268%22%20x2%3D%2231%22%20y2%3D%2266.5%22%2F%3E%3Cline%20x1%3D%2213%22%20y1%3D%2274%22%20x2%3D%2231%22%20y2%3D%2272.5%22%2F%3E%3Cline%20x1%3D%2287%22%20y1%3D%2268%22%20x2%3D%2269%22%20y2%3D%2266.5%22%2F%3E%3Cline%20x1%3D%2287%22%20y1%3D%2274%22%20x2%3D%2269%22%20y2%3D%2272.5%22%2F%3E%3C%2Fg%3E%3Cg%20class%3D%22eye%20eye-l%22%3E%3Cellipse%20cx%3D%2241%22%20cy%3D%2258%22%20rx%3D%225.4%22%20ry%3D%228.3%22%20fill%3D%22%235BC8E8%22%20transform%3D%22rotate(-76%2041%2058)%22%2F%3E%3Cg%20class%3D%22pupil%22%3E%3Cellipse%20cx%3D%2241.3%22%20cy%3D%2259.5%22%20rx%3D%222.3%22%20ry%3D%223.6%22%20fill%3D%22%2320140F%22%2F%3E%3Ccircle%20cx%3D%2239.6%22%20cy%3D%2255.6%22%20r%3D%220.9%22%20fill%3D%22%23FFFFFF%22%2F%3E%3C%2Fg%3E%3C%2Fg%3E%3Cg%20class%3D%22eye%20eye-r%22%3E%3Cellipse%20cx%3D%2259%22%20cy%3D%2258%22%20rx%3D%225.4%22%20ry%3D%228.3%22%20fill%3D%22%235BC8E8%22%20transform%3D%22rotate(76%2059%2058)%22%2F%3E%3Cg%20class%3D%22pupil%22%3E%3Cellipse%20cx%3D%2258.7%22%20cy%3D%2259.5%22%20rx%3D%222.3%22%20ry%3D%223.6%22%20fill%3D%22%2320140F%22%2F%3E%3Ccircle%20cx%3D%2257.6%22%20cy%3D%2255.6%22%20r%3D%220.9%22%20fill%3D%22%23FFFFFF%22%2F%3E%3C%2Fg%3E%3C%2Fg%3E%3Cpolygon%20points%3D%2250%2C74%2045.5%2C68.8%2054.5%2C68.8%22%20fill%3D%22%23E8929E%22%2F%3E%3Cpath%20d%3D%22M50%2072%20L50%2076%20M50%2076%20Q46%2080%2042%2076%20M50%2075%20Q53%2081%2057%2076%22%20stroke%3D%22%23b98%22%20stroke-width%3D%221%22%20fill%3D%22none%22%2F%3E%3C/svg%3E">
-<style>
-:root{
-  --cream:#FFF8EC;
-  --surface:#FFFFFF;
-  --sand:#F5E4C6;
-  --ink:#4A3B52;
-  --ink-soft:#8F82A0;
-  --ink-faint:#DCD3E6;
-  --line:rgba(74,59,82,0.10);
-  --line-strong:rgba(74,59,82,0.16);
-  --marmalade:#FF9A4D;
-  --marmalade-deep:#E77F2C;
-  --mint:#4FD6BE;
-  --bubblegum:#FF6E93;
-  --grout:#FFFFFF;
-  --shadow-color:rgba(74,59,82,0.16);
-  --shadow-lg:0 20px 44px -18px rgba(74,59,82,0.30);
-  --shadow-sm:0 8px 18px -10px rgba(74,59,82,0.20);
-  --radius:22px;
-  --radius-sm:14px;
-  --radius-xs:8px;
-  --font-display: ui-rounded, "SF Pro Rounded", "Segoe UI Rounded", "Nunito Sans", "Quicksand", system-ui, sans-serif;
-  --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", Roboto, system-ui, sans-serif;
-}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>Meowdoku (Rocky Graffietto Edition) — The Territorial Cats Puzzle</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpolygon%20points%3D%2218%2C46%2034%2C6%2052%2C40%22%20fill%3D%22%23432%22%2F%3E%3Cpolygon%20points%3D%2282%2C46%2066%2C6%2048%2C40%22%20fill%3D%22%23432%22%2F%3E%3Cpolygon%20points%3D%2224%2C46%2034%2C12%2048%2C40%22%20fill%3D%22%239E6A62%22%2F%3E%3Cpolygon%20points%3D%2276%2C46%2066%2C12%2052%2C40%22%20fill%3D%22%239E6A62%22%2F%3E%3Ccircle%20cx%3D%2250%22%20cy%3D%2260%22%20r%3D%2234%22%20fill%3D%22%23F7E8CB%22%2F%3E%3Cellipse%20cx%3D%2250%22%20cy%3D%2262%22%20rx%3D%2230%22%20ry%3D%2224%22%20fill%3D%22%23432%22%2F%3E%3Cg%20stroke%3D%22%23FAF0DC%22%20stroke-width%3D%221.5%22%20stroke-linecap%3D%22round%22%3E%3Cline%20x1%3D%2213%22%20y1%3D%2268%22%20x2%3D%2231%22%20y2%3D%2266.5%22%2F%3E%3Cline%20x1%3D%2213%22%20y1%3D%2274%22%20x2%3D%2231%22%20y2%3D%2272.5%22%2F%3E%3Cline%20x1%3D%2287%22%20y1%3D%2268%22%20x2%3D%2269%22%20y2%3D%2266.5%22%2F%3E%3Cline%20x1%3D%2287%22%20y1%3D%2274%22%20x2%3D%2269%22%20y2%3D%2272.5%22%2F%3E%3C%2Fg%3E%3Cg%20class%3D%22eye%20eye-l%22%3E%3Cellipse%20cx%3D%2241%22%20cy%3D%2258%22%20rx%3D%225.4%22%20ry%3D%228.3%22%20fill%3D%22%235BC8E8%22%20transform%3D%22rotate(-76%2041%2058)%22%2F%3E%3Cg%20class%3D%22pupil%22%3E%3Cellipse%20cx%3D%2241.3%22%20cy%3D%2259.5%22%20rx%3D%222.3%22%20ry%3D%223.6%22%20fill%3D%22%2320140F%22%2F%3E%3Ccircle%20cx%3D%2239.6%22%20cy%3D%2255.6%22%20r%3D%220.9%22%20fill%3D%22%23FFFFFF%22%2F%3E%3C%2Fg%3E%3C%2Fg%3E%3Cg%20class%3D%22eye%20eye-r%22%3E%3Cellipse%20cx%3D%2259%22%20cy%3D%2258%22%20rx%3D%225.4%22%20ry%3D%228.3%22%20fill%3D%22%235BC8E8%22%20transform%3D%22rotate(76%2059%2058)%22%2F%3E%3Cg%20class%3D%22pupil%22%3E%3Cellipse%20cx%3D%2258.7%22%20cy%3D%2259.5%22%20rx%3D%222.3%22%20ry%3D%223.6%22%20fill%3D%22%2320140F%22%2F%3E%3Ccircle%20cx%3D%2257.6%22%20cy%3D%2255.6%22%20r%3D%220.9%22%20fill%3D%22%23FFFFFF%22%2F%3E%3C%2Fg%3E%3C%2Fg%3E%3Cpolygon%20points%3D%2250%2C74%2045.5%2C68.8%2054.5%2C68.8%22%20fill%3D%22%23E8929E%22%2F%3E%3Cpath%20d%3D%22M50%2072%20L50%2076%20M50%2076%20Q46%2080%2042%2076%20M50%2075%20Q53%2081%2057%2076%22%20stroke%3D%22%23b98%22%20stroke-width%3D%221%22%20fill%3D%22none%22%2F%3E%3C/svg%3E">
+    <style>
+        :root{
+          --cream:#FFF8EC;
+          --surface:#FFFFFF;
+          --sand:#F5E4C6;
+          --ink:#4A3B52;
+          --ink-soft:#8F82A0;
+          --ink-faint:#DCD3E6;
+          --line:rgba(74,59,82,0.10);
+          --line-strong:rgba(74,59,82,0.16);
+          --marmalade:#FF9A4D;
+          --marmalade-deep:#E77F2C;
+          --mint:#4FD6BE;
+          --bubblegum:#FF6E93;
+          --grout:#FFFFFF;
+          --shadow-color:rgba(74,59,82,0.16);
+          --shadow-lg:0 20px 44px -18px rgba(74,59,82,0.30);
+          --shadow-sm:0 8px 18px -10px rgba(74,59,82,0.20);
+          --radius:22px;
+          --radius-sm:14px;
+          --radius-xs:8px;
+          --font-display: ui-rounded, "SF Pro Rounded", "Segoe UI Rounded", "Nunito Sans", "Quicksand", system-ui, sans-serif;
+          --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", Roboto, system-ui, sans-serif;
+        }
 
-*,*::before,*::after{ box-sizing:border-box; }
-html,body{ height:100%; touch-action:manipulation; }
-body{
-  margin:0;
-  font-family:var(--font-body);
-  color:var(--ink);
-  background:
-    radial-gradient(circle 420px at 10% 6%, rgba(255,110,147,0.22), transparent 62%),
-    radial-gradient(circle 460px at 92% 4%, rgba(79,214,190,0.24), transparent 60%),
-    radial-gradient(circle 520px at 104% 92%, rgba(255,154,77,0.26), transparent 58%),
-    radial-gradient(circle 440px at -6% 88%, rgba(150,120,255,0.20), transparent 58%),
-    radial-gradient(ellipse 900px 500px at 50% 40%, rgba(255,214,140,0.14), transparent 65%),
-    var(--cream);
-  background-attachment:fixed;
-  min-height:100vh;
-  -webkit-tap-highlight-color:transparent;
-  overscroll-behavior:contain;
-  position:relative;
-  isolation:isolate;
-}
-body::before{
-  content:"";
-  position:fixed; inset:0; z-index:-2;
-  pointer-events:none;
-  opacity:.05;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='96' viewBox='0 0 96 96'%3E%3Cg fill='%234A3B52' transform='translate(48 50) rotate(-18) translate(-16 -16)'%3E%3Cellipse cx='16' cy='24' rx='9' ry='7'/%3E%3Ccircle cx='7' cy='11' r='4'/%3E%3Ccircle cx='16' cy='7' r='4.2'/%3E%3Ccircle cx='25' cy='11' r='4'/%3E%3C/g%3E%3C/svg%3E");
-  background-size:96px 96px;
-}
-body::after{
-  content:"";
-  position:fixed; inset:-10%; z-index:-1;
-  pointer-events:none;
-  background:
-    radial-gradient(circle 220px at 20% 20%, rgba(255,110,147,0.16), transparent 70%),
-    radial-gradient(circle 260px at 80% 30%, rgba(79,214,190,0.16), transparent 70%),
-    radial-gradient(circle 240px at 30% 85%, rgba(255,154,77,0.16), transparent 70%);
-  filter:blur(6px);
-  animation:driftBg 26s ease-in-out infinite alternate;
-}
-@keyframes driftBg{
-  0%{ transform:translate(0,0) scale(1); }
-  50%{ transform:translate(-2%,2%) scale(1.06); }
-  100%{ transform:translate(2%,-2%) scale(1.02); }
-}
-button{ font-family:inherit; color:inherit; touch-action:manipulation; }
-h1,h2,h3,p{ margin:0; }
+        *,*::before,*::after{ box-sizing:border-box; }
+        html{ min-height:100%; }
+        body{
+          margin:0;
+          font-family:var(--font-body);
+          color:var(--ink);
+          touch-action:manipulation;
+          background:
+            radial-gradient(circle 420px at 10% 6%, rgba(255,110,147,0.22), transparent 62%),
+            radial-gradient(circle 460px at 92% 4%, rgba(79,214,190,0.24), transparent 60%),
+            radial-gradient(circle 520px at 104% 92%, rgba(255,154,77,0.26), transparent 58%),
+            radial-gradient(circle 440px at -6% 88%, rgba(150,120,255,0.20), transparent 58%),
+            radial-gradient(ellipse 900px 500px at 50% 40%, rgba(255,214,140,0.14), transparent 65%),
+            var(--cream);
+          background-attachment:fixed;
+          background-repeat:no-repeat;
+          min-height:100vh;
+          min-height:calc(var(--vh, 1vh) * 100);
+		  min-height:100dvh; /* vince sui browser che lo supportano, ignorato dagli altri */
+          -webkit-tap-highlight-color:transparent;
+          overscroll-behavior:contain;
+          position:relative;
+          isolation:isolate;
+        }
+        body::before{
+          content:"";
+          position:fixed; inset:0; z-index:-2;
+          pointer-events:none;
+          opacity:.05;
+          background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='96' viewBox='0 0 96 96'%3E%3Cg fill='%234A3B52' transform='translate(48 50) rotate(-18) translate(-16 -16)'%3E%3Cellipse cx='16' cy='24' rx='9' ry='7'/%3E%3Ccircle cx='7' cy='11' r='4'/%3E%3Ccircle cx='16' cy='7' r='4.2'/%3E%3Ccircle cx='25' cy='11' r='4'/%3E%3C/g%3E%3C/svg%3E");
+          background-size:96px 96px;
+        }
+        body::after{
+          content:"";
+          position:fixed; inset:-10%; z-index:-1;
+          pointer-events:none;
+          background:
+            radial-gradient(circle 220px at 20% 20%, rgba(255,110,147,0.16), transparent 70%),
+            radial-gradient(circle 260px at 80% 30%, rgba(79,214,190,0.16), transparent 70%),
+            radial-gradient(circle 240px at 30% 85%, rgba(255,154,77,0.16), transparent 70%);
+          filter:blur(2px);
+          will-change:transform;
+          animation:driftBg 26s ease-in-out infinite alternate;
+        }
+        @keyframes driftBg{
+          0%{ transform:translate(0,0) scale(1); }
+          50%{ transform:translate(-2%,2%) scale(1.06); }
+          100%{ transform:translate(2%,-2%) scale(1.02); }
+        }
+        button{ font-family:inherit; color:inherit; touch-action:manipulation; }
+        h1,h2,h3,p{ margin:0; }
 
-#app{ position:relative; z-index:1; max-width:640px; margin:0 auto; min-height:100vh; display:flex; flex-direction:column; padding:20px 16px 40px; }
+        #app{ position:relative; z-index:1; max-width:640px; margin:0 auto; 
+		min-height:100vh; 
+		min-height:calc(var(--vh, 1vh) * 100); 
+		min-height:100dvh; /* vince sui browser che lo supportano, ignorato dagli altri */
+		display:flex; flex-direction:column; padding:20px 16px 40px; }
 
-.screen{ display:none; flex-direction:column; flex:1; animation:fadeUp .5s ease both; }
-.screen.active{ display:flex; justify-content: space-between; }
-@keyframes fadeUp{ from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);} }
-@keyframes fadeIn{ from{opacity:0;} to{opacity:1;} }
-@keyframes pop{ 0%{transform:scale(.6); opacity:0;} 60%{transform:scale(1.08); opacity:1;} 100%{transform:scale(1);} }
-@keyframes shake{ 10%,90%{transform:translateX(-1px);} 20%,80%{transform:translateX(2px);} 30%,50%,70%{transform:translateX(-4px);} 40%,60%{transform:translateX(4px);} }
-@keyframes fall{ from{ transform:translateY(-10vh) rotate(0deg); opacity:0; } 10%{opacity:1;} to{ transform:translateY(110vh) rotate(200deg); opacity:0.9; } }
+        .screen{ display:none; flex-direction:column; flex:1; animation:fadeUp .5s ease both; }
+        .screen.active{ display:flex; justify-content: space-between; }
+        @keyframes fadeUp{ from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);} }
+        @keyframes fadeIn{ from{opacity:0;} to{opacity:1;} }
+        @keyframes pop{ 0%{transform:scale(.6); opacity:0;} 60%{transform:scale(1.08); opacity:1;} 100%{transform:scale(1);} }
+        @keyframes shake{ 10%,90%{transform:translateX(-1px);} 20%,80%{transform:translateX(2px);} 30%,50%,70%{transform:translateX(-4px);} 40%,60%{transform:translateX(4px);} }
+        @keyframes fall{ from{ transform:translateY(-10vh) rotate(0deg); opacity:0; } 10%{opacity:1;} to{ transform:translateY(110vh) rotate(200deg); opacity:0.9; } }
 
-@media (prefers-reduced-motion: reduce){
-  *{ animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; }
-}
+        @media (prefers-reduced-motion: reduce){
+          *{ animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; }
+        }
 
-/* ---------- Menu screen ---------- */
-.hero{ text-align:center; padding:28px 8px 8px; }
-.hero-mark{ width:88px; height:88px; margin:0 auto 14px; position:relative; }
-.hero-mark svg{ width:100%; height:100%; filter:drop-shadow(0 8px 16px rgba(74,59,82,.45)); animation:pop .6s ease both; }
-.hero h1{
-  font-family:var(--font-display);
-  font-weight:800;
-  font-size:clamp(2.1rem, 8vw, 2.7rem);
-  letter-spacing:0.5px;
-  color:var(--marmalade);
-}
-.hero p.tagline{ margin-top:8px; color:var(--ink-soft); font-size:.98rem; }
+        /* ---------- Menu screen ---------- */
+        .hero{ text-align:center; padding:28px 8px 8px; }
+        .hero-mark{ width:88px; height:88px; margin:0 auto 14px; position:relative; }
+        .hero-mark svg{ width:100%; height:100%; filter:drop-shadow(0 8px 16px rgba(74,59,82,.45)); animation:pop .6s ease both; }
+        .hero h1{
+          font-family:var(--font-display);
+          font-weight:800;
+          font-size:clamp(2.1rem, 8vw, 2.7rem);
+          letter-spacing:0.5px;
+          color:var(--marmalade);
+        }
+        .hero p.tagline{ margin-top:8px; color:var(--ink-soft); font-size:.98rem; }
 
-.diff-grid{ display:grid; grid-template-columns:1fr; gap:14px; margin:26px 0 8px; }
-.diff-card{
-  display:flex; align-items:center; gap:14px;
-  background:linear-gradient(120deg, var(--surface) 55%, var(--diff-tint, var(--cream)) 150%);
-  border:none; border-radius:var(--radius);
-  padding:16px 18px; text-align:left; cursor:pointer;
-  box-shadow:0 6px 0 var(--diff-shadow, var(--line-strong)), var(--shadow-sm);
-  transition:transform .18s cubic-bezier(.3,1.6,.4,1), box-shadow .18s ease, filter .15s ease;
-  animation:fadeUp .5s ease both;
-  border: 1px solid var(--diff-border, var(--marmalade));
-}
-.diff-card:hover, .diff-card:focus-visible{ transform:translateY(-3px) scale(1.015); filter:saturate(1.12); box-shadow:0 9px 0 var(--diff-shadow, var(--line-strong)), var(--shadow-lg); }
-.diff-card:active{ transform:translateY(4px) scale(1); box-shadow:0 2px 0 var(--diff-shadow, var(--line-strong)); }
-.diff-card:nth-child(1){animation-delay:.10s;} 
-.diff-card:nth-child(2){animation-delay:.20s;}
-.diff-card:nth-child(3){animation-delay:.30s;}
-.diff-card:nth-child(4){animation-delay:.40s;}
-.diff-card:nth-child(5){animation-delay:.50s;}
-.diff-card:nth-child(6){animation-delay:.60s;}
-.diff-card:nth-child(7){animation-delay:.70s;}
-.diff-card:nth-child(8){animation-delay:.80s;}
-.diff-card:nth-child(9){animation-delay:.90s;}
-.diff-swatch{
-  flex:0 0 auto; width:64px; height:64px; border-radius:16px;
-  display:grid; place-items:center; font-family:var(--font-display); font-weight:800; font-size:1.02rem;
-  color:var(--ink); box-shadow:inset 0 -3px 0 rgba(0,0,0,0.08);
-}
-.diff-info{ flex:1; min-width:0; }
-.diff-name{ font-family:var(--font-display); font-weight:700; font-size:1.05rem; color:var(--ink); }
-.diff-sub{ color:var(--ink-soft); font-size:.85rem; margin-top:2px; }
-.diff-paws{ display:flex; gap:3px; margin-top:7px; }
-.diff-paws svg{ width:14px; height:14px; }
-.diff-paws .filled{ color:var(--marmalade); }
-.diff-paws .empty{ color:var(--ink-faint); }
+        .diff-grid{ display:grid; grid-template-columns:1fr; gap:14px; margin:26px 0 8px; }
+        .diff-card{
+          display:flex; align-items:center; gap:14px;
+          background:linear-gradient(120deg, var(--surface) 55%, var(--diff-tint, var(--cream)) 150%);
+          border:none; border-radius:var(--radius);
+          padding:16px 18px; text-align:left; cursor:pointer;
+          box-shadow:0 6px 0 var(--diff-shadow, var(--line-strong)), var(--shadow-sm);
+          transition:transform .18s cubic-bezier(.3,1.6,.4,1), box-shadow .18s ease, filter .15s ease;
+          animation:fadeUp .5s ease both;
+          border: 1px solid var(--diff-border, var(--marmalade));
+        }
+        .diff-card:hover, .diff-card:focus-visible{ transform:translateY(-3px) scale(1.015); filter:saturate(1.12); box-shadow:0 9px 0 var(--diff-shadow, var(--line-strong)), var(--shadow-lg); }
+        .diff-card:active{ transform:translateY(4px) scale(1); box-shadow:0 2px 0 var(--diff-shadow, var(--line-strong)); }
+        .diff-card:nth-child(1){animation-delay:.10s;}
+        .diff-card:nth-child(2){animation-delay:.20s;}
+        .diff-card:nth-child(3){animation-delay:.30s;}
+        .diff-card:nth-child(4){animation-delay:.40s;}
+        .diff-card:nth-child(5){animation-delay:.50s;}
+        .diff-card:nth-child(6){animation-delay:.60s;}
+        .diff-card:nth-child(7){animation-delay:.70s;}
+        .diff-card:nth-child(8){animation-delay:.80s;}
+        .diff-card:nth-child(9){animation-delay:.90s;}
+        .diff-swatch{
+          flex:0 0 auto; width:64px; height:64px; border-radius:16px;
+          display:grid; place-items:center; font-family:var(--font-display); font-weight:800; font-size:1.02rem;
+          color:var(--ink); box-shadow:inset 0 -3px 0 rgba(0,0,0,0.08);
+        }
+        .diff-info{ flex:1; min-width:0; }
+        .diff-name{ font-family:var(--font-display); font-weight:700; font-size:1.05rem; color:var(--ink); }
+        .diff-sub{ color:var(--ink-soft); font-size:.85rem; margin-top:2px; }
+        .diff-paws{ display:flex; gap:3px; margin-top:7px; }
+        .diff-paws svg{ width:14px; height:14px; }
+        .diff-paws .filled{ color:var(--marmalade); }
+        .diff-paws .empty{ color:var(--ink-faint); }
 
-.menu-footer{ margin-top:auto; padding-top:24px; text-align:center; }
-.link-btn{
-  background:none; border:none; color:var(--ink-soft); font-size:.9rem; cursor:pointer;
-  text-decoration:underline; text-underline-offset:3px; padding:8px; font-weight:600;
-}
-.link-btn:hover{ color:var(--ink); }
+        .menu-footer{ margin-top:auto; padding-top:24px; text-align:center; }
+        .link-btn{
+          background:none; border:none; color:var(--ink-soft); font-size:.9rem; cursor:pointer;
+          text-decoration:underline; text-underline-offset:3px; padding:8px; font-weight:600;
+        }
+        .link-btn:hover{ color:var(--ink); }
 
-/* ---------- Game screen ---------- */
-.topbar{ display:flex; align-items:center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
-.icon-btn{
-  width:44px; height:44px; border-radius:999px; border:none;
-  background:linear-gradient(155deg, #FFFFFF, #FFF1DD);
-  display:grid; place-items:center; cursor:pointer;
-  box-shadow:0 3px 0 var(--line-strong), 0 4px 10px -6px var(--shadow-color);
-  transition:background .15s ease, transform .1s ease, box-shadow .1s ease, filter .15s ease;
-  flex:0 0 auto; color:var(--ink);
-  border: 1px solid var(--marmalade);
-}
-.icon-btn svg{ width:20px; height:20px; }
-.icon-btn:hover{ filter:brightness(1.04) saturate(1.15); transform:translateY(-1px); }
-.icon-btn:active{ transform:translateY(2px); box-shadow:0 1px 0 var(--line-strong); }
-.icon-btn:disabled{ opacity:.4; cursor:not-allowed; }
-.icon-btn:disabled:hover{ filter:none; transform:none; }
+        /* ---------- Game screen ---------- */
+        .topbar{ display:flex; align-items:center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+        .icon-btn{
+          width:44px; height:44px; border-radius:999px; border:none;
+          background:linear-gradient(155deg, #FFFFFF, #FFF1DD);
+          display:grid; place-items:center; cursor:pointer;
+          box-shadow:0 3px 0 var(--line-strong), 0 4px 10px -6px var(--shadow-color);
+          transition:background .15s ease, transform .1s ease, box-shadow .1s ease, filter .15s ease;
+          flex:0 0 auto; color:var(--ink);
+          border: 1px solid var(--marmalade);
+        }
+        .icon-btn svg{ width:20px; height:20px; }
+        .icon-btn:hover{ filter:brightness(1.04) saturate(1.15); transform:translateY(-1px); }
+        .icon-btn:active{ transform:translateY(2px); box-shadow:0 1px 0 var(--line-strong); }
+        .icon-btn:disabled{ opacity:.4; cursor:not-allowed; }
+        .icon-btn:disabled:hover{ filter:none; transform:none; }
 
-/* Signature colors: every action gets its own punchy identity */
-.icon-btn.btn-new{ background:linear-gradient(155deg, #6BE9D4, var(--mint)); border-color:#2FBFA6; color:#183B34; box-shadow:0 3px 0 #2FBFA6, 0 6px 14px -6px rgba(79,214,190,.6); }
-.icon-btn.btn-reset{ background:linear-gradient(155deg, #FF97B0, var(--bubblegum)); border-color:#E14E71; color:#4A0F22; box-shadow:0 3px 0 #E14E71, 0 6px 14px -6px rgba(255,110,147,.6); }
-.icon-btn.btn-undo{ background:linear-gradient(155deg, #B9A8FF, #8F72F2); border-color:#6A4EDB; color:#241458; box-shadow:0 3px 0 #6A4EDB, 0 6px 14px -6px rgba(143,114,242,.6); }
-.icon-btn.btn-hint{ background:linear-gradient(155deg, #FFC876, var(--marmalade)); border-color:var(--marmalade-deep); color:#4A2A05; box-shadow:0 3px 0 var(--marmalade-deep), 0 6px 14px -6px rgba(255,154,77,.6); }
-.icon-btn.btn-rules{ background:linear-gradient(155deg, #7FD8F5, #43B7E0); border-color:#1F93C2; color:#0A2E3D; box-shadow:0 3px 0 #1F93C2, 0 6px 14px -6px rgba(67,183,224,.6); }
-.icon-btn.btn-music{ background:linear-gradient(155deg, #F57FD8, #E043B7); border-color:#C21F93; color:#3D0A2E; box-shadow:0 3px 0 #C21F93, 0 6px 14px -6px rgba(224,67,183,.6); }
-.icon-btn.btn-new:active{ box-shadow:0 1px 0 #2FBFA6; }
-.icon-btn.btn-reset:active{ box-shadow:0 1px 0 #E14E71; }
-.icon-btn.btn-undo:active{ box-shadow:0 1px 0 #6A4EDB; }
-.icon-btn.btn-hint:active{ box-shadow:0 1px 0 var(--marmalade-deep); }
-.icon-btn.btn-rules:active{ box-shadow:0 1px 0 #1F93C2; }
-.icon-btn.btn-music:active{ box-shadow:0 1px 0 #C21F93; }
+        /* Signature colors: every action gets its own punchy identity */
+        .icon-btn.btn-new{ background:linear-gradient(155deg, #6BE9D4, var(--mint)); border-color:#2FBFA6; color:#183B34; box-shadow:0 3px 0 #2FBFA6, 0 6px 14px -6px rgba(79,214,190,.6); }
+        .icon-btn.btn-reset{ background:linear-gradient(155deg, #FF97B0, var(--bubblegum)); border-color:#E14E71; color:#4A0F22; box-shadow:0 3px 0 #E14E71, 0 6px 14px -6px rgba(255,110,147,.6); }
+        .icon-btn.btn-undo{ background:linear-gradient(155deg, #B9A8FF, #8F72F2); border-color:#6A4EDB; color:#241458; box-shadow:0 3px 0 #6A4EDB, 0 6px 14px -6px rgba(143,114,242,.6); }
+        .icon-btn.btn-hint{ background:linear-gradient(155deg, #FFC876, var(--marmalade)); border-color:var(--marmalade-deep); color:#4A2A05; box-shadow:0 3px 0 var(--marmalade-deep), 0 6px 14px -6px rgba(255,154,77,.6); }
+        .icon-btn.btn-rules{ background:linear-gradient(155deg, #7FD8F5, #43B7E0); border-color:#1F93C2; color:#0A2E3D; box-shadow:0 3px 0 #1F93C2, 0 6px 14px -6px rgba(67,183,224,.6); }
+        .icon-btn.btn-music{ background:linear-gradient(155deg, #F57FD8, #E043B7); border-color:#C21F93; color:#3D0A2E; box-shadow:0 3px 0 #C21F93, 0 6px 14px -6px rgba(224,67,183,.6); }
+        .icon-btn.btn-new:active{ box-shadow:0 1px 0 #2FBFA6; }
+        .icon-btn.btn-reset:active{ box-shadow:0 1px 0 #E14E71; }
+        .icon-btn.btn-undo:active{ box-shadow:0 1px 0 #6A4EDB; }
+        .icon-btn.btn-hint:active{ box-shadow:0 1px 0 var(--marmalade-deep); }
+        .icon-btn.btn-rules:active{ box-shadow:0 1px 0 #1F93C2; }
+        .icon-btn.btn-music:active{ box-shadow:0 1px 0 #C21F93; }
 
-.game-title{ display: flex; flex-direction: column; }
-.game-title .name{ font-family:var(--font-display); font-weight:800; font-size:1.15rem; color:var(--marmalade); margin-bottom: -20px;}
-.game-title .level{ color:var(--ink-soft); font-size:.8rem; }
+        .game-title{ display: flex; flex-direction: column; }
+        .game-title .name{ font-family:var(--font-display); font-weight:800; font-size:1.15rem; color:var(--marmalade); margin-bottom: -20px;}
+        .game-title .level{ color:var(--ink-soft); font-size:.8rem; }
 
-.status-row{ display:flex; align-items:center; gap:14px; justify-content: space-evenly; flex: 1; white-space: nowrap;}
-.hearts{ display:flex; gap:5px; }
-.hearts svg{ width:20px; height:20px; color:var(--bubblegum); transition:opacity .25s ease, filter .25s ease; }
-.hearts span.lost{ opacity:.25; filter:grayscale(1); }
-.heart-lost-anim{ animation:heartPop .5s ease; }
-@keyframes heartPop{ 0%{transform:scale(1);} 30%{transform:scale(1.4) rotate(-8deg);} 100%{transform:scale(1);} }
-.timer{
-  font-variant-numeric:tabular-nums; font-family:var(--font-display); font-weight:700;
-  color:var(--ink); font-size:.95rem; background:var(--surface);
-  box-shadow:0 3px 0 var(--line-strong);
-  padding:7px 12px; border-radius:999px;
-  border: 1px solid var(--marmalade);
-}
-.cats-counter{
-  display:flex; align-items:center; gap:6px;
-  font-variant-numeric:tabular-nums; font-family:var(--font-display); font-weight:700;
-  color:var(--ink); font-size:.95rem; background:var(--surface);
-  box-shadow:0 3px 0 var(--line-strong);
-  padding:7px 12px; border-radius:999px; 
-  transition:background .2s ease, color .2s ease;
-  border: 1px solid var(--marmalade);
-}
-.cats-counter svg{ width:15px; height:15px; color:var(--marmalade); flex:0 0 auto; }
-.cats-counter.complete{ background:linear-gradient(120deg, var(--mint), #7FE8D6); color:#123A33; animation:counterPulse .6s ease; }
-.cats-counter.complete svg{ color:#123A33; }
-@keyframes counterPulse{ 0%{ transform:scale(1); } 40%{ transform:scale(1.15); } 100%{ transform:scale(1); } }
+        .status-row{ display:flex; align-items:center; gap:14px; justify-content: space-evenly; flex: 1; white-space: nowrap;}
+        .hearts{ display:flex; gap:5px; }
+        .hearts svg{ width:20px; height:20px; color:var(--bubblegum); transition:opacity .25s ease, filter .25s ease; }
+        .hearts span.lost{ opacity:.25; filter:grayscale(1); }
+        .heart-lost-anim{ animation:heartPop .5s ease; }
+        @keyframes heartPop{ 0%{transform:scale(1);} 30%{transform:scale(1.4) rotate(-8deg);} 100%{transform:scale(1);} }
+        .timer{
+          font-variant-numeric:tabular-nums; font-family:var(--font-display); font-weight:700;
+          color:var(--ink); font-size:.95rem; background:var(--surface);
+          box-shadow:0 3px 0 var(--line-strong);
+          padding:7px 12px; border-radius:999px;
+          border: 1px solid var(--marmalade);
+        }
+        .cats-counter{
+          display:flex; align-items:center; gap:6px;
+          font-variant-numeric:tabular-nums; font-family:var(--font-display); font-weight:700;
+          color:var(--ink); font-size:.95rem; background:var(--surface);
+          box-shadow:0 3px 0 var(--line-strong);
+          padding:7px 12px; border-radius:999px;
+          transition:background .2s ease, color .2s ease;
+          border: 1px solid var(--marmalade);
+        }
+        .cats-counter svg{ width:15px; height:15px; color:var(--marmalade); flex:0 0 auto; }
+        .cats-counter.complete{ background:linear-gradient(120deg, var(--mint), #7FE8D6); color:#123A33; animation:counterPulse .6s ease; }
+        .cats-counter.complete svg{ color:#123A33; }
+        @keyframes counterPulse{ 0%{ transform:scale(1); } 40%{ transform:scale(1.15); } 100%{ transform:scale(1); } }
 
-.toolbar{ display:flex; gap:8px; margin:14px 0 4px; flex-wrap:wrap-reverse; justify-content: center; }
-.toolbar .icon-btn{ width:auto; padding:0 16px; gap:8px; display:flex; border-radius:999px; }
-.toolbar .icon-btn span { font-size:.85rem; font-weight:700; }
-.toolbar .icon-btn svg{ width:17px; height:17px; }
-.topbar .icon-btn{ width:auto; padding:0 16px; gap:8px; display:flex; border-radius:999px; }
-.topbar  .icon-btn span { font-size:.85rem; font-weight:700; }
+        .toolbar{ display:flex; gap:8px; margin:14px 0 4px; flex-wrap:wrap-reverse; justify-content: center; }
+        .toolbar .icon-btn{ width:auto; padding:0 16px; gap:8px; display:flex; border-radius:999px; }
+        .toolbar .icon-btn span { font-size:.85rem; font-weight:700; }
+        .toolbar .icon-btn svg{ width:17px; height:17px; }
+        .topbar .icon-btn{ width:auto; padding:0 16px; gap:8px; display:flex; border-radius:999px; }
+        .topbar  .icon-btn span { font-size:.85rem; font-weight:700; }
 
-.board-wrap{ margin:32px auto; width:100%; max-width:480px; position:relative; }
-.board-frame{
-  position:relative; background:var(--grout); border-radius:var(--radius); padding:var(--radius-xs);
-  box-shadow:var(--shadow-lg);
-  border: 1px solid var(--marmalade);
-}
-#board{
-  display:grid; width:100%; aspect-ratio:1/1; border-radius:calc(var(--radius) - 8px); overflow:hidden;
-  background:#FFFFFF;
-}
-.cell{
-  position:relative; border:none; padding:0; margin:3px; cursor:pointer;
-  top: -3px;
-  left: -2px;
-  display:grid; place-items:center; outline-offset:-3px;
-  transition:filter .12s ease, transform .1s cubic-bezier(.3,1.4,.4,1), box-shadow .1s ease;
-  contain:layout paint style;
-  
-  
-  border-radius:calc(var(--radius) - 8px);
-  border-radius: 20%;
-  box-shadow:
-    inset 0 3px 3px rgba(255,255,255,0.6),
-    inset 0 -5px 7px rgba(74,59,82,0.22),
-    0 3px 0 rgba(74,59,82,0.14),
-    0 6px 10px -5px rgba(74,59,82,0.32);
-}
-.cell::before{
-  content:"";
-  position:absolute; inset:0;
-  border-radius:inherit;
-  background:linear-gradient(165deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.10) 30%, rgba(255,255,255,0) 52%, rgba(74,59,82,0.14) 100%);
-  pointer-events:none;
-}
-.cell:hover{
-  filter:brightness(1.05) saturate(1.05);
-  transform:translateY(-2px);
-  box-shadow:
-    inset 0 3px 3px rgba(255,255,255,0.65),
-    inset 0 -5px 7px rgba(74,59,82,0.2),
-    0 5px 0 rgba(74,59,82,0.14),
-    0 10px 16px -6px rgba(74,59,82,0.38);
-}
-.cell:active{
-  transform:translateY(2px);
-  box-shadow:
-    inset 0 5px 9px rgba(74,59,82,0.32),
-    inset 0 -1px 2px rgba(255,255,255,0.35),
-    0 1px 0 rgba(74,59,82,0.14);
-}
-.cell:focus-visible{ outline:3px solid var(--marmalade); z-index:2; }
-.cell.conflict{ animation:shake .5s ease; }
-.cell.conflict::after{
-  content:""; position:absolute; inset:0; background:var(--bubblegum); opacity:.5; pointer-events:none; z-index:2;
-}
-.cell .glyph{ width:95%; height:95%; pointer-events:none; position:relative; z-index:1; }
-.cell .glyph.cat{
-  animation:pop .5s cubic-bezier(.3,1.5,.4,1) both;
-  color:var(--ink);
-  transform:translateY(-3%);
-  filter:
-    drop-shadow(0 1px 1px rgba(74,59,82,.4))
-    drop-shadow(0 5px 4px rgba(74,59,82,.30))
-    drop-shadow(0 11px 9px rgba(74,59,82,.20));
-}
-.cell .glyph.xmark{ animation:pop .25s ease both; color:rgba(74,59,82,0.75); width:46%; height:46%; filter:drop-shadow(0 2px 2px rgba(74,59,82,.25)); }
+        .board-wrap{ margin:32px auto; width:100%; max-width:480px; position:relative; }
+        .board-frame{
+          position:relative; background:var(--grout); border-radius:var(--radius); padding:var(--radius-xs);
+          box-shadow:var(--shadow-lg);
+          border: 1px solid var(--marmalade);
+        }
+        #board{
+          display:grid; width:100%; aspect-ratio:1/1; border-radius:calc(var(--radius) - 8px); overflow:hidden;
+          background:#FFFFFF;
+        }
+        .cell{
+          position:relative; border:none; padding:0; margin:3px; cursor:pointer;
+          top: -3px;
+          left: -2px;
+          display:grid; place-items:center; outline-offset:-3px;
+          transition:filter .12s ease, transform .1s cubic-bezier(.3,1.4,.4,1), box-shadow .1s ease;
+          contain:layout paint style;
 
-.hint-text{ text-align:center; color:var(--ink-faint); font-size:.8rem; margin-top:10px; min-height:1.2em; }
 
-/* loading overlay */
-.loading-overlay{
-  position:absolute; inset:0; display:none; align-items:center; justify-content:center; flex-direction:column; gap:12px;
-  background:rgba(255,248,236,0.94); border-radius:calc(var(--radius) - 8px); z-index:5;
-}
-.loading-overlay.active{ display:flex; }
-.loading-cat{ width:44px; height:44px; animation:bounce 1s ease-in-out infinite; color:var(--marmalade); }
-@keyframes bounce{ 0%,100%{ transform:translateY(0) rotate(-4deg); } 50%{ transform:translateY(-10px) rotate(4deg); } }
-.loading-overlay p{ color:var(--ink-soft); font-size:.85rem; font-weight:600; }
+          border-radius:calc(var(--radius) - 8px);
+          border-radius: 20%;
+          box-shadow:
+            inset 0 3px 3px rgba(255,255,255,0.6),
+            inset 0 -5px 7px rgba(74,59,82,0.22),
+            0 3px 0 rgba(74,59,82,0.14),
+            0 6px 10px -5px rgba(74,59,82,0.32);
+        }
+        .cell::before{
+          content:"";
+          position:absolute; inset:0;
+          border-radius:inherit;
+          background:linear-gradient(165deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.10) 30%, rgba(255,255,255,0) 52%, rgba(74,59,82,0.14) 100%);
+          pointer-events:none;
+        }
+        .cell:hover{
+          filter:brightness(1.05) saturate(1.05);
+          transform:translateY(-2px);
+          box-shadow:
+            inset 0 3px 3px rgba(255,255,255,0.65),
+            inset 0 -5px 7px rgba(74,59,82,0.2),
+            0 5px 0 rgba(74,59,82,0.14),
+            0 10px 16px -6px rgba(74,59,82,0.38);
+        }
+        .cell:active{
+          transform:translateY(2px);
+          box-shadow:
+            inset 0 5px 9px rgba(74,59,82,0.32),
+            inset 0 -1px 2px rgba(255,255,255,0.35),
+            0 1px 0 rgba(74,59,82,0.14);
+        }
+        .cell:focus-visible{ outline:3px solid var(--marmalade); z-index:2; }
+        .cell.conflict{ animation:shake .5s ease; }
+        .cell.conflict::after{
+          content:""; position:absolute; inset:0; background:var(--bubblegum); opacity:.5; pointer-events:none; z-index:2;
+        }
+        .cell .glyph{ width:95%; height:95%; pointer-events:none; position:relative; z-index:1; }
+        .cell .glyph.cat{
+          animation:pop .5s cubic-bezier(.3,1.5,.4,1) both;
+          color:var(--ink);
+          transform:translateY(-3%);
+          filter:
+            drop-shadow(0 1px 1px rgba(74,59,82,.4))
+            drop-shadow(0 5px 4px rgba(74,59,82,.30))
+            drop-shadow(0 11px 9px rgba(74,59,82,.20));
+        }
+        .cell .glyph.xmark{ animation:pop .25s ease both; color:rgba(74,59,82,0.75); width:46%; height:46%; filter:drop-shadow(0 2px 2px rgba(74,59,82,.25)); }
 
-/* ---------- Modals ---------- */
-.modal-backdrop{
-  position:fixed; inset:0; background:rgba(74,59,82,0.38); backdrop-filter:blur(3px);
-  display:none; align-items:center; justify-content:center; padding:20px; z-index:50;
-  animation:fadeIn 0.5s ease;
-}
-.modal-backdrop.active{ display:flex; }
-.modal{
-  background:var(--surface); border:none; border-radius:var(--radius);
-  max-width:460px; width:100%; padding:26px 24px; box-shadow:var(--shadow-lg);
-  animation:pop 0.5s cubic-bezier(.3,1.2,.4,1) both; max-height:86vh; overflow-y:auto;
-}
-.modal h2{ font-family:var(--font-display); font-size:1.3rem; margin-bottom:4px; color:var(--ink); text-align: center; }
-.modal .modal-icon{ width:100%; height:52px; margin: 0 auto 10px; color:var(--marmalade); }
-.modal p{ color:var(--ink-soft); font-size:.92rem; line-height:1.5; margin-top:6px; text-align: center; }
-.rule-list{ list-style:none; padding:0; margin:16px 0 0; display:flex; flex-direction:column; gap:12px; }
-.rule-list li{ display:flex; gap:12px; align-items:flex-start; font-size:.88rem; color:var(--ink); line-height:1.4; }
-.rule-list svg{ width:22px; height:22px; flex:0 0 auto; color:var(--marmalade); margin-top:1px; }
-.rule-list b{ color:var(--ink); }
-.modal-stats{ display:flex; gap:10px; margin:18px 0; }
-.stat-box{ flex:1; background:var(--cream); border-radius:14px; padding:12px; text-align:center; }
-.stat-box .val{ font-family:var(--font-display); font-weight:800; font-size:1.3rem; color:var(--marmalade); }
-.stat-box .lbl{ font-size:.72rem; color:var(--ink-soft); margin:2px 0; font-weight:700; letter-spacing:.02em; }
-.modal-actions{ display:flex; gap:10px; margin-top:20px; }
-.btn{
-  flex:1; padding:14px 16px; border-radius:999px; border:none; cursor:pointer;
-  font-weight:700; font-size:.92rem; font-family:var(--font-body);
-  transition:transform .1s ease, box-shadow .1s ease;
-}
-.btn-primary{ background:linear-gradient(120deg, var(--marmalade), var(--bubblegum)); color:#3B1608; box-shadow:0 4px 0 var(--marmalade-deep), 0 12px 22px -8px rgba(255,110,147,0.55); }
-.btn-primary:hover{ filter:brightness(1.05) saturate(1.1); }
-.btn-primary:active{ transform:translateY(3px); box-shadow:0 1px 0 var(--marmalade-deep); }
-.btn-ghost{ background:var(--surface); color:var(--ink); box-shadow:0 4px 0 var(--line-strong); }
-.btn-ghost:hover{ background:var(--cream); }
-.btn-ghost:active{ transform:translateY(3px); box-shadow:0 1px 0 var(--line-strong); }
-.modal-close{ position:absolute; top:16px; right:16px; }
+        .hint-text{ text-align:center; color:var(--ink-faint); font-size:.8rem; margin-top:10px; min-height:1.2em; }
 
-.confetti-layer{ position:fixed; inset:0; pointer-events:none; z-index:60; overflow:hidden; }
-.confetti-layer span{ position:absolute; top:-5%; font-size:20px; animation:fall linear forwards; }
+        /* loading overlay */
+        .loading-overlay{
+          position:absolute; inset:0; display:none; align-items:center; justify-content:center; flex-direction:column; gap:12px;
+          background:rgba(255,248,236,0.94); border-radius:calc(var(--radius) - 8px); z-index:5;
+        }
+        .loading-overlay.active{ display:flex; }
+        .loading-cat{ width:44px; height:44px; animation:bounce 1s ease-in-out infinite; color:var(--marmalade); }
+        @keyframes bounce{ 0%,100%{ transform:translateY(0) rotate(-4deg); } 50%{ transform:translateY(-10px) rotate(4deg); } }
+        .loading-overlay p{ color:var(--ink-soft); font-size:.85rem; font-weight:600; }
 
-/* ---------- Cat-placement explosion ---------- */
-.explosion-layer{ position:fixed; inset:0; pointer-events:none; z-index:45; overflow:visible; }
-.explosion-particle{
-  position:absolute; left:0; top:0;
-  transform:translate(-50%,-50%);
-  animation:explodeParticle 1s cubic-bezier(.15,.8,.3,1) forwards;
-  will-change:transform, opacity;
-}
-.explosion-particle.dot{
-  width:20px; height:20px; border-radius:50%;
-  box-shadow:0 0 8px 1px currentColor;
-}
-.explosion-particle.emoji{ 
-  font-size:48px;
-  line-height:1;
-}
-@keyframes explodeParticle{
-  0%{ transform:translate(-50%,-50%) scale(1.0) rotate(0deg); opacity:1; }
-  70%{ opacity:1; }
-  100%{ transform:translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(0.15) rotate(var(--rot)); opacity:0; }
-}
-.explosion-ring{
-  position:absolute; left:0; top:0; transform:translate(-50%,-50%);
-  border-radius:50%; border:3px solid var(--ring-color, var(--marmalade));
-  pointer-events:none; animation:ringPulse 1s cubic-bezier(.15,.8,.3,1) forwards;
-}
-@keyframes ringPulse{
-  0%{ width:6px; height:6px; opacity:.9; }
-  100%{ width:150px; height:150px; opacity:0; }
-}
-@media (prefers-reduced-motion: reduce){
-  .explosion-layer{ display:none; }
-}
+        /* ---------- Modals ---------- */
+        .modal-backdrop{
+          position:fixed; inset:0; background:rgba(74,59,82,0.38); backdrop-filter:blur(3px);
+          display:none; align-items:center; justify-content:center; padding:20px; z-index:50;
+          animation:fadeIn 0.5s ease;
+        }
+        .modal-backdrop.active{ display:flex; }
+        .modal{
+          background:var(--surface); border:none; border-radius:var(--radius);
+          max-width:460px; width:100%; padding:26px 24px; box-shadow:var(--shadow-lg);
+          animation:pop 0.5s cubic-bezier(.3,1.2,.4,1) both; max-height:86vh; overflow-y:auto;
+        }
+        .modal h2{ font-family:var(--font-display); font-size:1.3rem; margin-bottom:4px; color:var(--ink); text-align: center; }
+        .modal .modal-icon{ width:100%; height:52px; margin: 0 auto 10px; color:var(--marmalade); }
+        .modal p{ color:var(--ink-soft); font-size:.92rem; line-height:1.5; margin-top:6px; text-align: center; }
+        .rule-list{ list-style:none; padding:0; margin:16px 0 0; display:flex; flex-direction:column; gap:12px; }
+        .rule-list li{ display:flex; gap:12px; align-items:flex-start; font-size:.88rem; color:var(--ink); line-height:1.4; }
+        .rule-list svg{ width:22px; height:22px; flex:0 0 auto; color:var(--marmalade); margin-top:1px; }
+        .rule-list b{ color:var(--ink); }
+        .modal-stats{ display:flex; gap:10px; margin:18px 0; }
+        .stat-box{ flex:1; background:var(--cream); border-radius:14px; padding:12px; text-align:center; }
+        .stat-box .val{ font-family:var(--font-display); font-weight:800; font-size:1.3rem; color:var(--marmalade); }
+        .stat-box .lbl{ font-size:.72rem; color:var(--ink-soft); margin:2px 0; font-weight:700; letter-spacing:.02em; }
+        .modal-actions{ display:flex; gap:10px; margin-top:20px; }
+        .btn{
+          flex:1; padding:14px 16px; border-radius:999px; border:none; cursor:pointer;
+          font-weight:700; font-size:.92rem; font-family:var(--font-body);
+          transition:transform .1s ease, box-shadow .1s ease;
+        }
+        .btn-primary{ background:linear-gradient(120deg, var(--marmalade), var(--bubblegum)); color:#3B1608; box-shadow:0 4px 0 var(--marmalade-deep), 0 12px 22px -8px rgba(255,110,147,0.55); }
+        .btn-primary:hover{ filter:brightness(1.05) saturate(1.1); }
+        .btn-primary:active{ transform:translateY(3px); box-shadow:0 1px 0 var(--marmalade-deep); }
+        .btn-ghost{ background:var(--surface); color:var(--ink); box-shadow:0 4px 0 var(--line-strong); }
+        .btn-ghost:hover{ background:var(--cream); }
+        .btn-ghost:active{ transform:translateY(3px); box-shadow:0 1px 0 var(--line-strong); }
+        .modal-close{ position:absolute; top:16px; right:16px; }
 
-small { position: relative; top: -14px; color: var(--ink-soft); font-size: 9.5px; font-weight: 400; }
+        .confetti-layer{ position:fixed; inset:0; pointer-events:none; z-index:60; overflow:hidden; }
+        .confetti-layer span{ position:absolute; top:-5%; font-size:20px; animation:fall linear forwards; }
 
-@media (max-width:380px){
-  .hero h1{ font-size:1.9rem; }
-  .toolbar .icon-btn span{ display:none; }
-  .toolbar .icon-btn { padding:0 12px; }
-  .topbar .icon-btn span{ display:none; }
-  .topbar .icon-btn { padding:0 12px; }
-}
+        /* ---------- Cat-placement explosion ---------- */
+        .explosion-layer{ position:fixed; inset:0; pointer-events:none; z-index:45; overflow:visible; }
+        .explosion-particle{
+          position:absolute; left:0; top:0;
+          transform:translate(-50%,-50%);
+          animation:explodeParticle 1s cubic-bezier(.15,.8,.3,1) forwards;
+          will-change:transform, opacity;
+        }
+        .explosion-particle.dot{
+          width:20px; height:20px; border-radius:50%;
+          box-shadow:0 0 8px 1px currentColor;
+        }
+        .explosion-particle.emoji{
+          font-size:48px;
+          line-height:1;
+        }
+        @keyframes explodeParticle{
+          0%{ transform:translate(-50%,-50%) scale(1.0) rotate(0deg); opacity:1; }
+          70%{ opacity:1; }
+          100%{ transform:translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(0.15) rotate(var(--rot)); opacity:0; }
+        }
+        .explosion-ring{
+          position:absolute; left:0; top:0; transform:translate(-50%,-50%);
+          border-radius:50%; border:3px solid var(--ring-color, var(--marmalade));
+          pointer-events:none; animation:ringPulse 1s cubic-bezier(.15,.8,.3,1) forwards;
+        }
+        @keyframes ringPulse{
+          0%{ width:6px; height:6px; opacity:.9; }
+          100%{ width:150px; height:150px; opacity:0; }
+        }
+        @media (prefers-reduced-motion: reduce){
+          .explosion-layer{ display:none; }
+        }
 
-.topbar, .toolbar { 
-	margin: auto auto;
-    width: 100%;
-    max-width: 480px;
-    position: relative;
-}
+        small { position: relative; top: -14px; color: var(--ink-soft); font-size: 9.5px; font-weight: 400; }
 
-/* BLINK BLINK ;) */
-.eye{
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: blink 5s ease-in-out infinite;
-  animation-delay: var(--eye-delay, 0s);
-}
-.eye-r{ animation-delay: .05s; } /* micro-sfasamento, più naturale */
+        @media (max-width:380px){
+          .hero h1{ font-size:1.9rem; }
+          .toolbar .icon-btn span{ display:none; }
+          .toolbar .icon-btn { padding:0 12px; }
+          .topbar .icon-btn span{ display:none; }
+          .topbar .icon-btn { padding:0 12px; }
+        }
 
-@keyframes blink{
-  0%			{ transform: scaleY(1); }
-  90%			{ transform: scaleY(1); }
-  92%           { transform: scaleY(0.08); }
-  96%           { transform: scaleY(1); }
-  100%          { transform: scaleY(1); }
-}
+        .topbar, .toolbar {
+            margin: auto auto;
+            width: 100%;
+            max-width: 480px;
+            position: relative;
+        }
 
-/* LOOK */
-.pupil{
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: look 9s ease-in-out infinite;
-  animation-delay: var(--look-delay, 0s);
-}
+        /* BLINK BLINK ;) */
+        .eye{
+          transform-box: fill-box;
+          transform-origin: center;
+          animation: blink 5s ease-in-out infinite;
+          animation-delay: var(--eye-delay, 0s);
+        }
+        .eye-r{ animation-delay: .05s; } /* micro-sfasamento, più naturale */
 
-@keyframes look{
-  0%			{ transform: translate(0, 0); }
-  78%			{ transform: translate(0, 0); }
-  84%           { transform: translate(1.6px, -0.4px); } /* scatto rapido a destra/su */
-  90%           { transform: translate(-1.8px, 0.6px); } /* torna, passando un attimo in basso */
-  95%           { transform: translate(0, 0); }
-  100%			{ transform: translate(0, 0); }
-}
+        @keyframes blink{
+          0%			{ transform: scaleY(1); }
+          90%			{ transform: scaleY(1); }
+          92%           { transform: scaleY(0.08); }
+          96%           { transform: scaleY(1); }
+          100%          { transform: scaleY(1); }
+        }
 
-.game-title-container {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  justify-content: center;
-}
+        /* LOOK */
+        .pupil{
+          transform-box: fill-box;
+          transform-origin: center;
+          animation: look 9s ease-in-out infinite;
+          animation-delay: var(--look-delay, 0s);
+        }
 
-.game-logo {
-  width: 44px;
-  height: 44px;
-  filter:drop-shadow(0 8px 16px rgba(74,59,82,.45)); 
-  animation:pop .6s ease both;
-}
-</style>
+        @keyframes look{
+          0%			{ transform: translate(0, 0); }
+          78%			{ transform: translate(0, 0); }
+          84%           { transform: translate(1.6px, -0.4px); } /* scatto rapido a destra/su */
+          90%           { transform: translate(-1.8px, 0.6px); } /* torna, passando un attimo in basso */
+          95%           { transform: translate(0, 0); }
+          100%			{ transform: translate(0, 0); }
+        }
+
+        .game-title-container {
+          display: flex;
+          gap: 6px;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .game-logo {
+          width: 44px;
+          height: 44px;
+          filter:drop-shadow(0 8px 16px rgba(74,59,82,.45));
+          animation:pop .6s ease both;
+        }
+    </style>
 </head>
 <body>
 
 <!-- Shared Siamese cat artwork, reused via <use> for the logo, modal icons,
      and every in-game cat token (see catSvg() in the script below). One
      source of truth for the character design. -->
-<svg style="display:none" aria-hidden="true">
-  <defs>
-    <radialGradient id="furShine" cx="35%" cy="28%" r="65%">
-      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.85"/>
-      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
-    </radialGradient>
-    <radialGradient id="furShade" cx="50%" cy="85%" r="55%">
-      <stop offset="0%" stop-color="#000000" stop-opacity="0.32"/>
-      <stop offset="100%" stop-color="#000000" stop-opacity="0"/>
-    </radialGradient>
-  </defs>
-  <symbol id="cat-face" viewBox="0 0 100 100">
-	<!-- orecchie -->
-    <polygon points="18,46 34,6 52,40" fill="var(--siamese-point, #432)"/>
-    <polygon points="82,46 66,6 48,40" fill="var(--siamese-point, #432)"/>
-	<!-- orecchie interno -->
-	<polygon points="24,46 34,12 48,40" fill="#9E6A62"/>
-    <polygon points="76,46 66,12 52,40" fill="#9E6A62"/>
-	
-	<!-- testa tonda -->
-	<circle cx="50" cy="60" r="34" fill="#F7E8CB"/>
-    <ellipse cx="50" cy="62" rx="30" ry="24" fill="var(--siamese-point, #432)"/>
-	
-	<!-- baffazzi -->
-    <g stroke="#FAF0DC" stroke-width="1.5" stroke-linecap="round">
-      <line x1="13" y1="68" x2="31" y2="66.5"/>
-      <line x1="13" y1="74" x2="31" y2="72.5"/>
-      <line x1="87" y1="68" x2="69" y2="66.5"/>
-      <line x1="87" y1="74" x2="69" y2="72.5"/>
-    </g>
-	
-	<g class="eye eye-l">
-	  <ellipse cx="41" cy="58" rx="5.4" ry="8.3" fill="#5BC8E8" transform="rotate(-76 41 58)"/>
-	  <g class="pupil">
-		<ellipse cx="41.3" cy="59.5" rx="2.3" ry="3.6" fill="#20140F"/>
-		<circle cx="39.6" cy="55.6" r="0.9" fill="#FFFFFF"/>
-	  </g>
-	</g>
-	<g class="eye eye-r">
-	  <ellipse cx="59" cy="58" rx="5.4" ry="8.3" fill="#5BC8E8" transform="rotate(76 59 58)"/>
-	  <g class="pupil">
-		<ellipse cx="58.7" cy="59.5" rx="2.3" ry="3.6" fill="#20140F"/>
-		<circle cx="57.6" cy="55.6" r="0.9" fill="#FFFFFF"/>
-	  </g>
-	</g>
-	
-	<!-- naso -->
-    <polygon points="50,74 45.5,68.8 54.5,68.8" fill="#E8929E"/>
-	
-	<!-- bocca -->
-	<path d="M50 72 L50 76 
+<svg style="position:absolute; width:0; height:0; overflow:hidden;" aria-hidden="true">
+    <defs>
+        <radialGradient id="furShine" cx="35%" cy="28%" r="65%">
+            <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.85"/>
+            <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+        </radialGradient>
+        <radialGradient id="furShade" cx="50%" cy="85%" r="55%">
+            <stop offset="0%" stop-color="#000000" stop-opacity="0.32"/>
+            <stop offset="100%" stop-color="#000000" stop-opacity="0"/>
+        </radialGradient>
+    </defs>
+    <symbol id="cat-face" viewBox="0 0 100 100">
+        <!-- orecchie -->
+        <polygon points="18,46 34,6 52,40" fill="var(--siamese-point, #432)"/>
+        <polygon points="82,46 66,6 48,40" fill="var(--siamese-point, #432)"/>
+        <!-- orecchie interno -->
+        <polygon points="24,46 34,12 48,40" fill="#9E6A62"/>
+        <polygon points="76,46 66,12 52,40" fill="#9E6A62"/>
+
+        <!-- testa tonda -->
+        <circle cx="50" cy="60" r="34" fill="#F7E8CB"/>
+        <ellipse cx="50" cy="62" rx="30" ry="24" fill="var(--siamese-point, #432)"/>
+
+        <!-- baffazzi -->
+        <g stroke="#FAF0DC" stroke-width="1.5" stroke-linecap="round">
+            <line x1="13" y1="68" x2="31" y2="66.5"/>
+            <line x1="13" y1="74" x2="31" y2="72.5"/>
+            <line x1="87" y1="68" x2="69" y2="66.5"/>
+            <line x1="87" y1="74" x2="69" y2="72.5"/>
+        </g>
+
+        <g class="eye eye-l">
+            <ellipse cx="41" cy="58" rx="5.4" ry="8.3" fill="#5BC8E8" transform="rotate(-76 41 58)"/>
+            <g class="pupil">
+                <ellipse cx="41.3" cy="59.5" rx="2.3" ry="3.6" fill="#20140F"/>
+                <circle cx="39.6" cy="55.6" r="0.9" fill="#FFFFFF"/>
+            </g>
+        </g>
+        <g class="eye eye-r">
+            <ellipse cx="59" cy="58" rx="5.4" ry="8.3" fill="#5BC8E8" transform="rotate(76 59 58)"/>
+            <g class="pupil">
+                <ellipse cx="58.7" cy="59.5" rx="2.3" ry="3.6" fill="#20140F"/>
+                <circle cx="57.6" cy="55.6" r="0.9" fill="#FFFFFF"/>
+            </g>
+        </g>
+
+        <!-- naso -->
+        <polygon points="50,74 45.5,68.8 54.5,68.8" fill="#E8929E"/>
+
+        <!-- bocca -->
+        <path d="M50 72 L50 76
 			 M50 76 Q46 80 42 76
 			 M50 75 Q53 81 57 76" stroke="#b98" stroke-width="1" fill="none"/>
 
-	<!-- volume 3D: luce in alto a sinistra, ombra sotto il muso -->
-	<ellipse cx="37" cy="45" rx="18" ry="13" fill="url(#furShine)"/>
-	<ellipse cx="50" cy="83" rx="27" ry="11" fill="url(#furShade)"/>
-  </symbol>
-  <symbol id="cat-face-sad" viewBox="0 0 100 100">
-    <!-- orecchie -->
-    <polygon points="18,46 34,6 52,40" fill="var(--siamese-point, #432)"/>
-    <polygon points="82,46 66,6 48,40" fill="var(--siamese-point, #432)"/>
-	<!-- orecchie interno -->
-	<polygon points="24,46 34,12 48,40" fill="#9E6A62"/>
-    <polygon points="76,46 66,12 52,40" fill="#9E6A62"/>
-	
-    <!-- testa tonda -->
-	<circle cx="50" cy="60" r="34" fill="#F7E8CB"/>
-    <ellipse cx="50" cy="62" rx="30" ry="24" fill="var(--siamese-point, #432)"/>
-	
-	<!-- occhi X -->
-    <g stroke="#FAF0DC" stroke-width="3.4" stroke-linecap="round">
-      <path d="M34 54 L45 65 M45 54 L34 65"/>
-      <path d="M66 54 L55 65 M55 54 L66 65"/>
-    </g>
-	
-	<!-- naso -->
-    <polygon points="50,74 45.5,68.8 54.5,68.8" fill="#E8929E"/>
+        <!-- volume 3D: luce in alto a sinistra, ombra sotto il muso -->
+        <ellipse cx="37" cy="45" rx="18" ry="13" fill="url(#furShine)"/>
+        <ellipse cx="50" cy="83" rx="27" ry="11" fill="url(#furShade)"/>
+    </symbol>
+    <symbol id="cat-face-sad" viewBox="0 0 100 100">
+        <!-- orecchie -->
+        <polygon points="18,46 34,6 52,40" fill="var(--siamese-point, #432)"/>
+        <polygon points="82,46 66,6 48,40" fill="var(--siamese-point, #432)"/>
+        <!-- orecchie interno -->
+        <polygon points="24,46 34,12 48,40" fill="#9E6A62"/>
+        <polygon points="76,46 66,12 52,40" fill="#9E6A62"/>
 
-	<!-- volume 3D -->
-	<ellipse cx="37" cy="45" rx="18" ry="13" fill="url(#furShine)"/>
-	<ellipse cx="50" cy="83" rx="27" ry="11" fill="url(#furShade)"/>
-  </symbol>
+        <!-- testa tonda -->
+        <circle cx="50" cy="60" r="34" fill="#F7E8CB"/>
+        <ellipse cx="50" cy="62" rx="30" ry="24" fill="var(--siamese-point, #432)"/>
+
+        <!-- occhi X -->
+        <g stroke="#FAF0DC" stroke-width="3.4" stroke-linecap="round">
+            <path d="M34 54 L45 65 M45 54 L34 65"/>
+            <path d="M66 54 L55 65 M55 54 L66 65"/>
+        </g>
+
+        <!-- naso -->
+        <polygon points="50,74 45.5,68.8 54.5,68.8" fill="#E8929E"/>
+
+        <!-- volume 3D -->
+        <ellipse cx="37" cy="45" rx="18" ry="13" fill="url(#furShine)"/>
+        <ellipse cx="50" cy="83" rx="27" ry="11" fill="url(#furShade)"/>
+    </symbol>
 </svg>
 
 <div id="app">
-  <audio id="catSound" preload="auto">
-  	<source src="./meowdoku-cat.mp3" type="audio/mpeg">
-  </audio>
-  <audio id="purrSound" preload="auto">
-  	<source src="./meowdoku-purr.mp3" type="audio/mpeg">
-  </audio>
-  <audio id="errorSound" preload="auto">
-  	<source src="./meowdoku-error.mp3" type="audio/mpeg">
-  </audio>
-  <audio id="musicSound" loop preload="auto">
-  	<source src="./meowdoku-music.mp3" type="audio/mpeg">
-  </audio>
+    <audio id="catSound" preload="auto">
+        <source src="./meowdoku-cat.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="purrSound" preload="auto">
+        <source src="./meowdoku-purr.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="errorSound" preload="auto">
+        <source src="./meowdoku-error.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="musicSound" loop preload="auto">
+        <source src="./meowdoku-music.mp3" type="audio/mpeg">
+    </audio>
 
-  <!-- ============ MENU SCREEN ============ -->
-  <section id="screen-menu" class="screen active" aria-label="Main menu">
-    <div class="hero">
-      <div class="hero-mark">
-        <svg viewBox="0 0 100 100" aria-hidden="true"><use href="#cat-face"/></svg>
-      </div>
-      <h1>Meowdoku</h1>
-	  <small>Rocky Graffietto Edition</small>
-      <p class="tagline">One cat per row. One cat per column.<br/>One cat per territory. Zero contact.</p>
-    </div>
-
-    <div class="diff-grid" id="diffGrid" role="list"></div>
-
-    <div class="menu-footer">
-      <button class="link-btn" id="btnHowMenu" type="button">How to play?</button>
-    </div>
-  </section>
-
-  <!-- ============ GAME SCREEN ============ -->
-  <section id="screen-game" class="screen" aria-label="Game in progress">
-    <div class="topbar">
-      <button class="icon-btn" id="btnBack" type="button" aria-label="Back to menu">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
-		<span>Back</span>
-      </button>
-	  <div class="game-title-container">
-		  <div class="game-logo">
-		    <svg viewBox="0 0 100 100" aria-hidden="true"><use href="#cat-face"/></svg>
-		  </div>
-		  <div class="game-title">
-			<div class="name" id="gameTitleName">Meowdoku<br/><small>Rocky Graffietto Edition</small></div>
-			<div class="level" id="gameTitleLevel">—</div>
-		  </div>
-	  </div>
-      <div class="status-row">
-        <div class="cats-counter" id="catsCounter" aria-label="Cats placed"></div>
-        <div class="hearts" id="hearts" aria-label="Lives remaining"></div>
-        <div class="timer" id="timer">00:00</div>
-      </div>
-    </div>
-
-    <div class="board-wrap">
-      <div class="board-frame">
-        <div id="board" role="grid" aria-label="Game grid"></div>
-        <div class="loading-overlay" id="loadingOverlay">
-          <svg class="loading-cat" viewBox="0 0 100 100" aria-hidden="true"><use href="#cat-face"/></svg>
-          <p>Rounding up the cats…</p>
+    <!-- ============ MENU SCREEN ============ -->
+    <section id="screen-menu" class="screen active" aria-label="Main menu">
+        <div class="hero">
+            <div class="hero-mark">
+                <svg viewBox="0 0 100 100" aria-hidden="true"><use href="#cat-face"/></svg>
+            </div>
+            <h1>Meowdoku</h1>
+            <small>Rocky Graffietto Edition</small>
+            <p class="tagline">One cat per row. One cat per column.<br/>One cat per territory. Zero contact.</p>
         </div>
-      </div>
-	  <p class="hint-text" id="hintText">Touch a cell: before X, then Cat, then Empty.</p>
-    </div>
-	
-	<div class="toolbar">
-      <button class="icon-btn btn-new" id="btnNew" type="button" title="New puzzle">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v6h-6"/></svg>
-        <span>New</span>
-      </button>
-      <button class="icon-btn btn-reset" id="btnRestart" type="button" title="Restart">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 3v6h6"/></svg>
-        <span>Reset</span>
-      </button>
-      <button class="icon-btn btn-undo" id="btnUndo" type="button" title="Undo">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14l-4-4 4-4"/><path d="M5 10h9a5 5 0 0 1 0 10h-1"/></svg>
-        <span>Undo</span>
-      </button>
-      <button class="icon-btn btn-hint" id="btnHint" type="button" title="Hint">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.2 1 2.3h6c0-1.1.4-1.8 1-2.3A7 7 0 0 0 12 2Z"/></svg>
-        <span>Hint</span>
-      </button>
-      <button class="icon-btn btn-rules" id="btnHowGame" type="button" title="Rules">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.4 2.3c-.9.4-1.4 1-1.4 2"/><path d="M12 17h.01"/></svg>
-		<span>Rules</span>
-      </button>
-	  <button class="icon-btn btn-music" id="btnMusic" type="button" title="Music">
-	    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10v4h4l5 4V6l-5 4H4z"/><path d="M16 9.5a4 4 0 0 1 0 5"/><path d="M18.5 7a7.5 7.5 0 0 1 0 10"/></svg>
-	    <span>Music</span>
-	  </button>
-    </div>
 
-	
-  </section>
+        <div class="diff-grid" id="diffGrid" role="list"></div>
+
+        <div class="menu-footer">
+            <button class="link-btn" id="btnHowMenu" type="button">How to play?</button>
+        </div>
+    </section>
+
+    <!-- ============ GAME SCREEN ============ -->
+    <section id="screen-game" class="screen" aria-label="Game in progress">
+        <div class="topbar">
+            <button class="icon-btn" id="btnBack" type="button" aria-label="Back to menu">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+                <span>Back</span>
+            </button>
+            <div class="game-title-container">
+                <div class="game-logo">
+                    <svg viewBox="0 0 100 100" aria-hidden="true"><use href="#cat-face"/></svg>
+                </div>
+                <div class="game-title">
+                    <div class="name" id="gameTitleName">Meowdoku<br/><small>Rocky Graffietto Edition</small></div>
+                    <div class="level" id="gameTitleLevel">—</div>
+                </div>
+            </div>
+            <div class="status-row">
+                <div class="cats-counter" id="catsCounter" aria-label="Cats placed"></div>
+                <div class="hearts" id="hearts" aria-label="Lives remaining"></div>
+                <div class="timer" id="timer">00:00</div>
+            </div>
+        </div>
+
+        <div class="board-wrap">
+            <div class="board-frame">
+                <div id="board" role="grid" aria-label="Game grid"></div>
+                <div class="loading-overlay" id="loadingOverlay">
+                    <svg class="loading-cat" viewBox="0 0 100 100" aria-hidden="true"><use href="#cat-face"/></svg>
+                    <p>Rounding up the cats…</p>
+                </div>
+            </div>
+            <p class="hint-text" id="hintText">Touch a cell: before X, then Cat, then Empty.</p>
+        </div>
+
+        <div class="toolbar">
+            <button class="icon-btn btn-new" id="btnNew" type="button" title="New puzzle">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v6h-6"/></svg>
+                <span>New</span>
+            </button>
+            <button class="icon-btn btn-reset" id="btnRestart" type="button" title="Restart">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 3v6h6"/></svg>
+                <span>Reset</span>
+            </button>
+            <button class="icon-btn btn-undo" id="btnUndo" type="button" title="Undo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14l-4-4 4-4"/><path d="M5 10h9a5 5 0 0 1 0 10h-1"/></svg>
+                <span>Undo</span>
+            </button>
+            <button class="icon-btn btn-hint" id="btnHint" type="button" title="Hint">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.2 1 2.3h6c0-1.1.4-1.8 1-2.3A7 7 0 0 0 12 2Z"/></svg>
+                <span>Hint</span>
+            </button>
+            <button class="icon-btn btn-rules" id="btnHowGame" type="button" title="Rules">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.4 2.3c-.9.4-1.4 1-1.4 2"/><path d="M12 17h.01"/></svg>
+                <span>Rules</span>
+            </button>
+            <button class="icon-btn btn-music" id="btnMusic" type="button" title="Music">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10v4h4l5 4V6l-5 4H4z"/><path d="M16 9.5a4 4 0 0 1 0 5"/><path d="M18.5 7a7.5 7.5 0 0 1 0 10"/></svg>
+                <span>Music</span>
+            </button>
+        </div>
+
+
+    </section>
 
 </div>
 
 <!-- ============ MODALS ============ -->
 <div class="modal-backdrop" id="modalHow">
-  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="howTitle">
-    <svg class="modal-icon" viewBox="0 0 100 100" aria-hidden="true"><use href="#cat-face"/></svg>
-    <h2 id="howTitle">How to play</h2>
-    <p>Every cat is territorial: it wants a home of its own, far from the others.</p>
-    <ul class="rule-list">
-      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 9h18M9 21V9"/></svg><span><b>One row, one cat.</b> Every row in the grid holds exactly one.</span></li>
-      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 9h18M9 21V9"/></svg><span><b>One column, one cat.</b> Same rule, vertically.</span></li>
-      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l3 6 6 1-4.5 4.5L17.5 21 12 17.5 6.5 21l1-6.5L3 10l6-1 3-6Z"/></svg><span><b>One colored area, one cat.</b> Every territory holds exactly one.</span></li>
-      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 8l8 8M16 8l-8 8"/></svg><span><b>Never touching.</b> Not even diagonally: cats need their space.</span></li>
-      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.2 1 2.3h6c0-1.1.4-1.8 1-2.3A7 7 0 0 0 12 2Z"/></svg><span><b>Tap to mark.</b> First tap: X (ruled out). Second: cat. Third: empty.</span></li>
-      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8Z"/></svg><span><b>3 lives.</b> Every cat placed in the wrong cell costs one.</span></li>
-    </ul>
-    <div class="modal-actions">
-      <button class="btn btn-primary" id="btnHowClose" type="button">Got it</button>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="howTitle">
+        <svg class="modal-icon" viewBox="0 0 100 100" aria-hidden="true"><use href="#cat-face"/></svg>
+        <h2 id="howTitle">How to play</h2>
+        <p>Every cat is territorial: it wants a home of its own, far from the others.</p>
+        <ul class="rule-list">
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 9h18M9 21V9"/></svg><span><b>One row, one cat.</b> Every row in the grid holds exactly one.</span></li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 9h18M9 21V9"/></svg><span><b>One column, one cat.</b> Same rule, vertically.</span></li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l3 6 6 1-4.5 4.5L17.5 21 12 17.5 6.5 21l1-6.5L3 10l6-1 3-6Z"/></svg><span><b>One colored area, one cat.</b> Every territory holds exactly one.</span></li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 8l8 8M16 8l-8 8"/></svg><span><b>Never touching.</b> Not even diagonally: cats need their space.</span></li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.2 1 2.3h6c0-1.1.4-1.8 1-2.3A7 7 0 0 0 12 2Z"/></svg><span><b>Tap to mark.</b> First tap: X (ruled out). Second: cat. Third: empty.</span></li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8Z"/></svg><span><b>3 lives.</b> Every cat placed in the wrong cell costs one.</span></li>
+        </ul>
+        <div class="modal-actions">
+            <button class="btn btn-primary" id="btnHowClose" type="button">Got it</button>
+        </div>
     </div>
-  </div>
 </div>
 
 <div class="modal-backdrop" id="modalWin">
-  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="winTitle">
-    <svg class="modal-icon" viewBox="0 0 100 100" aria-hidden="true"><use href="#cat-face"/></svg>
-    <h2 id="winTitle">Territories claimed!</h2>
-    <p>Every cat has found its own corner of the world. Well done.</p>
-    <div class="modal-stats">
-      <div class="stat-box"><div class="lbl">TIME</div><div class="val" id="winTime">00:00</div></div>
-      <div class="stat-box"><div class="lbl">LEVEL</div><div class="val" id="winLevel">—</div></div>
-      <div class="stat-box"><div class="lbl">LIVES</div><div class="val" id="winLives">3</div></div>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="winTitle">
+        <svg class="modal-icon" viewBox="0 0 100 100" aria-hidden="true"><use href="#cat-face"/></svg>
+        <h2 id="winTitle">Territories claimed!</h2>
+        <p>Every cat has found its own corner of the world. Well done.</p>
+        <div class="modal-stats">
+            <div class="stat-box"><div class="lbl">TIME</div><div class="val" id="winTime">00:00</div></div>
+            <div class="stat-box"><div class="lbl">LEVEL</div><div class="val" id="winLevel">—</div></div>
+            <div class="stat-box"><div class="lbl">LIVES</div><div class="val" id="winLives">3</div></div>
+        </div>
+        <div class="modal-actions">
+            <button class="btn btn-ghost" id="btnWinMenu" type="button">Menu</button>
+            <button class="btn btn-primary" id="btnWinNext" type="button">New puzzle</button>
+        </div>
     </div>
-    <div class="modal-actions">
-      <button class="btn btn-ghost" id="btnWinMenu" type="button">Menu</button>
-      <button class="btn btn-primary" id="btnWinNext" type="button">New puzzle</button>
-    </div>
-  </div>
 </div>
 
 <div class="modal-backdrop" id="modalLose">
-  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="loseTitle">
-    <svg class="modal-icon" viewBox="0 0 100 100" aria-hidden="true"><use href="#cat-face-sad"/></svg>
-    <h2 id="loseTitle">Out of lives</h2>
-    <p>You've used up all 3 lives. Take a breath and try again — the solution is still waiting for you.</p>
-    <div class="modal-actions">
-      <button class="btn btn-ghost" id="btnLoseMenu" type="button">Menu</button>
-      <button class="btn btn-primary" id="btnLoseRetry" type="button">Try again</button>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="loseTitle">
+        <svg class="modal-icon" viewBox="0 0 100 100" aria-hidden="true"><use href="#cat-face-sad"/></svg>
+        <h2 id="loseTitle">Out of lives</h2>
+        <p>You've used up all 3 lives. Take a breath and try again — the solution is still waiting for you.</p>
+        <div class="modal-actions">
+            <button class="btn btn-ghost" id="btnLoseMenu" type="button">Menu</button>
+            <button class="btn btn-primary" id="btnLoseRetry" type="button">Try again</button>
+        </div>
     </div>
-  </div>
 </div>
 
 <script>
-(function(){
-"use strict";
+    (function(){
+    "use strict";
 
-/* ============================================================
-   1. PUZZLE GENERATOR
-   Queste funzioni sono scritte per essere riutilizzabili sia
-   nel thread principale (fallback sincrono) sia dentro un
-   Web Worker costruito dinamicamente da Function#toString(),
-   cosi' la logica esiste in un solo punto del file.
-   ============================================================ */
-const DIRS = [[-1,0],[1,0],[0,-1],[0,1]];
-
-function rndInt(n){ return Math.floor(Math.random() * n); }
-
-function shuffleArr(arr){
-  for (let i = arr.length - 1; i > 0; i--){
-    const j = rndInt(i + 1);
-    const tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
-  }
-  return arr;
-}
-
-function arraysEqual(a, b){
-  for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
-  return true;
-}
-
-// Valid permutation: 1 cat per row/column, adjacent rows can't have
-// columns at distance <=1 (otherwise they'd be touching).
-function generateSolution(n){
-  const cols = [];
-  function backtrack(row, usedCols, prevCol){
-    if (row === n) return true;
-    const order = shuffleArr(Array.from({length:n}, function(_,i){ return i; }));
-    for (let k = 0; k < order.length; k++){
-      const col = order[k];
-      if (usedCols.has(col)) continue;
-      if (prevCol !== null && Math.abs(col - prevCol) <= 1) continue;
-      usedCols.add(col);
-      cols[row] = col;
-      if (backtrack(row + 1, usedCols, col)) return true;
-      usedCols.delete(col);
+    // Fix del bug "100vh stantio dopo rotazione" tipico delle WebView Android:
+    // calcoliamo l'altezza reale della viewport via JS e la esponiamo come
+    // custom property, usata al posto di 100vh in CSS (vedi body/#app).
+    function setViewportHeightVar(){
+      document.documentElement.style.setProperty("--vh", (window.innerHeight * 0.01) + "px");
     }
-    return false;
-  }
-  const ok = backtrack(0, new Set(), null);
-  return ok ? cols.slice() : null;
-}
+    setViewportHeightVar();
 
-// "Snake" growth of regions starting from the solution seeds: long,
-// irregular shapes constrain the solution more than compact BFS
-// growth does, drastically cutting down the number of attempts needed.
-//
-// forcedRegion/forcedSize: a randomly chosen region is excluded from
-// growth as soon as it reaches forcedSize cells. With forcedSize=1 that
-// region stays a single cell: the first move is forced (the cat can
-// only go there). With forcedSize=2 it stays a 2-cell "domino": the
-// first move is a genuine 50/50 until the other rules narrow it down.
-// -1 disables the constraint.
-function growRegions(n, solution, forcedRegion, forcedSize){
-  const region = Array.from({length:n}, function(){ return new Array(n).fill(-1); });
-  const cellsOf = Array.from({length:n}, function(){ return []; });
-  const lastCell = [];
-  for (let r = 0; r < n; r++){
-    region[r][solution[r]] = r;
-    cellsOf[r].push([r, solution[r]]);
-    lastCell[r] = [r, solution[r]];
-  }
-  let unassigned = n * n - n;
+    /* ============================================================
+       1. PUZZLE GENERATOR
+       Queste funzioni sono scritte per essere riutilizzabili sia
+       nel thread principale (fallback sincrono) sia dentro un
+       Web Worker costruito dinamicamente da Function#toString(),
+       cosi' la logica esiste in un solo punto del file.
+       ============================================================ */
+    const DIRS = [[-1,0],[1,0],[0,-1],[0,1]];
 
-  function isCapped(reg){ return reg === forcedRegion && cellsOf[reg].length >= forcedSize; }
-  function neighborsOf(r, c){
-    const out = [];
-    for (let i = 0; i < DIRS.length; i++){
-      const nr = r + DIRS[i][0], nc = c + DIRS[i][1];
-      if (nr >= 0 && nr < n && nc >= 0 && nc < n && region[nr][nc] === -1) out.push([nr, nc]);
-    }
-    return out;
-  }
-  function anyFrontier(reg){
-    for (let i = 0; i < cellsOf[reg].length; i++){
-      const f = neighborsOf(cellsOf[reg][i][0], cellsOf[reg][i][1]);
-      if (f.length) return f;
-    }
-    return [];
-  }
+    function rndInt(n){ return Math.floor(Math.random() * n); }
 
-  let guard = 0;
-  while (unassigned > 0){
-    guard++;
-    if (guard > n * n * 80) throw new Error("growRegions stuck");
-    const regionOrder = shuffleArr(Array.from({length:n}, function(_,i){ return i; }))
-      .sort(function(a,b){ return cellsOf[a].length - cellsOf[b].length; });
-    let placed = false;
-    for (let i = 0; i < regionOrder.length; i++){
-      const reg = regionOrder[i];
-      if (isCapped(reg)) continue;
-      let options = neighborsOf(lastCell[reg][0], lastCell[reg][1]);
-      if (options.length === 0) options = anyFrontier(reg);
-      if (options.length === 0) continue;
-      const pick = options[rndInt(options.length)];
-      region[pick[0]][pick[1]] = reg;
-      cellsOf[reg].push(pick);
-      lastCell[reg] = pick;
-      unassigned--;
-      placed = true;
-      break;
+    function shuffleArr(arr){
+      for (let i = arr.length - 1; i > 0; i--){
+        const j = rndInt(i + 1);
+        const tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
+      }
+      return arr;
     }
-    if (!placed){
-      let done = false;
-      for (let r = 0; r < n && !done; r++){
-        for (let c = 0; c < n && !done; c++){
-          if (region[r][c] !== -1) continue;
-          const neighborRegs = [];
-          for (let i = 0; i < DIRS.length; i++){
-            const nr = r + DIRS[i][0], nc = c + DIRS[i][1];
-            if (nr >= 0 && nr < n && nc >= 0 && nc < n && region[nr][nc] !== -1) neighborRegs.push(region[nr][nc]);
+
+    function arraysEqual(a, b){
+      for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
+      return true;
+    }
+
+    // Valid permutation: 1 cat per row/column, adjacent rows can't have
+    // columns at distance <=1 (otherwise they'd be touching).
+    function generateSolution(n){
+      const cols = [];
+      function backtrack(row, usedCols, prevCol){
+        if (row === n) return true;
+        const order = shuffleArr(Array.from({length:n}, function(_,i){ return i; }));
+        for (let k = 0; k < order.length; k++){
+          const col = order[k];
+          if (usedCols.has(col)) continue;
+          if (prevCol !== null && Math.abs(col - prevCol) <= 1) continue;
+          usedCols.add(col);
+          cols[row] = col;
+          if (backtrack(row + 1, usedCols, col)) return true;
+          usedCols.delete(col);
+        }
+        return false;
+      }
+      const ok = backtrack(0, new Set(), null);
+      return ok ? cols.slice() : null;
+    }
+
+    // "Snake" growth of regions starting from the solution seeds: long,
+    // irregular shapes constrain the solution more than compact BFS
+    // growth does, drastically cutting down the number of attempts needed.
+    //
+    // forcedRegion/forcedSize: a randomly chosen region is excluded from
+    // growth as soon as it reaches forcedSize cells. With forcedSize=1 that
+    // region stays a single cell: the first move is forced (the cat can
+    // only go there). With forcedSize=2 it stays a 2-cell "domino": the
+    // first move is a genuine 50/50 until the other rules narrow it down.
+    // -1 disables the constraint.
+    function growRegions(n, solution, forcedRegion, forcedSize){
+      const region = Array.from({length:n}, function(){ return new Array(n).fill(-1); });
+      const cellsOf = Array.from({length:n}, function(){ return []; });
+      const lastCell = [];
+      for (let r = 0; r < n; r++){
+        region[r][solution[r]] = r;
+        cellsOf[r].push([r, solution[r]]);
+        lastCell[r] = [r, solution[r]];
+      }
+      let unassigned = n * n - n;
+
+      function isCapped(reg){ return reg === forcedRegion && cellsOf[reg].length >= forcedSize; }
+      function neighborsOf(r, c){
+        const out = [];
+        for (let i = 0; i < DIRS.length; i++){
+          const nr = r + DIRS[i][0], nc = c + DIRS[i][1];
+          if (nr >= 0 && nr < n && nc >= 0 && nc < n && region[nr][nc] === -1) out.push([nr, nc]);
+        }
+        return out;
+      }
+      function anyFrontier(reg){
+        for (let i = 0; i < cellsOf[reg].length; i++){
+          const f = neighborsOf(cellsOf[reg][i][0], cellsOf[reg][i][1]);
+          if (f.length) return f;
+        }
+        return [];
+      }
+
+      let guard = 0;
+      while (unassigned > 0){
+        guard++;
+        if (guard > n * n * 80) throw new Error("growRegions stuck");
+        const regionOrder = shuffleArr(Array.from({length:n}, function(_,i){ return i; }))
+          .sort(function(a,b){ return cellsOf[a].length - cellsOf[b].length; });
+        let placed = false;
+        for (let i = 0; i < regionOrder.length; i++){
+          const reg = regionOrder[i];
+          if (isCapped(reg)) continue;
+          let options = neighborsOf(lastCell[reg][0], lastCell[reg][1]);
+          if (options.length === 0) options = anyFrontier(reg);
+          if (options.length === 0) continue;
+          const pick = options[rndInt(options.length)];
+          region[pick[0]][pick[1]] = reg;
+          cellsOf[reg].push(pick);
+          lastCell[reg] = pick;
+          unassigned--;
+          placed = true;
+          break;
+        }
+        if (!placed){
+          let done = false;
+          for (let r = 0; r < n && !done; r++){
+            for (let c = 0; c < n && !done; c++){
+              if (region[r][c] !== -1) continue;
+              const neighborRegs = [];
+              for (let i = 0; i < DIRS.length; i++){
+                const nr = r + DIRS[i][0], nc = c + DIRS[i][1];
+                if (nr >= 0 && nr < n && nc >= 0 && nc < n && region[nr][nc] !== -1) neighborRegs.push(region[nr][nc]);
+              }
+              if (neighborRegs.length === 0) continue;
+              let chosen = -1;
+              for (let i = 0; i < neighborRegs.length; i++) if (!isCapped(neighborRegs[i])) { chosen = neighborRegs[i]; break; }
+              if (chosen === -1) chosen = neighborRegs[0]; // last resort: may violate the cap in rare geometric edge cases
+              region[r][c] = chosen; cellsOf[chosen].push([r,c]); lastCell[chosen] = [r,c];
+              unassigned--; done = true;
+            }
           }
-          if (neighborRegs.length === 0) continue;
-          let chosen = -1;
-          for (let i = 0; i < neighborRegs.length; i++) if (!isCapped(neighborRegs[i])) { chosen = neighborRegs[i]; break; }
-          if (chosen === -1) chosen = neighborRegs[0]; // last resort: may violate the cap in rare geometric edge cases
-          region[r][c] = chosen; cellsOf[chosen].push([r,c]); lastCell[chosen] = [r,c];
-          unassigned--; done = true;
+          if (!done) throw new Error("growRegions truly stuck");
         }
       }
-      if (!done) throw new Error("growRegions truly stuck");
+      return region;
     }
-  }
-  return region;
-}
 
-function collectSolutions(n, regionGrid, cap){
-  const found = [];
-  function backtrack(row, usedCols, usedRegions, prevCol, cur){
-    if (found.length >= cap) return;
-    if (row === n){ found.push(cur.slice()); return; }
-    for (let col = 0; col < n; col++){
-      if (found.length >= cap) return;
-      if (usedCols.has(col)) continue;
-      const reg = regionGrid[row][col];
-      if (usedRegions.has(reg)) continue;
-      if (prevCol !== null && Math.abs(col - prevCol) <= 1) continue;
-      usedCols.add(col); usedRegions.add(reg); cur.push(col);
-      backtrack(row + 1, usedCols, usedRegions, col, cur);
-      cur.pop(); usedCols.delete(col); usedRegions.delete(reg);
-    }
-  }
-  backtrack(0, new Set(), new Set(), null, []);
-  return found;
-}
-
-function getAlternate(n, regionGrid, solution){
-  const found = collectSolutions(n, regionGrid, 2);
-  for (let i = 0; i < found.length; i++) if (!arraysEqual(found[i], solution)) return found[i];
-  return null;
-}
-
-function buildCellsOf(n, regionGrid){
-  const cellsOf = Array.from({length:n}, function(){ return []; });
-  for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) cellsOf[regionGrid[r][c]].push([r,c]);
-  return cellsOf;
-}
-
-function wouldDisconnect(cellsOf, oldReg, r, c){
-  const cells = cellsOf[oldReg];
-  if (cells.length <= 1) return true;
-  const remaining = [];
-  for (let i = 0; i < cells.length; i++) if (!(cells[i][0] === r && cells[i][1] === c)) remaining.push(cells[i]);
-  const remainingSet = new Set(remaining.map(function(p){ return p[0] + ',' + p[1]; }));
-  const seen = new Set([remaining[0][0] + ',' + remaining[0][1]]);
-  const stack = [remaining[0]];
-  while (stack.length){
-    const cur = stack.pop();
-    for (let i = 0; i < DIRS.length; i++){
-      const nr = cur[0] + DIRS[i][0], nc = cur[1] + DIRS[i][1];
-      const key = nr + ',' + nc;
-      if (remainingSet.has(key) && !seen.has(key)){ seen.add(key); stack.push([nr,nc]); }
-    }
-  }
-  return seen.size !== remaining.length;
-}
-
-// Eliminates spurious solutions by moving single boundary cells to a
-// neighboring region, never touching the true solution cell and never
-// breaking a region's connectivity (territories stay compact).
-// Never touches the forced region: doesn't remove cells from it (that
-// would break the constraint) and never assigns it cells past the cap.
-// `deadline` (Date.now() ms) lets a slow grid (10x10) bail out of a
-// stuck repair instead of grinding through hundreds of full alternate-
-// solution searches; the attempt is simply discarded like any other
-// failed attempt, so correctness (only provably-unique puzzles are
-// ever returned) is unaffected.
-function repairRegions(n, regionGrid, solution, maxRepairs, forcedRegion, forcedSize, deadline){
-  for (let iter = 0; iter < maxRepairs; iter++){
-    if (deadline && Date.now() > deadline) return -1;
-    const alt = getAlternate(n, regionGrid, solution);
-    if (!alt) return iter;
-    const cellsOf = buildCellsOf(n, regionGrid);
-    const diffRows = [];
-    for (let r = 0; r < n; r++) if (alt[r] !== solution[r]) diffRows.push(r);
-    shuffleArr(diffRows);
-    let repaired = false;
-    for (let i = 0; i < diffRows.length; i++){
-      const r = diffRows[i], c = alt[r];
-      const oldReg = regionGrid[r][c];
-      if (oldReg === forcedRegion) continue;
-      if (wouldDisconnect(cellsOf, oldReg, r, c)) continue;
-      const candidates = [];
-      for (let d = 0; d < DIRS.length; d++){
-        const nr = r + DIRS[d][0], nc = c + DIRS[d][1];
-        if (nr >= 0 && nr < n && nc >= 0 && nc < n && regionGrid[nr][nc] !== oldReg){
-          const cr = regionGrid[nr][nc];
-          if (cr === forcedRegion && cellsOf[forcedRegion].length >= forcedSize) continue;
-          candidates.push(cr);
+    function collectSolutions(n, regionGrid, cap){
+      const found = [];
+      function backtrack(row, usedCols, usedRegions, prevCol, cur){
+        if (found.length >= cap) return;
+        if (row === n){ found.push(cur.slice()); return; }
+        for (let col = 0; col < n; col++){
+          if (found.length >= cap) return;
+          if (usedCols.has(col)) continue;
+          const reg = regionGrid[row][col];
+          if (usedRegions.has(reg)) continue;
+          if (prevCol !== null && Math.abs(col - prevCol) <= 1) continue;
+          usedCols.add(col); usedRegions.add(reg); cur.push(col);
+          backtrack(row + 1, usedCols, usedRegions, col, cur);
+          cur.pop(); usedCols.delete(col); usedRegions.delete(reg);
         }
       }
-      if (candidates.length === 0) continue;
-      shuffleArr(candidates);
-      regionGrid[r][c] = candidates[0];
-      repaired = true;
-      break;
+      backtrack(0, new Set(), new Set(), null, []);
+      return found;
     }
-    if (!repaired) return -1;
-  }
-  return -2;
-}
 
-function regionSizes(n, regionGrid){
-  const sizes = new Array(n).fill(0);
-  for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) sizes[regionGrid[r][c]]++;
-  return sizes;
-}
-
-// One full attempt: solution + growth with a forced region + repair.
-function generatePuzzleOnce(n, forcedSize, maxGenAttempts, maxRepairs, deadline){
-  for (let attempt = 0; attempt < maxGenAttempts; attempt++){
-    if (deadline && Date.now() > deadline) return null;
-    const solution = generateSolution(n);
-    if (!solution) continue;
-    const forcedRegion = rndInt(n);
-    let regions;
-    try { regions = growRegions(n, solution, forcedRegion, forcedSize); } catch(e){ continue; }
-    const rep = repairRegions(n, regions, solution, maxRepairs, forcedRegion, forcedSize, deadline);
-    if (rep >= 0) return { n:n, solution:solution, regions:regions };
-  }
-  return null;
-}
-
-// Generation cost grows fast with n (bigger board, slower uniqueness
-// checks, and Panther's forced 2-cell "domino" needs extra repair
-// work on top of that) so the same attempt/repair budget that's
-// instant on a 4x4 can take a very long time on a 10x10. Scale the
-// budget down for bigger grids and cap total wall-clock time so the
-// worst case is "a returned puzzle, maybe not perfectly tuned" rather
-// than "the user waits forever".
-function genParamsFor(n){
-  if (n <= 6) return { maxGenAttempts: 300, maxRepairs: 800, k: 5, timeBudgetMs: 4000 };
-  if (n === 8) return { maxGenAttempts: 150, maxRepairs: 300, k: 3, timeBudgetMs: 5000 };
-  return { maxGenAttempts: 60, maxRepairs: 120, k: 2, timeBudgetMs: 6000 }; // 10x10 / Panther
-}
-
-// Repair can rarely grow the forced region past its cap (rare geometric
-// edge cases): a handful of full attempts is almost always enough to
-// land the exact size, with a safe fallback if not. Bounded overall by
-// timeBudgetMs so a hard grid size never hangs the UI.
-function generatePuzzleSync(n, forcedSize, maxGenAttempts, maxRepairs, kAttempts, timeBudgetMs){
-  const deadline = timeBudgetMs ? (Date.now() + timeBudgetMs) : null;
-  const K = kAttempts || 5;
-  let fallback = null;
-  for (let k = 0; k < K; k++){
-    if (deadline && Date.now() > deadline) break;
-    const res = generatePuzzleOnce(n, forcedSize, maxGenAttempts, maxRepairs, deadline);
-    if (!res) continue;
-    if (!fallback) fallback = res;
-    const sizes = regionSizes(n, res.regions);
-    if (Math.min.apply(null, sizes) === forcedSize) return res;
-  }
-  return fallback;
-}
-
-/* ---- Web Worker costruito dal codice sopra, per non bloccare la UI ---- */
-let puzzleWorker = null;
-function getWorker(){
-  if (puzzleWorker) return puzzleWorker;
-  try{
-    const fns = [rndInt, shuffleArr, arraysEqual, generateSolution, growRegions,
-                 collectSolutions, getAlternate, buildCellsOf, wouldDisconnect,
-                 repairRegions, regionSizes, genParamsFor, generatePuzzleOnce, generatePuzzleSync];
-    let src = "const DIRS=" + JSON.stringify(DIRS) + ";\n\n";
-    src += fns.map(function(f){ return f.toString(); }).join("\n\n");
-    src += "\n\nself.onmessage = function(e){\n" +
-           "  const n = e.data.n, forcedSize = e.data.forcedSize;\n" +
-           "  const p = genParamsFor(n);\n" +
-           "  let result = null;\n" +
-           "  try { result = generatePuzzleSync(n, forcedSize, p.maxGenAttempts, p.maxRepairs, p.k, p.timeBudgetMs); } catch(err) { result = null; }\n" +
-           "  self.postMessage(result);\n" +
-           "};";
-    const blob = new Blob([src], { type: "application/javascript" });
-    puzzleWorker = new Worker(URL.createObjectURL(blob));
-  } catch(e){
-    puzzleWorker = null;
-  }
-  return puzzleWorker;
-}
-
-function generatePuzzleAsync(n, forcedSize){
-  const p = genParamsFor(n);
-  return new Promise(function(resolve){
-    const w = getWorker();
-    if (w){
-      const onMsg = function(e){
-        w.removeEventListener("message", onMsg);
-        w.removeEventListener("error", onErr);
-        resolve(e.data);
-      };
-      const onErr = function(){
-        w.removeEventListener("message", onMsg);
-        w.removeEventListener("error", onErr);
-        // synchronous fallback if the worker fails at runtime
-        setTimeout(function(){ resolve(generatePuzzleSync(n, forcedSize, p.maxGenAttempts, p.maxRepairs, p.k, p.timeBudgetMs)); }, 10);
-      };
-      w.addEventListener("message", onMsg);
-      w.addEventListener("error", onErr);
-      w.postMessage({ n: n, forcedSize: forcedSize });
-    } else {
-      setTimeout(function(){ resolve(generatePuzzleSync(n, forcedSize, p.maxGenAttempts, p.maxRepairs, p.k, p.timeBudgetMs)); }, 10);
+    function getAlternate(n, regionGrid, solution){
+      const found = collectSolutions(n, regionGrid, 2);
+      for (let i = 0; i < found.length; i++) if (!arraysEqual(found[i], solution)) return found[i];
+      return null;
     }
-  });
-}
 
-/* ============================================================
-   2. THEME / REGION PALETTE
-   ============================================================ */
-function regionPalette(n){
-  const baseHue = rndInt(360);
-  const sats = [62, 50];
-  const lits = [83, 77];
-  const colors = [];
-  for (let i = 0; i < n; i++){
-    const hue = (baseHue + i * (360 / n) + (rndInt(9) - 4)) % 360;
-    const s = sats[i % 2];
-    const l = lits[Math.floor(i / 2) % 2];
-    colors.push("hsl(" + Math.round(hue) + "," + s + "%," + l + "%)");
-  }
-  return colors;
-}
-
-/* ============================================================
-   3. DIFFICULTY LEVELS
-   forcedSize=1 -> one region stays a single cell: the first move is
-                   always deducible with certainty, no guessing needed.
-   forcedSize=2 -> one region stays a 2-cell "domino": you start with
-                   a genuine 50/50, then logic takes over.
-   ============================================================ */
-const DIFFICULTIES_OLD = [
-  { n:4,  name:"Kitten", 		sub:"To warm-up the paws",	  paws:1, forcedSize:1 },
-  { n:5,  name:"Tabby Cat",		sub:"Feline instinct",		  paws:2, forcedSize:1 },
-  { n:6,  name:"Wildcat",		sub:"Complex territories",	  paws:3, forcedSize:1 },
-  { n:8,  name:"Panther",		sub:"Roof master",			  paws:4, forcedSize:1 },
-  { n:10, name:"Alpha Colony",  sub:"No mercy for beginners", paws:5, forcedSize:2 }
-];
-
-const DIFFICULTIES = [
-	{ n:4,  name:"House Kitten",       sub:"The floor is lava, curtains are target dummy.",    paws:1, forcedSize:1 },
-	{ n:5,  name:"Living Room Ninja",  sub:"Special skill: Knocking glasses off tables.",      paws:2, forcedSize:1 },
-	{ n:6,  name:"3 AM Zoomies",       sub:"Singing the song of my people at midnight.",       paws:3, forcedSize:1 },
-	{ n:7,  name:"Roof Ruler",         sub:"King of the alley, terror of pigeons.",            paws:4, forcedSize:1 },
-	{ n:8,  name:"Keyboard Overlord",  sub:"I sleep on the keyboardfghjklòàù+*",                   paws:5, forcedSize:1 },
-	{ n:9,  name:"Schrödinger's Boss", sub:"Simultaneously beaten and unbeaten.",              paws:6, forcedSize:1 },
-	{ n:10, name:"Egyptian Deity",     sub:"Demand worship, golden cans, and zero mercy.",     paws:7, forcedSize:2 }
-];
-
-/* ============================================================
-   4. REUSABLE SVG ICONS
-   ============================================================ */
-function catSvgOLD(cls){
-  return '<svg class="glyph ' + (cls||"") + '" viewBox="0 0 100 100" aria-hidden="true"><use href="#cat-face"/></svg>';
-}
-function catSvg(cls, row = 0, col = 0){
-  const eyeDelay = (-(Math.random() * 5)).toFixed(2) + "s";
-  const lookDelay = (-(Math.random() * 9)).toFixed(2) + "s";
-  const siamesePointColors = [
-	"#211",//seal
-	"#666",//blue
-	"#432",//choco
-	"#842",//red
-	"#987"//lilac
-  ];
-  const siamesePoint = siamesePointColors[row % siamesePointColors.length];
-  return '<svg class="glyph ' + (cls||"") + '" viewBox="0 0 100 100" aria-hidden="true" ' +
-    'style="--eye-delay:' + eyeDelay + '; --look-delay:' + lookDelay + '; --siamese-point:' + siamesePoint+ ';">' +
-    '<use href="#cat-face"/></svg>';
-}
-function xSvg(){
-  return '<svg class="glyph xmark" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="30" stroke-linecap="round" aria-hidden="true">' +
-    '<line x1="20" y1="20" x2="80" y2="80"/><line x1="80" y1="20" x2="20" y2="80"/>' +
-	'</svg>';
-}
-function pawSvg(cls){
-  return '<svg class="' + (cls||"") + '" viewBox="0 0 100 100" fill="currentColor" aria-hidden="true">' +
-    '<ellipse cx="50" cy="68" rx="27" ry="22"/>' +
-    '<circle cx="27" cy="34" r="12"/><circle cx="50" cy="22" r="12.5"/>' +
-    '<circle cx="73" cy="34" r="12"/></svg>';
-}
-
-/* ============================================================
-   5. GAME STATE
-   ============================================================ */
-const state = {
-  n: 0,
-  difficulty: null,
-  regions: null,     // regions[r][c] -> region index
-  solution: null,     // usato solo dai suggerimenti
-  grid: null,         // 'empty' | 'x' | 'cat'
-  cellEls: null,       // [r][c] -> riferimento diretto al bottone DOM (mai ricreato dopo buildBoardOnce)
-  hearts: 3,
-  hintsUsed: 0,
-  history: [],         // stack di snapshot { grid, hearts }
-  focusR: 0,
-  focusC: 0,
-  timerStart: 0,
-  timerElapsed: 0,
-  timerRunning: false,
-  timerHandle: null,
-  gameOver: false,
-  palette: null,
-  paletteDark: null
-};
-
-/* ============================================================
-   6. GAME UTILITIES
-   ============================================================ */
-function isAdjacent(r1,c1,r2,c2){
-  if (r1 === r2 && c1 === c2) return false;
-  return Math.abs(r1-r2) <= 1 && Math.abs(c1-c2) <= 1;
-}
-
-function cellsRelatedTo(r,c){
-  // every cell sharing row, column, or region with (r,c), or adjacent to it
-  const n = state.n;
-  const reg = state.regions[r][c];
-  const out = [];
-  for (let rr = 0; rr < n; rr++){
-    for (let cc = 0; cc < n; cc++){
-      if (rr === r && cc === c) continue;
-      if (rr === r || cc === c || state.regions[rr][cc] === reg || isAdjacent(r,c,rr,cc)) out.push([rr,cc]);
+    function buildCellsOf(n, regionGrid){
+      const cellsOf = Array.from({length:n}, function(){ return []; });
+      for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) cellsOf[regionGrid[r][c]].push([r,c]);
+      return cellsOf;
     }
-  }
-  return out;
-}
 
-function findConflicts(r,c){
-  const related = cellsRelatedTo(r,c);
-  const conflicts = [];
-  for (let i = 0; i < related.length; i++){
-    const rr = related[i][0], cc = related[i][1];
-    if (state.grid[rr][cc] === 'cat') conflicts.push([rr,cc]);
-  }
-  return conflicts;
-}
-
-function snapshot(){
-  state.history.push({
-    grid: state.grid.map(function(row){ return row.slice(); }),
-    hearts: state.hearts
-  });
-  updateUndoBtn();
-}
-
-function restoreSnapshot(){
-  if (!state.history.length) return;
-  const snap = state.history.pop();
-  state.grid = snap.grid;
-  state.hearts = snap.hearts;
-  ////renderBoard();
-  syncBoardVisuals();
-  renderHearts();
-  updateUndoBtn();
-  checkWin();
-}
-
-/* ============================================================
-   7. RENDER
-   ============================================================ */
-const els = {};
-function cacheEls(){
-  ["screen-menu","screen-game","diffGrid","board","loadingOverlay",
-   "gameTitleName","gameTitleLevel","hearts","timer","hintText","catsCounter",
-   "modalHow","modalWin","modalLose","winTime","winLevel","winLives"
-  ].forEach(function(id){ els[id] = document.getElementById(id); });
-  
-  //fix resize
-  new ResizeObserver(function(entries){
-    els.board.style.height = entries[0].contentRect.width + "px";
-  }).observe(els.board.parentElement); // .board-frame
-}
-
-function renderMenu(){
-  let html = "";
-  DIFFICULTIES.forEach(function(d, idx){
-    const hue = (idx * 67) % 360;
-    let paws = "";
-    for (let i = 0; i < DIFFICULTIES.length; i++){
-      paws += '<span class="' + (i < d.paws ? "filled" : "empty") + '">' + pawSvg() + "</span>";
+    function wouldDisconnect(cellsOf, oldReg, r, c){
+      const cells = cellsOf[oldReg];
+      if (cells.length <= 1) return true;
+      const remaining = [];
+      for (let i = 0; i < cells.length; i++) if (!(cells[i][0] === r && cells[i][1] === c)) remaining.push(cells[i]);
+      const remainingSet = new Set(remaining.map(function(p){ return p[0] + ',' + p[1]; }));
+      const seen = new Set([remaining[0][0] + ',' + remaining[0][1]]);
+      const stack = [remaining[0]];
+      while (stack.length){
+        const cur = stack.pop();
+        for (let i = 0; i < DIRS.length; i++){
+          const nr = cur[0] + DIRS[i][0], nc = cur[1] + DIRS[i][1];
+          const key = nr + ',' + nc;
+          if (remainingSet.has(key) && !seen.has(key)){ seen.add(key); stack.push([nr,nc]); }
+        }
+      }
+      return seen.size !== remaining.length;
     }
-    const tint = 'hsl(' + hue + ',85%,93%)';
-    const shadow = 'hsl(' + hue + ',55%,68%)';
-    const border = 'hsl(' + hue + ',60%,60%)';
-    html += '<button class="diff-card" type="button" data-n="' + d.n + '" role="listitem" ' +
-      'style="--diff-tint:' + tint + '; --diff-shadow:' + shadow + '; --diff-border:' + border + ';">' +
-      '<div class="diff-swatch" style="background:hsl(' + hue + ',65%,72%)">' + d.n + '×' + d.n + '</div>' +
-      '<div class="diff-info"><div class="diff-name">' + d.name + '</div>' +
-      '<div class="diff-sub">' + d.sub + '</div>' +
-      '<div class="diff-paws">' + paws + '</div></div></button>';
-  });
-  els.diffGrid.innerHTML = html;
-  els.diffGrid.querySelectorAll(".diff-card").forEach(function(btn){
-    btn.addEventListener("click", function(){ startNewGame(parseInt(btn.dataset.n, 10)); });
-  });
-}
 
-function renderHearts(){
-  let html = "";
-  for (let i = 0; i < 3; i++){
-    html += '<span class="' + (i < state.hearts ? "" : "lost") + '" data-idx="' + i + '">' + pawSvg() + '</span>';
-  }
-  els.hearts.innerHTML = html;
-}
+    // Eliminates spurious solutions by moving single boundary cells to a
+    // neighboring region, never touching the true solution cell and never
+    // breaking a region's connectivity (territories stay compact).
+    // Never touches the forced region: doesn't remove cells from it (that
+    // would break the constraint) and never assigns it cells past the cap.
+    // `deadline` (Date.now() ms) lets a slow grid (10x10) bail out of a
+    // stuck repair instead of grinding through hundreds of full alternate-
+    // solution searches; the attempt is simply discarded like any other
+    // failed attempt, so correctness (only provably-unique puzzles are
+    // ever returned) is unaffected.
+    function repairRegions(n, regionGrid, solution, maxRepairs, forcedRegion, forcedSize, deadline){
+      for (let iter = 0; iter < maxRepairs; iter++){
+        if (deadline && Date.now() > deadline) return -1;
+        const alt = getAlternate(n, regionGrid, solution);
+        if (!alt) return iter;
+        const cellsOf = buildCellsOf(n, regionGrid);
+        const diffRows = [];
+        for (let r = 0; r < n; r++) if (alt[r] !== solution[r]) diffRows.push(r);
+        shuffleArr(diffRows);
+        let repaired = false;
+        for (let i = 0; i < diffRows.length; i++){
+          const r = diffRows[i], c = alt[r];
+          const oldReg = regionGrid[r][c];
+          if (oldReg === forcedRegion) continue;
+          if (wouldDisconnect(cellsOf, oldReg, r, c)) continue;
+          const candidates = [];
+          for (let d = 0; d < DIRS.length; d++){
+            const nr = r + DIRS[d][0], nc = c + DIRS[d][1];
+            if (nr >= 0 && nr < n && nc >= 0 && nc < n && regionGrid[nr][nc] !== oldReg){
+              const cr = regionGrid[nr][nc];
+              if (cr === forcedRegion && cellsOf[forcedRegion].length >= forcedSize) continue;
+              candidates.push(cr);
+            }
+          }
+          if (candidates.length === 0) continue;
+          shuffleArr(candidates);
+          regionGrid[r][c] = candidates[0];
+          repaired = true;
+          break;
+        }
+        if (!repaired) return -1;
+      }
+      return -2;
+    }
 
-function renderBoardOLD(doFadeIn = false){
-  const n = state.n;
-  const hadFocusInBoard = els.board.contains(document.activeElement);
-  els.board.style.gridTemplateColumns = "repeat(" + n + ", 1fr)";
-  els.board.style.gridTemplateRows = "repeat(" + n + ", 1fr)";
-  let html = "";
-  for (let r = 0; r < n; r++){
-    for (let c = 0; c < n; c++){
+    function regionSizes(n, regionGrid){
+      const sizes = new Array(n).fill(0);
+      for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) sizes[regionGrid[r][c]]++;
+      return sizes;
+    }
+
+    // One full attempt: solution + growth with a forced region + repair.
+    function generatePuzzleOnce(n, forcedSize, maxGenAttempts, maxRepairs, deadline){
+      for (let attempt = 0; attempt < maxGenAttempts; attempt++){
+        if (deadline && Date.now() > deadline) return null;
+        const solution = generateSolution(n);
+        if (!solution) continue;
+        const forcedRegion = rndInt(n);
+        let regions;
+        try { regions = growRegions(n, solution, forcedRegion, forcedSize); } catch(e){ continue; }
+        const rep = repairRegions(n, regions, solution, maxRepairs, forcedRegion, forcedSize, deadline);
+        if (rep >= 0) return { n:n, solution:solution, regions:regions };
+      }
+      return null;
+    }
+
+    // Generation cost grows fast with n (bigger board, slower uniqueness
+    // checks, and Panther's forced 2-cell "domino" needs extra repair
+    // work on top of that) so the same attempt/repair budget that's
+    // instant on a 4x4 can take a very long time on a 10x10. Scale the
+    // budget down for bigger grids and cap total wall-clock time so the
+    // worst case is "a returned puzzle, maybe not perfectly tuned" rather
+    // than "the user waits forever".
+    function genParamsFor(n){
+      if (n <= 6) return { maxGenAttempts: 300, maxRepairs: 800, k: 5, timeBudgetMs: 4000 };
+      if (n === 8) return { maxGenAttempts: 150, maxRepairs: 300, k: 3, timeBudgetMs: 5000 };
+      return { maxGenAttempts: 60, maxRepairs: 120, k: 2, timeBudgetMs: 6000 }; // 10x10 / Panther
+    }
+
+    // Repair can rarely grow the forced region past its cap (rare geometric
+    // edge cases): a handful of full attempts is almost always enough to
+    // land the exact size, with a safe fallback if not. Bounded overall by
+    // timeBudgetMs so a hard grid size never hangs the UI.
+    function generatePuzzleSync(n, forcedSize, maxGenAttempts, maxRepairs, kAttempts, timeBudgetMs){
+      const deadline = timeBudgetMs ? (Date.now() + timeBudgetMs) : null;
+      const K = kAttempts || 5;
+      let fallback = null;
+      for (let k = 0; k < K; k++){
+        if (deadline && Date.now() > deadline) break;
+        const res = generatePuzzleOnce(n, forcedSize, maxGenAttempts, maxRepairs, deadline);
+        if (!res) continue;
+        if (!fallback) fallback = res;
+        const sizes = regionSizes(n, res.regions);
+        if (Math.min.apply(null, sizes) === forcedSize) return res;
+      }
+      return fallback;
+    }
+
+    /* ---- Web Worker costruito dal codice sopra, per non bloccare la UI ---- */
+    let puzzleWorker = null;
+    function getWorker(){
+      if (puzzleWorker) return puzzleWorker;
+      try{
+        const fns = [rndInt, shuffleArr, arraysEqual, generateSolution, growRegions,
+                     collectSolutions, getAlternate, buildCellsOf, wouldDisconnect,
+                     repairRegions, regionSizes, genParamsFor, generatePuzzleOnce, generatePuzzleSync];
+        let src = "const DIRS=" + JSON.stringify(DIRS) + ";\n\n";
+        src += fns.map(function(f){ return f.toString(); }).join("\n\n");
+        src += "\n\nself.onmessage = function(e){\n" +
+               "  const n = e.data.n, forcedSize = e.data.forcedSize;\n" +
+               "  const p = genParamsFor(n);\n" +
+               "  let result = null;\n" +
+               "  try { result = generatePuzzleSync(n, forcedSize, p.maxGenAttempts, p.maxRepairs, p.k, p.timeBudgetMs); } catch(err) { result = null; }\n" +
+               "  self.postMessage(result);\n" +
+               "};";
+        const blob = new Blob([src], { type: "application/javascript" });
+        puzzleWorker = new Worker(URL.createObjectURL(blob));
+      } catch(e){
+        puzzleWorker = null;
+      }
+      return puzzleWorker;
+    }
+
+    function generatePuzzleAsync(n, forcedSize){
+      const p = genParamsFor(n);
+      return new Promise(function(resolve){
+        const w = getWorker();
+        if (w){
+          const onMsg = function(e){
+            w.removeEventListener("message", onMsg);
+            w.removeEventListener("error", onErr);
+            resolve(e.data);
+          };
+          const onErr = function(){
+            w.removeEventListener("message", onMsg);
+            w.removeEventListener("error", onErr);
+            // synchronous fallback if the worker fails at runtime
+            setTimeout(function(){ resolve(generatePuzzleSync(n, forcedSize, p.maxGenAttempts, p.maxRepairs, p.k, p.timeBudgetMs)); }, 10);
+          };
+          w.addEventListener("message", onMsg);
+          w.addEventListener("error", onErr);
+          w.postMessage({ n: n, forcedSize: forcedSize });
+        } else {
+          setTimeout(function(){ resolve(generatePuzzleSync(n, forcedSize, p.maxGenAttempts, p.maxRepairs, p.k, p.timeBudgetMs)); }, 10);
+        }
+      });
+    }
+
+    /* ============================================================
+       2. THEME / REGION PALETTE
+       ============================================================ */
+    function regionPalette(n){
+      const baseHue = rndInt(360);
+      const sats = [62, 50];
+      const lits = [83, 77];
+      const colors = [];
+      for (let i = 0; i < n; i++){
+        const hue = (baseHue + i * (360 / n) + (rndInt(9) - 4)) % 360;
+        const s = sats[i % 2];
+        const l = lits[Math.floor(i / 2) % 2];
+        colors.push("hsl(" + Math.round(hue) + "," + s + "%," + l + "%)");
+      }
+      return colors;
+    }
+
+    /* ============================================================
+       3. DIFFICULTY LEVELS
+       forcedSize=1 -> one region stays a single cell: the first move is
+                       always deducible with certainty, no guessing needed.
+       forcedSize=2 -> one region stays a 2-cell "domino": you start with
+                       a genuine 50/50, then logic takes over.
+       ============================================================ */
+    const DIFFICULTIES_OLD = [
+      { n:4,  name:"Kitten", 		sub:"To warm-up the paws",	  paws:1, forcedSize:1 },
+      { n:5,  name:"Tabby Cat",		sub:"Feline instinct",		  paws:2, forcedSize:1 },
+      { n:6,  name:"Wildcat",		sub:"Complex territories",	  paws:3, forcedSize:1 },
+      { n:8,  name:"Panther",		sub:"Roof master",			  paws:4, forcedSize:1 },
+      { n:10, name:"Alpha Colony",  sub:"No mercy for beginners", paws:5, forcedSize:2 }
+    ];
+
+    const DIFFICULTIES = [
+        { n:4,  name:"House Kitten",       sub:"The floor is lava, curtains are target dummy.",    paws:1, forcedSize:1 },
+        { n:5,  name:"Living Room Ninja",  sub:"Special skill: Knocking glasses off tables.",      paws:2, forcedSize:1 },
+        { n:6,  name:"3 AM Zoomies",       sub:"Singing the song of my people at midnight.",       paws:3, forcedSize:1 },
+        { n:7,  name:"Roof Ruler",         sub:"King of the alley, terror of pigeons.",            paws:4, forcedSize:1 },
+        { n:8,  name:"Keyboard Overlord",  sub:"I sleep on the keyboardfghjklòàù+*",                   paws:5, forcedSize:1 },
+        { n:9,  name:"Schrödinger's Boss", sub:"Simultaneously beaten and unbeaten.",              paws:6, forcedSize:1 },
+        { n:10, name:"Egyptian Deity",     sub:"Demand worship, golden cans, and zero mercy.",     paws:7, forcedSize:2 }
+    ];
+
+    /* ============================================================
+       4. REUSABLE SVG ICONS
+       ============================================================ */
+    function catSvgOLD(cls){
+      return '<svg class="glyph ' + (cls||"") + '" viewBox="0 0 100 100" aria-hidden="true"><use href="#cat-face"/></svg>';
+    }
+    function catSvg(cls, row = 0, col = 0){
+      const eyeDelay = (-(Math.random() * 5)).toFixed(2) + "s";
+      const lookDelay = (-(Math.random() * 9)).toFixed(2) + "s";
+      const siamesePointColors = [
+        "#211",//seal
+        "#666",//blue
+        "#432",//choco
+        "#842",//red
+        "#987"//lilac
+      ];
+      const siamesePoint = siamesePointColors[row % siamesePointColors.length];
+      return '<svg class="glyph ' + (cls||"") + '" viewBox="0 0 100 100" aria-hidden="true" ' +
+        'style="--eye-delay:' + eyeDelay + '; --look-delay:' + lookDelay + '; --siamese-point:' + siamesePoint+ ';">' +
+        '<use href="#cat-face"/></svg>';
+    }
+    function xSvg(){
+      return '<svg class="glyph xmark" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="30" stroke-linecap="round" aria-hidden="true">' +
+        '<line x1="20" y1="20" x2="80" y2="80"/><line x1="80" y1="20" x2="20" y2="80"/>' +
+        '</svg>';
+    }
+    function pawSvg(cls){
+      return '<svg class="' + (cls||"") + '" viewBox="0 0 100 100" fill="currentColor" aria-hidden="true">' +
+        '<ellipse cx="50" cy="68" rx="27" ry="22"/>' +
+        '<circle cx="27" cy="34" r="12"/><circle cx="50" cy="22" r="12.5"/>' +
+        '<circle cx="73" cy="34" r="12"/></svg>';
+    }
+
+    /* ============================================================
+       5. GAME STATE
+       ============================================================ */
+    const state = {
+      n: 0,
+      difficulty: null,
+      regions: null,     // regions[r][c] -> region index
+      solution: null,     // usato solo dai suggerimenti
+      grid: null,         // 'empty' | 'x' | 'cat'
+      cellEls: null,       // [r][c] -> riferimento diretto al bottone DOM (mai ricreato dopo buildBoardOnce)
+      hearts: 3,
+      hintsUsed: 0,
+      history: [],         // stack di snapshot { grid, hearts }
+      focusR: 0,
+      focusC: 0,
+      timerStart: 0,
+      timerElapsed: 0,
+      timerRunning: false,
+      timerHandle: null,
+      gameOver: false,
+      palette: null,
+      paletteDark: null
+    };
+
+    /* ============================================================
+       6. GAME UTILITIES
+       ============================================================ */
+    function isAdjacent(r1,c1,r2,c2){
+      if (r1 === r2 && c1 === c2) return false;
+      return Math.abs(r1-r2) <= 1 && Math.abs(c1-c2) <= 1;
+    }
+
+    function cellsRelatedTo(r,c){
+      // every cell sharing row, column, or region with (r,c), or adjacent to it
+      const n = state.n;
       const reg = state.regions[r][c];
-      const color = 'radial-gradient(circle, ' + state.palette[reg]+ ' 0%, '+state.paletteDark[reg]+' 100%)';//state.palette[reg];
-      const cellState = state.grid[r][c];
+      const out = [];
+      for (let rr = 0; rr < n; rr++){
+        for (let cc = 0; cc < n; cc++){
+          if (rr === r && cc === c) continue;
+          if (rr === r || cc === c || state.regions[rr][cc] === reg || isAdjacent(r,c,rr,cc)) out.push([rr,cc]);
+        }
+      }
+      return out;
+    }
+
+    function findConflicts(r,c){
+      const related = cellsRelatedTo(r,c);
+      const conflicts = [];
+      for (let i = 0; i < related.length; i++){
+        const rr = related[i][0], cc = related[i][1];
+        if (state.grid[rr][cc] === 'cat') conflicts.push([rr,cc]);
+      }
+      return conflicts;
+    }
+
+    function snapshot(){
+      state.history.push({
+        grid: state.grid.map(function(row){ return row.slice(); }),
+        hearts: state.hearts
+      });
+      updateUndoBtn();
+    }
+
+    function restoreSnapshot(){
+      if (!state.history.length) return;
+      const snap = state.history.pop();
+      state.grid = snap.grid;
+      state.hearts = snap.hearts;
+      ////renderBoard();
+      syncBoardVisuals();
+      renderHearts();
+      updateUndoBtn();
+      checkWin();
+    }
+
+    /* ============================================================
+       7. RENDER
+       ============================================================ */
+    const els = {};
+    function cacheEls(){
+      ["screen-menu","screen-game","diffGrid","board","loadingOverlay",
+       "gameTitleName","gameTitleLevel","hearts","timer","hintText","catsCounter",
+       "modalHow","modalWin","modalLose","winTime","winLevel","winLives"
+      ].forEach(function(id){ els[id] = document.getElementById(id); });
+
+      //fix resize
+      new ResizeObserver(function(entries){
+        els.board.style.height = entries[0].contentRect.width + "px";
+      }).observe(els.board.parentElement); // .board-frame
+    }
+
+    function renderMenu(){
+      let html = "";
+      DIFFICULTIES.forEach(function(d, idx){
+        const hue = (idx * 67) % 360;
+        let paws = "";
+        for (let i = 0; i < DIFFICULTIES.length; i++){
+          paws += '<span class="' + (i < d.paws ? "filled" : "empty") + '">' + pawSvg() + "</span>";
+        }
+        const tint = 'hsl(' + hue + ',85%,93%)';
+        const shadow = 'hsl(' + hue + ',55%,68%)';
+        const border = 'hsl(' + hue + ',60%,60%)';
+        html += '<button class="diff-card" type="button" data-n="' + d.n + '" role="listitem" ' +
+          'style="--diff-tint:' + tint + '; --diff-shadow:' + shadow + '; --diff-border:' + border + ';">' +
+          '<div class="diff-swatch" style="background:hsl(' + hue + ',65%,72%)">' + d.n + '×' + d.n + '</div>' +
+          '<div class="diff-info"><div class="diff-name">' + d.name + '</div>' +
+          '<div class="diff-sub">' + d.sub + '</div>' +
+          '<div class="diff-paws">' + paws + '</div></div></button>';
+      });
+      els.diffGrid.innerHTML = html;
+      els.diffGrid.querySelectorAll(".diff-card").forEach(function(btn){
+        btn.addEventListener("click", function(){ startNewGame(parseInt(btn.dataset.n, 10)); });
+      });
+    }
+
+    function renderHearts(){
+      let html = "";
+      for (let i = 0; i < 3; i++){
+        html += '<span class="' + (i < state.hearts ? "" : "lost") + '" data-idx="' + i + '">' + pawSvg() + '</span>';
+      }
+      els.hearts.innerHTML = html;
+    }
+
+    function renderBoardOLD(doFadeIn = false){
+      const n = state.n;
+      const hadFocusInBoard = els.board.contains(document.activeElement);
+      els.board.style.gridTemplateColumns = "repeat(" + n + ", 1fr)";
+      els.board.style.gridTemplateRows = "repeat(" + n + ", 1fr)";
+      let html = "";
+      for (let r = 0; r < n; r++){
+        for (let c = 0; c < n; c++){
+          const reg = state.regions[r][c];
+          const color = 'radial-gradient(circle, ' + state.palette[reg]+ ' 0%, '+state.paletteDark[reg]+' 100%)';//state.palette[reg];
+          const cellState = state.grid[r][c];
+          /*
+          const topDiff = (r === 0) || (state.regions[r-1][c] !== reg);
+          const leftDiff = (c === 0) || (state.regions[r][c-1] !== reg);
+          const bottomDiff = (r === n-1) || (state.regions[r+1][c] !== reg);
+          const rightDiff = (c === n-1) || (state.regions[r][c+1] !== reg);
+          const bw = function(diff){ return diff ? "1" : "0"; };//////////xxxx
+          const bc = function(diff){ return diff ? "var(--grout)" : "rgba(74,59,82,0.10)"; };
+          */
+          let inner = "";
+          if (cellState === "cat") inner = catSvg("cat",r,c);
+          else if (cellState === "x") inner = xSvg();
+          else inner = '';
+          let max = 5 * (c+1) * (r+1) / (n * n);
+          html += '<button class="cell" type="button" data-r="' + r + '" data-c="' + c + '" ' +
+            'role="gridcell" aria-label="row ' + (r+1) + ' column ' + (c+1) + '" ' +
+            'style="background:' + color + ';' +
+            (doFadeIn ? 'animation: fadeIn '+max+'s; ' : '') +
+            /*
+            'border-top:' + bw(topDiff) + 'px solid ' + bc(topDiff) + ';' +
+            'border-left:' + bw(leftDiff) + 'px solid ' + bc(leftDiff) + ';' +
+            'border-bottom:' + bw(bottomDiff) + 'px solid ' + bc(bottomDiff) + ';' +
+            'border-right:' + bw(rightDiff) + 'px solid ' + bc(rightDiff) +
+            */
+            ';">' +
+            inner + '</button>';
+        }
+      }
+      els.board.innerHTML = html;
+      els.board.querySelectorAll(".cell").forEach(function(cell){
+        cell.addEventListener("click", onCellClick);
+      });
+      applyRovingTabindex();
+      if (hadFocusInBoard){
+        const el = els.board.querySelector('.cell[data-r="' + state.focusR + '"][data-c="' + state.focusC + '"]');
+        if (el) el.focus();
+      }
+      updateCatsCounter();
+    }
+
+
+
+
+    // Calcola una sola volta lo stile "statico" di una cella (sfondo regione,
+    // bordi tra territori, eventuale animazione d'ingresso). Non dipende mai
+    // dallo stato di gioco (gatto/x/vuoto): per questo viene applicato solo in
+    // buildBoardOnce e non serve piu' toccarlo a ogni tap.
+    function cellStaticStyle(r, c, doFadeIn){
+      const n = state.n;
+      const reg = state.regions[r][c];
+      const color = 'radial-gradient(circle, ' + state.palette[reg]+ ' 0%, '+state.paletteDark[reg]+' 100%)';
       const topDiff = (r === 0) || (state.regions[r-1][c] !== reg);
       const leftDiff = (c === 0) || (state.regions[r][c-1] !== reg);
       const bottomDiff = (r === n-1) || (state.regions[r+1][c] !== reg);
       const rightDiff = (c === n-1) || (state.regions[r][c+1] !== reg);
-      const bw = function(diff){ return diff ? "1" : "0"; };//////////xxxx
+      const bw = function(diff){ return diff ? "1" : "0"; };
       const bc = function(diff){ return diff ? "var(--grout)" : "rgba(74,59,82,0.10)"; };
-      let inner = "";
-      if (cellState === "cat") inner = catSvg("cat",r,c);
-      else if (cellState === "x") inner = xSvg();
-      else inner = '';
-	  let max = 5 * (c+1) * (r+1) / (n * n);
-      html += '<button class="cell" type="button" data-r="' + r + '" data-c="' + c + '" ' +
-        'role="gridcell" aria-label="row ' + (r+1) + ' column ' + (c+1) + '" ' +
-        'style="background:' + color + ';' +
-		(doFadeIn ? 'animation: fadeIn '+max+'s; ' : '') +
+      let style = 'background:' + color + ';' +
         'border-top:' + bw(topDiff) + 'px solid ' + bc(topDiff) + ';' +
         'border-left:' + bw(leftDiff) + 'px solid ' + bc(leftDiff) + ';' +
         'border-bottom:' + bw(bottomDiff) + 'px solid ' + bc(bottomDiff) + ';' +
-        'border-right:' + bw(rightDiff) + 'px solid ' + bc(rightDiff) + ';">' +
-        inner + '</button>';
+        'border-right:' + bw(rightDiff) + 'px solid ' + bc(rightDiff) + ';';
+      if (doFadeIn){
+        const max = 5 * (c+1) * (r+1) / (n * n);
+        style += 'animation: fadeIn ' + max + 's;';
+      }
+      return style;
     }
-  }
-  els.board.innerHTML = html;
-  els.board.querySelectorAll(".cell").forEach(function(cell){
-    cell.addEventListener("click", onCellClick);
-  });
-  applyRovingTabindex();
-  if (hadFocusInBoard){
-    const el = els.board.querySelector('.cell[data-r="' + state.focusR + '"][data-c="' + state.focusC + '"]');
-    if (el) el.focus();
-  }
-  updateCatsCounter();
-}
 
-
-
-
-// Calcola una sola volta lo stile "statico" di una cella (sfondo regione,
-// bordi tra territori, eventuale animazione d'ingresso). Non dipende mai
-// dallo stato di gioco (gatto/x/vuoto): per questo viene applicato solo in
-// buildBoardOnce e non serve piu' toccarlo a ogni tap.
-function cellStaticStyle(r, c, doFadeIn){
-  const n = state.n;
-  const reg = state.regions[r][c];
-  const color = 'radial-gradient(circle, ' + state.palette[reg]+ ' 0%, '+state.paletteDark[reg]+' 100%)';
-  const topDiff = (r === 0) || (state.regions[r-1][c] !== reg);
-  const leftDiff = (c === 0) || (state.regions[r][c-1] !== reg);
-  const bottomDiff = (r === n-1) || (state.regions[r+1][c] !== reg);
-  const rightDiff = (c === n-1) || (state.regions[r][c+1] !== reg);
-  const bw = function(diff){ return diff ? "1" : "0"; };
-  const bc = function(diff){ return diff ? "var(--grout)" : "rgba(74,59,82,0.10)"; };
-  let style = 'background:' + color + ';' +
-    'border-top:' + bw(topDiff) + 'px solid ' + bc(topDiff) + ';' +
-    'border-left:' + bw(leftDiff) + 'px solid ' + bc(leftDiff) + ';' +
-    'border-bottom:' + bw(bottomDiff) + 'px solid ' + bc(bottomDiff) + ';' +
-    'border-right:' + bw(rightDiff) + 'px solid ' + bc(rightDiff) + ';';
-  if (doFadeIn){
-    const max = 5 * (c+1) * (r+1) / (n * n);
-    style += 'animation: fadeIn ' + max + 's;';
-  }
-  return style;
-}
-
-// Costruisce la griglia DOM UNA SOLA VOLTA per un nuovo puzzle. Da qui in
-// poi, per tutta la partita, i bottoni non vengono MAI piu' distrutti ne'
-// ricreati: cio' che cambia a ogni tap e' solo il contenuto (glifo gatto/x)
-// di una manciata di celle, vedi updateCellVisual/syncBoardVisuals. E' la
-// causa principale del rallentamento su griglie grandi (10x10) su telefoni
-// meno potenti: prima ogni click ricostruiva tutte le 100 celle (e i loro
-// listener) da zero.
-function buildBoardOnce(doFadeIn){
-  const n = state.n;
-  els.board.style.gridTemplateColumns = "repeat(" + n + ", 1fr)";
-  els.board.style.gridTemplateRows = "repeat(" + n + ", 1fr)";
-  const frag = document.createDocumentFragment();
-  state.cellEls = Array.from({length:n}, function(){ return new Array(n); });
-  for (let r = 0; r < n; r++){
-    for (let c = 0; c < n; c++){
-      const btn = document.createElement("button");
-      btn.className = "cell";
-      btn.type = "button";
-      btn.dataset.r = r; btn.dataset.c = c;
-      btn.setAttribute("role", "gridcell");
-      btn.setAttribute("aria-label", "row " + (r+1) + " column " + (c+1));
-      btn.setAttribute("style", cellStaticStyle(r, c, doFadeIn));
-      btn.tabIndex = (r === state.focusR && c === state.focusC) ? 0 : -1;
-      frag.appendChild(btn);
-      state.cellEls[r][c] = btn;
+    // Costruisce la griglia DOM UNA SOLA VOLTA per un nuovo puzzle. Da qui in
+    // poi, per tutta la partita, i bottoni non vengono MAI piu' distrutti ne'
+    // ricreati: cio' che cambia a ogni tap e' solo il contenuto (glifo gatto/x)
+    // di una manciata di celle, vedi updateCellVisual/syncBoardVisuals. E' la
+    // causa principale del rallentamento su griglie grandi (10x10) su telefoni
+    // meno potenti: prima ogni click ricostruiva tutte le 100 celle (e i loro
+    // listener) da zero.
+    function buildBoardOnce(doFadeIn){
+      const n = state.n;
+      els.board.style.gridTemplateColumns = "repeat(" + n + ", 1fr)";
+      els.board.style.gridTemplateRows = "repeat(" + n + ", 1fr)";
+      const frag = document.createDocumentFragment();
+      state.cellEls = Array.from({length:n}, function(){ return new Array(n); });
+      for (let r = 0; r < n; r++){
+        for (let c = 0; c < n; c++){
+          const btn = document.createElement("button");
+          btn.className = "cell";
+          btn.type = "button";
+          btn.dataset.r = r; btn.dataset.c = c;
+          btn.setAttribute("role", "gridcell");
+          btn.setAttribute("aria-label", "row " + (r+1) + " column " + (c+1));
+          btn.setAttribute("style", cellStaticStyle(r, c, doFadeIn));
+          btn.tabIndex = (r === state.focusR && c === state.focusC) ? 0 : -1;
+          frag.appendChild(btn);
+          state.cellEls[r][c] = btn;
+        }
+      }
+      els.board.innerHTML = "";
+      els.board.appendChild(frag);
+      els.board.onclick = onBoardClick; // un solo listener delegato per tutta la griglia, mai piu' riattaccato
+      syncBoardVisuals();
     }
-  }
-  els.board.innerHTML = "";
-  els.board.appendChild(frag);
-  els.board.onclick = onBoardClick; // un solo listener delegato per tutta la griglia, mai piu' riattaccato
-  syncBoardVisuals();
-}
 
-// Un solo listener su #board invece di uno per cella: risale alla cella
-// toccata risalendo il DOM da e.target, cosi' non serve un addEventListener
-// per bottone (e niente da ri-registrare quando il contenuto cambia).
-function onBoardClick(e){
-  const cell = e.target.closest(".cell");
-  if (!cell || !els.board.contains(cell)) return;
-  onCellClick({ currentTarget: cell });
-}
+    // Un solo listener su #board invece di uno per cella: risale alla cella
+    // toccata risalendo il DOM da e.target, cosi' non serve un addEventListener
+    // per bottone (e niente da ri-registrare quando il contenuto cambia).
+    function onBoardClick(e){
+      const cell = e.target.closest(".cell");
+      if (!cell || !els.board.contains(cell)) return;
+      onCellClick({ currentTarget: cell });
+    }
 
-// Aggiorna il contenuto (gatto/x/vuoto) di UNA sola cella: nessun altro
-// nodo della griglia viene toccato. E' la funzione chiamata a ogni tap
-// al posto del vecchio renderBoard() completo.
-function updateCellVisual(r, c){
-  const btn = state.cellEls[r][c];
-  if (!btn) return;
-  const cellState = state.grid[r][c];
-  btn.innerHTML = cellState === "cat" ? catSvg("cat", r, c) : (cellState === "x" ? xSvg() : "");
-  updateCatsCounter();
-}
-
-// Ri-sincronizza tutte le celle con state.grid SENZA ricreare i nodi ne'
-// i listener: usata per undo, restart e dopo la generazione di un nuovo
-// puzzle. Molto piu' leggera del vecchio rebuild HTML completo.
-function syncBoardVisuals(){
-  const n = state.n;
-  for (let r = 0; r < n; r++){
-    for (let c = 0; c < n; c++){
+    // Aggiorna il contenuto (gatto/x/vuoto) di UNA sola cella: nessun altro
+    // nodo della griglia viene toccato. E' la funzione chiamata a ogni tap
+    // al posto del vecchio renderBoard() completo.
+    function updateCellVisual(r, c){
       const btn = state.cellEls[r][c];
+      if (!btn) return;
       const cellState = state.grid[r][c];
       btn.innerHTML = cellState === "cat" ? catSvg("cat", r, c) : (cellState === "x" ? xSvg() : "");
+      updateCatsCounter();
     }
-  }
-  updateCatsCounter();
-}
 
-// Fa ripartire l'animazione fadeIn di ingresso delle celle (usata al
-// restart) con un solo reflow forzato per l'intera griglia, invece di uno
-// per cella: si azzera l'animazione su tutte le celle, si forza UN reflow,
-// poi si riassegna l'animazione a tutte.
-function replayFadeIn(){
-  const n = state.n;
-  for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) state.cellEls[r][c].style.animation = 'none';
-  void els.board.offsetWidth; // singolo reflow forzato
-  for (let r = 0; r < n; r++){
-    for (let c = 0; c < n; c++){
-      const max = 5 * (c+1) * (r+1) / (n * n);
-      state.cellEls[r][c].style.animation = 'fadeIn ' + max + 's';
+    // Ri-sincronizza tutte le celle con state.grid SENZA ricreare i nodi ne'
+    // i listener: usata per undo, restart e dopo la generazione di un nuovo
+    // puzzle. Molto piu' leggera del vecchio rebuild HTML completo.
+    function syncBoardVisuals(){
+      const n = state.n;
+      for (let r = 0; r < n; r++){
+        for (let c = 0; c < n; c++){
+          const btn = state.cellEls[r][c];
+          const cellState = state.grid[r][c];
+          btn.innerHTML = cellState === "cat" ? catSvg("cat", r, c) : (cellState === "x" ? xSvg() : "");
+        }
+      }
+      updateCatsCounter();
     }
-  }
-}
 
-// Always-visible counter of cats placed: keeps one extra click (which
-// cycles a cell from "cat" back to "empty") from going unnoticed and
-// making the board look complete when it's actually one cat short.
-function updateCatsCounter(){
-  const n = state.n;
-  let count = 0;
-  for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (state.grid[r][c] === "cat") count++;
-  els.catsCounter.innerHTML = pawSvg() + '<span>' + count + ' / ' + n + '</span>';
-  els.catsCounter.classList.toggle("complete", count === n);
-}
-
-// Roving tabindex: only one cell is Tab-reachable, arrow keys move
-// focus between cells without losing your place on every redraw.
-function applyRovingTabindexOLD(){
-  els.board.querySelectorAll(".cell").forEach(function(cell){
-    const r = parseInt(cell.dataset.r, 10), c = parseInt(cell.dataset.c, 10);
-    cell.tabIndex = (r === state.focusR && c === state.focusC) ? 0 : -1;
-  });
-}
-
-// Roving tabindex mirato: aggiorna il tabIndex solo sulla cella che perde
-// il focus e su quella che lo guadagna, invece di iterare tutte le n²
-// celle a ogni render come faceva la vecchia applyRovingTabindex().
-function setFocusCell(r, c){
-  const prevRow = state.cellEls && state.cellEls[state.focusR];
-  const prev = prevRow && prevRow[state.focusC];
-  if (prev) prev.tabIndex = -1;
-  state.focusR = r; state.focusC = c;
-  const next = state.cellEls && state.cellEls[r] && state.cellEls[r][c];
-  if (next) next.tabIndex = 0;
-}
-
-function updateUndoBtn(){
-  document.getElementById("btnUndo").disabled = state.history.length === 0 || state.gameOver;
-}
-
-/* ============================================================
-   7b. EXPLOSION FX — paw/star burst fired when a cat lands correctly
-   ============================================================ */
-let explosionLayerEl = null;
-function getExplosionLayer(){
-  if (!explosionLayerEl){
-    explosionLayerEl = document.createElement("div");
-    explosionLayerEl.className = "explosion-layer";
-    document.body.appendChild(explosionLayerEl);
-  }
-  return explosionLayerEl;
-}
-
-const EXPLOSION_COLORS = ["#FF9A4D", "#4FD6BE", "#FF6E93", "#8F72F2", "#43B7E0"];
-const EXPLOSION_EMOJI = ["🐾","🐱","⭐", "🐾","🥊","😻", "🐈","🐈‍⬛"];
-
-function spawnCatExplosion(cellEl){
-  if (!cellEl) return;
-  if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-  
-  const rect = cellEl.getBoundingClientRect();
-  const x = rect.left + rect.width / 2;
-  const y = rect.top + rect.height / 2;
-  const layer = getExplosionLayer();
-
-  // expanding shockwave ring
-  const ring = document.createElement("div");
-  ring.className = "explosion-ring";
-  ring.style.left = x + "px";
-  ring.style.top = y + "px";
-  ring.style.setProperty("--ring-color", EXPLOSION_COLORS[rndInt(EXPLOSION_COLORS.length)]);
-  layer.appendChild(ring);
-  setTimeout(function(){ ring.remove(); }, 1000);
-
-  // burst of glowing dots mixed with little paw/star emoji
-  const count = 16;
-  for (let i = 0; i < count; i++){
-    const p = document.createElement("div");
-    const useEmoji = i % 3 === 0;
-    p.className = "explosion-particle " + (useEmoji ? "emoji" : "dot");
-    const angle = (Math.PI * 2 * i / count) + (Math.random() * 0.5 - 0.25);
-    const dist = 46 + Math.random() * 56;
-    const dx = Math.cos(angle) * dist;
-	const dy = Math.sin(angle) * dist;
-    p.style.setProperty("--dx", dx.toFixed(1) + "px");
-    p.style.setProperty("--dy", dy.toFixed(1) + "px");
-    p.style.setProperty("--rot", (rndInt(240) - 120) + "deg");
-    p.style.left = x + "px";
-    p.style.top = y + "px";
-    if (useEmoji){
-      p.textContent = EXPLOSION_EMOJI[rndInt(EXPLOSION_EMOJI.length)];
-    } else {
-      p.style.color = EXPLOSION_COLORS[rndInt(EXPLOSION_COLORS.length)];
-      p.style.background = "currentColor";
+    // Fa ripartire l'animazione fadeIn di ingresso delle celle (usata al
+    // restart) con un solo reflow forzato per l'intera griglia, invece di uno
+    // per cella: si azzera l'animazione su tutte le celle, si forza UN reflow,
+    // poi si riassegna l'animazione a tutte.
+    function replayFadeIn(){
+      const n = state.n;
+      for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) state.cellEls[r][c].style.animation = 'none';
+      void els.board.offsetWidth; // singolo reflow forzato
+      for (let r = 0; r < n; r++){
+        for (let c = 0; c < n; c++){
+          const max = 5 * (c+1) * (r+1) / (n * n);
+          state.cellEls[r][c].style.animation = 'fadeIn ' + max + 's';
+        }
+      }
     }
-    layer.appendChild(p);
-    setTimeout(function(){ p.remove(); }, 1000);
-  }
-  playSound('purrSound');
-}
 
-/* ============================================================
-   8. GAME LOGIC
-   ============================================================ */
-function onCellClick(e){
-  if (state.gameOver) return;
-  const r = parseInt(e.currentTarget.dataset.r, 10);
-  const c = parseInt(e.currentTarget.dataset.c, 10);
-  ////state.focusR = r; state.focusC = c;										 
-  setFocusCell(r, c);
-  const cur = state.grid[r][c];
-
-  if (cur === "empty"){
-    snapshot();
-    state.grid[r][c] = "x";
-	////renderBoard();			   
-    updateCellVisual(r, c);
-    return;
-  }
-  if (cur === "x"){
-    snapshot();
-    tryPlaceCat(r, c);
-    return;
-  }
-  if (cur === "cat"){
-    snapshot();
-    state.grid[r][c] = "empty";
-	////renderBoard();			   
-    updateCellVisual(r, c);
-    return;
-  }
-}
-
-function tryPlaceCat(r, c){
-  const conflicts = findConflicts(r, c);
-  if (conflicts.length > 0){
-    state.grid[r][c] = "cat";
-	////renderBoard();			   
-    updateCellVisual(r, c);
-    flashConflict(r, c, conflicts);
-    loseHeart();
-	playSound('errorSound');
-    return;
-  }
-  state.grid[r][c] = "cat";
-  updateCellVisual(r, c);
-  autoMarkEliminated(r, c);
-  spawnCatExplosion(state.cellEls[r][c]);
-  checkWin();
-}
-
-function autoMarkEliminated(r, c){
-  const related = cellsRelatedTo(r, c);
-  for (let i = 0; i < related.length; i++){
-    const rr = related[i][0], cc = related[i][1];
-    if (state.grid[rr][cc] === "empty"){
-      state.grid[rr][cc] = "x";
-      updateCellVisual(rr, cc);
+    // Always-visible counter of cats placed: keeps one extra click (which
+    // cycles a cell from "cat" back to "empty") from going unnoticed and
+    // making the board look complete when it's actually one cat short.
+    function updateCatsCounter(){
+      const n = state.n;
+      let count = 0;
+      for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (state.grid[r][c] === "cat") count++;
+      els.catsCounter.innerHTML = pawSvg() + '<span>' + count + ' / ' + n + '</span>';
+      els.catsCounter.classList.toggle("complete", count === n);
     }
-  }
-}
 
-// Shake pilotato via Web Animations API invece che con una classe CSS:
-// el.animate() crea SEMPRE una nuova animazione indipendente ad ogni
-// chiamata, quindi parte in modo affidabile anche su nodi persistenti e
-// anche su motori/WebView con repaint poco affidabile dopo un resize.
-const SHAKE_KEYFRAMES = [
-  { transform: "translateX(0)" },
-  { transform: "translateX(-1px)" },
-  { transform: "translateX(2px)" },
-  { transform: "translateX(-4px)" },
-  { transform: "translateX(4px)" },
-  { transform: "translateX(-4px)" },
-  { transform: "translateX(4px)" },
-  { transform: "translateX(2px)" },
-  { transform: "translateX(-1px)" },
-  { transform: "translateX(0)" }
-];
-function shakeEl(el){
-  if (!el || !el.animate) return;
-  if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-  el.animate(SHAKE_KEYFRAMES, { duration: 500, easing: "ease" });
-}
+    // Roving tabindex: only one cell is Tab-reachable, arrow keys move
+    // focus between cells without losing your place on every redraw.
+    function applyRovingTabindexOLD(){
+      els.board.querySelectorAll(".cell").forEach(function(cell){
+        const r = parseInt(cell.dataset.r, 10), c = parseInt(cell.dataset.c, 10);
+        cell.tabIndex = (r === state.focusR && c === state.focusC) ? 0 : -1;
+      });
+    }
 
-function flashConflict(r, c, conflicts){
-  setTimeout(function(){
-    const toFlash = [state.cellEls[r][c]];
-    conflicts.forEach(function(p){ 
-		toFlash.push(state.cellEls[p[0]][p[1]]); 
-	});
-    // le celle ora sono nodi persistenti (mai ricreati): se una di queste avesse
-    // gia' la classe "conflict" da un flash precedentissimo non ancora ripulito,
-    // un semplice classList.add non farebbe ripartire l'animazione CSS. Si toglie,
-    // si forza un reflow, poi si riaggiunge: garantisce sempre lo shake da capo.
-    toFlash.forEach(function(el){ if (el) el.classList.remove("conflict"); });
-    void els.board.offsetWidth;
-    toFlash.forEach(function(el){ if (el) el.classList.add("conflict"); shakeEl(el); });
-    setTimeout(function(){
-      toFlash.forEach(function(el){ if (el) el.classList.remove("conflict"); });
-      // reset the just-placed cell back to empty (the mistake doesn't stay on the board)
-      state.grid[r][c] = "empty";
+    // Roving tabindex mirato: aggiorna il tabIndex solo sulla cella che perde
+    // il focus e su quella che lo guadagna, invece di iterare tutte le n²
+    // celle a ogni render come faceva la vecchia applyRovingTabindex().
+    function setFocusCell(r, c){
+      const prevRow = state.cellEls && state.cellEls[state.focusR];
+      const prev = prevRow && prevRow[state.focusC];
+      if (prev) prev.tabIndex = -1;
+      state.focusR = r; state.focusC = c;
+      const next = state.cellEls && state.cellEls[r] && state.cellEls[r][c];
+      if (next) next.tabIndex = 0;
+    }
+
+    function updateUndoBtn(){
+      document.getElementById("btnUndo").disabled = state.history.length === 0 || state.gameOver;
+    }
+
+    /* ============================================================
+       7b. EXPLOSION FX — paw/star burst fired when a cat lands correctly
+       ============================================================ */
+    let explosionLayerEl = null;
+    function getExplosionLayer(){
+      if (!explosionLayerEl){
+        explosionLayerEl = document.createElement("div");
+        explosionLayerEl.className = "explosion-layer";
+        document.body.appendChild(explosionLayerEl);
+      }
+      return explosionLayerEl;
+    }
+
+    const EXPLOSION_COLORS = ["#FF9A4D", "#4FD6BE", "#FF6E93", "#8F72F2", "#43B7E0"];
+    const EXPLOSION_EMOJI = ["🐾","🐱","⭐", "🐾","🥊","😻", "🐈","🐈‍⬛"];
+
+    function spawnCatExplosion(cellEl){
+      if (!cellEl) return;
+      if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+      const rect = cellEl.getBoundingClientRect();
+      const x = rect.left + rect.width / 2;
+      const y = rect.top + rect.height / 2;
+      const layer = getExplosionLayer();
+
+      // expanding shockwave ring
+      const ring = document.createElement("div");
+      ring.className = "explosion-ring";
+      ring.style.left = x + "px";
+      ring.style.top = y + "px";
+      ring.style.setProperty("--ring-color", EXPLOSION_COLORS[rndInt(EXPLOSION_COLORS.length)]);
+      layer.appendChild(ring);
+      setTimeout(function(){ ring.remove(); }, 1000);
+
+      // burst of glowing dots mixed with little paw/star emoji
+      const count = 16;
+      for (let i = 0; i < count; i++){
+        const p = document.createElement("div");
+        const useEmoji = i % 3 === 0;
+        p.className = "explosion-particle " + (useEmoji ? "emoji" : "dot");
+        const angle = (Math.PI * 2 * i / count) + (Math.random() * 0.5 - 0.25);
+        const dist = 46 + Math.random() * 56;
+        const dx = Math.cos(angle) * dist;
+        const dy = Math.sin(angle) * dist;
+        p.style.setProperty("--dx", dx.toFixed(1) + "px");
+        p.style.setProperty("--dy", dy.toFixed(1) + "px");
+        p.style.setProperty("--rot", (rndInt(240) - 120) + "deg");
+        p.style.left = x + "px";
+        p.style.top = y + "px";
+        if (useEmoji){
+          p.textContent = EXPLOSION_EMOJI[rndInt(EXPLOSION_EMOJI.length)];
+        } else {
+          p.style.color = EXPLOSION_COLORS[rndInt(EXPLOSION_COLORS.length)];
+          p.style.background = "currentColor";
+        }
+        layer.appendChild(p);
+        setTimeout(function(){ p.remove(); }, 1000);
+      }
+      playSound('purrSound');
+    }
+
+    /* ============================================================
+       8. GAME LOGIC
+       ============================================================ */
+    function onCellClick(e){
+      if (state.gameOver) return;
+      const r = parseInt(e.currentTarget.dataset.r, 10);
+      const c = parseInt(e.currentTarget.dataset.c, 10);
+      ////state.focusR = r; state.focusC = c;
+      setFocusCell(r, c);
+      const cur = state.grid[r][c];
+
+      if (cur === "empty"){
+        snapshot();
+        state.grid[r][c] = "x";
+        ////renderBoard();
+        updateCellVisual(r, c);
+        return;
+      }
+      if (cur === "x"){
+        snapshot();
+        tryPlaceCat(r, c);
+        return;
+      }
+      if (cur === "cat"){
+        snapshot();
+        state.grid[r][c] = "empty";
+        ////renderBoard();
+        updateCellVisual(r, c);
+        return;
+      }
+    }
+
+    function tryPlaceCat(r, c){
+      const conflicts = findConflicts(r, c);
+      if (conflicts.length > 0){
+        state.grid[r][c] = "cat";
+        ////renderBoard();
+        updateCellVisual(r, c);
+        flashConflict(r, c, conflicts);
+        loseHeart();
+        playSound('errorSound');
+        return;
+      }
+      state.grid[r][c] = "cat";
       updateCellVisual(r, c);
-    }, 500);
-  }, 10);
-}
-
-function loseHeart(){
-  state.hearts = Math.max(0, state.hearts - 1);
-  renderHearts();
-  const lastPaw = els.hearts.querySelector('[data-idx="' + state.hearts + '"]');
-  if (lastPaw) { lastPaw.classList.add("heart-lost-anim"); setTimeout(function(){ lastPaw.classList.remove("heart-lost-anim"); }, 400); }
-  if (state.hearts <= 0){
-    setTimeout(function(){ endGame(false); }, 520);
-  }
-}
-
-function checkWin(){
-  const n = state.n;
-  let count = 0;
-  for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (state.grid[r][c] === "cat") count++;
-  if (count === n) endGame(true);
-}
-
-/* ============================================================
-   9. TIMER
-   ============================================================ */
-function timerStart(){
-  state.timerRunning = true;
-  state.timerStart = Date.now();
-  state.timerHandle = setInterval(updateTimerDisplay, 250);
-}
-function timerStop(){
-  if (state.timerHandle) clearInterval(state.timerHandle);
-  state.timerRunning = false;
-}
-function timerElapsedMs(){
-  return state.timerElapsed + (state.timerRunning ? Date.now() - state.timerStart : 0);
-}
-function updateTimerDisplay(){
-  const totalSec = Math.floor(timerElapsedMs() / 1000);
-  const mm = Math.floor(totalSec / 60).toString().padStart(2, "0");
-  const ss = (totalSec % 60).toString().padStart(2, "0");
-  els.timer.textContent = mm + ":" + ss;
-}
-function timerReset(){
-  timerStop();
-  state.timerElapsed = 0;
-  updateTimerDisplay();
-}
-
-/* ============================================================
-   10. GAME FLOW
-   ============================================================ */
-function startNewGame(n){
-  
-  if (!isMusicStarted) {
-	playSound('musicSound', 0.5);
-	isMusicStarted = true;
-  }
-  
-  state.difficulty = DIFFICULTIES.find(function(d){ return d.n === n; });
-  showScreen("screen-game");
-  els.gameTitleLevel.textContent = state.difficulty.name + " · " + n + "×" + n;
-  els.loadingOverlay.classList.add("active");
-  els.board.innerHTML = "";
-  generatePuzzleAsync(n, state.difficulty.forcedSize).then(function(result){
-    els.loadingOverlay.classList.remove("active");
-    if (!result){
-      els.hintText.textContent = "Generation error \u2014 try \u00abNew\u00bb again.";
-      return;
+      autoMarkEliminated(r, c);
+      spawnCatExplosion(state.cellEls[r][c]);
+      checkWin();
     }
-    state.n = n;
-    state.solution = result.solution;
-    state.regions = result.regions;
-    state.palette = regionPalette(n);
-	state.paletteDark = [...state.palette];
-	for (let i = 0; i < n; i++){
-		//hsl(121,50%,83%)
-		let x1 = state.palette[i].split(',')[0];
-		let x2 = state.palette[i].split(',')[1];
-		let x3 = state.palette[i].split(',')[2];
-		state.paletteDark[i] = x1 + ',' + x2 + ',' + x3.split('%')[0] * 0.8 + '%)';
-	}
-	
-    resetBoardState();
-	////renderBoard(true);																		  
-    buildBoardOnce(true);
-    els.hintText.textContent = "Touch a cell: first X, than Cat, then Empty.";
-  });
-}
 
-function resetBoardState(){
-  state.grid = Array.from({length: state.n}, function(){ return new Array(state.n).fill("empty"); });
-  state.hearts = 3;
-  state.hintsUsed = 0;
-  state.history = [];
-  state.gameOver = false;
-  state.focusR = 0;
-  state.focusC = 0;
-  renderHearts();
-  updateUndoBtn();
-  timerReset();
-  timerStart();
-}
-
-function restartSamePuzzle(){
-  if (!state.n) return;
-  resetBoardState();
-  ////renderBoard();				 
-  syncBoardVisuals();
-  replayFadeIn();
-}
-
-function endGame(won){
-  state.gameOver = true;
-  timerStop();
-  updateUndoBtn();
-  if (won){
-    document.getElementById("winTime").textContent = els.timer.textContent;
-    document.getElementById("winLevel").textContent = state.difficulty.name;
-    document.getElementById("winLives").textContent = state.hearts;
-    openModal("modalWin");
-    launchConfetti();
-  } else {
-    openModal("modalLose");
-  }
-  playSound('catSound');
-}
-
-function giveHintOLD(){
-  if (state.gameOver || !state.n) return;
-  const n = state.n;
-  const rowsWithoutCat = [];
-  for (let r = 0; r < n; r++){
-    let has = false;
-    for (let c = 0; c < n; c++) if (state.grid[r][c] === "cat") { has = true; break; }
-    if (!has) rowsWithoutCat.push(r);
-  }
-  if (rowsWithoutCat.length === 0) return;
-  const r = rowsWithoutCat[rndInt(rowsWithoutCat.length)];
-  const c = state.solution[r];
-  snapshot();
-  // clears any wrong X marks in the target cell, then places the cat with no penalty
-  state.grid[r][c] = "cat";
-  autoMarkEliminated(r, c);
-  state.hintsUsed++;
-  renderBoard();
-  checkWin();
-}
-
-function giveHint(){
-  if (state.gameOver || !state.n) return;
-  const n = state.n;
-
-  // 1) c'è un gatto piazzato nella cella sbagliata? rimuovilo prima di tutto
-  const wrongCats = [];
-  for (let r = 0; r < n; r++){
-    for (let c = 0; c < n; c++){
-      if (state.grid[r][c] === "cat" && state.solution[r] !== c) wrongCats.push([r, c]);
+    function autoMarkEliminated(r, c){
+      const related = cellsRelatedTo(r, c);
+      for (let i = 0; i < related.length; i++){
+        const rr = related[i][0], cc = related[i][1];
+        if (state.grid[rr][cc] === "empty"){
+          state.grid[rr][cc] = "x";
+          updateCellVisual(rr, cc);
+        }
+      }
     }
-  }
-  if (wrongCats.length > 0){
-    const pick = wrongCats[rndInt(wrongCats.length)];
-    snapshot();
-    state.grid[pick[0]][pick[1]] = "x"; // ora sappiamo che qui il gatto non ci va
-    state.hintsUsed++;
-	////renderBoard();	   
-    updateCellVisual(pick[0], pick[1]);
-    return;
-  }
 
-  // 2) nessun gatto sbagliato: comportamento originale, piazza il gatto giusto
-  const rowsWithoutCat = [];
-  for (let r = 0; r < n; r++){
-    let has = false;
-    for (let c = 0; c < n; c++) if (state.grid[r][c] === "cat") { has = true; break; }
-    if (!has) rowsWithoutCat.push(r);
-  }
-  if (rowsWithoutCat.length === 0) return;
-  const r = rowsWithoutCat[rndInt(rowsWithoutCat.length)];
-  const c = state.solution[r];
-  snapshot();
-  state.grid[r][c] = "cat";
-  updateCellVisual(r, c);
-  autoMarkEliminated(r, c);
-  spawnCatExplosion(state.cellEls[r][c]);
-  state.hintsUsed++;
-  ////renderBoard(); 
-  checkWin();
-}
+    // Shake pilotato via Web Animations API invece che con una classe CSS:
+    // el.animate() crea SEMPRE una nuova animazione indipendente ad ogni
+    // chiamata, quindi parte in modo affidabile anche su nodi persistenti e
+    // anche su motori/WebView con repaint poco affidabile dopo un resize.
+    const SHAKE_KEYFRAMES = [
+      { transform: "translateX(0)" },
+      { transform: "translateX(-1px)" },
+      { transform: "translateX(2px)" },
+      { transform: "translateX(-4px)" },
+      { transform: "translateX(4px)" },
+      { transform: "translateX(-4px)" },
+      { transform: "translateX(4px)" },
+      { transform: "translateX(2px)" },
+      { transform: "translateX(-1px)" },
+      { transform: "translateX(0)" }
+    ];
+    function shakeEl(el){
+      if (!el || !el.animate) return;
+      if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+      el.animate(SHAKE_KEYFRAMES, { duration: 500, easing: "ease" });
+    }
 
-/* ============================================================
-   11. MODALS & MISC UI
-   ============================================================ */
-function showScreen(id){
-  document.querySelectorAll(".screen").forEach(function(s){ s.classList.remove("active"); });
-  document.getElementById(id).classList.add("active");
-}
-function openModal(id){ document.getElementById(id).classList.add("active"); }
-function closeModal(id){ document.getElementById(id).classList.remove("active"); }
+    function flashConflict(r, c, conflicts){
+      setTimeout(function(){
+        const toFlash = [state.cellEls[r][c]];
+        conflicts.forEach(function(p){
+            toFlash.push(state.cellEls[p[0]][p[1]]);
+        });
+        // le celle ora sono nodi persistenti (mai ricreati): se una di queste avesse
+        // gia' la classe "conflict" da un flash precedentissimo non ancora ripulito,
+        // un semplice classList.add non farebbe ripartire l'animazione CSS. Si toglie,
+        // si forza un reflow, poi si riaggiunge: garantisce sempre lo shake da capo.
+        toFlash.forEach(function(el){ if (el) el.classList.remove("conflict"); });
+        void els.board.offsetWidth;
+        toFlash.forEach(function(el){ if (el) el.classList.add("conflict"); shakeEl(el); });
+        setTimeout(function(){
+          toFlash.forEach(function(el){ if (el) el.classList.remove("conflict"); });
+          // reset the just-placed cell back to empty (the mistake doesn't stay on the board)
+          state.grid[r][c] = "empty";
+          updateCellVisual(r, c);
+        }, 500);
+      }, 10);
+    }
 
-function launchConfetti(){
-  if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-  const layer = document.createElement("div");
-  layer.className = "confetti-layer";
-  document.body.appendChild(layer);
-  for (let i = 0; i < 26; i++){
-    const s = document.createElement("span");
-    s.textContent = EXPLOSION_EMOJI[rndInt(EXPLOSION_EMOJI.length)];
-    s.style.left = rndInt(100) + "%";
-    s.style.animationDuration = (2 + Math.random()*2) + "s";
-    s.style.animationDelay = (Math.random()*0.6) + "s";
-    s.style.fontSize = (12 + rndInt(48)) + "px";
-    layer.appendChild(s);
-  }
-  setTimeout(function(){ layer.remove(); }, 4200);
-}
+    function loseHeart(){
+      state.hearts = Math.max(0, state.hearts - 1);
+      renderHearts();
+      const lastPaw = els.hearts.querySelector('[data-idx="' + state.hearts + '"]');
+      if (lastPaw) { lastPaw.classList.add("heart-lost-anim"); setTimeout(function(){ lastPaw.classList.remove("heart-lost-anim"); }, 400); }
+      if (state.hearts <= 0){
+        setTimeout(function(){ endGame(false); }, 520);
+      }
+    }
 
-/* ============================================================
-   12. KEYBOARD NAVIGATION ON THE GRID
-   ============================================================ */
-function onBoardKeydown(e){
-  const active = document.activeElement;
-  if (!active || !active.classList || !active.classList.contains("cell")) return;
-  const r = parseInt(active.dataset.r, 10), c = parseInt(active.dataset.c, 10);
-  let nr = r, nc = c;
-  if (e.key === "ArrowUp") nr = Math.max(0, r-1);
-  else if (e.key === "ArrowDown") nr = Math.min(state.n-1, r+1);
-  else if (e.key === "ArrowLeft") nc = Math.max(0, c-1);
-  else if (e.key === "ArrowRight") nc = Math.min(state.n-1, c+1);
-  else return;
-  e.preventDefault();
-  setFocusCell(nr, nc);
-  const next = state.cellEls[nr][nc];
-  if (next) next.focus();
-}
+    function checkWin(){
+      const n = state.n;
+      let count = 0;
+      for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (state.grid[r][c] === "cat") count++;
+      if (count === n) endGame(true);
+    }
 
-/* ============================================================
-   13. INIT & GLOBAL LISTENERS
-   ============================================================ */
-function init(){
-  cacheEls();
-  renderMenu();
+    /* ============================================================
+       9. TIMER
+       ============================================================ */
+    function timerStart(){
+      state.timerRunning = true;
+      state.timerStart = Date.now();
+      state.timerHandle = setInterval(updateTimerDisplay, 250);
+    }
+    function timerStop(){
+      if (state.timerHandle) clearInterval(state.timerHandle);
+      state.timerRunning = false;
+    }
+    function timerElapsedMs(){
+      return state.timerElapsed + (state.timerRunning ? Date.now() - state.timerStart : 0);
+    }
+    function updateTimerDisplay(){
+      const totalSec = Math.floor(timerElapsedMs() / 1000);
+      const mm = Math.floor(totalSec / 60).toString().padStart(2, "0");
+      const ss = (totalSec % 60).toString().padStart(2, "0");
+      els.timer.textContent = mm + ":" + ss;
+    }
+    function timerReset(){
+      timerStop();
+      state.timerElapsed = 0;
+      updateTimerDisplay();
+    }
 
-  document.getElementById("btnBack").addEventListener("click", function(){
-    timerStop();
-    showScreen("screen-menu");
-  });
-  document.getElementById("btnNew").addEventListener("click", function(){
-    if (state.n) startNewGame(state.n);
-  });
-  document.getElementById("btnRestart").addEventListener("click", restartSamePuzzle);
-  document.getElementById("btnUndo").addEventListener("click", restoreSnapshot);
-  document.getElementById("btnHint").addEventListener("click", giveHint);
+    /* ============================================================
+       10. GAME FLOW
+       ============================================================ */
+    function startNewGame(n){
 
-  document.getElementById("btnHowMenu").addEventListener("click", function(){ openModal("modalHow"); });
-  document.getElementById("btnHowGame").addEventListener("click", function(){ openModal("modalHow"); });
-  document.getElementById("btnHowClose").addEventListener("click", function(){ closeModal("modalHow"); });
+      if (!isMusicStarted) {
+        playSound('musicSound', 0.5);
+        isMusicStarted = true;
+      }
 
-  document.getElementById("btnWinMenu").addEventListener("click", function(){ closeModal("modalWin"); showScreen("screen-menu"); });
-  document.getElementById("btnWinNext").addEventListener("click", function(){ closeModal("modalWin"); startNewGame(state.n); });
-  document.getElementById("btnLoseMenu").addEventListener("click", function(){ closeModal("modalLose"); showScreen("screen-menu"); });
-  document.getElementById("btnLoseRetry").addEventListener("click", function(){ closeModal("modalLose"); restartSamePuzzle(); });
-  
-  document.getElementById("btnMusic").addEventListener("click", function() {
-	isMute = !isMute; 
-	
-	const music = document.getElementById("musicSound");
-	
-	if(!isMute && music) {
-		music.volume = 0.5;
-		music.play();
-		isMusicStarted = true;
-	} else if (music) {
-		music.pause();
-		isMusicStarted = false;
-	}
-  });
+      state.difficulty = DIFFICULTIES.find(function(d){ return d.n === n; });
+      showScreen("screen-game");
+      els.gameTitleLevel.textContent = state.difficulty.name + " · " + n + "×" + n;
+      els.loadingOverlay.classList.add("active");
+      els.board.innerHTML = "";
+      generatePuzzleAsync(n, state.difficulty.forcedSize).then(function(result){
+        els.loadingOverlay.classList.remove("active");
+        if (!result){
+          els.hintText.textContent = "Generation error \u2014 try \u00abNew\u00bb again.";
+          return;
+        }
+        state.n = n;
+        state.solution = result.solution;
+        state.regions = result.regions;
+        state.palette = regionPalette(n);
+        state.paletteDark = [...state.palette];
+        for (let i = 0; i < n; i++){
+            //hsl(121,50%,83%)
+            let x1 = state.palette[i].split(',')[0];
+            let x2 = state.palette[i].split(',')[1];
+            let x3 = state.palette[i].split(',')[2];
+            state.paletteDark[i] = x1 + ',' + x2 + ',' + x3.split('%')[0] * 0.8 + '%)';
+        }
 
-  document.querySelectorAll(".modal-backdrop").forEach(function(mb){
-    mb.addEventListener("click", function(e){ if (e.target === mb) mb.classList.remove("active"); });
-  });
+        resetBoardState();
+        ////renderBoard(true);
+        buildBoardOnce(true);
+        els.hintText.textContent = "Touch a cell: first X, than Cat, then Empty.";
+      });
+    }
 
-  els.board.addEventListener("keydown", onBoardKeydown);
-  
-  // Alcune WebView Android non ricalcolano correttamente lo scroll/layout
-  // dopo una rotazione (la pagina resta "congelata" con le vecchie
-  // dimensioni, anche se il contenuto e' effettivamente cambiato). Forziamo
-  // un reflow esplicito quando cambia l'orientamento o la viewport, cosi'
-  // lo scroll torna reattivo anche se la WebView non se ne accorge da sola.
-  function nudgeReflow(){
-    document.body.style.display = "none";
-    void document.body.offsetHeight;
-    document.body.style.display = "";
-  }
-  window.addEventListener("orientationchange", function(){ setTimeout(nudgeReflow, 80); });
-  window.addEventListener("resize", function(){ setTimeout(nudgeReflow, 80); });
-}
+    function resetBoardState(){
+      state.grid = Array.from({length: state.n}, function(){ return new Array(state.n).fill("empty"); });
+      state.hearts = 3;
+      state.hintsUsed = 0;
+      state.history = [];
+      state.gameOver = false;
+      state.focusR = 0;
+      state.focusC = 0;
+      renderHearts();
+      updateUndoBtn();
+      timerReset();
+      timerStart();
+    }
 
-document.addEventListener("DOMContentLoaded", init);
-})();
+    function restartSamePuzzle(){
+      if (!state.n) return;
+      resetBoardState();
+      ////renderBoard();
+      syncBoardVisuals();
+      replayFadeIn();
+    }
 
-let isMute = false;
-let isMusicStarted = false;
-function playSound(id, vol = 1) {
-  if (isMute) return;
-  const audio = document.getElementById(id);
-  if (audio) {
-	audio.currentTime = 0;
-	audio.volume = vol;
-	audio.play();
-  }
-}
+    function endGame(won){
+      state.gameOver = true;
+      timerStop();
+      updateUndoBtn();
+      if (won){
+        document.getElementById("winTime").textContent = els.timer.textContent;
+        document.getElementById("winLevel").textContent = state.difficulty.name;
+        document.getElementById("winLives").textContent = state.hearts;
+        openModal("modalWin");
+        launchConfetti();
+      } else {
+        openModal("modalLose");
+      }
+      playSound('catSound');
+    }
+
+    function giveHintOLD(){
+      if (state.gameOver || !state.n) return;
+      const n = state.n;
+      const rowsWithoutCat = [];
+      for (let r = 0; r < n; r++){
+        let has = false;
+        for (let c = 0; c < n; c++) if (state.grid[r][c] === "cat") { has = true; break; }
+        if (!has) rowsWithoutCat.push(r);
+      }
+      if (rowsWithoutCat.length === 0) return;
+      const r = rowsWithoutCat[rndInt(rowsWithoutCat.length)];
+      const c = state.solution[r];
+      snapshot();
+      // clears any wrong X marks in the target cell, then places the cat with no penalty
+      state.grid[r][c] = "cat";
+      autoMarkEliminated(r, c);
+      state.hintsUsed++;
+      renderBoard();
+      checkWin();
+    }
+
+    function giveHint(){
+      if (state.gameOver || !state.n) return;
+      const n = state.n;
+
+      // 1) c'è un gatto piazzato nella cella sbagliata? rimuovilo prima di tutto
+      const wrongCats = [];
+      for (let r = 0; r < n; r++){
+        for (let c = 0; c < n; c++){
+          if (state.grid[r][c] === "cat" && state.solution[r] !== c) wrongCats.push([r, c]);
+        }
+      }
+      if (wrongCats.length > 0){
+        const pick = wrongCats[rndInt(wrongCats.length)];
+        snapshot();
+        state.grid[pick[0]][pick[1]] = "x"; // ora sappiamo che qui il gatto non ci va
+        state.hintsUsed++;
+        ////renderBoard();
+        updateCellVisual(pick[0], pick[1]);
+        return;
+      }
+
+      // 2) nessun gatto sbagliato: comportamento originale, piazza il gatto giusto
+      const rowsWithoutCat = [];
+      for (let r = 0; r < n; r++){
+        let has = false;
+        for (let c = 0; c < n; c++) if (state.grid[r][c] === "cat") { has = true; break; }
+        if (!has) rowsWithoutCat.push(r);
+      }
+      if (rowsWithoutCat.length === 0) return;
+      const r = rowsWithoutCat[rndInt(rowsWithoutCat.length)];
+      const c = state.solution[r];
+      snapshot();
+      state.grid[r][c] = "cat";
+      updateCellVisual(r, c);
+      autoMarkEliminated(r, c);
+      spawnCatExplosion(state.cellEls[r][c]);
+      state.hintsUsed++;
+      ////renderBoard();
+      checkWin();
+    }
+
+    /* ============================================================
+       11. MODALS & MISC UI
+       ============================================================ */
+    function showScreen(id){
+      document.querySelectorAll(".screen").forEach(function(s){ s.classList.remove("active"); });
+      document.getElementById(id).classList.add("active");
+    }
+    function openModal(id){ document.getElementById(id).classList.add("active"); }
+    function closeModal(id){ document.getElementById(id).classList.remove("active"); }
+
+    function launchConfetti(){
+      if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+      const layer = document.createElement("div");
+      layer.className = "confetti-layer";
+      document.body.appendChild(layer);
+      for (let i = 0; i < 26; i++){
+        const s = document.createElement("span");
+        s.textContent = EXPLOSION_EMOJI[rndInt(EXPLOSION_EMOJI.length)];
+        s.style.left = rndInt(100) + "%";
+        s.style.animationDuration = (2 + Math.random()*2) + "s";
+        s.style.animationDelay = (Math.random()*0.6) + "s";
+        s.style.fontSize = (12 + rndInt(48)) + "px";
+        layer.appendChild(s);
+      }
+      setTimeout(function(){ layer.remove(); }, 4200);
+    }
+
+    /* ============================================================
+       12. KEYBOARD NAVIGATION ON THE GRID
+       ============================================================ */
+    function onBoardKeydown(e){
+      const active = document.activeElement;
+      if (!active || !active.classList || !active.classList.contains("cell")) return;
+      const r = parseInt(active.dataset.r, 10), c = parseInt(active.dataset.c, 10);
+      let nr = r, nc = c;
+      if (e.key === "ArrowUp") nr = Math.max(0, r-1);
+      else if (e.key === "ArrowDown") nr = Math.min(state.n-1, r+1);
+      else if (e.key === "ArrowLeft") nc = Math.max(0, c-1);
+      else if (e.key === "ArrowRight") nc = Math.min(state.n-1, c+1);
+      else return;
+      e.preventDefault();
+      setFocusCell(nr, nc);
+      const next = state.cellEls[nr][nc];
+      if (next) next.focus();
+    }
+
+    /* ============================================================
+       13. INIT & GLOBAL LISTENERS
+       ============================================================ */
+    function init(){
+      cacheEls();
+      renderMenu();
+
+      document.getElementById("btnBack").addEventListener("click", function(){
+        timerStop();
+        showScreen("screen-menu");
+      });
+      document.getElementById("btnNew").addEventListener("click", function(){
+        if (state.n) startNewGame(state.n);
+      });
+      document.getElementById("btnRestart").addEventListener("click", restartSamePuzzle);
+      document.getElementById("btnUndo").addEventListener("click", restoreSnapshot);
+      document.getElementById("btnHint").addEventListener("click", giveHint);
+
+      document.getElementById("btnHowMenu").addEventListener("click", function(){ openModal("modalHow"); });
+      document.getElementById("btnHowGame").addEventListener("click", function(){ openModal("modalHow"); });
+      document.getElementById("btnHowClose").addEventListener("click", function(){ closeModal("modalHow"); });
+
+      document.getElementById("btnWinMenu").addEventListener("click", function(){ closeModal("modalWin"); showScreen("screen-menu"); });
+      document.getElementById("btnWinNext").addEventListener("click", function(){ closeModal("modalWin"); startNewGame(state.n); });
+      document.getElementById("btnLoseMenu").addEventListener("click", function(){ closeModal("modalLose"); showScreen("screen-menu"); });
+      document.getElementById("btnLoseRetry").addEventListener("click", function(){ closeModal("modalLose"); restartSamePuzzle(); });
+
+      document.getElementById("btnMusic").addEventListener("click", function() {
+        isMute = !isMute;
+
+        const music = document.getElementById("musicSound");
+
+        if(!isMute && music) {
+            music.volume = 0.5;
+            music.play();
+            isMusicStarted = true;
+        } else if (music) {
+            music.pause();
+            isMusicStarted = false;
+        }
+      });
+
+      document.querySelectorAll(".modal-backdrop").forEach(function(mb){
+        mb.addEventListener("click", function(e){ if (e.target === mb) mb.classList.remove("active"); });
+      });
+
+      els.board.addEventListener("keydown", onBoardKeydown);
+
+      // Alcune WebView Android non ricalcolano correttamente lo scroll/layout
+      // dopo una rotazione (la pagina resta "congelata" con le vecchie
+      // dimensioni, anche se il contenuto e' effettivamente cambiato). Forziamo
+      // un reflow esplicito quando cambia l'orientamento o la viewport, cosi'
+      // lo scroll torna reattivo anche se la WebView non se ne accorge da sola.
+      function nudgeReflow(){
+        document.body.style.display = "none";
+        void document.body.offsetHeight;
+        document.body.style.display = "";
+      }
+      window.addEventListener("orientationchange", function(){
+        setTimeout(function(){
+          setViewportHeightVar();
+          ////nudgeReflow();
+        }, 250);
+      });
+      window.addEventListener("resize", function(){
+        setTimeout(function(){
+          setViewportHeightVar();
+          ////nudgeReflow();
+        }, 250);
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", init);
+    })();
+
+    let isMute = false;
+    let isMusicStarted = false;
+    function playSound(id, vol = 1) {
+      if (isMute) return;
+      const audio = document.getElementById(id);
+      if (audio) {
+        audio.currentTime = 0;
+        audio.volume = vol;
+        audio.play();
+      }
+    }
 </script>
 </body>
 </html>
