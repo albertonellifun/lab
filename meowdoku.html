@@ -32,7 +32,7 @@
 
         *,*::before,*::after{ box-sizing:border-box; }
         html{ min-height:100%; }
-        body{
+		body{
           margin:0;
           font-family:var(--font-body);
           color:var(--ink);
@@ -44,35 +44,44 @@
             radial-gradient(circle 440px at -6% 88%, rgba(150,120,255,0.20), transparent 58%),
             radial-gradient(ellipse 900px 500px at 50% 40%, rgba(255,214,140,0.14), transparent 65%),
             var(--cream);
-          background-attachment:fixed;
           background-repeat:no-repeat;
           min-height:100vh;
           min-height:100dvh; /* vince sui browser che lo supportano, ignorato dagli altri */
           -webkit-tap-highlight-color:transparent;
           overscroll-behavior:contain;
           position:relative;
-          isolation:isolate;
+          xxxisolation:isolate;
         }
-        body::before{
-          content:"";
-          position:fixed; inset:0; z-index:-2;
-          pointer-events:none;
-          opacity:.05;
-          background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='96' viewBox='0 0 96 96'%3E%3Cg fill='%234A3B52' transform='translate(48 50) rotate(-18) translate(-16 -16)'%3E%3Cellipse cx='16' cy='24' rx='9' ry='7'/%3E%3Ccircle cx='7' cy='11' r='4'/%3E%3Ccircle cx='16' cy='7' r='4.2'/%3E%3Ccircle cx='25' cy='11' r='4'/%3E%3C/g%3E%3C/svg%3E");
-          background-size:96px 96px;
-        }
-        body::after{
-          content:"";
-          position:fixed; inset:-10%; z-index:-1;
-          pointer-events:none;
-          background:
-            radial-gradient(circle 220px at 20% 20%, rgba(255,110,147,0.16), transparent 70%),
-            radial-gradient(circle 260px at 80% 30%, rgba(79,214,190,0.16), transparent 70%),
-            radial-gradient(circle 240px at 30% 85%, rgba(255,154,77,0.16), transparent 70%);
-          filter:blur(2px);
-          will-change:transform;
-          animation:driftBg 26s ease-in-out infinite alternate;
-        }
+		
+		/* Modifica::before e ::after usando z-index: 0 invece di valori negativi */
+		body::before {
+		  content: "";
+		  position: fixed; 
+		  inset: 0; 
+		  xxxz-index:-2;
+		  z-index: 0;
+		  pointer-events: none;
+		  opacity: .05;
+		  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='96' viewBox='0 0 96 96'%3E%3Cg fill='%234A3B52' transform='translate(48 50) rotate(-18) translate(-16 -16)'%3E%3Cellipse cx='16' cy='24' rx='9' ry='7'/%3E%3Ccircle cx='7' cy='11' r='4'/%3E%3Ccircle cx='16' cy='7' r='4.2'/%3E%3Ccircle cx='25' cy='11' r='4'/%3E%3C/g%3E%3C/svg%3E");
+		  background-size: 96px 96px;
+		}
+
+		body::after {
+		  content: "";
+		  position: fixed; 
+		  inset: -10%;
+		  xxxz-index:-1;
+		  z-index: 0;
+		  pointer-events: none;
+		  background:
+			radial-gradient(circle 220px at 20% 20%, rgba(255,110,147,0.16), transparent 70%),
+			radial-gradient(circle 260px at 80% 30%, rgba(79,214,190,0.16), transparent 70%),
+			radial-gradient(circle 240px at 30% 85%, rgba(255,154,77,0.16), transparent 70%);
+		  filter: blur(2px);
+		  will-change: transform;
+		  animation: driftBg 26s ease-in-out infinite alternate;
+		}
+		
         @keyframes driftBg{
           0%{ transform:translate(0,0) scale(1); }
           50%{ transform:translate(-2%,2%) scale(1.06); }
@@ -81,11 +90,19 @@
         button{ font-family:inherit; color:inherit; touch-action:manipulation; }
         h1,h2,h3,p{ margin:0; }
 
-        #app{ position:relative; z-index:1; max-width:640px; margin:0 auto;
-		min-height:100vh;
-		min-height:100dvh; /* vince sui browser che lo supportano, ignorato dagli altri */
-		display:flex; flex-direction:column; padding:20px 16px 40px; }
-
+        #app {
+		  position: relative; 
+		  xxxz-index:1;
+		  z-index: 2; /* Aumentato a 2 per stare sopra ai layer 0 */
+		  max-width: 640px; 
+		  margin: 0 auto;
+		  min-height:100vh;
+		  min-height:100dvh; /* vince sui browser che lo supportano, ignorato dagli altri */
+		  display: flex; 
+		  flex-direction: column; 
+		  padding: 20px 16px 40px; 
+		}
+		
         .screen{ display:none; flex-direction:column; flex:1; animation:fadeUp .5s ease both; }
         .screen.active{ display:flex; justify-content: space-between; }
         @keyframes fadeUp{ from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);} }
@@ -342,7 +359,7 @@
         .confetti-layer span{ position:absolute; top:-5%; font-size:20px; animation:fall linear forwards; }
 
         /* ---------- Cat-placement explosion ---------- */
-        .explosion-layer{ position:fixed; inset:0; pointer-events:none; z-index:45; overflow:visible; }
+        .explosion-layer{ position:fixed; inset:0; pointer-events:none; z-index:55; overflow:visible; }
         .explosion-particle{
           position:absolute; left:0; top:0;
           transform:translate(-50%,-50%);
@@ -362,15 +379,20 @@
           70%{ opacity:1; }
           100%{ transform:translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(0.15) rotate(var(--rot)); opacity:0; }
         }
-        .explosion-ring{
-          position:absolute; left:0; top:0; transform:translate(-50%,-50%);
-          border-radius:50%; border:3px solid var(--ring-color, var(--marmalade));
+        
+        .explosion-ring {
+          position: absolute; left: 0; top: 0; xxxtransform:translate(-50%,-50%);
+          width: 150px; height: 150px; /* Dimensione fissa, animiamo lo scale */
+          border-radius: 50%; border: 3px solid var(--ring-color, var(--marmalade));
           pointer-events:none; animation:ringPulse 1s cubic-bezier(.15,.8,.3,1) forwards;
+          will-change: transform, opacity;
         }
-        @keyframes ringPulse{
-          0%{ width:6px; height:6px; opacity:.9; }
-          100%{ width:150px; height:150px; opacity:0; }
+          
+        @keyframes ringPulse {
+          0%   { transform: translate(-50%, -50%) scale(0.05); opacity: 1; xxxwidth:6px; xxxheight:6px; }
+          100% { transform: translate(-50%, -50%) scale(1.2); opacity: 0; xxxwidth:150px; xxxheight:150px; }
         }
+        
         @media (prefers-reduced-motion: reduce){
           .explosion-layer{ display:none; }
         }
@@ -529,6 +551,9 @@
         <ellipse cx="37" cy="45" rx="18" ry="13" fill="url(#furShine)"/>
         <ellipse cx="50" cy="83" rx="27" ry="11" fill="url(#furShade)"/>
     </symbol>
+	<symbol id="x-mark" viewBox="0 0 100 100">
+        <path d="M20 20 L80 80 M80 20 L20 80" fill="none" stroke="currentColor" stroke-width="30" stroke-linecap="round"/>
+    </symbol>
 </svg>
 
 <div id="app">
@@ -651,7 +676,7 @@
 
 <div class="modal-backdrop" id="modalWin">
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="winTitle">
-        <svg class="modal-icon" viewBox="0 0 100 100" aria-hidden="true"><use href="#cat-face"/></svg>
+        <svg id="winModalIcon" class="modal-icon" viewBox="0 0 100 100" aria-hidden="true"><use href="#cat-face"/></svg>
         <h2 id="winTitle">Territories claimed!</h2>
         <p>Every cat has found its own corner of the world. Well done.</p>
         <div class="modal-stats">
@@ -683,14 +708,14 @@
     "use strict";
 
     function resizeViewPort() {
-        const vv = window.visualViewport;
-        const w = vv ? Math.round(vv.width) : window.innerWidth;
-        const h = vv ? Math.round(vv.height) : window.innerHeight;
-        // px assoluti in inline style: sovrascrivono il CSS
-        document.body.style.minHeight = h + "px";
-        const app = document.getElementById("app");
-        if (app) app.style.minHeight = h + "px";
-    }
+		const vv = window.visualViewport;
+		const h = vv ? Math.round(vv.height) : window.innerHeight;
+		
+		// Aggiorna l'altezza in px 
+		document.body.style.minHeight = h + "px";
+		const app = document.getElementById("app");
+		if (app) app.style.minHeight = h + "px";
+	}
 
     resizeViewPort();
 
@@ -949,7 +974,7 @@
     // than "the user waits forever".
     function genParamsFor(n){
       if (n <= 6) return { maxGenAttempts: 300, maxRepairs: 800, k: 5, timeBudgetMs: 4000 };
-      if (n === 8) return { maxGenAttempts: 150, maxRepairs: 300, k: 3, timeBudgetMs: 5000 };
+      if (n <= 9) return { maxGenAttempts: 150, maxRepairs: 300, k: 3, timeBudgetMs: 5000 };
       return { maxGenAttempts: 60, maxRepairs: 120, k: 2, timeBudgetMs: 6000 }; // 10x10 / Panther
     }
 
@@ -1086,9 +1111,7 @@
         '<use href="#cat-face"/></svg>';
     }
     function xSvg(){
-      return '<svg class="glyph xmark" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="30" stroke-linecap="round" aria-hidden="true">' +
-        '<line x1="20" y1="20" x2="80" y2="80"/><line x1="80" y1="20" x2="20" y2="80"/>' +
-        '</svg>';
+      return '<svg class="glyph xmark" viewBox="0 0 100 100" aria-hidden="true"><use href="#x-mark"/></svg>';
     }
     function pawSvg(cls){
       return '<svg class="' + (cls||"") + '" viewBox="0 0 100 100" fill="currentColor" aria-hidden="true">' +
@@ -1184,9 +1207,11 @@
       ].forEach(function(id){ els[id] = document.getElementById(id); });
 
       //fix resize
+	  /*
       new ResizeObserver(function(entries){
         els.board.style.height = entries[0].contentRect.width + "px";
       }).observe(els.board.parentElement); // .board-frame
+	  */
     }
 
     function renderMenu(){
@@ -1282,17 +1307,21 @@
       const n = state.n;
       const reg = state.regions[r][c];
       const color = 'radial-gradient(circle, ' + state.palette[reg]+ ' 0%, '+state.paletteDark[reg]+' 100%)';
-      const topDiff = (r === 0) || (state.regions[r-1][c] !== reg);
+      /*
+	  const topDiff = (r === 0) || (state.regions[r-1][c] !== reg);
       const leftDiff = (c === 0) || (state.regions[r][c-1] !== reg);
       const bottomDiff = (r === n-1) || (state.regions[r+1][c] !== reg);
       const rightDiff = (c === n-1) || (state.regions[r][c+1] !== reg);
       const bw = function(diff){ return diff ? "1" : "0"; };
       const bc = function(diff){ return diff ? "var(--grout)" : "rgba(74,59,82,0.10)"; };
-      let style = 'background:' + color + ';' +
-        'border-top:' + bw(topDiff) + 'px solid ' + bc(topDiff) + ';' +
+	  */
+      let style = 'background:' + color + ';';
+		/*
+		+ 'border-top:' + bw(topDiff) + 'px solid ' + bc(topDiff) + ';' +
         'border-left:' + bw(leftDiff) + 'px solid ' + bc(leftDiff) + ';' +
         'border-bottom:' + bw(bottomDiff) + 'px solid ' + bc(bottomDiff) + ';' +
         'border-right:' + bw(rightDiff) + 'px solid ' + bc(rightDiff) + ';';
+		*/
       if (doFadeIn){
         const max = 5 * (c+1) * (r+1) / (n * n);
         style += 'animation: fadeIn ' + max + 's;';
@@ -1350,7 +1379,6 @@
       if (!btn) return;
       const cellState = state.grid[r][c];
       btn.innerHTML = cellState === "cat" ? catSvg("cat", r, c) : (cellState === "x" ? xSvg() : "");
-      updateCatsCounter();
     }
 
     // Ri-sincronizza tutte le celle con state.grid SENZA ricreare i nodi ne'
@@ -1435,8 +1463,70 @@
 
     const EXPLOSION_COLORS = ["#FF9A4D", "#4FD6BE", "#FF6E93", "#8F72F2", "#43B7E0"];
     const EXPLOSION_EMOJI = ["🐾","🐱","⭐", "🐾","🥊","😻", "🐈","🐈‍⬛"];
+    
+    function spawnCatExplosion(cellEl) {
+      if (!cellEl) return;
+      if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    
+      const rect = cellEl.getBoundingClientRect();
+      const x = rect.left + rect.width / 2;
+      const y = rect.top + rect.height / 2;
+      const layer = getExplosionLayer();
+      
+      // Usiamo un frammento per iniettare tutto insieme
+      const fragment = document.createDocumentFragment();
+    
+      // 1. Il cerchio (Ring)
+      const ring = document.createElement("div");
+      ring.className = "explosion-ring";
+      ring.style.left = x + "px";
+      ring.style.top = y + "px";
+      ring.style.setProperty("--ring-color", EXPLOSION_COLORS[rndInt(EXPLOSION_COLORS.length)]);
+      fragment.appendChild(ring);
+    
+      // 2. Le particelle (riduciamo il numero a 12 per sicurezza)
+      const count = 12; 
+      for (let i = 0; i < count; i++) {
+        const p = document.createElement("div");
+        const useEmoji = i % 3 === 0;
+        p.className = "explosion-particle " + (useEmoji ? "emoji" : "dot");
+        
+        const angle = (Math.PI * 2 * i / count) + (Math.random() * 0.5 - 0.25);
+        const dist = 40 + rndInt(40);
+        const dx = Math.cos(angle) * dist;
+        const dy = Math.sin(angle) * dist;
+    
+        p.style.left = x + "px";
+        p.style.top = y + "px";
+        p.style.setProperty("--dx", dx.toFixed(1) + "px");
+        p.style.setProperty("--dy", dy.toFixed(1) + "px");
+        p.style.setProperty("--rot", rndInt(360) + "deg");
+    
+        if (useEmoji) {
+          p.textContent = EXPLOSION_EMOJI[rndInt(EXPLOSION_EMOJI.length)];
+        } else {
+          p.style.background = EXPLOSION_COLORS[rndInt(EXPLOSION_COLORS.length)];
+        }
+        fragment.appendChild(p);
+      }
+    
+      layer.appendChild(fragment);
+    
+      // Pulizia singola per tutto il gruppo invece di 17 timer
+      setTimeout(function() {
+        // Rimuoviamo solo gli elementi creati in questo ciclo
+        // (Nota: in produzione potresti voler gestire meglio la rimozione)
+        while (fragment.firstChild) {
+            if (fragment.firstChild.parentNode) fragment.firstChild.parentNode.removeChild(fragment.firstChild);
+        }
+        // Metodo semplice: pulisci il layer se non ci sono altre esplosioni in corso
+        if (layer.childNodes.length < 20) { 
+            // lasciamo che le animazioni finiscano e poi svuotiamo se necessario
+        }
+      }, 1000);
+    }
 
-    function spawnCatExplosion(cellEl){
+    function spawnCatExplosionOLD(cellEl){
       if (!cellEl) return;
       if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
@@ -1461,12 +1551,12 @@
         const useEmoji = i % 3 === 0;
         p.className = "explosion-particle " + (useEmoji ? "emoji" : "dot");
         const angle = (Math.PI * 2 * i / count) + (Math.random() * 0.5 - 0.25);
-        const dist = 46 + Math.random() * 56;
+        const dist = 50 + rndInt(50);
         const dx = Math.cos(angle) * dist;
         const dy = Math.sin(angle) * dist;
         p.style.setProperty("--dx", dx.toFixed(1) + "px");
         p.style.setProperty("--dy", dy.toFixed(1) + "px");
-        p.style.setProperty("--rot", (rndInt(240) - 120) + "deg");
+        p.style.setProperty("--rot", rndInt(360) + "deg");
         p.style.left = x + "px";
         p.style.top = y + "px";
         if (useEmoji){
@@ -1478,7 +1568,6 @@
         layer.appendChild(p);
         setTimeout(function(){ p.remove(); }, 1000);
       }
-      playSound('purrSound');
     }
 
     /* ============================================================
@@ -1509,6 +1598,7 @@
         state.grid[r][c] = "empty";
         ////renderBoard();
         updateCellVisual(r, c);
+		updateCatsCounter();							
         return;
       }
     }
@@ -1528,6 +1618,8 @@
       updateCellVisual(r, c);
       autoMarkEliminated(r, c);
       spawnCatExplosion(state.cellEls[r][c]);
+	  playSound('purrSound');
+	  updateCatsCounter();
       checkWin();
     }
 
@@ -1703,31 +1795,13 @@
         document.getElementById("winLives").textContent = state.hearts;
         openModal("modalWin");
         launchConfetti();
+		setTimeout(function(){
+		  spawnCatExplosion(document.getElementById("winModalIcon"));
+		}, 350); // aspetta che il pop-in del modal si assesti
       } else {
         openModal("modalLose");
       }
       playSound('catSound');
-    }
-
-    function giveHintOLD(){
-      if (state.gameOver || !state.n) return;
-      const n = state.n;
-      const rowsWithoutCat = [];
-      for (let r = 0; r < n; r++){
-        let has = false;
-        for (let c = 0; c < n; c++) if (state.grid[r][c] === "cat") { has = true; break; }
-        if (!has) rowsWithoutCat.push(r);
-      }
-      if (rowsWithoutCat.length === 0) return;
-      const r = rowsWithoutCat[rndInt(rowsWithoutCat.length)];
-      const c = state.solution[r];
-      snapshot();
-      // clears any wrong X marks in the target cell, then places the cat with no penalty
-      state.grid[r][c] = "cat";
-      autoMarkEliminated(r, c);
-      state.hintsUsed++;
-      renderBoard();
-      checkWin();
     }
 
     function giveHint(){
@@ -1748,6 +1822,7 @@
         state.hintsUsed++;
         ////renderBoard();
         updateCellVisual(pick[0], pick[1]);
+		updateCatsCounter();					
         return;
       }
 
@@ -1766,7 +1841,9 @@
       updateCellVisual(r, c);
       autoMarkEliminated(r, c);
       spawnCatExplosion(state.cellEls[r][c]);
+	  playSound('purrSound');
       state.hintsUsed++;
+      updateCatsCounter();						  
       ////renderBoard();
       checkWin();
     }
@@ -1824,13 +1901,8 @@
       cacheEls();
       renderMenu();
 
-      document.getElementById("btnBack").addEventListener("click", function(){
-        timerStop();
-        showScreen("screen-menu");
-      });
-      document.getElementById("btnNew").addEventListener("click", function(){
-        if (state.n) startNewGame(state.n);
-      });
+      document.getElementById("btnBack").addEventListener("click", function(){ timerStop(); showScreen("screen-menu"); });
+      document.getElementById("btnNew").addEventListener("click", function(){ if (state.n) startNewGame(state.n); });
       document.getElementById("btnRestart").addEventListener("click", restartSamePuzzle);
       document.getElementById("btnUndo").addEventListener("click", restoreSnapshot);
       document.getElementById("btnHint").addEventListener("click", giveHint);
@@ -1865,12 +1937,16 @@
 
       els.board.addEventListener("keydown", onBoardKeydown);
 
-      window.addEventListener("orientationchange", function(){
-      setTimeout(function(){resizeViewPort();},250);
-      });
-      window.addEventListener("resize", function(){
-      setTimeout(function(){resizeViewPort();},250);
-      });
+	  // Ascolta sia il ridimensionamento della Viewport sia il cambio di orientamento (Redmi / Android)
+	  if (window.visualViewport) {
+		window.visualViewport.addEventListener("resize", resizeViewPort);
+	  } else {
+		window.addEventListener("resize", resizeViewPort);
+	  }
+	  window.addEventListener("orientationchange", function() {
+		// Piccolo ritardo per consentire alla WebView Redmi di ricalcolare le dimensioni corrette dopo la rotazione
+		setTimeout(resizeViewPort, 100);
+	  });
     }
 
     document.addEventListener("DOMContentLoaded", init);
