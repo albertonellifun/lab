@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Meowdoku (Rocky Graffietto Edition) — The Territorial Cats Puzzle</title>
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpolygon%20points%3D%2218%2C46%2034%2C6%2052%2C40%22%20fill%3D%22%23432%22%2F%3E%3Cpolygon%20points%3D%2282%2C46%2066%2C6%2048%2C40%22%20fill%3D%22%23432%22%2F%3E%3Cpolygon%20points%3D%2224%2C46%2034%2C12%2048%2C40%22%20fill%3D%22%239E6A62%22%2F%3E%3Cpolygon%20points%3D%2276%2C46%2066%2C12%2052%2C40%22%20fill%3D%22%239E6A62%22%2F%3E%3Ccircle%20cx%3D%2250%22%20cy%3D%2260%22%20r%3D%2234%22%20fill%3D%22%23F7E8CB%22%2F%3E%3Cellipse%20cx%3D%2250%22%20cy%3D%2262%22%20rx%3D%2230%22%20ry%3D%2224%22%20fill%3D%22%23432%22%2F%3E%3Cg%20stroke%3D%22%23FAF0DC%22%20stroke-width%3D%221.5%22%20stroke-linecap%3D%22round%22%3E%3Cline%20x1%3D%2213%22%20y1%3D%2268%22%20x2%3D%2231%22%20y2%3D%2266.5%22%2F%3E%3Cline%20x1%3D%2213%22%20y1%3D%2274%22%20x2%3D%2231%22%20y2%3D%2272.5%22%2F%3E%3Cline%20x1%3D%2287%22%20y1%3D%2268%22%20x2%3D%2269%22%20y2%3D%2266.5%22%2F%3E%3Cline%20x1%3D%2287%22%20y1%3D%2274%22%20x2%3D%2269%22%20y2%3D%2272.5%22%2F%3E%3C%2Fg%3E%3Cg%20class%3D%22eye%20eye-l%22%3E%3Cellipse%20cx%3D%2241%22%20cy%3D%2258%22%20rx%3D%225.4%22%20ry%3D%228.3%22%20fill%3D%22%235BC8E8%22%20transform%3D%22rotate(-76%2041%2058)%22%2F%3E%3Cg%20class%3D%22pupil%22%3E%3Cellipse%20cx%3D%2241.3%22%20cy%3D%2259.5%22%20rx%3D%222.3%22%20ry%3D%223.6%22%20fill%3D%22%2320140F%22%2F%3E%3Ccircle%20cx%3D%2239.6%22%20cy%3D%2255.6%22%20r%3D%220.9%22%20fill%3D%22%23FFFFFF%22%2F%3E%3C%2Fg%3E%3C%2Fg%3E%3Cg%20class%3D%22eye%20eye-r%22%3E%3Cellipse%20cx%3D%2259%22%20cy%3D%2258%22%20rx%3D%225.4%22%20ry%3D%228.3%22%20fill%3D%22%235BC8E8%22%20transform%3D%22rotate(76%2059%2058)%22%2F%3E%3Cg%20class%3D%22pupil%22%3E%3Cellipse%20cx%3D%2258.7%22%20cy%3D%2259.5%22%20rx%3D%222.3%22%20ry%3D%223.6%22%20fill%3D%22%2320140F%22%2F%3E%3Ccircle%20cx%3D%2257.6%22%20cy%3D%2255.6%22%20r%3D%220.9%22%20fill%3D%22%23FFFFFF%22%2F%3E%3C%2Fg%3E%3C%2Fg%3E%3Cpolygon%20points%3D%2250%2C74%2045.5%2C68.8%2054.5%2C68.8%22%20fill%3D%22%23E8929E%22%2F%3E%3Cpath%20d%3D%22M50%2072%20L50%2076%20M50%2076%20Q46%2080%2042%2076%20M50%2075%20Q53%2081%2057%2076%22%20stroke%3D%22%23b98%22%20stroke-width%3D%221%22%20fill%3D%22none%22%2F%3E%3C/svg%3E">
     <style>
@@ -46,19 +46,16 @@
             var(--cream);
           background-repeat:no-repeat;
           min-height:100vh;
-          min-height:100dvh; /* vince sui browser che lo supportano, ignorato dagli altri */
           -webkit-tap-highlight-color:transparent;
           overscroll-behavior:contain;
           position:relative;
-          xxxisolation:isolate;
         }
-		
+
 		/* Modifica::before e ::after usando z-index: 0 invece di valori negativi */
 		body::before {
 		  content: "";
-		  position: fixed; 
-		  inset: 0; 
-		  xxxz-index:-2;
+		  position: fixed;
+		  inset: 0;
 		  z-index: 0;
 		  pointer-events: none;
 		  opacity: .05;
@@ -68,9 +65,8 @@
 
 		body::after {
 		  content: "";
-		  position: fixed; 
+		  position: fixed;
 		  inset: -10%;
-		  xxxz-index:-1;
 		  z-index: 0;
 		  pointer-events: none;
 		  background:
@@ -81,7 +77,7 @@
 		  will-change: transform;
 		  animation: driftBg 26s ease-in-out infinite alternate;
 		}
-		
+
         @keyframes driftBg{
           0%{ transform:translate(0,0) scale(1); }
           50%{ transform:translate(-2%,2%) scale(1.06); }
@@ -91,18 +87,19 @@
         h1,h2,h3,p{ margin:0; }
 
         #app {
-		  position: relative; 
-		  xxxz-index:1;
+		  position: relative;
 		  z-index: 2; /* Aumentato a 2 per stare sopra ai layer 0 */
-		  max-width: 640px; 
+		  max-width: 640px;
 		  margin: 0 auto;
 		  min-height:100vh;
 		  min-height:100dvh; /* vince sui browser che lo supportano, ignorato dagli altri */
-		  display: flex; 
-		  flex-direction: column; 
-		  padding: 20px 16px 40px; 
+		  display: flex;
+		  flex-direction: column;
+		  padding: 20px 16px 40px;
+          transform: translateZ(0);
+          will-change: transform;
 		}
-		
+
         .screen{ display:none; flex-direction:column; flex:1; animation:fadeUp .5s ease both; }
         .screen.active{ display:flex; justify-content: space-between; }
         @keyframes fadeUp{ from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);} }
@@ -256,8 +253,7 @@
           display:grid; place-items:center; outline-offset:-3px;
           transition:filter .12s ease, transform .1s cubic-bezier(.3,1.4,.4,1), box-shadow .1s ease;
           contain:layout paint style;
-
-
+		  
           border-radius:calc(var(--radius) - 8px);
           border-radius: 20%;
           box-shadow:
@@ -379,7 +375,7 @@
           70%{ opacity:1; }
           100%{ transform:translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(0.15) rotate(var(--rot)); opacity:0; }
         }
-        
+
         .explosion-ring {
           position: absolute; left: 0; top: 0; xxxtransform:translate(-50%,-50%);
           width: 150px; height: 150px; /* Dimensione fissa, animiamo lo scale */
@@ -387,12 +383,12 @@
           pointer-events:none; animation:ringPulse 1s cubic-bezier(.15,.8,.3,1) forwards;
           will-change: transform, opacity;
         }
-          
+
         @keyframes ringPulse {
           0%   { transform: translate(-50%, -50%) scale(0.05); opacity: 1; xxxwidth:6px; xxxheight:6px; }
           100% { transform: translate(-50%, -50%) scale(1.2); opacity: 0; xxxwidth:150px; xxxheight:150px; }
         }
-        
+
         @media (prefers-reduced-motion: reduce){
           .explosion-layer{ display:none; }
         }
@@ -491,6 +487,10 @@
         <circle cx="50" cy="60" r="34" fill="#F7E8CB"/>
         <ellipse cx="50" cy="62" rx="30" ry="24" fill="var(--siamese-point, #432)"/>
 
+		<!-- guance bianche tuxedo -->
+		<ellipse cx="50" cy="77" rx="19" ry="9" fill="var(--tuxedo-point, #432)"/>
+		<ellipse cx="50" cy="73" rx="9"  ry="9" fill="var(--tuxedo-point, #432)"/>
+
         <!-- baffazzi -->
         <g stroke="#FAF0DC" stroke-width="1.5" stroke-linecap="round">
             <line x1="13" y1="68" x2="31" y2="66.5"/>
@@ -551,25 +551,28 @@
         <ellipse cx="37" cy="45" rx="18" ry="13" fill="url(#furShine)"/>
         <ellipse cx="50" cy="83" rx="27" ry="11" fill="url(#furShade)"/>
     </symbol>
-	<symbol id="x-mark" viewBox="0 0 100 100">
+    <symbol id="x-mark" viewBox="0 0 100 100">
         <path d="M20 20 L80 80 M80 20 L20 80" fill="none" stroke="currentColor" stroke-width="30" stroke-linecap="round"/>
     </symbol>
 </svg>
 
-<div id="app">
-    <audio id="catSound" preload="auto">
-        <source src="./meowdoku-cat.mp3" type="audio/mpeg">
-    </audio>
-    <audio id="purrSound" preload="auto">
-        <source src="./meowdoku-purr.mp3" type="audio/mpeg">
-    </audio>
-    <audio id="errorSound" preload="auto">
-        <source src="./meowdoku-error.mp3" type="audio/mpeg">
-    </audio>
-    <audio id="musicSound" loop preload="auto">
-        <source src="./meowdoku-music.mp3" type="audio/mpeg">
-    </audio>
+<audio id="catSound" preload="auto">
+	<source src="./meowdoku-cat.mp3" type="audio/mpeg">
+</audio>
+<audio id="purrSound" preload="auto">
+    <source src="./meowdoku-purr.mp3" type="audio/mpeg">
+</audio>
+<audio id="errorSound" preload="auto">
+    <source src="./meowdoku-error.mp3" type="audio/mpeg">
+</audio>
+<audio id="musicSound" loop preload="auto">
+    <source src="./meowdoku-music.mp3" type="audio/mpeg">
+</audio>
+<audio id="musicSound2" loop preload="auto">
+    <source src="./meowdoku-music2.mp3" type="audio/mpeg">
+</audio>
 
+<div id="app">
     <!-- ============ MENU SCREEN ============ -->
     <section id="screen-menu" class="screen active" aria-label="Main menu">
         <div class="hero">
@@ -648,10 +651,7 @@
                 <span>Music</span>
             </button>
         </div>
-
-
     </section>
-
 </div>
 
 <!-- ============ MODALS ============ -->
@@ -708,13 +708,26 @@
     "use strict";
 
     function resizeViewPort() {
-		const vv = window.visualViewport;
-		const h = vv ? Math.round(vv.height) : window.innerHeight;
-		
-		// Aggiorna l'altezza in px 
-		document.body.style.minHeight = h + "px";
-		const app = document.getElementById("app");
-		if (app) app.style.minHeight = h + "px";
+		setTimeout(function() {
+			const h = window.innerHeight;
+			if (!h || h < 50) return;
+													   
+			document.body.style.minHeight = h + "px";
+			const app = document.getElementById("app");
+			if (app) {
+			  app.style.minHeight = h + "px";
+			  // Forza un ricalcolo dello stacking context su alcuni motori mobili
+			  app.style.transform = "translateZ(0)";
+			}
+			
+			//ricostruisce menu + griglia
+			renderMenu();
+            if (state.n && state.cellEls) {
+                syncBoardVisuals();
+            }
+
+			window.scrollTo(0, 0);
+		}, 150);
 	}
 
     resizeViewPort();
@@ -1084,7 +1097,7 @@
         { n:5,  name:"Living Room Ninja",  sub:"Special skill: Knocking glasses off tables.",      paws:2, forcedSize:1 },
         { n:6,  name:"3 AM Zoomies",       sub:"Singing the song of my people at midnight.",       paws:3, forcedSize:1 },
         { n:7,  name:"Roof Ruler",         sub:"King of the alley, terror of pigeons.",            paws:4, forcedSize:1 },
-        { n:8,  name:"Keyboard Overlord",  sub:"I sleep on the keyboardfghjklòàù+*",                   paws:5, forcedSize:1 },
+        { n:8,  name:"Keyboard Overlord",  sub:"I sleep on the keyboardfghjklòàù+*",               paws:5, forcedSize:1 },
         { n:9,  name:"Schrödinger's Boss", sub:"Simultaneously beaten and unbeaten.",              paws:6, forcedSize:1 },
         { n:10, name:"Egyptian Deity",     sub:"Demand worship, golden cans, and zero mercy.",     paws:7, forcedSize:2 }
     ];
@@ -1092,22 +1105,27 @@
     /* ============================================================
        4. REUSABLE SVG ICONS
        ============================================================ */
-    function catSvgOLD(cls){
-      return '<svg class="glyph ' + (cls||"") + '" viewBox="0 0 100 100" aria-hidden="true"><use href="#cat-face"/></svg>';
-    }
     function catSvg(cls, row = 0, col = 0){
-      const eyeDelay = (-(Math.random() * 5)).toFixed(2) + "s";
-      const lookDelay = (-(Math.random() * 9)).toFixed(2) + "s";
+      // Deterministic pseudo-random values based on position to avoid redundant DOM updates
+      const seed = (row * 17 + col * 31) % 100;
+      const eyeDelay = (-(seed % 50 * 0.1)).toFixed(1) + "s";
+      const lookDelay = (-(seed % 90 * 0.1)).toFixed(1) + "s";
       const siamesePointColors = [
         "#211",//seal
         "#666",//blue
         "#432",//choco
-        "#842",//red
-        "#987"//lilac
+		"#842",//red
+		"#987",//lilac
+		"#aa9",//grigio chiaro
+		"#dca",//crema chiarissimo
+		"#954",//rosso chiaro
+		"#000",//black!
       ];
       const siamesePoint = siamesePointColors[row % siamesePointColors.length];
+	  const tuxedoPoint = seed % 5 === 0 ? "#ffe" : siamesePoint;
+	  //return '<svg class="glyph ' + (cls||"") + '" viewBox="0 0 100 100" aria-hidden="true"><use href="#cat-face"/></svg>';
       return '<svg class="glyph ' + (cls||"") + '" viewBox="0 0 100 100" aria-hidden="true" ' +
-        'style="--eye-delay:' + eyeDelay + '; --look-delay:' + lookDelay + '; --siamese-point:' + siamesePoint+ ';">' +
+        'style="--eye-delay:' + eyeDelay + '; --look-delay:' + lookDelay + '; --siamese-point:' + siamesePoint+ '; --tuxedo-point:' + tuxedoPoint +';">' +
         '<use href="#cat-face"/></svg>';
     }
     function xSvg(){
@@ -1205,17 +1223,10 @@
        "gameTitleName","gameTitleLevel","hearts","timer","hintText","catsCounter",
        "modalHow","modalWin","modalLose","winTime","winLevel","winLives"
       ].forEach(function(id){ els[id] = document.getElementById(id); });
-
-      //fix resize
-	  /*
-      new ResizeObserver(function(entries){
-        els.board.style.height = entries[0].contentRect.width + "px";
-      }).observe(els.board.parentElement); // .board-frame
-	  */
     }
 
     function renderMenu(){
-      let html = "";
+	  let html = "";
       DIFFICULTIES.forEach(function(d, idx){
         const hue = (idx * 67) % 360;
         let paws = "";
@@ -1233,11 +1244,11 @@
           '<div class="diff-paws">' + paws + '</div></div></button>';
       });
       els.diffGrid.innerHTML = html;
-      els.diffGrid.querySelectorAll(".diff-card").forEach(function(btn){
-        btn.addEventListener("click", function(){ startNewGame(parseInt(btn.dataset.n, 10)); });
+	  els.diffGrid.querySelectorAll(".diff-card").forEach(function(btn){
+		btn.addEventListener("click", function(){ startNewGame(parseInt(btn.dataset.n, 10)); });
       });
-    }
-
+	}
+	
     function renderHearts(){
       let html = "";
       for (let i = 0; i < 3; i++){
@@ -1246,59 +1257,7 @@
       els.hearts.innerHTML = html;
     }
 
-    function renderBoardOLD(doFadeIn = false){
-      const n = state.n;
-      const hadFocusInBoard = els.board.contains(document.activeElement);
-      els.board.style.gridTemplateColumns = "repeat(" + n + ", 1fr)";
-      els.board.style.gridTemplateRows = "repeat(" + n + ", 1fr)";
-      let html = "";
-      for (let r = 0; r < n; r++){
-        for (let c = 0; c < n; c++){
-          const reg = state.regions[r][c];
-          const color = 'radial-gradient(circle, ' + state.palette[reg]+ ' 0%, '+state.paletteDark[reg]+' 100%)';//state.palette[reg];
-          const cellState = state.grid[r][c];
-          /*
-          const topDiff = (r === 0) || (state.regions[r-1][c] !== reg);
-          const leftDiff = (c === 0) || (state.regions[r][c-1] !== reg);
-          const bottomDiff = (r === n-1) || (state.regions[r+1][c] !== reg);
-          const rightDiff = (c === n-1) || (state.regions[r][c+1] !== reg);
-          const bw = function(diff){ return diff ? "1" : "0"; };//////////xxxx
-          const bc = function(diff){ return diff ? "var(--grout)" : "rgba(74,59,82,0.10)"; };
-          */
-          let inner = "";
-          if (cellState === "cat") inner = catSvg("cat",r,c);
-          else if (cellState === "x") inner = xSvg();
-          else inner = '';
-          let max = 5 * (c+1) * (r+1) / (n * n);
-          html += '<button class="cell" type="button" data-r="' + r + '" data-c="' + c + '" ' +
-            'role="gridcell" aria-label="row ' + (r+1) + ' column ' + (c+1) + '" ' +
-            'style="background:' + color + ';' +
-            (doFadeIn ? 'animation: fadeIn '+max+'s; ' : '') +
-            /*
-            'border-top:' + bw(topDiff) + 'px solid ' + bc(topDiff) + ';' +
-            'border-left:' + bw(leftDiff) + 'px solid ' + bc(leftDiff) + ';' +
-            'border-bottom:' + bw(bottomDiff) + 'px solid ' + bc(bottomDiff) + ';' +
-            'border-right:' + bw(rightDiff) + 'px solid ' + bc(rightDiff) +
-            */
-            ';">' +
-            inner + '</button>';
-        }
-      }
-      els.board.innerHTML = html;
-      els.board.querySelectorAll(".cell").forEach(function(cell){
-        cell.addEventListener("click", onCellClick);
-      });
-      applyRovingTabindex();
-      if (hadFocusInBoard){
-        const el = els.board.querySelector('.cell[data-r="' + state.focusR + '"][data-c="' + state.focusC + '"]');
-        if (el) el.focus();
-      }
-      updateCatsCounter();
-    }
-
-
-
-
+    
     // Calcola una sola volta lo stile "statico" di una cella (sfondo regione,
     // bordi tra territori, eventuale animazione d'ingresso). Non dipende mai
     // dallo stato di gioco (gatto/x/vuoto): per questo viene applicato solo in
@@ -1348,6 +1307,7 @@
           btn.className = "cell";
           btn.type = "button";
           btn.dataset.r = r; btn.dataset.c = c;
+          btn.dataset.state = "empty"; // Initialize state tracker
           btn.setAttribute("role", "gridcell");
           btn.setAttribute("aria-label", "row " + (r+1) + " column " + (c+1));
           btn.setAttribute("style", cellStaticStyle(r, c, doFadeIn));
@@ -1358,7 +1318,7 @@
       }
       els.board.innerHTML = "";
       els.board.appendChild(frag);
-      els.board.onclick = onBoardClick; // un solo listener delegato per tutta la griglia, mai piu' riattaccato
+      els.board.onclick = onBoardClick;
       syncBoardVisuals();
     }
 
@@ -1378,6 +1338,8 @@
       const btn = state.cellEls[r][c];
       if (!btn) return;
       const cellState = state.grid[r][c];
+      if (btn.dataset.state === cellState) return;
+      btn.dataset.state = cellState;
       btn.innerHTML = cellState === "cat" ? catSvg("cat", r, c) : (cellState === "x" ? xSvg() : "");
     }
 
@@ -1388,9 +1350,7 @@
       const n = state.n;
       for (let r = 0; r < n; r++){
         for (let c = 0; c < n; c++){
-          const btn = state.cellEls[r][c];
-          const cellState = state.grid[r][c];
-          btn.innerHTML = cellState === "cat" ? catSvg("cat", r, c) : (cellState === "x" ? xSvg() : "");
+          updateCellVisual(r, c);
         }
       }
       updateCatsCounter();
@@ -1421,15 +1381,6 @@
       for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (state.grid[r][c] === "cat") count++;
       els.catsCounter.innerHTML = pawSvg() + '<span>' + count + ' / ' + n + '</span>';
       els.catsCounter.classList.toggle("complete", count === n);
-    }
-
-    // Roving tabindex: only one cell is Tab-reachable, arrow keys move
-    // focus between cells without losing your place on every redraw.
-    function applyRovingTabindexOLD(){
-      els.board.querySelectorAll(".cell").forEach(function(cell){
-        const r = parseInt(cell.dataset.r, 10), c = parseInt(cell.dataset.c, 10);
-        cell.tabIndex = (r === state.focusR && c === state.focusC) ? 0 : -1;
-      });
     }
 
     // Roving tabindex mirato: aggiorna il tabIndex solo sulla cella che perde
@@ -1463,113 +1414,52 @@
 
     const EXPLOSION_COLORS = ["#FF9A4D", "#4FD6BE", "#FF6E93", "#8F72F2", "#43B7E0"];
     const EXPLOSION_EMOJI = ["🐾","🐱","⭐", "🐾","🥊","😻", "🐈","🐈‍⬛"];
-    
+
     function spawnCatExplosion(cellEl) {
       if (!cellEl) return;
       if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    
+
       const rect = cellEl.getBoundingClientRect();
       const x = rect.left + rect.width / 2;
       const y = rect.top + rect.height / 2;
       const layer = getExplosionLayer();
-      
-      // Usiamo un frammento per iniettare tutto insieme
-      const fragment = document.createDocumentFragment();
-    
-      // 1. Il cerchio (Ring)
+
+      const container = document.createElement("div");
+      container.style.position = "absolute";
+      container.style.left = "0";
+      container.style.top = "0";
+
       const ring = document.createElement("div");
       ring.className = "explosion-ring";
       ring.style.left = x + "px";
       ring.style.top = y + "px";
       ring.style.setProperty("--ring-color", EXPLOSION_COLORS[rndInt(EXPLOSION_COLORS.length)]);
-      fragment.appendChild(ring);
-    
-      // 2. Le particelle (riduciamo il numero a 12 per sicurezza)
-      const count = 12; 
+      container.appendChild(ring);
+
+      const count = 16;
       for (let i = 0; i < count; i++) {
         const p = document.createElement("div");
         const useEmoji = i % 3 === 0;
         p.className = "explosion-particle " + (useEmoji ? "emoji" : "dot");
-        
         const angle = (Math.PI * 2 * i / count) + (Math.random() * 0.5 - 0.25);
         const dist = 40 + rndInt(40);
         const dx = Math.cos(angle) * dist;
         const dy = Math.sin(angle) * dist;
-    
         p.style.left = x + "px";
         p.style.top = y + "px";
         p.style.setProperty("--dx", dx.toFixed(1) + "px");
         p.style.setProperty("--dy", dy.toFixed(1) + "px");
         p.style.setProperty("--rot", rndInt(360) + "deg");
-    
-        if (useEmoji) {
-          p.textContent = EXPLOSION_EMOJI[rndInt(EXPLOSION_EMOJI.length)];
-        } else {
-          p.style.background = EXPLOSION_COLORS[rndInt(EXPLOSION_COLORS.length)];
-        }
-        fragment.appendChild(p);
+        if (useEmoji) p.textContent = EXPLOSION_EMOJI[rndInt(EXPLOSION_EMOJI.length)];
+        else p.style.background = EXPLOSION_COLORS[rndInt(EXPLOSION_COLORS.length)];
+        container.appendChild(p);
       }
-    
-      layer.appendChild(fragment);
-    
-      // Pulizia singola per tutto il gruppo invece di 17 timer
-      setTimeout(function() {
-        // Rimuoviamo solo gli elementi creati in questo ciclo
-        // (Nota: in produzione potresti voler gestire meglio la rimozione)
-        while (fragment.firstChild) {
-            if (fragment.firstChild.parentNode) fragment.firstChild.parentNode.removeChild(fragment.firstChild);
-        }
-        // Metodo semplice: pulisci il layer se non ci sono altre esplosioni in corso
-        if (layer.childNodes.length < 20) { 
-            // lasciamo che le animazioni finiscano e poi svuotiamo se necessario
-        }
-      }, 1000);
+
+      layer.appendChild(container);
+      setTimeout(function() { container.remove(); }, 1000);
     }
 
-    function spawnCatExplosionOLD(cellEl){
-      if (!cellEl) return;
-      if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-
-      const rect = cellEl.getBoundingClientRect();
-      const x = rect.left + rect.width / 2;
-      const y = rect.top + rect.height / 2;
-      const layer = getExplosionLayer();
-
-      // expanding shockwave ring
-      const ring = document.createElement("div");
-      ring.className = "explosion-ring";
-      ring.style.left = x + "px";
-      ring.style.top = y + "px";
-      ring.style.setProperty("--ring-color", EXPLOSION_COLORS[rndInt(EXPLOSION_COLORS.length)]);
-      layer.appendChild(ring);
-      setTimeout(function(){ ring.remove(); }, 1000);
-
-      // burst of glowing dots mixed with little paw/star emoji
-      const count = 16;
-      for (let i = 0; i < count; i++){
-        const p = document.createElement("div");
-        const useEmoji = i % 3 === 0;
-        p.className = "explosion-particle " + (useEmoji ? "emoji" : "dot");
-        const angle = (Math.PI * 2 * i / count) + (Math.random() * 0.5 - 0.25);
-        const dist = 50 + rndInt(50);
-        const dx = Math.cos(angle) * dist;
-        const dy = Math.sin(angle) * dist;
-        p.style.setProperty("--dx", dx.toFixed(1) + "px");
-        p.style.setProperty("--dy", dy.toFixed(1) + "px");
-        p.style.setProperty("--rot", rndInt(360) + "deg");
-        p.style.left = x + "px";
-        p.style.top = y + "px";
-        if (useEmoji){
-          p.textContent = EXPLOSION_EMOJI[rndInt(EXPLOSION_EMOJI.length)];
-        } else {
-          p.style.color = EXPLOSION_COLORS[rndInt(EXPLOSION_COLORS.length)];
-          p.style.background = "currentColor";
-        }
-        layer.appendChild(p);
-        setTimeout(function(){ p.remove(); }, 1000);
-      }
-    }
-
+    
     /* ============================================================
        8. GAME LOGIC
        ============================================================ */
@@ -1598,7 +1488,7 @@
         state.grid[r][c] = "empty";
         ////renderBoard();
         updateCellVisual(r, c);
-		updateCatsCounter();							
+		updateCatsCounter();
         return;
       }
     }
@@ -1726,11 +1616,7 @@
        10. GAME FLOW
        ============================================================ */
     function startNewGame(n){
-
-      if (!isMusicStarted) {
-        playSound('musicSound', 0.5);
-        isMusicStarted = true;
-      }
+      updateMusic(n);
 
       state.difficulty = DIFFICULTIES.find(function(d){ return d.n === n; });
       showScreen("screen-game");
@@ -1822,7 +1708,7 @@
         state.hintsUsed++;
         ////renderBoard();
         updateCellVisual(pick[0], pick[1]);
-		updateCatsCounter();					
+		updateCatsCounter();
         return;
       }
 
@@ -1843,7 +1729,7 @@
       spawnCatExplosion(state.cellEls[r][c]);
 	  playSound('purrSound');
       state.hintsUsed++;
-      updateCatsCounter();						  
+      updateCatsCounter();
       ////renderBoard();
       checkWin();
     }
@@ -1897,11 +1783,9 @@
     /* ============================================================
        13. INIT & GLOBAL LISTENERS
        ============================================================ */
-    function init(){
-      cacheEls();
-      renderMenu();
-
-      document.getElementById("btnBack").addEventListener("click", function(){ timerStop(); showScreen("screen-menu"); });
+	   
+	function attachGameToolbarListeners(){
+	  document.getElementById("btnBack").addEventListener("click", function(){ timerStop(); showScreen("screen-menu"); });
       document.getElementById("btnNew").addEventListener("click", function(){ if (state.n) startNewGame(state.n); });
       document.getElementById("btnRestart").addEventListener("click", restartSamePuzzle);
       document.getElementById("btnUndo").addEventListener("click", restoreSnapshot);
@@ -1916,20 +1800,13 @@
       document.getElementById("btnLoseMenu").addEventListener("click", function(){ closeModal("modalLose"); showScreen("screen-menu"); });
       document.getElementById("btnLoseRetry").addEventListener("click", function(){ closeModal("modalLose"); restartSamePuzzle(); });
 
-      document.getElementById("btnMusic").addEventListener("click", function() {
-        isMute = !isMute;
-
-        const music = document.getElementById("musicSound");
-
-        if(!isMute && music) {
-            music.volume = 0.5;
-            music.play();
-            isMusicStarted = true;
-        } else if (music) {
-            music.pause();
-            isMusicStarted = false;
-        }
-      });
+      document.getElementById("btnMusic").addEventListener("click", function() { isMute = !isMute; updateMusic(state.n); });
+	}
+	
+    function init(){
+      cacheEls();
+      renderMenu();
+	  attachGameToolbarListeners();
 
       document.querySelectorAll(".modal-backdrop").forEach(function(mb){
         mb.addEventListener("click", function(e){ if (e.target === mb) mb.classList.remove("active"); });
@@ -1937,23 +1814,36 @@
 
       els.board.addEventListener("keydown", onBoardKeydown);
 
-	  // Ascolta sia il ridimensionamento della Viewport sia il cambio di orientamento (Redmi / Android)
-	  if (window.visualViewport) {
-		window.visualViewport.addEventListener("resize", resizeViewPort);
-	  } else {
-		window.addEventListener("resize", resizeViewPort);
-	  }
-	  window.addEventListener("orientationchange", function() {
-		// Piccolo ritardo per consentire alla WebView Redmi di ricalcolare le dimensioni corrette dopo la rotazione
-		setTimeout(resizeViewPort, 100);
-	  });
+	  window.addEventListener("resize", resizeViewPort);
     }
 
     document.addEventListener("DOMContentLoaded", init);
     })();
 
     let isMute = false;
-    let isMusicStarted = false;
+
+    function updateMusic(n) {
+      if (!n) return;
+      const m1 = document.getElementById("musicSound");
+      const m2 = document.getElementById("musicSound2");
+      if (!m1 || !m2) return;
+
+      if (isMute) {
+        m1.pause();
+        m2.pause();
+        return;
+      }
+
+      const active = (n % 2 === 0) ? m1 : m2;
+      const idle = (n % 2 === 0) ? m2 : m1;
+
+      idle.pause();
+      if (active.paused) {
+        active.volume = 0.5;
+        active.play().catch(function(){});
+      }
+    }
+
     function playSound(id, vol = 1) {
       if (isMute) return;
       const audio = document.getElementById(id);
