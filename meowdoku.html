@@ -46,6 +46,7 @@
             var(--cream);
           background-repeat:no-repeat;
           min-height:100vh;
+          min-height:100dvh; /* vince sui browser che lo supportano, ignorato dagli altri */
           -webkit-tap-highlight-color:transparent;
           overscroll-behavior:contain;
           position:relative;
@@ -253,7 +254,7 @@
           display:grid; place-items:center; outline-offset:-3px;
           transition:filter .12s ease, transform .1s cubic-bezier(.3,1.4,.4,1), box-shadow .1s ease;
           contain:layout paint style;
-		  
+
           border-radius:calc(var(--radius) - 8px);
           border-radius: 20%;
           box-shadow:
@@ -457,6 +458,8 @@
           filter:drop-shadow(0 8px 16px rgba(74,59,82,.45));
           animation:pop .6s ease both;
         }
+		
+		.confetti-layer span{ position:absolute; top:-5%; font-size:20px; animation:fall linear forwards; will-change:transform, opacity; }
     </style>
 </head>
 <body>
@@ -487,9 +490,9 @@
         <circle cx="50" cy="60" r="34" fill="#F7E8CB"/>
         <ellipse cx="50" cy="62" rx="30" ry="24" fill="var(--siamese-point, #432)"/>
 
-		<!-- guance bianche tuxedo -->
-		<ellipse cx="50" cy="77" rx="19" ry="9" fill="var(--tuxedo-point, #432)"/>
-		<ellipse cx="50" cy="73" rx="9"  ry="9" fill="var(--tuxedo-point, #432)"/>
+        <!-- guance bianche tuxedo -->
+        <ellipse cx="50" cy="77" rx="19" ry="9" fill="var(--tuxedo-point, #432)"/>
+        <ellipse cx="50" cy="73" rx="9"  ry="9" fill="var(--tuxedo-point, #432)"/>
 
         <!-- baffazzi -->
         <g stroke="#FAF0DC" stroke-width="1.5" stroke-linecap="round">
@@ -557,7 +560,7 @@
 </svg>
 
 <audio id="catSound" preload="auto">
-	<source src="./meowdoku-cat.mp3" type="audio/mpeg">
+    <source src="./meowdoku-cat.mp3" type="audio/mpeg">
 </audio>
 <audio id="purrSound" preload="auto">
     <source src="./meowdoku-purr.mp3" type="audio/mpeg">
@@ -706,31 +709,6 @@
 <script>
     (function(){
     "use strict";
-
-    function resizeViewPort() {
-		setTimeout(function() {
-			const h = window.innerHeight;
-			if (!h || h < 50) return;
-													   
-			document.body.style.minHeight = h + "px";
-			const app = document.getElementById("app");
-			if (app) {
-			  app.style.minHeight = h + "px";
-			  // Forza un ricalcolo dello stacking context su alcuni motori mobili
-			  app.style.transform = "translateZ(0)";
-			}
-			
-			//ricostruisce menu + griglia
-			renderMenu();
-            if (state.n && state.cellEls) {
-                syncBoardVisuals();
-            }
-
-			window.scrollTo(0, 0);
-		}, 150);
-	}
-
-    resizeViewPort();
 
     /* ============================================================
        1. PUZZLE GENERATOR
@@ -1128,9 +1106,13 @@
         'style="--eye-delay:' + eyeDelay + '; --look-delay:' + lookDelay + '; --siamese-point:' + siamesePoint+ '; --tuxedo-point:' + tuxedoPoint +';">' +
         '<use href="#cat-face"/></svg>';
     }
-    function xSvg(){
+    function xSvgOLD(){
       return '<svg class="glyph xmark" viewBox="0 0 100 100" aria-hidden="true"><use href="#x-mark"/></svg>';
     }
+	function xSvg(delayMs){
+	  const style = delayMs ? ' style="animation-delay:' + delayMs + 'ms"' : '';
+	  return '<svg class="glyph xmark" viewBox="0 0 100 100" aria-hidden="true"' + style + '><use href="#x-mark"/></svg>';
+	}
     function pawSvg(cls){
       return '<svg class="' + (cls||"") + '" viewBox="0 0 100 100" fill="currentColor" aria-hidden="true">' +
         '<ellipse cx="50" cy="68" rx="27" ry="22"/>' +
@@ -1248,7 +1230,7 @@
 		btn.addEventListener("click", function(){ startNewGame(parseInt(btn.dataset.n, 10)); });
       });
 	}
-	
+
     function renderHearts(){
       let html = "";
       for (let i = 0; i < 3; i++){
@@ -1257,7 +1239,7 @@
       els.hearts.innerHTML = html;
     }
 
-    
+
     // Calcola una sola volta lo stile "statico" di una cella (sfondo regione,
     // bordi tra territori, eventuale animazione d'ingresso). Non dipende mai
     // dallo stato di gioco (gatto/x/vuoto): per questo viene applicato solo in
@@ -1334,7 +1316,7 @@
     // Aggiorna il contenuto (gatto/x/vuoto) di UNA sola cella: nessun altro
     // nodo della griglia viene toccato. E' la funzione chiamata a ogni tap
     // al posto del vecchio renderBoard() completo.
-    function updateCellVisual(r, c){
+    function updateCellVisualOLD(r, c){
       const btn = state.cellEls[r][c];
       if (!btn) return;
       const cellState = state.grid[r][c];
@@ -1342,6 +1324,15 @@
       btn.dataset.state = cellState;
       btn.innerHTML = cellState === "cat" ? catSvg("cat", r, c) : (cellState === "x" ? xSvg() : "");
     }
+	
+	function updateCellVisual(r, c, delayMs){
+	  const btn = state.cellEls[r][c];
+	  if (!btn) return;
+	  const cellState = state.grid[r][c];
+	  if (btn.dataset.state === cellState) return;
+	  btn.dataset.state = cellState;
+	  btn.innerHTML = cellState === "cat" ? catSvg("cat", r, c) : (cellState === "x" ? xSvg(delayMs) : "");
+	}
 
     // Ri-sincronizza tutte le celle con state.grid SENZA ricreare i nodi ne'
     // i listener: usata per undo, restart e dopo la generazione di un nuovo
@@ -1459,7 +1450,7 @@
       setTimeout(function() { container.remove(); }, 1000);
     }
 
-    
+
     /* ============================================================
        8. GAME LOGIC
        ============================================================ */
@@ -1513,7 +1504,7 @@
       checkWin();
     }
 
-    function autoMarkEliminated(r, c){
+    function autoMarkEliminatedOLD(r, c){
       const related = cellsRelatedTo(r, c);
       for (let i = 0; i < related.length; i++){
         const rr = related[i][0], cc = related[i][1];
@@ -1523,6 +1514,22 @@
         }
       }
     }
+	
+	const X_RIPPLE_MS = 50;      // stagger per unità di distanza
+	const X_RIPPLE_MAX_MS = 500; // tetto, altrimenti su 10x10 diventa lento
+
+	function autoMarkEliminated(r, c){
+	  const related = cellsRelatedTo(r, c);
+	  for (let i = 0; i < related.length; i++){
+		const rr = related[i][0], cc = related[i][1];
+		if (state.grid[rr][cc] === "empty"){
+		  state.grid[rr][cc] = "x";
+		  const dist = Math.hypot(rr - r, cc - c);
+		  const delay = Math.min(X_RIPPLE_MAX_MS, Math.round(dist * X_RIPPLE_MS));
+		  updateCellVisual(rr, cc, delay);
+		}
+	  }
+	}
 
     // Shake pilotato via Web Animations API invece che con una classe CSS:
     // el.animate() crea SEMPRE una nuova animazione indipendente ad ogni
@@ -1744,7 +1751,7 @@
     function openModal(id){ document.getElementById(id).classList.add("active"); }
     function closeModal(id){ document.getElementById(id).classList.remove("active"); }
 
-    function launchConfetti(){
+    function launchConfettiOLD(){
       if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
       const layer = document.createElement("div");
       layer.className = "confetti-layer";
@@ -1760,6 +1767,25 @@
       }
       setTimeout(function(){ layer.remove(); }, 4200);
     }
+	
+	function launchConfetti(){
+	  if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+	  const layer = document.createElement("div");
+	  layer.className = "confetti-layer";
+	  const frag = document.createDocumentFragment();
+	  for (let i = 0; i < 32; i++){
+		const s = document.createElement("span");
+		s.textContent = EXPLOSION_EMOJI[rndInt(EXPLOSION_EMOJI.length)];
+		s.style.left = rndInt(100) + "%";
+		s.style.animationDuration = (2 + Math.random()*2) + "s";
+		s.style.animationDelay = (Math.random()*0.6) + "s";
+		s.style.fontSize = (12 + rndInt(48)) + "px";
+		frag.appendChild(s);
+	  }
+	  layer.appendChild(frag);
+	  document.body.appendChild(layer);
+	  setTimeout(function(){ layer.remove(); }, 4200);
+	}
 
     /* ============================================================
        12. KEYBOARD NAVIGATION ON THE GRID
@@ -1783,7 +1809,7 @@
     /* ============================================================
        13. INIT & GLOBAL LISTENERS
        ============================================================ */
-	   
+
 	function attachGameToolbarListeners(){
 	  document.getElementById("btnBack").addEventListener("click", function(){ timerStop(); showScreen("screen-menu"); });
       document.getElementById("btnNew").addEventListener("click", function(){ if (state.n) startNewGame(state.n); });
@@ -1802,7 +1828,7 @@
 
       document.getElementById("btnMusic").addEventListener("click", function() { isMute = !isMute; updateMusic(state.n); });
 	}
-	
+
     function init(){
       cacheEls();
       renderMenu();
@@ -1813,8 +1839,6 @@
       });
 
       els.board.addEventListener("keydown", onBoardKeydown);
-
-	  window.addEventListener("resize", resizeViewPort);
     }
 
     document.addEventListener("DOMContentLoaded", init);
